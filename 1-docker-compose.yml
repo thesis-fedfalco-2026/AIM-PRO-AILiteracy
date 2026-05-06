@@ -1,0 +1,73 @@
+services:
+  ollama-phi:
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_phi_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  ollama-phi-pull:
+    image: ollama/ollama
+    depends_on:
+      ollama-phi:
+        condition: service_healthy
+    volumes:
+      - ollama_phi_data:/root/.ollama
+      - ./scripts:/scripts:ro
+    environment:
+      OLLAMA_HOST: http://ollama-phi:11434
+      MODEL: phi
+    entrypoint: ["/bin/sh", "/scripts/ollama_pull_if_missing.sh"]
+    restart: "no"
+
+  ollama-gemma:
+    image: ollama/ollama
+    ports:
+      - "11435:11434"
+    volumes:
+      - ollama_gemma_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  ollama-gemma-pull:
+    image: ollama/ollama
+    depends_on:
+      ollama-gemma:
+        condition: service_healthy
+    volumes:
+      - ollama_gemma_data:/root/.ollama
+      - ./scripts:/scripts:ro
+    environment:
+      OLLAMA_HOST: http://ollama-gemma:11434
+      MODEL: gemma
+    entrypoint: ["/bin/sh", "/scripts/ollama_pull_if_missing.sh"]
+    restart: "no"
+
+  app:
+    build: .
+    volumes:
+      - .:/app
+    environment:
+      OLLAMA_PHI_BASE_URL: http://ollama-phi:11434
+      OLLAMA_GEMMA_BASE_URL: http://ollama-gemma:11434
+    depends_on:
+      ollama-phi:
+        condition: service_healthy
+      ollama-phi-pull:
+        condition: service_completed_successfully
+      ollama-gemma:
+        condition: service_healthy
+      ollama-gemma-pull:
+        condition: service_completed_successfully
+
+volumes:
+  ollama_phi_data:
+  ollama_gemma_data:
