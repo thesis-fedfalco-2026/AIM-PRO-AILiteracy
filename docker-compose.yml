@@ -18,7 +18,7 @@ services:
       retries: 5
     restart: unless-stopped
 
-  ollama-setup:
+  ollama_puller:
     image: ollama/ollama:latest
     container_name: ollama_puller
     volumes:
@@ -33,11 +33,11 @@ services:
       - "-c"
       - |
         for m in phi gemma; do
-          if ! ollama list | grep -q "$m"; then
-            echo "Scaricamento modello $m..."
-            ollama pull $m
+          if ! ollama list | grep -q "$$m"; then
+            echo "Scaricamento modello $$m..."
+            ollama pull $$m
           else
-            echo "Modello $m già presente."
+            echo "Modello $$m già presente."
           fi
         done
         echo "Inizializzazione completata con successo."
@@ -52,7 +52,7 @@ services:
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
     depends_on:
-      ollama-setup:
+      ollama_puller:
         condition: service_completed_successfully
     restart: on-failure
 
