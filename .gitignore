@@ -220,3 +220,4 @@ GEMINI.md
 .geminiignore
 instructions.md
 .gitattributes
+.worktrees/
