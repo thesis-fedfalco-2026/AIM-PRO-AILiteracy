@@ -1,71 +1,78 @@
 # py-prototype
 
-Questo progetto resta indipendente dal Python globale e tiene Jupyter isolato nel virtualenv.
+Workflow CrewAI con backend selezionato staticamente in `model.properties`: vLLM locale o commerciale (es. OpenAI, Anthropic...). L'esecuzione avviene sempre su host tramite `.venv`
 
-L'obiettivo è testare un flusso locale con Ollama in Docker e notebook Jupyter, usando modelli leggeri come `phi` o `gemma`.
+## Configurazione
 
-## Struttura
-- Tutte le dipendenze in `.venv`
-- Kernel Jupyter registrato dentro `.venv`
-- Runtime Jupyter dentro `.venv/var/jupyter/runtime`
+`model.properties` è versionato e contiene solo configurazione non sensibile:
 
-## Setup rapido di ambiente
+- `backend`: `vllm`, `openai` o `anthropic`;
+- modello e `base_url` per ogni backend;
+- `temperature`, `top_p`, `max_tokens` e `timeout`.
+
+La scelta statica avviene prima dell'avvio:
+
+Valori attualmente ammessi: `vllm`, `openai`, `anthropic`.
+
+```properties
+[llm]
+backend = vllm
+```
+
+`.env` non è versionato e contiene solo secret:
+
+```dotenv
+VLLM_API_KEY=local-development
+OPENAI_API_KEY=
+ANTHROPIC_API_KEY=
+HF_TOKEN=
+```
+
+Applicazione legge solo chiave corrispondente al backend configurato. Configurazione mancante termina con errore; nessun fallback implicito.
+
+## Ambiente Python
+
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install jupyterlab ipykernel
-```
-## Registra il kernel nel virtualenv
-```bash
-python -m ipykernel install --prefix "$PWD/.venv" --name py-prototype-local --display-name "Python (.venv py-prototype)"
+python -m pip install "crewai[anthropic]==1.15.18" python-dotenv jupyterlab ipykernel
 ```
 
-## Runtime Jupyter nel progetto
-Crea la cartella runtime locale.
+## vLLM locale
 
-```bash
-mkdir -p .venv/var/jupyter/runtime
-```
-
-## Per usare il progetto
-installa anche le librerie necessarie (esempio):
-```bash
-python -m pip install crewai langchain langchain-community
-```
-
-## Docker (CPU only)
-Il compose avvia due istanze di Ollama separate:
-
-Ogni servizio mantiene il proprio volume, quindi il modello scaricato resta disponibile nei riavvii.
+Impostare `backend = vllm` e valorizzare `VLLM_API_KEY`. Avviare solo server vLLM:
 
 ```bash
 docker compose up -d
+docker compose ps
 ```
 
-Il servizio `ollama-pull` scarica rispettivamente `phi` e `gemma` e poi danno segnale di ready.
+Poi eseguire workflow sull'host:
 
-## Esempi di file locali (NON versionati)
-Questi file devono restare locali e non finire nel repository.
-
-### .env (locale)
-```
-JUPYTER_RUNTIME_DIR=.venv/var/jupyter/runtime
-```
-
-### IDE specifics (json format)
-```
-{
-  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
-  "python.envFile": "${workspaceFolder}/.env",
-  "jupyter.notebookFileRoot": "${workspaceFolder}"
-}
-```
-
-## Dipendenze
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install crewai langchain langchain-community langgraph
+python main.py
 ```
+
+`base_url = http://127.0.0.1:8000/v1` usa porta pubblicata dal container verso host.
+
+## Provider cloud
+
+Impostare `backend = openai` oppure `backend = anthropic`, valorizzare chiave corrispondente e avviare solo Python:
+
+```bash
+python main.py
+```
+
+## Verifica
+
+```bash
+python -m unittest -v test_main.py
+```
+
+Arresto vLLM:
+
+```bash
+docker compose down
+```
+
+Aggiungere `-v` solo per eliminare anche cache modelli.
