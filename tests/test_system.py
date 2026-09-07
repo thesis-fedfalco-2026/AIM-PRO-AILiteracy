@@ -559,7 +559,7 @@ class ApplicationTest(unittest.TestCase):
         self.assertIn("--tool-call-parser", command)
         self.assertEqual(command[command.index("--tool-call-parser") + 1], "hermes")
 
-    def test_composition_loads_three_agents_without_network(self):
+    def test_composition_loads_configured_agents_without_network(self):
         clients = []
 
         class FakeAgent:
@@ -568,7 +568,7 @@ class ApplicationTest(unittest.TestCase):
 
         orchestrator = main.build_orchestrator(
             Path(__file__).parents[1],
-            environ={"VLLM_API_KEY": "test"},
+            environ={"VLLM_API_KEY": "test", "ANTHROPIC_API_KEY": "test"},
             client_factory=lambda **values: clients.append(values) or "llm",
             agent_factory=FakeAgent,
         )
@@ -577,6 +577,9 @@ class ApplicationTest(unittest.TestCase):
         self.assertIn("agent-x:", orchestrator.lead.values["backstory"])
         self.assertIn("agent-y:", orchestrator.lead.values["backstory"])
         self.assertIn("agent-z:", orchestrator.lead.values["backstory"])
+        self.assertIn("agent-u:", orchestrator.lead.values["backstory"])
+        self.assertIn("agent-v:", orchestrator.lead.values["backstory"])
+        self.assertIn("agent-w:", orchestrator.lead.values["backstory"])
         self.assertEqual(len(clients), 1)
 
     def test_cli_prints_orchestrator_answer(self):
@@ -648,7 +651,7 @@ class ApplicationTest(unittest.TestCase):
         exit_code, output = invoke(
             lambda: real_build_orchestrator(
                 main.BASE_DIR,
-                environ={"VLLM_API_KEY": "test"},
+                environ={"VLLM_API_KEY": "test", "ANTHROPIC_API_KEY": "test"},
                 client_factory=provider_factory,
                 agent_factory=lambda **values: None,
             )
