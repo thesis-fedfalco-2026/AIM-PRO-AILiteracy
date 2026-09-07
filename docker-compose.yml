@@ -20,6 +20,9 @@ services:
       - "1024"
       - --language-model-only
       - --enforce-eager
+      - --enable-auto-tool-choice
+      - --tool-call-parser
+      - hermes
       - --default-chat-template-kwargs
       - '{"enable_thinking":false}'
       - --generation-config

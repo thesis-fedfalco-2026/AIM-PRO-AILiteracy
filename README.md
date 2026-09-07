@@ -1,78 +1,42 @@
-# py-prototype
+# CrewAI multi-agent orchestrator
 
-Workflow CrewAI con backend selezionato staticamente in `model.properties`: vLLM locale o commerciale (es. OpenAI, Anthropic...). L'esecuzione avviene sempre su host tramite `.venv`
+Lead Agent carica worker configurati in `agents/*.md`, delega task tramite `TaskTool` e sintetizza una risposta finale. Configurazione LLM usa profili nominati in `model.properties`; secret restano in `.env`.
 
-## Configurazione
-
-`model.properties` è versionato e contiene solo configurazione non sensibile:
-
-- `backend`: `vllm`, `openai` o `anthropic`;
-- modello e `base_url` per ogni backend;
-- `temperature`, `top_p`, `max_tokens` e `timeout`.
-
-La scelta statica avviene prima dell'avvio:
-
-Valori attualmente ammessi: `vllm`, `openai`, `anthropic`.
-
-```properties
-[llm]
-backend = vllm
-```
-
-`.env` non è versionato e contiene solo secret:
-
-```dotenv
-VLLM_API_KEY=local-development
-OPENAI_API_KEY=
-ANTHROPIC_API_KEY=
-HF_TOKEN=
-```
-
-Applicazione legge solo chiave corrispondente al backend configurato. Configurazione mancante termina con errore; nessun fallback implicito.
-
-## Ambiente Python
+## Installazione
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install "crewai[anthropic]==1.15.18" python-dotenv jupyterlab ipykernel
+python -m pip install -r requirements.txt
 ```
 
-## vLLM locale
+## Configurazione
 
-Impostare `backend = vllm` e valorizzare `VLLM_API_KEY`. Avviare solo server vLLM:
+Impostare `app.lead_model` e profili `[profile:<nome>]` in `model.properties`. Ogni `model:` nei file `agents/*.md` riferisce uno di questi profili.
+
+```dotenv
+VLLM_API_KEY=local-development
+```
+
+Tool worker sono nomi registrati dalla composition root. Skill worker sono directory locali `skills/<nome>/SKILL.md`. Nomi sconosciuti bloccano avvio; import dinamici non sono ammessi.
+
+## Esecuzione locale
 
 ```bash
 docker compose up -d
-docker compose ps
+.venv/bin/python main.py "Progetta un servizio affidabile di elaborazione documenti"
 ```
 
-Poi eseguire workflow sull'host:
+## Test
 
 ```bash
-python main.py
+.venv/bin/python -m unittest -v
 ```
 
-`base_url = http://127.0.0.1:8000/v1` usa porta pubblicata dal container verso host.
-
-## Provider cloud
-
-Impostare `backend = openai` oppure `backend = anthropic`, valorizzare chiave corrispondente e avviare solo Python:
-
-```bash
-python main.py
-```
-
-## Verifica
-
-```bash
-python -m unittest -v test_main.py
-```
-
-Arresto vLLM:
+## Arresto vLLM
 
 ```bash
 docker compose down
 ```
 
-Aggiungere `-v` solo per eliminare anche cache modelli.
+Usare `docker compose down -v` solo quando si vuole eliminare anche la cache modelli.

@@ -1,0 +1,4 @@
+crewai[anthropic]==1.15.18
+pydantic==2.12.5
+PyYAML==6.0.3
+python-dotenv==1.2.2
