@@ -20,8 +20,14 @@ with warnings.catch_warnings():
     )
     from crewai import Agent, LLM
 from dotenv import load_dotenv
+from mcp.client.stdio import StdioServerParameters
 
 from agent_system.config import ConfigurationError, load_model_catalog
+from agent_system.mcp_runtime import (
+    SEARCH_TOOL_NAME,
+    DocumentSearchClient,
+    build_document_search_params,
+)
 from agent_system.orchestrator import Orchestrator
 from agent_system.registry import AgentRegistry
 from agent_system.runtime import CrewAIWorker, LLMFactory, load_skill_catalog
@@ -37,25 +43,32 @@ def build_orchestrator(
     environ: Mapping[str, str] | None = None,
     client_factory: Callable[..., Any] = LLM,
     agent_factory: Callable[..., Any] = Agent,
+    search_client_factory: Callable[[StdioServerParameters], Any] = DocumentSearchClient,
+    tools: Mapping[str, Any] | None = None,
 ) -> Orchestrator:
     catalog = load_model_catalog(base_dir / "model.properties")
-    tools = {}
+    runtime_environ = os.environ if environ is None else environ
+    local_tools = {} if tools is None else tools
+    if SEARCH_TOOL_NAME in local_tools:
+        raise ConfigurationError("search_documents is reserved for MCP retrieval")
+    search_params = build_document_search_params(base_dir, runtime_environ)
+    search_client = search_client_factory(search_params)
     skills = load_skill_catalog(base_dir / "skills")
     registry = AgentRegistry.load(
         base_dir / "agents",
         models=catalog.profiles.keys(),
-        tools=tools,
+        tools={**local_tools, SEARCH_TOOL_NAME: object()},
         skills=skills,
     )
     llms = LLMFactory(
         catalog,
-        environ=os.environ if environ is None else environ,
+        environ=runtime_environ,
         client_factory=client_factory,
     )
     llms.validate(registry.model_names() | {catalog.lead_model})
     worker = CrewAIWorker(
         llm_factory=llms,
-        tools=tools,
+        tools=local_tools,
         skills=skills,
         logger=LOGGER,
         agent_factory=agent_factory,
@@ -65,6 +78,8 @@ def build_orchestrator(
         lead_llm=llms(catalog.lead_model),
         registry=registry,
         task_tool=task_tool,
+        search=search_client.search,
+        settings=catalog.orchestrator,
         logger=LOGGER,
         agent_factory=agent_factory,
     )
@@ -98,8 +113,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     except Exception as error:
         LOGGER.error("Execution failed: %s", type(error).__name__)
         return 1
-    print(answer)
-    return 0
+    else:
+        print(answer)
+        return 0
+    finally:
+        if callable(close := getattr(orchestrator, "close", None)):
+            close()
 
 
 if __name__ == "__main__":

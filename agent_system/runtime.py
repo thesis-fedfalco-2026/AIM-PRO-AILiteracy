@@ -108,7 +108,11 @@ class CrewAIWorker:
             goal="Complete the assigned task accurately and return only the useful result.",
             backstory=config.system_prompt,
             llm=self.llm_factory(config.model),
-            tools=[self.tools[name] for name in config.tools],
+            tools=[
+                self.tools[name]
+                for name in config.tools
+                if name in self.tools
+            ],
             skills=[self.skills[name] for name in config.skills] or None,
             allow_delegation=False,
         )

@@ -54,11 +54,21 @@ class LLMSettings(BaseModel):
     timeout: float = Field(gt=0)
 
 
+class OrchestratorSettings(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    max_steps: int = Field(gt=0)
+    max_input_chars: int = Field(gt=0)
+    max_task_chars: int = Field(gt=0)
+    max_context_chars: int = Field(gt=0)
+
+
 class ModelCatalog(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     lead_model: Identifier
     settings: LLMSettings
+    orchestrator: OrchestratorSettings
     profiles: dict[Identifier, ModelProfile]
 
 
@@ -102,6 +112,12 @@ def load_model_catalog(path: Path) -> ModelCatalog:
             max_tokens=parser.getint("llm", "max_tokens"),
             timeout=parser.getfloat("llm", "timeout"),
         )
+        orchestrator = OrchestratorSettings(
+            max_steps=parser.getint("orchestrator", "max_steps"),
+            max_input_chars=parser.getint("orchestrator", "max_input_chars"),
+            max_task_chars=parser.getint("orchestrator", "max_task_chars"),
+            max_context_chars=parser.getint("orchestrator", "max_context_chars"),
+        )
         profiles = {}
         for section in parser.sections():
             if section.startswith("profile:"):
@@ -111,7 +127,12 @@ def load_model_catalog(path: Path) -> ModelCatalog:
                     raise ValueError(f"Invalid {section}: {error}") from error
         if not profiles:
             raise ValueError("no model profiles configured")
-        catalog = ModelCatalog(lead_model=lead_model, settings=settings, profiles=profiles)
+        catalog = ModelCatalog(
+            lead_model=lead_model,
+            settings=settings,
+            orchestrator=orchestrator,
+            profiles=profiles,
+        )
         if catalog.lead_model not in catalog.profiles:
             raise ValueError(f"Unknown lead model profile: {catalog.lead_model}")
         return catalog

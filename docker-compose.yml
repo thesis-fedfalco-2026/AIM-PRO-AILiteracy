@@ -1,30 +1,24 @@
+include:
+  - compose.databases.yml
+
 services:
-  vllm:
+  vllm-generation:
     image: vllm/vllm-openai-cpu:v0.28.0-x86_64
     platform: linux/amd64
     command:
-      - Qwen/Qwen3-0.6B
+      - ${GENERATION_MODEL_ID:?set GENERATION_MODEL_ID in .env}
       - --served-model-name
       - local-model
-      - --host
-      - 0.0.0.0
       - --port
       - "8000"
       - --dtype
       - bfloat16
       - --max-model-len
-      - "2048"
+      - "4096"
       - --max-num-seqs
       - "1"
-      - --max-num-batched-tokens
-      - "1024"
       - --language-model-only
       - --enforce-eager
-      - --enable-auto-tool-choice
-      - --tool-call-parser
-      - hermes
-      - --default-chat-template-kwargs
-      - '{"enable_thinking":false}'
       - --generation-config
       - vllm
     user: "0:0"
@@ -35,15 +29,14 @@ services:
       VLLM_CPU_NUM_OF_RESERVED_CPU: "1"
       VLLM_NO_USAGE_STATS: "1"
       HF_HUB_DISABLE_TELEMETRY: "1"
-      HF_HUB_OFFLINE: "0"
-      HF_TOKEN: ${HF_TOKEN:-}
+      HF_HUB_OFFLINE: "1"
     ports:
       - "127.0.0.1:8000:8000"
     volumes:
       - huggingface_cache:/root/.cache/huggingface
-      - vllm_cache:/root/.cache/vllm
-    cpus: 6
-    mem_limit: 8g
+      - vllm_generation_cache:/root/.cache/vllm
+    cpus: 8
+    mem_limit: 12g
     shm_size: 4g
     cap_add:
       - SYS_NICE
@@ -64,6 +57,61 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  vllm-embedding:
+    image: vllm/vllm-openai-cpu:v0.28.0-x86_64
+    platform: linux/amd64
+    command:
+      - ${EMBEDDING_MODEL_ID:?set EMBEDDING_MODEL_ID in .env}
+      - --served-model-name
+      - local-embedding
+      - --port
+      - "9000"
+      - --runner
+      - pooling
+      - --dtype
+      - bfloat16
+      - --max-model-len
+      - "2048"
+      - --max-num-seqs
+      - "1"
+      - --enforce-eager
+    user: "0:0"
+    environment:
+      VLLM_API_KEY: ${EMBEDDING_API_KEY:-}
+      VLLM_CPU_KVCACHE_SPACE: "1"
+      VLLM_CPU_OMP_THREADS_BIND: auto
+      VLLM_CPU_NUM_OF_RESERVED_CPU: "1"
+      VLLM_NO_USAGE_STATS: "1"
+      HF_HUB_DISABLE_TELEMETRY: "1"
+      HF_HUB_OFFLINE: "1"
+    ports:
+      - "127.0.0.1:9000:9000"
+    volumes:
+      - huggingface_cache:/root/.cache/huggingface
+      - vllm_embedding_cache:/root/.cache/vllm
+    cpus: 2
+    mem_limit: 2.25g
+    shm_size: 4g
+    cap_add:
+      - SYS_NICE
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9000/health', timeout=5)"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 10m
+    init: true
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+      - seccomp=unconfined
+    logging:
+      driver: local
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 volumes:
   huggingface_cache:
-  vllm_cache:
+  vllm_generation_cache:
+  vllm_embedding_cache:
