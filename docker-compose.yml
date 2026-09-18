@@ -57,45 +57,27 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  vllm-embedding:
-    image: vllm/vllm-openai-cpu:v0.28.0-x86_64
+  tei-embedding:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.9
     platform: linux/amd64
     command:
+      - --model-id
       - ${EMBEDDING_MODEL_ID:?set EMBEDDING_MODEL_ID in .env}
-      - --served-model-name
-      - local-embedding
-      - --port
-      - "9000"
-      - --runner
-      - pooling
       - --dtype
-      - bfloat16
-      - --max-model-len
-      - "2048"
-      - --max-num-seqs
-      - "1"
-      - --enforce-eager
-    user: "0:0"
+      - float32
+      - --huggingface-hub-cache
+      - /data/hub
     environment:
-      VLLM_API_KEY: ${EMBEDDING_API_KEY:-}
-      VLLM_CPU_KVCACHE_SPACE: "1"
-      VLLM_CPU_OMP_THREADS_BIND: auto
-      VLLM_CPU_NUM_OF_RESERVED_CPU: "1"
-      VLLM_NO_USAGE_STATS: "1"
       HF_HUB_DISABLE_TELEMETRY: "1"
       HF_HUB_OFFLINE: "1"
     ports:
-      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9000:80"
     volumes:
-      - huggingface_cache:/root/.cache/huggingface
-      - vllm_embedding_cache:/root/.cache/vllm
+      - huggingface_cache:/data
     cpus: 2
     mem_limit: 2.25g
-    shm_size: 4g
-    cap_add:
-      - SYS_NICE
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9000/health', timeout=5)"]
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost/health"]
       interval: 15s
       timeout: 10s
       retries: 20
@@ -104,7 +86,6 @@ services:
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
-      - seccomp=unconfined
     logging:
       driver: local
       options:
@@ -114,4 +95,3 @@ services:
 volumes:
   huggingface_cache:
   vllm_generation_cache:
-  vllm_embedding_cache:

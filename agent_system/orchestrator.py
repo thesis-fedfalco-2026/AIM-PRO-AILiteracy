@@ -79,7 +79,10 @@ class Orchestrator:
         planned = self.lead.kickoff(
             "Create an execution plan. Use an empty plan if you can answer directly. "
             f"Use at most {self.settings.max_steps} steps and tasks of at most "
-            f"{self.settings.max_task_chars} characters.\n\nQuestion:\n{question}",
+            f"{self.settings.max_task_chars} characters. Return compact JSON without "
+            "blank lines or trailing whitespace. Close every array and object. For each "
+            "step include id, agent, task, depends_on, and retrieval; use [] and null "
+            f"when optional values are absent.\n\nQuestion:\n{question}",
             response_format=ExecutionPlan,
         )
         if type(getattr(planned, "pydantic", None)) is not ExecutionPlan:

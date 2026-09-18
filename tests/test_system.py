@@ -705,6 +705,9 @@ class OrchestratorTest(unittest.TestCase):
         self.assertEqual(result, "direct answer")
         self.assertEqual(len(calls["prompts"]), 2)
         self.assertIn("Complex question", calls["prompts"][0])
+        self.assertIn("compact JSON", calls["prompts"][0])
+        self.assertIn("Close every array and object", calls["prompts"][0])
+        self.assertIn("depends_on, and retrieval", calls["prompts"][0])
         self.assertIn("Complex question", calls["prompts"][1])
         self.assertIn("agent-x: Handles analysis.", calls["agent"]["backstory"])
         self.assertNotIn("PRIVATE SYSTEM PROMPT", calls["agent"]["backstory"])
@@ -754,9 +757,9 @@ class ApplicationTest(unittest.TestCase):
         qdrant = yaml.safe_load((main.BASE_DIR / "compose.databases.yml").read_text())
 
         self.assertEqual(compose["include"], ["compose.databases.yml"])
-        self.assertEqual(set(compose["services"]), {"vllm-generation", "vllm-embedding"})
+        self.assertEqual(set(compose["services"]), {"vllm-generation", "tei-embedding"})
         generation = compose["services"]["vllm-generation"]
-        embedding = compose["services"]["vllm-embedding"]
+        embedding = compose["services"]["tei-embedding"]
         generation_command = generation["command"]
         embedding_command = embedding["command"]
 
@@ -777,28 +780,39 @@ class ApplicationTest(unittest.TestCase):
                 self.assertNotIn(forbidden, generation_command)
         self.assertFalse(any("qwen" in argument.lower() for argument in generation_command))
 
-        self.assertEqual(embedding["image"], "vllm/vllm-openai-cpu:v0.28.0-x86_64")
-        self.assertEqual(embedding_command[0], "${EMBEDDING_MODEL_ID:?set EMBEDDING_MODEL_ID in .env}")
         self.assertEqual(
-            embedding_command[embedding_command.index("--served-model-name") + 1],
-            "local-embedding",
+            embedding["image"],
+            "ghcr.io/huggingface/text-embeddings-inference:cpu-1.9",
         )
-        self.assertEqual(embedding_command[embedding_command.index("--port") + 1], "9000")
-        self.assertEqual(embedding_command[embedding_command.index("--runner") + 1], "pooling")
-        self.assertEqual(embedding_command[embedding_command.index("--dtype") + 1], "bfloat16")
+        self.assertEqual(embedding_command, [
+            "--model-id",
+            "${EMBEDDING_MODEL_ID:?set EMBEDDING_MODEL_ID in .env}",
+            "--dtype",
+            "float32",
+            "--huggingface-hub-cache",
+            "/data/hub",
+        ])
         self.assertEqual(generation["ports"], ["127.0.0.1:8000:8000"])
-        self.assertEqual(embedding["ports"], ["127.0.0.1:9000:9000"])
+        self.assertEqual(embedding["ports"], ["127.0.0.1:9000:80"])
 
-        for service, memory, cpus in ((generation, "12g", 8), (embedding, "2.25g", 2)):
-            self.assertEqual(service["environment"]["HF_HUB_OFFLINE"], "1")
-            self.assertNotIn("HF_TOKEN", service["environment"])
-            self.assertEqual(service["mem_limit"], memory)
-            self.assertEqual(service["cpus"], cpus)
-            self.assertIn("huggingface_cache:/root/.cache/huggingface", service["volumes"])
+        self.assertEqual(generation["environment"]["HF_HUB_OFFLINE"], "1")
+        self.assertNotIn("HF_TOKEN", generation["environment"])
+        self.assertEqual(generation["mem_limit"], "12g")
+        self.assertEqual(generation["cpus"], 8)
+        self.assertIn("huggingface_cache:/root/.cache/huggingface", generation["volumes"])
         self.assertEqual(generation["environment"]["VLLM_API_KEY"], "${VLLM_API_KEY:-}")
-        self.assertEqual(embedding["environment"]["VLLM_API_KEY"], "${EMBEDDING_API_KEY:-}")
         self.assertIn("vllm_generation_cache:/root/.cache/vllm", generation["volumes"])
-        self.assertIn("vllm_embedding_cache:/root/.cache/vllm", embedding["volumes"])
+
+        self.assertEqual(embedding["environment"]["HF_HUB_OFFLINE"], "1")
+        self.assertNotIn("HF_TOKEN", embedding["environment"])
+        self.assertFalse(any(key.startswith("VLLM_") for key in embedding["environment"]))
+        self.assertEqual(embedding["mem_limit"], "2.25g")
+        self.assertEqual(embedding["cpus"], 2)
+        self.assertEqual(embedding["volumes"], ["huggingface_cache:/data"])
+        self.assertNotIn("shm_size", embedding)
+        self.assertNotIn("cap_add", embedding)
+        self.assertEqual(embedding["security_opt"], ["no-new-privileges:true"])
+        self.assertEqual(set(compose["volumes"]), {"huggingface_cache", "vllm_generation_cache"})
 
         qdrant_service = qdrant["services"]["qdrant"]
         self.assertEqual(qdrant_service["mem_limit"], "1g")

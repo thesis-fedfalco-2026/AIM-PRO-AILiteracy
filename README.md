@@ -1,7 +1,7 @@
 # CrewAI multi-agent orchestrator
 
 This repository runs a fixed local topology: a CrewAI Lead agent, six checked-in
-worker agents, one local vLLM generation service, one local vLLM embedding
+worker agents, one local vLLM generation service, one local TEI embedding
 service, Qdrant, and short-lived MCP document-search sessions.
 
 ## Prerequisites
@@ -34,7 +34,7 @@ Create `.env` directly with the values for this machine.
 | `QDRANT_API_KEY` | optional, use only when Qdrant is configured with one | `local-qdrant-key` |
 | `QDRANT_COLLECTION` | required when `SEARCH_BACKEND=qdrant` | `documents` |
 | `EMBEDDING_URL` | required when `SEARCH_BACKEND=qdrant` | `http://127.0.0.1:9000/v1/embeddings` |
-| `EMBEDDING_MODEL` | required when `SEARCH_BACKEND=qdrant` | `local-embedding` |
+| `EMBEDDING_MODEL` | required when `SEARCH_BACKEND=qdrant` | `text-embeddings-inference` |
 | `EMBEDDING_DIMENSIONS` | required when `SEARCH_BACKEND=qdrant` | `768` |
 
 `HF_TOKEN` may be present locally for provisioning. It must be absent from
@@ -69,9 +69,9 @@ Normal runtime is offline with no `HF_TOKEN`:
 docker compose up -d
 ```
 
-The generation service listens on `127.0.0.1:8000`, the embedding service on
-`127.0.0.1:9000`, Qdrant HTTP on `127.0.0.1:6333`, and Qdrant gRPC on
-`127.0.0.1:6334`.
+The vLLM generation service listens on `127.0.0.1:8000`, the TEI embedding
+service on `127.0.0.1:9000`, Qdrant HTTP on `127.0.0.1:6333`, and Qdrant gRPC
+on `127.0.0.1:6334`.
 
 ## Run
 
@@ -128,13 +128,12 @@ checks, not for real evidence.
 Qdrant mode only queries a pre-existing external collection. Missing,
 wrong-dimension, or poorly prompted embeddings will produce poor retrieval.
 
-Runtime limits are intentionally small: generation has 8 CPUs and 12 GiB,
-embedding has 2 CPUs and 2.25 GiB, and Qdrant has 1 CPU and 1 GiB. The two vLLM
-services do not fit concurrently on the validated 16 GB development machine
-without quantization; use the generation-only mock smoke command above. CPU
-vLLM may fail or be slow on hosts without the expected x86_64 CPU features such
-as AVX2. Worker execution is sequential, and the checked-in LLM timeout is 600
-seconds.
+Runtime limits are generation 8 CPUs and 12 GiB, TEI embedding 2 CPUs and 2.25
+GiB, and Qdrant 1 CPU and 1 GiB. This configuration targets the validated 16
+GiB development machine. Generation remains the dominant memory consumer;
+verify restart and OOM state during the smoke. CPU vLLM may fail or be slow on
+hosts without expected x86_64 CPU features such as AVX2. Worker execution is
+sequential, and the checked-in LLM timeout is 600 seconds.
 
 ## Tests And Smoke Checks
 
@@ -144,18 +143,36 @@ Automated tests:
 .venv/bin/python -m unittest discover -v
 ```
 
-Manual smoke checklist:
+Manual smoke checks:
 
-- `docker compose ps` shows `vllm-generation` healthy.
-- `curl http://127.0.0.1:8000/health` returns success.
-- The Lead returns a valid structured `ExecutionPlan`.
-- `.venv/bin/python main.py "Summarize the mock deployment procedure"` returns
-  an answer in `SEARCH_BACKEND=mock`, proving the mock pipeline runs end to end.
-- Logs show no OOM kill, memory-limit exit, CPU feature failure, missing
-  model-cache error, or authentication error.
+```bash
+docker compose ps
+curl --fail http://127.0.0.1:8000/health
+curl --fail http://127.0.0.1:9000/health
+curl --fail http://127.0.0.1:6333/healthz
+```
+
+Verify TEI returns one real 768-dimensional EmbeddingGemma vector:
+
+```bash
+.venv/bin/python -c 'import json, math, urllib.request; request=urllib.request.Request("http://127.0.0.1:9000/v1/embeddings", data=json.dumps({"input":"task: search result | query: deployment", "model":"text-embeddings-inference"}).encode(), headers={"Content-Type":"application/json"}); vector=json.load(urllib.request.urlopen(request, timeout=120))["data"][0]["embedding"]; assert len(vector) == 768 and all(math.isfinite(value) for value in vector); print("embedding ok: 768 finite values")'
+```
+
+Run the complete orchestrator and MCP flow against synthetic local evidence:
+
+```bash
+SEARCH_BACKEND=mock .venv/bin/python main.py \
+  "Summarize the mock deployment procedure"
+```
+
+This smoke does not validate real Qdrant retrieval because the repository does
+not own collection data. Confirm that the Lead returns a valid structured
+`ExecutionPlan`, the final answer is non-empty, and container logs and state
+show no restart, OOM kill, memory-limit exit, CPU feature failure, missing
+model-cache error, or authentication error.
 
 ## Cache Removal
 
 `docker compose down` stops services and keeps caches. `docker compose down -v`
-also deletes the Hugging Face, vLLM, and Qdrant volumes; after that, models must
-be downloaded again before offline startup will work.
+also deletes the Hugging Face, generation vLLM, and Qdrant volumes; after that,
+models must be downloaded again before offline startup will work.
