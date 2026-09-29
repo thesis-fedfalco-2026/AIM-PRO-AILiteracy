@@ -220,6 +220,6 @@ GEMINI.md
 .geminiignore
 instructions.md
 .gitattributes
-docs/**
+**/superpowers/
 .worktrees/
 .gitignore
