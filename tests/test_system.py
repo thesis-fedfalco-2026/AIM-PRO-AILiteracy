@@ -24,6 +24,7 @@ import main
 
 from agent_system.config import (
     AgentConfig,
+    ResolvedAgentConfig,
     ConfigurationError,
     LLMSettings,
     ModelCatalog,
@@ -37,6 +38,10 @@ from agent_system.runtime import CrewAIWorker, LLMFactory, load_skill_catalog
 from agent_system.task_tool import TaskTool
 from agent_system.orchestrator import Orchestrator
 from agent_system.plan import ExecutionPlan
+from learning.outputs import WorkerOutput
+from types import SimpleNamespace
+from tests.test_learning_planning import run_context
+from document_search.contracts import SearchScope
 
 
 class TemporaryFilesTestCase(unittest.TestCase):
@@ -61,7 +66,7 @@ class ConfigurationTest(TemporaryFilesTestCase):
 
         self.assertEqual(
             catalog.settings,
-            LLMSettings(temperature=0.2, top_p=0.9, max_tokens=512, timeout=600),
+            LLMSettings(temperature=0.2, top_p=0.9, timeout=600),
         )
         self.assertEqual(
             catalog.orchestrator,
@@ -82,7 +87,7 @@ class ConfigurationTest(TemporaryFilesTestCase):
             """---
 name: agent-x
 description: Handles focused analysis.
-model: local
+profile: local
 tools: [search]
 skills: [review]
 ---
@@ -94,7 +99,7 @@ You are a focused analyst.
 
         self.assertEqual(config.name, "agent-x")
         self.assertEqual(config.description, "Handles focused analysis.")
-        self.assertEqual(config.model, "local")
+        self.assertEqual(config.profile, "local")
         self.assertEqual(config.tools, ("search",))
         self.assertEqual(config.skills, ("review",))
         self.assertEqual(config.system_prompt, "You are a focused analyst.")
@@ -103,12 +108,12 @@ You are a focused analyst.
     def test_agent_parser_rejects_invalid_documents(self):
         invalid_documents = {
             "missing-frontmatter": "plain text",
-            "missing-closing": "---\nname: agent-x\ndescription: x\nmodel: local\nPrompt",
+            "missing-closing": "---\nname: agent-x\ndescription: x\nprofile: local\nPrompt",
             "invalid-yaml": "---\nname: [\n---\nPrompt",
-            "missing-required": "---\nname: agent-x\nmodel: local\n---\nPrompt",
-            "unknown-field": "---\nname: agent-x\ndescription: x\nmodel: local\nextra: x\n---\nPrompt",
-            "empty-body": "---\nname: agent-x\ndescription: x\nmodel: local\n---\n   ",
-            "unsafe-skill": "---\nname: agent-x\ndescription: x\nmodel: local\nskills: [../secret]\n---\nPrompt",
+            "missing-required": "---\nname: agent-x\nprofile: local\n---\nPrompt",
+            "unknown-field": "---\nname: agent-x\ndescription: x\nprofile: local\nextra: x\n---\nPrompt",
+            "empty-body": "---\nname: agent-x\ndescription: x\nprofile: local\n---\n   ",
+            "unsafe-skill": "---\nname: agent-x\ndescription: x\nprofile: local\nskills: [../secret]\n---\nPrompt",
         }
         for label, document in invalid_documents.items():
             with self.subTest(label):
@@ -119,7 +124,7 @@ You are a focused analyst.
     def test_agent_name_must_match_file_name(self):
         path = self.write(
             "agent-x.md",
-            "---\nname: agent-y\ndescription: x\nmodel: local\n---\nPrompt",
+            "---\nname: agent-y\ndescription: x\nprofile: local\n---\nPrompt",
         )
         with self.assertRaisesRegex(ValueError, "must match file name"):
             parse_agent_file(path)
@@ -129,7 +134,7 @@ You are a focused analyst.
             with self.subTest(field=field):
                 path = self.write(
                     "agent-x.md",
-                    f"---\nname: agent-x\ndescription: x\nmodel: local\n{field}\n---\nPrompt",
+                    f"---\nname: agent-x\ndescription: x\nprofile: local\n{field}\n---\nPrompt",
                 )
                 with self.assertRaises(Exception) as raised:
                     parse_agent_file(path)
@@ -145,7 +150,7 @@ You are a focused analyst.
         )
         self.write(
             "agents/agent-x.md",
-            "---\nname: agent-x\ndescription: x\nmodel: worker\n---\nPrompt",
+            "---\nname: agent-x\ndescription: x\nprofile: worker\n---\nPrompt",
         )
         clients = []
         with self.assertRaises(ValueError) as raised:
@@ -161,124 +166,36 @@ You are a focused analyst.
         self.assertNotIn("SENTINEL_SECRET_UNSUPPORTED", message)
         self.assertEqual(clients, [])
 
+    def write_catalog(self, **limits):
+        self.write("model.properties", "[profile:local]\nprovider = hosted_vllm\nmodel = local-model\napi_key_env = VLLM_API_KEY\n")
+        self.write("control/lead.md", "---\nname: lead\ndescription: Plan\nprofile: local\ntools: []\nskills: []\n---\nLead instructions")
+        values = dict(max_steps=6, max_input_chars=8000, max_task_chars=2000, max_context_chars=8000) | limits
+        self.write("runtime.properties", "[app]\nlead_agent = control/lead.md\n[llm]\ntemperature = 0.2\ntop_p = 0.9\ntimeout = 120\n[orchestrator]\n" + "\n".join(f"{k} = {v}" for k,v in values.items()))
+        return self.root / "model.properties"
+
     def test_named_model_profiles_are_loaded(self):
-        path = self.write(
-            "model.properties",
-            """[app]
-lead_model = local
-
-[llm]
-temperature = 0.2
-top_p = 0.9
-max_tokens = 512
-timeout = 120
-
-[orchestrator]
-max_steps = 6
-max_input_chars = 8000
-max_task_chars = 2000
-max_context_chars = 8000
-
-[profile:local]
-provider = hosted_vllm
-model = local-model
-base_url = http://127.0.0.1:8000/v1
-api_key_env = VLLM_API_KEY
-""",
-        )
-
-        catalog = load_model_catalog(path)
-
-        self.assertEqual(catalog.lead_model, "local")
-        self.assertEqual(catalog.settings.max_tokens, 512)
-        self.assertEqual(
-            catalog.orchestrator,
-            OrchestratorSettings(
-                max_steps=6,
-                max_input_chars=8000,
-                max_task_chars=2000,
-                max_context_chars=8000,
-            ),
-        )
+        catalog = load_model_catalog(self.write_catalog())
+        self.assertEqual(catalog.lead_profile, "local")
+        self.assertIsNone(catalog.settings.max_tokens)
+        self.assertEqual(catalog.orchestrator.max_steps, 6)
         self.assertEqual(catalog.profiles["local"].provider, "hosted_vllm")
-        self.assertEqual(catalog.profiles["local"].api_key_env, "VLLM_API_KEY")
 
     def test_orchestrator_limits_must_be_positive(self):
-        template = """[app]
-lead_model = local
-[llm]
-temperature = 0.2
-top_p = 0.9
-max_tokens = 512
-timeout = 120
-[orchestrator]
-max_steps = {max_steps}
-max_input_chars = {max_input_chars}
-max_task_chars = {max_task_chars}
-max_context_chars = {max_context_chars}
-[profile:local]
-provider = hosted_vllm
-model = SENTINEL_UNRELATED_MODEL
-api_key_env = VLLM_API_KEY
-"""
-        valid = {
-            "max_steps": 6,
-            "max_input_chars": 8000,
-            "max_task_chars": 2000,
-            "max_context_chars": 8000,
-        }
-        for field in valid:
+        for field in ("max_steps", "max_input_chars", "max_task_chars", "max_context_chars"):
             for value in (0, -1):
-                with self.subTest(field=field, value=value):
-                    values = valid | {field: value}
-                    path = self.write("model.properties", template.format(**values))
-                    with self.assertRaises(ConfigurationError) as raised:
-                        load_model_catalog(path)
-                    self.assertNotIn("SENTINEL_UNRELATED_MODEL", str(raised.exception))
+                with self.subTest(field=field, value=value), self.assertRaises(ConfigurationError):
+                    load_model_catalog(self.write_catalog(**{field: value}))
 
     def test_orchestrator_section_is_required(self):
-        path = self.write(
-            "model.properties",
-            """[app]
-lead_model = local
-[llm]
-temperature = 0.2
-top_p = 0.9
-max_tokens = 512
-timeout = 120
-[profile:local]
-provider = hosted_vllm
-model = SENTINEL_UNRELATED_MODEL
-api_key_env = VLLM_API_KEY
-""",
-        )
-
-        with self.assertRaises(ConfigurationError) as raised:
-            load_model_catalog(path)
-
-        self.assertNotIn("SENTINEL_UNRELATED_MODEL", str(raised.exception))
+        path = self.write_catalog()
+        runtime = self.root / "runtime.properties"
+        runtime.write_text(runtime.read_text().split("[orchestrator]")[0])
+        with self.assertRaises(ConfigurationError): load_model_catalog(path)
 
     def test_lead_profile_must_exist(self):
-        path = self.write(
-            "model.properties",
-            """[app]
-lead_model = missing
-[llm]
-temperature = 0.2
-top_p = 0.9
-max_tokens = 512
-timeout = 120
-[orchestrator]
-max_steps = 6
-max_input_chars = 8000
-max_task_chars = 2000
-max_context_chars = 8000
-[profile:local]
-provider = hosted_vllm
-model = local-model
-api_key_env = VLLM_API_KEY
-""",
-        )
+        path = self.write_catalog()
+        lead = self.root / "control/lead.md"
+        lead.write_text(lead.read_text().replace("profile: local", "profile: missing"))
         with self.assertRaisesRegex(ValueError, "Unknown lead model profile"):
             load_model_catalog(path)
 
@@ -288,23 +205,23 @@ class RegistryTest(TemporaryFilesTestCase):
         self.assertFalse((main.BASE_DIR / ".env.example").exists())
 
         expected = {
-            "agent-u": ((), ("planning",)),
-            "agent-v": (("search_documents",), ("evidence-search",)),
-            "agent-w": (("search_documents",), ("evidence-search",)),
-            "agent-x": ((), ("answer-review",)),
-            "agent-y": ((), ("answer-synthesis",)),
-            "agent-z": ((), ("requirements-analysis",)),
+            "execution-planner": ((), ("planning",)),
+            "technical-document-researcher": (("search_documents",), ("evidence-search",)),
+            "policy-procedure-researcher": (("search_documents",), ("evidence-search",)),
+            "answer-reviewer": ((), ("answer-review",)),
+            "answer-synthesizer": ((), ("answer-synthesis",)),
+            "requirements-analyst": ((), ("requirements-analysis",)),
         }
 
         for name, (tools, skills) in expected.items():
             with self.subTest(agent=name):
                 config = parse_agent_file(main.BASE_DIR / "agents" / f"{name}.md")
                 self.assertEqual(config.name, name)
-                self.assertEqual(config.model, "local")
+                self.assertEqual(config.profile, "openrouter")
                 self.assertEqual(config.tools, tools)
                 self.assertEqual(config.skills, skills)
 
-        for name in ("agent-v", "agent-w"):
+        for name in ("technical-document-researcher", "policy-procedure-researcher"):
             with self.subTest(researcher=name):
                 prompt = parse_agent_file(
                     main.BASE_DIR / "agents" / f"{name}.md"
@@ -326,10 +243,10 @@ class RegistryTest(TemporaryFilesTestCase):
         )
         self.assertEqual(result.returncode, 0, result.stderr)
 
-    def agent_file(self, name: str, *, model: str = "local", tools: str = "[]", skills: str = "[]") -> Path:
+    def agent_file(self, name: str, *, profile: str = "local", tools: str = "[]", skills: str = "[]") -> Path:
         return self.write(
             f"agents/{name}.md",
-            f"---\nname: {name}\ndescription: Handles {name}.\nmodel: {model}\ntools: {tools}\nskills: {skills}\n---\nPrompt for {name}.",
+            f"---\nname: {name}\ndescription: Handles {name}.\nprofile: {profile}\ntools: {tools}\nskills: {skills}\n---\nPrompt for {name}.",
         )
 
     def test_registry_loads_sorted_agents_and_exposes_only_summaries(self):
@@ -338,10 +255,10 @@ class RegistryTest(TemporaryFilesTestCase):
 
         registry = AgentRegistry.load(
             self.root / "agents",
-            models={"local"},
+            profiles={"local"},
             tools={},
             skills={},
-        )
+         settings=LLMSettings(temperature=.2, top_p=.9, timeout=600))
 
         summaries = registry.summaries()
         self.assertEqual([item.name for item in summaries], ["agent-x", "agent-z"])
@@ -352,7 +269,7 @@ class RegistryTest(TemporaryFilesTestCase):
         duplicate = AgentConfig(
             name="agent-x",
             description="x",
-            model="local",
+            profile="local",
             system_prompt="prompt",
             source=Path("agent-x.md"),
         )
@@ -360,7 +277,7 @@ class RegistryTest(TemporaryFilesTestCase):
             AgentRegistry([duplicate, duplicate])
 
         cases = {
-            "model": {"model": "missing"},
+            "profile": {"profile": "missing"},
             "tool": {"tools": "[missing]"},
             "skill": {"skills": "[missing]"},
         }
@@ -370,20 +287,20 @@ class RegistryTest(TemporaryFilesTestCase):
                 with self.assertRaisesRegex(ValueError, "unknown"):
                     AgentRegistry.load(
                         self.root / "agents",
-                        models={"local"},
+                        profiles={"local"},
                         tools={},
                         skills={},
-                    )
+                     settings=LLMSettings(temperature=.2, top_p=.9, timeout=600))
 
     def test_registry_rejects_empty_directory_and_unknown_agent(self):
         (self.root / "agents").mkdir()
         with self.assertRaisesRegex(ValueError, "No agent configurations"):
-            AgentRegistry.load(self.root / "agents", models={"local"}, tools={}, skills={})
+            AgentRegistry.load(self.root / "agents", profiles={"local"}, tools={}, skills={}, settings=LLMSettings(temperature=.2, top_p=.9, timeout=600))
 
         config = AgentConfig(
             name="agent-x",
             description="x",
-            model="local",
+            profile="local",
             system_prompt="prompt",
             source=Path("agent-x.md"),
         )
@@ -398,7 +315,7 @@ class RegistryTest(TemporaryFilesTestCase):
             patch.object(Path, "glob", side_effect=OSError("enumeration denied")),
             self.assertRaises(Exception) as raised,
         ):
-            AgentRegistry.load(root, models={"local"}, tools={}, skills={})
+            AgentRegistry.load(root, profiles={"local"}, tools={}, skills={}, settings=LLMSettings(temperature=.2, top_p=.9, timeout=600))
 
         self.assertIsInstance(raised.exception, ConfigurationError)
         self.assertIn(str(root), str(raised.exception))
@@ -454,10 +371,54 @@ class RegistryTest(TemporaryFilesTestCase):
 
 
 class RuntimeTest(unittest.TestCase):
+    def test_openrouter_profile_preserves_model_and_routes_to_openrouter(self):
+        catalog = load_model_catalog(main.BASE_DIR / "model.properties")
+        self.assertEqual(catalog.lead_profile, "openrouter")
+        factory = LLMFactory(catalog, environ={"OPENROUTER_API_KEY": "test"})
+        names = {catalog.lead_profile} | {
+            parse_agent_file(path).profile for path in (main.BASE_DIR / "agents").glob("*.md")
+        }
+        factory.validate(names)
+        self.assertEqual(names, {"openrouter"})
+        client = factory("openrouter")
+        self.assertTrue(client.stream)
+        self.assertEqual(client.model, catalog.profiles["openrouter"].model)
+        self.assertEqual(str(client._get_sync_client().base_url), "https://openrouter.ai/api/v1/")
+        self.assertEqual(client._get_sync_client().api_key, "test")
+        params = client._prepare_completion_params([{"role": "user", "content": "test"}])
+        self.assertNotIn("max_tokens", params)
+        self.assertNotIn("max_completion_tokens", params)
+
+    def test_no_profile_imposes_a_generation_budget(self):
+        catalog = load_model_catalog(main.BASE_DIR / "model.properties")
+        for name in ("openai", "anthropic"):
+            catalog.profiles[name] = catalog.profiles[name].model_copy(update={"allow_paid": True})
+        factory = LLMFactory(catalog, environ={
+            profile.api_key_env: "test" for profile in catalog.profiles.values()
+        }, client_factory=lambda **values: values)
+        for name in catalog.profiles:
+            with self.subTest(profile=name):
+                self.assertEqual(factory(name)["max_tokens"], None)
+
+    def test_direct_paid_profiles_require_explicit_opt_in(self):
+        catalog = load_model_catalog(main.BASE_DIR / "model.properties")
+        factory = LLMFactory(catalog, environ={
+            "OPENAI_API_KEY": "test", "ANTHROPIC_API_KEY": "test",
+        }, client_factory=lambda **values: values)
+        for name in ("openai", "anthropic"):
+            with self.subTest(profile=name), self.assertRaisesRegex(ConfigurationError, "allow_paid = true"):
+                factory.validate({name})
+
+    def test_profile_rejects_invalid_token_budget(self):
+        for value in (0, -1, "invalid"):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                ModelProfile(provider="openai", model="test", api_key_env="TEST_KEY",
+                             max_tokens=value)
+
     def catalog(self) -> ModelCatalog:
         return ModelCatalog(
-            lead_model="local",
-            settings=LLMSettings(temperature=0.2, top_p=0.9, max_tokens=512, timeout=120),
+            lead=AgentConfig(name="lead", description="Lead", profile="local", system_prompt="Lead", source=Path("lead.md")),
+            settings=LLMSettings(temperature=0.2, top_p=0.9, timeout=120, max_tokens=512),
             orchestrator=OrchestratorSettings(
                 max_steps=6,
                 max_input_chars=8000,
@@ -505,14 +466,14 @@ class RuntimeTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "VLLM_API_KEY"):
             factory.validate({"local"})
 
-    def test_worker_applies_selected_config_and_returns_raw_output(self):
+    def test_worker_applies_selected_config_and_returns_structured_output(self):
         calls = {}
 
         class FakeOutput:
-            raw = "worker answer"
+            pydantic = WorkerOutput(kind="EXPLANATION", content="worker answer")
 
         class FakeAgent:
-            def kickoff(self, task):
+            def kickoff(self, task, response_format=None):
                 calls["task"] = task
                 return FakeOutput()
 
@@ -520,17 +481,18 @@ class RuntimeTest(unittest.TestCase):
             calls["agent"] = values
             return FakeAgent()
 
-        config = AgentConfig(
+        config = ResolvedAgentConfig(
+            settings=LLMSettings(temperature=.2, top_p=.9, timeout=120),
             name="agent-x",
             description="analysis",
-            model="local",
+            profile="local",
             tools=("search",),
             skills=("review",),
             system_prompt="System X",
             source=Path("agent-x.md"),
         )
         worker = CrewAIWorker(
-            llm_factory=lambda profile: f"llm:{profile}",
+            llm_factory=lambda profile, settings: f"llm:{profile}",
             tools={"search": "search-tool"},
             skills={"review": "review-skill"},
             logger=logging.getLogger("test.worker"),
@@ -539,7 +501,7 @@ class RuntimeTest(unittest.TestCase):
 
         result = worker.run(config, "Investigate issue")
 
-        self.assertEqual(result, "worker answer")
+        self.assertEqual(result.content, "worker answer")
         self.assertEqual(calls["task"], "Investigate issue")
         self.assertEqual(calls["agent"]["llm"], "llm:local")
         self.assertEqual(calls["agent"]["tools"], ["search-tool"])
@@ -554,20 +516,21 @@ class RuntimeTest(unittest.TestCase):
             def __init__(self, **values):
                 calls["agent"] = values
 
-            def kickoff(self, task):
-                return "worker answer"
+            def kickoff(self, task, response_format=None):
+                return SimpleNamespace(pydantic=WorkerOutput(kind="EXPLANATION", content="worker answer"))
 
-        config = AgentConfig(
+        config = ResolvedAgentConfig(
+            settings=LLMSettings(temperature=.2, top_p=.9, timeout=120),
             name="agent-x",
             description="analysis",
-            model="local",
+            profile="local",
             tools=("search_documents",),
             skills=("review",),
             system_prompt="System X",
             source=Path("agent-x.md"),
         )
         worker = CrewAIWorker(
-            llm_factory=lambda profile: f"llm:{profile}",
+            llm_factory=lambda profile, settings: f"llm:{profile}",
             tools={},
             skills={"review": "review-skill"},
             logger=logging.getLogger("test.worker"),
@@ -590,7 +553,7 @@ class TaskToolTest(unittest.TestCase):
             AgentConfig(
                 name="agent-x",
                 description="analysis",
-                model="local",
+                profile="local",
                 system_prompt="System X",
                 source=Path("agent-x.md"),
             )
@@ -600,13 +563,13 @@ class TaskToolTest(unittest.TestCase):
         calls = []
         tool = TaskTool(
             registry=self.registry(),
-            worker=lambda config, task: calls.append((config, task)) or "worker answer",
+            worker=lambda config, task: calls.append((config, task)) or WorkerOutput(kind="EXPLANATION",content="worker answer"),
             logger=logging.getLogger("test.tool"),
         )
 
         result = tool.run(agent_name="agent-x", task="Focused task")
 
-        self.assertEqual(result, "worker answer")
+        self.assertEqual(result.content, "worker answer")
         self.assertEqual(calls[0][0].system_prompt, "System X")
         self.assertEqual(calls[0][1], "Focused task")
 
@@ -662,58 +625,14 @@ class OrchestratorTest(unittest.TestCase):
             max_context_chars=8000,
         )
 
-    def test_tool_free_lead_plans_then_synthesizes_empty_plan(self):
-        calls = {"prompts": []}
-        test = self
-
-        class FakeAgent:
-            def kickoff(self, prompt, response_format=None):
-                calls["prompts"].append(prompt)
-                if len(calls["prompts"]) == 1:
-                    test.assertIs(response_format, ExecutionPlan)
-                    return type("PlanOutput", (), {"pydantic": ExecutionPlan(steps=())})()
-                test.assertIsNone(response_format)
-                return type("Answer", (), {"raw": "direct answer"})()
-
-        def agent_factory(**values):
-            calls["agent"] = values
-            return FakeAgent()
-
-        registry = AgentRegistry([
-            AgentConfig(
-                name="agent-x",
-                description="Handles analysis.",
-                model="local",
-                tools=("private-tool",),
-                system_prompt="PRIVATE SYSTEM PROMPT",
-                source=Path("agent-x.md"),
-            )
-        ])
-        task_tool = object()
-        orchestrator = Orchestrator(
-            lead_llm="lead-llm",
-            registry=registry,
-            task_tool=task_tool,
-            search=lambda query, k: self.fail("Empty plan must not search"),
-            settings=self.settings,
-            logger=logging.getLogger("test.lead"),
-            agent_factory=agent_factory,
-        )
-
-        result = orchestrator.answer("  Complex question  ")
-
-        self.assertEqual(result, "direct answer")
-        self.assertEqual(len(calls["prompts"]), 2)
-        self.assertIn("Complex question", calls["prompts"][0])
-        self.assertIn("compact JSON", calls["prompts"][0])
-        self.assertIn("Close every array and object", calls["prompts"][0])
-        self.assertIn("depends_on, and retrieval", calls["prompts"][0])
-        self.assertIn("Complex question", calls["prompts"][1])
-        self.assertIn("agent-x: Handles analysis.", calls["agent"]["backstory"])
-        self.assertNotIn("PRIVATE SYSTEM PROMPT", calls["agent"]["backstory"])
-        self.assertNotIn("private-tool", calls["agent"]["backstory"])
-        self.assertEqual(calls["agent"]["tools"], [])
-        self.assertFalse(calls["agent"]["allow_delegation"])
+    def test_lead_has_no_tools_or_generic_catalog(self):
+        calls = {}
+        orchestrator = Orchestrator(lead_llm="lead", registry=TaskToolTest().registry(), task_tool=object(),
+            search=lambda *a, **k: None, settings=self.settings, logger=logging.getLogger("test"),
+            agent_factory=lambda **values: calls.update(values), lead_config=parse_agent_file(Path(__file__).resolve().parents[1]/'control/lead.md'), lead_skills=[])
+        self.assertEqual(calls["tools"], [])
+        self.assertFalse(calls["allow_delegation"])
+        self.assertNotIn("agent-x", calls["backstory"])
 
     def test_orchestrator_rejects_blank_and_oversized_question_before_lead(self):
         test = self
@@ -726,7 +645,7 @@ class OrchestratorTest(unittest.TestCase):
             AgentConfig(
                 name="agent-x",
                 description="analysis",
-                model="local",
+                profile="local",
                 system_prompt="prompt",
                 source=Path("agent-x.md"),
             )
@@ -739,11 +658,11 @@ class OrchestratorTest(unittest.TestCase):
             settings=self.settings,
             logger=logging.getLogger("test.lead"),
             agent_factory=lambda **values: UnusedLead(),
-        )
+         lead_config=parse_agent_file(Path(__file__).resolve().parents[1]/'control/lead.md'), lead_skills=[])
         with self.assertRaisesRegex(ValueError, "Question must not be blank"):
-            orchestrator.answer("   ")
+            orchestrator.answer("   ", context=run_context())
         with self.assertRaisesRegex(ValueError, "Question exceeds"):
-            orchestrator.answer("x" * 8001)
+            orchestrator.answer("x" * 8001, context=run_context())
 
 
 class ApplicationTest(unittest.TestCase):
@@ -752,19 +671,23 @@ class ApplicationTest(unittest.TestCase):
 
         self.assertNotRegex(readme, r"(?m)^HF_TOKEN=\S+")
 
-    def test_compose_defines_offline_gemma_generation_embedding_and_qdrant(self):
+    def test_compose_defaults_to_retrieval_and_embedding_with_local_generation_opt_in(self):
         compose = yaml.safe_load((main.BASE_DIR / "docker-compose.yml").read_text())
-        qdrant = yaml.safe_load((main.BASE_DIR / "compose.databases.yml").read_text())
+        local = yaml.safe_load((main.BASE_DIR / "compose.local.yml").read_text())
 
-        self.assertEqual(compose["include"], ["compose.databases.yml"])
-        self.assertEqual(set(compose["services"]), {"vllm-generation", "tei-embedding"})
-        generation = compose["services"]["vllm-generation"]
+        self.assertEqual(compose["include"], ["compose.local.yml"])
+        self.assertEqual(set(compose["services"]), {"tei-embedding", "qdrant"})
+        self.assertEqual(set(local["services"]), {"vllm-generation"})
+        self.assertNotIn("sqlite", compose["services"])
+        generation = local["services"]["vllm-generation"]
         embedding = compose["services"]["tei-embedding"]
+        self.assertEqual(generation["profiles"], ["local"])
+        self.assertNotIn("profiles", embedding)
         generation_command = generation["command"]
         embedding_command = embedding["command"]
 
         self.assertEqual(generation["image"], "vllm/vllm-openai-cpu:v0.28.0-x86_64")
-        self.assertEqual(generation_command[0], "${GENERATION_MODEL_ID:?set GENERATION_MODEL_ID in .env}")
+        self.assertEqual(generation_command[0], "${GENERATION_MODEL_ID:-google/gemma-3-4b-it}")
         for argument in ("--served-model-name", "local-model", "--dtype", "bfloat16",
                          "--max-model-len", "4096", "--max-num-seqs", "1",
                          "--language-model-only"):
@@ -812,9 +735,10 @@ class ApplicationTest(unittest.TestCase):
         self.assertNotIn("shm_size", embedding)
         self.assertNotIn("cap_add", embedding)
         self.assertEqual(embedding["security_opt"], ["no-new-privileges:true"])
-        self.assertEqual(set(compose["volumes"]), {"huggingface_cache", "vllm_generation_cache"})
+        self.assertEqual(set(compose["volumes"]), {"huggingface_cache", "qdrant_data"})
+        self.assertEqual(set(local["volumes"]), {"vllm_generation_cache"})
 
-        qdrant_service = qdrant["services"]["qdrant"]
+        qdrant_service = compose["services"]["qdrant"]
         self.assertEqual(qdrant_service["mem_limit"], "1g")
         self.assertEqual(qdrant_service["cpus"], 1)
 
@@ -829,12 +753,15 @@ class ApplicationTest(unittest.TestCase):
         clients = []
         agent_calls = []
         searches = []
+        catalog = load_model_catalog(main.BASE_DIR / "model.properties")
+        catalog.profiles["openrouter"] = catalog.profiles["openrouter"].model_copy(
+            update={"model": "test/catalog-sentinel:free"})
 
         class FakeSearchClient:
             def __init__(self, params):
                 self.params = params
 
-            def search(self, query, k):
+            def search(self, query, k, *, scope):
                 searches.append((query, k))
                 return {"documents": []}
 
@@ -843,15 +770,15 @@ class ApplicationTest(unittest.TestCase):
                 self.values = values
                 agent_calls.append(values)
 
-            def kickoff(self, task):
-                return "worker answer"
+            def kickoff(self, task, response_format=None):
+                return SimpleNamespace(pydantic=WorkerOutput(kind="EXPLANATION", content="worker answer"))
 
         orchestrator = main.build_orchestrator(
             Path(__file__).parents[1],
+            model_catalog=catalog,
             environ={
                 "SEARCH_BACKEND": "mock",
-                "VLLM_API_KEY": "test",
-                "ANTHROPIC_API_KEY": "test",
+                "OPENROUTER_API_KEY": "test",
             },
             client_factory=lambda **values: clients.append(values) or "llm",
             agent_factory=FakeAgent,
@@ -859,28 +786,30 @@ class ApplicationTest(unittest.TestCase):
         )
 
         self.assertEqual(orchestrator.lead.values["tools"], [])
-        for name in ("agent-u", "agent-v", "agent-w", "agent-x", "agent-y", "agent-z"):
+        for name in ("execution-planner", "technical-document-researcher", "policy-procedure-researcher", "answer-reviewer", "answer-synthesizer", "requirements-analyst"):
             with self.subTest(agent=name):
-                self.assertIn(f"{name}:", orchestrator.lead.values["backstory"])
+                self.assertNotIn(f"{name}:", orchestrator.lead.values["backstory"])
                 self.assertNotIn(
                     orchestrator.registry.get(name).system_prompt,
                     orchestrator.lead.values["backstory"],
                 )
         self.assertEqual(len(clients), 1)
+        self.assertEqual(clients[0]["model"], "test/catalog-sentinel:free")
         self.assertEqual(
             orchestrator.settings.model_dump(),
             {
                 "max_steps": 6,
-                "max_input_chars": 8000,
-                "max_task_chars": 2000,
-                "max_context_chars": 8000,
+                "max_input_chars": None,
+                "max_task_chars": None,
+                "max_context_chars": None,
             },
         )
-        self.assertEqual(orchestrator.search("needle", 2), {"documents": []})
+        self.assertEqual(orchestrator.search.__self__.params.env["SEARCH_UNLIMITED_TEXT"], "1")
+        self.assertEqual(orchestrator.search("needle", 2, scope=SearchScope(mode="PREPARATION",source_scope_keys=("demo",))), {"documents": []})
         self.assertEqual(searches, [("needle", 2)])
 
-        orchestrator.task_tool.run(agent_name="agent-v", task="technical research")
-        orchestrator.task_tool.run(agent_name="agent-w", task="policy research")
+        orchestrator.task_tool.run(agent_name="technical-document-researcher", task="technical research")
+        orchestrator.task_tool.run(agent_name="policy-procedure-researcher", task="policy research")
 
         self.assertEqual(len(agent_calls), 3)
         for worker_call in agent_calls[1:]:
@@ -901,178 +830,25 @@ class ApplicationTest(unittest.TestCase):
                 tools={"search_documents": object()},
             )
 
-    def test_cli_prints_orchestrator_answer(self):
-        class FakeOrchestrator:
-            def answer(self, question):
-                return f"answer:{question}"
-
-        output = StringIO()
-        with (
-            patch.object(main, "build_orchestrator", return_value=FakeOrchestrator()),
-            patch.object(main.logging, "basicConfig"),
-            redirect_stdout(output),
-        ):
-            exit_code = main.main(["Complex question"])
-
-        self.assertEqual(exit_code, 0)
-        self.assertEqual(output.getvalue(), "answer:Complex question\n")
-
-    def test_cli_hides_execution_error_details(self):
-        sentinel = "SENTINEL_SECRET user question"
-
-        class FakeOrchestrator:
-            def answer(self, question):
-                raise ValueError(sentinel)
-
-        with (
-            patch.object(main, "build_orchestrator", return_value=FakeOrchestrator()),
-            patch.object(main.logging, "basicConfig"),
-            self.assertLogs(main.LOGGER, level="ERROR") as logs,
-        ):
-            exit_code = main.main(["Complex question"])
-
-        output = "\n".join(logs.output)
-        self.assertNotIn(sentinel, output)
-        self.assertEqual(exit_code, 1)
-        self.assertIn("ValueError", output)
-
-    def test_cli_distinguishes_configuration_from_provider_construction_errors(self):
-        real_build_orchestrator = main.build_orchestrator
-
-        def invoke(builder):
-            stdout, stderr = StringIO(), StringIO()
-            with (
-                patch.object(main, "build_orchestrator", new=builder),
-                patch.object(main.logging, "basicConfig"),
-                redirect_stdout(stdout),
-                redirect_stderr(stderr),
-                self.assertLogs(main.LOGGER, level="ERROR") as logs,
-            ):
-                exit_code = main.main(["Complex question"])
-            return exit_code, "\n".join((stdout.getvalue(), stderr.getvalue(), *logs.output))
-
-        with tempfile.TemporaryDirectory() as directory:
-            config_path = Path(directory) / "model.properties"
-            exit_code, output = invoke(
-                lambda: real_build_orchestrator(Path(directory), environ={})
-            )
-        self.assertEqual(exit_code, 2)
-        self.assertIn(str(config_path), output)
-        self.assertIn("file not found", output)
-
-        sentinel = "SENTINEL_PROVIDER_CONSTRUCTOR_SECRET"
-        provider_calls = []
-
-        def provider_factory(**values):
-            provider_calls.append(values)
-            raise ValueError(sentinel)
-
-        exit_code, output = invoke(
-            lambda: real_build_orchestrator(
-                main.BASE_DIR,
-                environ={
-                    "SEARCH_BACKEND": "mock",
-                    "VLLM_API_KEY": "test",
-                    "ANTHROPIC_API_KEY": "test",
-                },
-                client_factory=provider_factory,
+    def test_local_lead_keeps_character_budgets(self):
+        catalog = load_model_catalog(main.BASE_DIR / "model.properties")
+        catalog = catalog.model_copy(update={"lead": catalog.lead.model_copy(update={"profile": "local"})})
+        with patch.object(main, "load_model_catalog", return_value=catalog):
+            orchestrator = main.build_orchestrator(
+                environ={"SEARCH_BACKEND": "mock", "VLLM_API_KEY": "test",
+                         "OPENROUTER_API_KEY": "test"},
+                client_factory=lambda **values: "llm",
                 agent_factory=lambda **values: None,
             )
-        )
+        self.assertEqual(orchestrator.settings, catalog.orchestrator)
+        self.assertNotIn("SEARCH_UNLIMITED_TEXT", orchestrator.search.__self__.params.env)
 
-        self.assertEqual(len(provider_calls), 1)
-        self.assertNotIn(sentinel, output)
-        self.assertEqual(exit_code, 1)
-        self.assertIn("Execution failed: ValueError", output)
+    def test_cli_without_context_stops_before_provider(self):
+        with patch.object(main, "build_orchestrator") as build, redirect_stdout(StringIO()):
+            self.assertEqual(main.main(["Complex question"]), 2)
+        build.assert_not_called()
 
-    def test_cli_classifies_invalid_search_backend_as_safe_configuration_error(self):
-        real_build_orchestrator = main.build_orchestrator
-
-        for environ in ({}, {"SEARCH_BACKEND": ""}, {"SEARCH_BACKEND": " "},
-                        {"SEARCH_BACKEND": "SENTINEL_UNKNOWN"}):
-            with self.subTest(environ=environ):
-                with (
-                    patch.object(
-                        main,
-                        "build_orchestrator",
-                        new=lambda environ=environ: real_build_orchestrator(
-                            main.BASE_DIR, environ=environ,
-                        ),
-                    ),
-                    patch.object(main, "load_dotenv"),
-                    patch.object(main.logging, "basicConfig"),
-                    self.assertLogs(main.LOGGER, level="ERROR") as logs,
-                ):
-                    exit_code = main.main(["Complex question"])
-
-                output = "\n".join(logs.output)
-                self.assertEqual(exit_code, 2)
-                self.assertIn("Invalid search backend", output)
-                self.assertNotIn("SENTINEL_UNKNOWN", output)
-
-    def test_cli_hides_real_crewai_provider_failure_on_all_outputs(self):
-        from crewai.events.event_bus import crewai_event_bus
-        from crewai.events.utils.console_formatter import (
-            set_suppress_console_output,
-            should_suppress_console_output,
-        )
-        from openai.resources.chat.completions import Completions
-
-        sentinel = "SENTINEL_SECRET_PRIVATE_PROMPT"
-        stdout, stderr = StringIO(), StringIO()
-        llm = main.LLM(
-            provider="hosted_vllm",
-            model="local-model",
-            api_key="test",
-            base_url="http://127.0.0.1:8000/v1",
-        )
-
-        class RealCrewAIExecution:
-            def answer(self, question):
-                return llm.call(question, response_model=ExecutionPlan)
-
-        def emit_synchronously(source, event):
-            crewai_event_bus._prepare_event(source, event)
-            crewai_event_bus._call_handlers(
-                source,
-                event,
-                crewai_event_bus._sync_handlers.get(type(event), frozenset()),
-                crewai_event_bus._runtime_state,
-            )
-
-        self.addCleanup(logging.getLogger().setLevel, logging.getLogger().level)
-        self.addCleanup(main.LOGGER.setLevel, main.LOGGER.level)
-        self.addCleanup(set_suppress_console_output, should_suppress_console_output())
-        set_suppress_console_output(False)
-        with (
-            warnings.catch_warnings(),
-            patch.dict(
-                os.environ,
-                {
-                    "CREWAI_DISABLE_TELEMETRY": "true",
-                    "CREWAI_TRACING_ENABLED": "false",
-                },
-            ),
-            patch.object(Completions, "parse", side_effect=ValueError(sentinel)) as provider,
-            patch.object(main, "build_orchestrator", return_value=RealCrewAIExecution()),
-            patch.object(crewai_event_bus, "emit", emit_synchronously),
-            patch.object(main.logging, "basicConfig"),
-            redirect_stdout(stdout),
-            redirect_stderr(stderr),
-            self.assertLogs(level="INFO") as logs,
-        ):
-            warnings.filterwarnings(
-                "ignore",
-                category=DeprecationWarning,
-                module=r"crewai\.",
-            )
-            exit_code = main.main([sentinel])
-            self.assertTrue(crewai_event_bus.flush(timeout=5))
-
-        self.assertEqual(exit_code, 1)
-        self.assertTrue(provider.called, (stdout.getvalue(), stderr.getvalue(), logs.output))
-        self.assertIn("Execution failed: ValueError", "\n".join(logs.output))
-        for name, output in (("stdout", stdout.getvalue()), ("stderr", stderr.getvalue()),
-                             ("logs", "\n".join(logs.output))):
-            with self.subTest(output=name):
-                self.assertNotIn(sentinel, output)
+    def test_cli_forwards_explicit_context(self):
+        with patch("learning.__main__.main", return_value=0) as learning_main:
+            self.assertEqual(main.main(["Question", "--db", "db", "--policy", "policy", "--subject", "learner", "--context", "session"]), 0)
+        self.assertEqual(learning_main.call_args.args[0], ["--db","db","--policy","policy","--subject","learner","--context","session","ask","Question"])

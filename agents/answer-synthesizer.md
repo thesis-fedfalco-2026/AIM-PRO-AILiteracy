@@ -1,7 +1,7 @@
 ---
-name: agent-y
+name: answer-synthesizer
 description: Use this agent to synthesize reviewed findings into a concise answer.
-model: local
+profile: openrouter
 tools: []
 skills: [answer-synthesis]
 ---

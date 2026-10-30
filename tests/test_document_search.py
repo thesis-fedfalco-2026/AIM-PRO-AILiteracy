@@ -1,3 +1,7 @@
+from document_search.contracts import SearchScope, resource_key
+
+TEST_SCOPE = SearchScope(mode="PREPARATION", source_scope_keys=("demo",))
+
 import json
 import traceback
 import unittest
@@ -5,16 +9,30 @@ from unittest.mock import patch
 
 
 class DocumentSearchTest(unittest.TestCase):
+    def test_remote_flow_preserves_full_documents(self):
+        from document_search.backend import build_backend
+
+        document = {"id": "long", "text": "text " * 2000,
+                    "metadata": {"source_scope": "demo", "source": "test", "extra": "preserved"}, "score": 1.0}
+        backend = build_backend(
+            {"SEARCH_BACKEND": "mock", "SEARCH_UNLIMITED_TEXT": "1"},
+            vector_search=lambda vector, k, scope: [document],
+        )
+        self.addCleanup(backend.close)
+        self.assertEqual(backend.search_documents("deployment", scope=TEST_SCOPE), {
+            "documents": [document], "truncated": False,
+        })
+
     def test_mock_deployment_query_returns_literal_synthetic_document(self):
         from document_search.backend import build_backend
 
         backend = build_backend({"SEARCH_BACKEND": "mock"})
         self.addCleanup(backend.close)
-        self.assertEqual(backend.search_documents("deployment", 1), {
+        self.assertEqual(backend.search_documents("deployment", 1, scope=TEST_SCOPE), {
             "documents": [{
                 "id": "mock-technical",
-                "text": "Technical deployment guide: deploy the service with the approved release procedure.",
-                "metadata": {"source": "technical-deployment-guide", "synthetic": True},
+                "text": "Technical deployment guide (synthetic): The approved release procedure is to verify the approved release tag, deploy the service through the approved pipeline, and check the service health endpoint. If the health check fails, roll back to the previous approved release.",
+                "metadata": {"source_scope": "demo", "resource_key": resource_key('technical-deployment-guide', "1"), "source": "technical-deployment-guide", "synthetic": True},
                 "score": 1.0,
             }],
             "truncated": False,
@@ -26,7 +44,7 @@ class DocumentSearchTest(unittest.TestCase):
         backend = build_backend({"SEARCH_BACKEND": "mock"})
         self.addCleanup(backend.close)
         self.assertEqual(
-            backend.search_documents("unmatched", 5),
+            backend.search_documents("unmatched", 5, scope=TEST_SCOPE),
             {"documents": [], "truncated": False},
         )
 
@@ -37,12 +55,12 @@ class DocumentSearchTest(unittest.TestCase):
         backend = build_backend(
             {"SEARCH_BACKEND": "mock"},
             embed=lambda query: events.append(("embed", query)) or [1.0, 0.0],
-            vector_search=lambda vector, k: events.append(("search", vector, k)) or [{
-                "id": "literal", "text": "Literal technical result", "metadata": {"source": "literal"}, "score": 0.5,
+            vector_search=lambda vector, k, scope: events.append(("search", vector, k)) or [{
+                "id": "literal", "text": "Literal technical result", "metadata": {"source_scope": "demo", "source": "literal"}, "score": 0.5,
             }],
         )
         self.addCleanup(backend.close)
-        self.assertEqual(backend.search_documents("deployment", 1)["documents"][0]["id"], "literal")
+        self.assertEqual(backend.search_documents("deployment", 1, scope=TEST_SCOPE)["documents"][0]["id"], "literal")
         self.assertEqual(events, [
             ("embed", "task: search result | query: deployment"),
             ("search", [1.0, 0.0], 1),
@@ -57,7 +75,7 @@ class DocumentSearchTest(unittest.TestCase):
             embed=lambda query: queries.append(query) or [1.0, 0.0],
         )
         self.addCleanup(backend.close)
-        backend.search_documents("task: search result | query: deployment", 1)
+        backend.search_documents("task: search result | query: deployment", 1, scope=TEST_SCOPE)
         self.assertEqual(queries, ["task: search result | query: deployment"])
 
     def test_prefix_only_query_is_rejected_before_embedding(self):
@@ -70,7 +88,7 @@ class DocumentSearchTest(unittest.TestCase):
         )
         self.addCleanup(backend.close)
         with self.assertRaisesRegex(ValueError, "query must not be blank"):
-            backend.search_documents("task: search result | query:   ", 1)
+            backend.search_documents("task: search result | query:   ", 1, scope=TEST_SCOPE)
         self.assertEqual(queries, [])
 
     def test_invalid_inputs_and_untrusted_backend_fail_without_leaking_values(self):
@@ -84,66 +102,66 @@ class DocumentSearchTest(unittest.TestCase):
         for query, k in (("", 1), (" \t", 1), ("topic", 0), ("topic", 21), ("topic", True)):
             with self.subTest(query=query, k=k):
                 with self.assertRaises((ValueError, SearchError)) as raised:
-                    backend.search_documents(query, k)
+                    backend.search_documents(query, k, scope=TEST_SCOPE)
                 self.assertNotIn("SENTINEL_PRIVATE", str(raised.exception))
         with self.assertRaisesRegex(SearchError, "Invalid embedding vector"):
-            backend.search_documents("topic", 1)
+            backend.search_documents("topic", 1, scope=TEST_SCOPE)
 
         for embedding in ([1.0], [1.0, "wrong"], [True, 0.0]):
             with self.subTest(embedding=embedding):
                 invalid_embedding = build_backend({"SEARCH_BACKEND": "mock"}, embed=lambda query: embedding)
                 self.addCleanup(invalid_embedding.close)
                 with self.assertRaisesRegex(SearchError, "Invalid embedding vector"):
-                    invalid_embedding.search_documents("topic", 1)
+                    invalid_embedding.search_documents("topic", 1, scope=TEST_SCOPE)
 
         failing = build_backend(
             {"SEARCH_BACKEND": "mock"},
-            vector_search=lambda vector, k: (_ for _ in ()).throw(RuntimeError("SENTINEL_PRIVATE")),
+            vector_search=lambda vector, k, scope: (_ for _ in ()).throw(RuntimeError("SENTINEL_PRIVATE")),
         )
         self.addCleanup(failing.close)
         with self.assertRaisesRegex(SearchError, "Search failed") as raised:
-            failing.search_documents("deployment", 1)
+            failing.search_documents("deployment", 1, scope=TEST_SCOPE)
         self.assertNotIn("SENTINEL_PRIVATE", str(raised.exception))
 
     def test_malformed_source_and_metadata_are_rejected_safely(self):
         from document_search.backend import SearchError, build_backend
 
-        for metadata in ({"source": 123}, {"source": " \t"}, {}):
+        for metadata in ({"source_scope": "demo", "source": 123}, {"source_scope": "demo", "source": " \t"}, {}):
             with self.subTest(metadata=metadata):
                 backend = build_backend(
                     {"SEARCH_BACKEND": "mock"},
-                    vector_search=lambda vector, k: [{
+                    vector_search=lambda vector, k, scope: [{
                         "id": "bad", "text": "evidence", "metadata": metadata, "score": 1.0,
                     }],
                 )
                 self.addCleanup(backend.close)
                 with self.assertRaisesRegex(SearchError, "Search failed"):
-                    backend.search_documents("deployment", 1)
+                    backend.search_documents("deployment", 1, scope=TEST_SCOPE)
 
         unserializable = build_backend(
             {"SEARCH_BACKEND": "mock"},
-            vector_search=lambda vector, k: [{
-                "id": "bad", "text": "evidence", "metadata": {"source": "source", "value": object()}, "score": 1.0,
+            vector_search=lambda vector, k, scope: [{
+                "id": "bad", "text": "evidence", "metadata": {"source_scope": "demo", "source": "source", "value": object()}, "score": 1.0,
             }],
         )
         self.addCleanup(unserializable.close)
         with self.assertRaisesRegex(SearchError, "Search failed"):
-            unserializable.search_documents("deployment", 1)
+            unserializable.search_documents("deployment", 1, scope=TEST_SCOPE)
 
     def test_response_evidence_is_serialized_within_budget(self):
         from document_search.backend import MAX_RESPONSE_CHARS, build_backend
 
         backend = build_backend(
             {"SEARCH_BACKEND": "mock"},
-            vector_search=lambda vector, k: [{
+            vector_search=lambda vector, k, scope: [{
                 "id": "large-source",
                 "text": "meaningful evidence " * 1000,
-                "metadata": {"source": "large-source", "note": "unneeded " * 1000},
+                "metadata": {"source_scope": "demo", "source": "large-source", "note": "unneeded " * 1000},
                 "score": 1.0,
             }],
         )
         self.addCleanup(backend.close)
-        result = backend.search_documents("deployment", 1)
+        result = backend.search_documents("deployment", 1, scope=TEST_SCOPE)
         self.assertTrue(result["truncated"])
         self.assertEqual(result["documents"][0]["id"], "large-source")
         self.assertTrue(result["documents"][0]["text"].strip())
@@ -252,11 +270,11 @@ class DocumentSearchTest(unittest.TestCase):
                 events.append("http-close")
 
         class QdrantClient:
-            def query_points(self, collection, *, query, limit, with_payload):
+            def query_points(self, collection, *, query, limit, with_payload, query_filter):
                 events.append(("query", collection, query, limit, with_payload))
                 point = type("Point", (), {
                     "id": 7,
-                    "payload": {"text": "Qdrant evidence", "metadata": {"source": "qdrant-source"}},
+                    "payload": {"text": "Qdrant evidence", "metadata": {"source_scope": "demo", "source": "qdrant-source"}},
                     "score": 0.75,
                 })()
                 return type("Result", (), {"points": [point]})()
@@ -278,14 +296,14 @@ class DocumentSearchTest(unittest.TestCase):
             qdrant_factory=lambda **kwargs: QdrantClient(),
             http_client_factory=lambda **kwargs: HttpClient(),
         )
-        result = backend.search_documents("deployment", 1)
+        result = backend.search_documents("deployment", 1, scope=TEST_SCOPE)
         backend.close()
 
         self.assertEqual(result, {
             "documents": [{
                 "id": "7",
                 "text": "Qdrant evidence",
-                "metadata": {"source": "qdrant-source"},
+                "metadata": {"source_scope": "demo", "source": "qdrant-source"},
                 "score": 0.75,
             }],
             "truncated": False,

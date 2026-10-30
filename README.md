@@ -1,13 +1,13 @@
-# CrewAI multi-agent orchestrator
+# Prototipo ALM con agenti CrewAI
 
-This repository runs a fixed local topology: a CrewAI Lead agent, six checked-in
-worker agents, one local vLLM generation service, one local TEI embedding
-service, Qdrant, and short-lived MCP document-search sessions.
+Applicazione locale per gestire un contesto di apprendimento ALM con stato e tracciamento in SQLite. Un agente Lead pianifica i compiti, agenti specializzati producono risposte e il codice verifica autorizzazioni, fonti e risultati. La generazione predefinita usa OpenRouter; la ricerca usa `mock` per prove sintetiche oppure Qdrant e TEI per documenti reali.
 
-## Prerequisites
+- [Metamodello ALM 1.0.0](docs/resources/metamodello-agnostico-apprendimento.json)
+- [Specifica del dominio](docs/resources/2026-10-27-specifica.md)
 
-- Docker Compose 2.20.3 or newer.
-- Python 3 with a virtual environment:
+## Installazione
+
+Servono Python 3 e, solo per la ricerca reale, Docker Compose 2.20.3 o successivo.
 
 ```bash
 python3 -m venv .venv
@@ -15,164 +15,49 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
-- Accepted Hugging Face licenses for `google/gemma-3-4b-it` and
-  `google/embeddinggemma-300m`.
+## Configurazione
 
-## Environment
+Crea `.env` nella radice del progetto. Per la prova con documenti sintetici imposta `OPENROUTER_API_KEY` e `SEARCH_BACKEND=mock`. Questa modalità non richiede Docker. La chiave non va inserita nel repository.
 
-Create `.env` directly with the values for this machine.
+Il Lead e gli agenti specializzati selezionano il profilo nei rispettivi file `control/lead.md` e `agents/*.md`. `model.properties` definisce fornitore, modello e nome della variabile credenziale; `runtime.properties` definisce il Lead, i parametri di generazione e i limiti. Il modello OpenRouter incluso termina in `:free` e non passa automaticamente a un modello a pagamento. Per usarne uno serve `allow_paid = true` nel suo profilo.
 
-| Variable | Status | Example |
-| --- | --- | --- |
-| `GENERATION_MODEL_ID` | required | `google/gemma-3-4b-it` |
-| `EMBEDDING_MODEL_ID` | required | `google/embeddinggemma-300m` |
-| `VLLM_API_KEY` | required | `local-development` |
-| `SEARCH_BACKEND` | required | `mock` |
-| `HF_TOKEN` | provisioning-only | `hf_your_token` |
-| `EMBEDDING_API_KEY` | required when `SEARCH_BACKEND=qdrant` | `local-embedding-development` |
-| `QDRANT_URL` | required when `SEARCH_BACKEND=qdrant` | `http://127.0.0.1:6333` |
-| `QDRANT_API_KEY` | optional, use only when Qdrant is configured with one | `local-qdrant-key` |
-| `QDRANT_COLLECTION` | required when `SEARCH_BACKEND=qdrant` | `documents` |
-| `EMBEDDING_URL` | required when `SEARCH_BACKEND=qdrant` | `http://127.0.0.1:9000/v1/embeddings` |
-| `EMBEDDING_MODEL` | required when `SEARCH_BACKEND=qdrant` | `text-embeddings-inference` |
-| `EMBEDDING_DIMENSIONS` | required when `SEARCH_BACKEND=qdrant` | `768` |
+Per cercare documenti reali imposta `SEARCH_BACKEND=qdrant` e configura le variabili seguenti in `.env`:
 
-`HF_TOKEN` may be present locally for provisioning. It must be absent from
-runtime containers; the Compose services do not pass it through.
+| Variabile | Uso |
+| --- | --- |
+| `EMBEDDING_MODEL_ID` | Modello caricato da TEI, per esempio `google/embeddinggemma-300m` |
+| `QDRANT_URL`, `QDRANT_COLLECTION` | Endpoint e collezione Qdrant |
+| `EMBEDDING_URL`, `EMBEDDING_MODEL` | Endpoint e nome del modello per le richieste embedding |
+| `EMBEDDING_DIMENSIONS`, `EMBEDDING_API_KEY` | Dimensione del vettore e credenziale inviata all'endpoint embedding |
+| `QDRANT_API_KEY` | Facoltativa, solo se Qdrant la richiede |
 
-## One-Time Model Download
+Dopo aver accettato la licenza del modello di embedding, popola una volta la cache condivisa prima dell'avvio offline di TEI
 
-Run this after accepting the model licenses. It populates the shared Hugging
-Face cache volume used later by the offline services:
 
-```bash
-read -rsp "Hugging Face token: " HF_TOKEN && echo
-export HF_TOKEN
-GENERATION_MODEL_ID=google/gemma-3-4b-it \
-EMBEDDING_MODEL_ID=google/embeddinggemma-300m \
-docker compose run --rm --no-deps \
-  -e HF_TOKEN \
-  -e GENERATION_MODEL_ID \
-  -e EMBEDDING_MODEL_ID \
-  -e HF_HUB_OFFLINE=0 \
-  --entrypoint python \
-  vllm-generation \
-  -c 'import os; from huggingface_hub import snapshot_download; [snapshot_download(repo_id=os.environ[name], token=os.environ["HF_TOKEN"]) for name in ("GENERATION_MODEL_ID", "EMBEDDING_MODEL_ID")]'
-unset HF_TOKEN
-```
+`HF_TOKEN` serve solo al caricamento iniziale e non viene passato ai servizi in esecuzione. Avvia i servizi con `docker compose up -d`; TEI ascolta su `127.0.0.1:9000` e Qdrant su `127.0.0.1:6333` (HTTP) e `6334` (gRPC).
 
-## Startup
+Questo progetto **non crea né popola** la collezione Qdrant. Il caricamento dei documenti è esterno: con EmbeddingGemma servono vettori di 768 dimensioni e dati con `text`, `metadata.source` e `metadata.source_scope` per PREPARATION oppure `metadata.resource_key` per LEARNING. In PREPARATION la ricerca richiede un ambito di fonti autorizzato; in LEARNING richiede risorse collegate e approvate, con versioni esatte.
 
-Normal runtime is offline with no `HF_TOKEN`:
+## Flusso locale ALM
+
+I comandi operativi di `python -m learning` richiedono `--db`, `--policy`, `--subject` e `--context` prima del sottocomando. Usa `--help` per vedere `bootstrap`, `propose`, `decide`, `apply`, `abandon`, `ask`, `submit` e `show`.
+
+La CLI è destinata a un operatore locale fidato: `--subject` seleziona un soggetto, **non autentica** una persona da remoto. Proteggi il file policy e il database a livello host. Una risposta generata non approva proposte e non assegna automaticamente progressi al discente.
+
+
+`bootstrap` rifiuta un contesto già presente: usa un nuovo database per ripetere l'esempio. Se `ask` viene interrotto dopo aver riservato `demo-ask-1`, un amministratore autorizzato può eseguire `alm abandon demo-ask-1`; il tentativo successivo richiede un ID nuovo. `submit` registra una risposta osservata, ma una valutazione deve essere proposta, approvata e applicata separatamente.
+
+## Dati e verifica
+
+Il percorso SQLite è sempre quello passato in `--db`; non esiste un database predefinito. L'apertura di un DB schema v1 crea una copia privata `.v1.bak` (o `.v1.N.bak` se esiste già) e lo migra a v2: ferma gli altri processi che scrivono prima dell'apertura. La versione precedente dell'applicazione non legge v2; ripristinare il backup v1 dopo nuove scritture elimina quelle scritture.
+
+I vecchi nomi delle specializzazioni non sono migrati automaticamente: `teacher` → `lesson-explainer`, `trainer` → `guided-practice-coach`, `socratic` → `reasoning-questioner`. Per `curator` scegli `lesson-support-summarizer` in LEARNING o `resource-candidate-researcher` in PREPARATION; per `evaluator` scegli `learner-response-evaluator` in LEARNING o `assessment-designer` in PREPARATION. Aggiorna le specializzazioni con proposta, revisione e applicazione autorizzate, conservando le versioni storiche.
+
+`docker compose down` conserva i volumi. **`docker compose down -v` elimina anche i dati Qdrant e le cache dei modelli**: non usarlo senza aver salvato i dati necessari.
 
 ```bash
-docker compose up -d
+.venv/bin/python -m unittest discover -q
+.venv/bin/python smoke.py --runs 1
 ```
 
-The vLLM generation service listens on `127.0.0.1:8000`, the TEI embedding
-service on `127.0.0.1:9000`, Qdrant HTTP on `127.0.0.1:6333`, and Qdrant gRPC
-on `127.0.0.1:6334`.
-
-## Run
-
-```bash
-.venv/bin/python main.py "Plan a reliable document-processing service"
-```
-
-## Orchestration Flow
-
-The Lead produces a structured plan, the application validates it, the
-Orchestrator invokes MCP retrieval for approved retrieval steps, `TaskTool`
-runs one worker at a time with supplied context, and the Lead synthesizes the
-final answer from worker results.
-
-The Lead is only the logical requester of retrieval. The technical invoker is
-the Orchestrator, which opens a short MCP stdio session for each retrieval via
-`python -m document_search.server`, passes only the allowed search environment,
-and closes that session after the result.
-
-`agent-v` and `agent-w` keep `tools: [search_documents]` only as authorization
-metadata. Their prompts analyze retrieved context supplied in the task. The
-other four workers declare `tools: []`.
-
-## Retrieval Prompts
-
-EmbeddingGemma query text is prefixed exactly once as:
-
-```text
-task: search result | query: ...
-```
-
-Documents in an external Qdrant collection should be embedded with:
-
-```text
-title: {title} | text: {content}
-```
-
-When no title exists, use:
-
-```text
-title: none | text: {content}
-```
-
-The external collection must use 768-dimensional vectors for
-`google/embeddinggemma-300m`. This project never populates Qdrant; create and
-load that collection outside this repository. Stored payloads must include
-nonblank `text` and `metadata.source` fields so workers can cite sources.
-
-## Limitations
-
-The `mock` backend is synthetic and local. It is useful for tests and smoke
-checks, not for real evidence.
-
-Qdrant mode only queries a pre-existing external collection. Missing,
-wrong-dimension, or poorly prompted embeddings will produce poor retrieval.
-
-Runtime limits are generation 8 CPUs and 12 GiB, TEI embedding 2 CPUs and 2.25
-GiB, and Qdrant 1 CPU and 1 GiB. This configuration targets the validated 16
-GiB development machine. Generation remains the dominant memory consumer;
-verify restart and OOM state during the smoke. CPU vLLM may fail or be slow on
-hosts without expected x86_64 CPU features such as AVX2. Worker execution is
-sequential, and the checked-in LLM timeout is 600 seconds.
-
-## Tests And Smoke Checks
-
-Automated tests:
-
-```bash
-.venv/bin/python -m unittest discover -v
-```
-
-Manual smoke checks:
-
-```bash
-docker compose ps
-curl --fail http://127.0.0.1:8000/health
-curl --fail http://127.0.0.1:9000/health
-curl --fail http://127.0.0.1:6333/healthz
-```
-
-Verify TEI returns one real 768-dimensional EmbeddingGemma vector:
-
-```bash
-.venv/bin/python -c 'import json, math, urllib.request; request=urllib.request.Request("http://127.0.0.1:9000/v1/embeddings", data=json.dumps({"input":"task: search result | query: deployment", "model":"text-embeddings-inference"}).encode(), headers={"Content-Type":"application/json"}); vector=json.load(urllib.request.urlopen(request, timeout=120))["data"][0]["embedding"]; assert len(vector) == 768 and all(math.isfinite(value) for value in vector); print("embedding ok: 768 finite values")'
-```
-
-Run the complete orchestrator and MCP flow against synthetic local evidence:
-
-```bash
-SEARCH_BACKEND=mock .venv/bin/python main.py \
-  "Summarize the mock deployment procedure"
-```
-
-This smoke does not validate real Qdrant retrieval because the repository does
-not own collection data. Confirm that the Lead returns a valid structured
-`ExecutionPlan`, the final answer is non-empty, and container logs and state
-show no restart, OOM kill, memory-limit exit, CPU feature failure, missing
-model-cache error, or authentication error.
-
-## Cache Removal
-
-`docker compose down` stops services and keeps caches. `docker compose down -v`
-also deletes the Hugging Face, generation vLLM, and Qdrant volumes; after that,
-models must be downloaded again before offline startup will work.
+I test automatici usano dati sintetici. La prova `smoke.py` chiama davvero il modello OpenRouter gratuito e usa il protocollo MCP, ma seleziona la ricerca `mock`: non verifica la collezione Qdrant, TEI o vLLM locale.

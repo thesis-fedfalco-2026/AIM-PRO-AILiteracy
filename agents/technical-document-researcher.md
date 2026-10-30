@@ -1,7 +1,7 @@
 ---
-name: agent-v
+name: technical-document-researcher
 description: Use this agent to research technical documents, interfaces, and operations.
-model: local
+profile: openrouter
 tools: [search_documents]
 skills: [evidence-search]
 ---

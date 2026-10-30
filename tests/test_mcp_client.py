@@ -1,3 +1,7 @@
+from document_search.contracts import SearchScope, resource_key
+
+TEST_SCOPE = SearchScope(mode="PREPARATION", source_scope_keys=("demo",))
+
 import asyncio
 from pathlib import Path
 import sys
@@ -20,6 +24,16 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class McpClientTest(unittest.TestCase):
+    def test_remote_flow_passes_text_policy_without_forwarding_credentials(self):
+        params = build_document_search_params(
+            ROOT, {"SEARCH_BACKEND": "mock", "OPENROUTER_API_KEY": "private"},
+            unlimited_text=True,
+        )
+        self.assertEqual(params.env, {
+            "LC_ALL": "C", "PYTHONPATH": str(ROOT), "SEARCH_BACKEND": "mock",
+            "SEARCH_UNLIMITED_TEXT": "1",
+        })
+
     def test_params_require_explicit_supported_backend(self):
         for environ in ({}, {"SEARCH_BACKEND": ""}, {"SEARCH_BACKEND": " "},
                         {"SEARCH_BACKEND": "unknown"}):
@@ -90,7 +104,7 @@ class McpClientTest(unittest.TestCase):
             build_document_search_params(ROOT, {"SEARCH_BACKEND": "mock"})
         )
 
-        result = client.search("deployment", 1)
+        result = client.search("deployment", 1, scope=TEST_SCOPE)
 
         document = result["documents"][0]
         self.assertEqual(document["id"], "mock-technical")
@@ -105,7 +119,7 @@ class McpClientTest(unittest.TestCase):
         with self.assertRaisesRegex(
             DocumentSearchError, "^Document search failed$"
         ):
-            client.search("", 1)
+            client.search("", 1, scope=TEST_SCOPE)
 
     def test_invalid_server_output_is_sanitized(self):
         client = DocumentSearchClient(
@@ -119,7 +133,7 @@ class McpClientTest(unittest.TestCase):
             with self.assertRaisesRegex(
                 DocumentSearchError, "^Document search failed$"
             ) as raised:
-                client.search("deployment", 1)
+                client.search("deployment", 1, scope=TEST_SCOPE)
 
         self.assertNotIn("SENTINEL_PRIVATE", str(raised.exception))
 

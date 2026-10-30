@@ -1,3 +1,4 @@
+from agent_system.config import parse_agent_file
 import unittest
 import logging
 from pathlib import Path
@@ -18,7 +19,7 @@ class PlanValidationTest(unittest.TestCase):
             AgentConfig(
                 name="researcher",
                 description="Searches documents.",
-                model="local",
+                profile="local",
                 tools=("search_documents",),
                 system_prompt="Research.",
                 source=Path("researcher.md"),
@@ -26,7 +27,7 @@ class PlanValidationTest(unittest.TestCase):
             AgentConfig(
                 name="writer",
                 description="Writes answers.",
-                model="local",
+                profile="local",
                 system_prompt="Write.",
                 source=Path("writer.md"),
             ),
@@ -148,223 +149,172 @@ class PlanValidationTest(unittest.TestCase):
 
 
 class OrchestrationExecutionTest(unittest.TestCase):
-    def setUp(self):
-        self.events = []
-        self.worker_prompts = {}
-        self.synthesis = []
-        self.settings = OrchestratorSettings(
-            max_steps=6, max_input_chars=8000, max_task_chars=2000,
-            max_context_chars=1000,
-        )
-        self.registry = AgentRegistry([
-            AgentConfig(
-                name=name, description="Specialist", model="local",
-                tools=("search_documents",) if name == "agent-v" else (),
-                system_prompt="PRIVATE", source=Path(f"{name}.md"),
-            )
-            for name in ("agent-v", "agent-x")
-        ])
-
-    def build(self, plan, *, search_error=False, worker_error=False,
-              synthesis_error=False, long_context=False, plan_output=None):
-        test = self
-
+    def build(self, *, failure=None, budget=None, plan_override=None):
+        from dataclasses import replace
+        from learning.outputs import WorkerOutput, LearningResponse, SemanticReview
+        from learning.planning import LearningPlanDraft, Capability
+        from learning.policies import ScopeGrant
+        from tests.test_learning_planning import run_context, draft_step
+        from tests.test_learning_profiles import specialization, registry
+        self.events, self.prompts = [], []
+        capability = Capability(capability='search_documents',accessPath='ORCHESTRATOR_RETRIEVAL',operations=('read',),scope='demo',purpose='Evidence')
+        profile = specialization(capabilities=(capability.model_dump(mode='json'),))
+        context = run_context(profile)
+        root = context.snapshot.context.model_copy(update={'fields':{**context.snapshot.context.fields,'mode':'PREPARATION'}})
+        context = replace(context,snapshot=replace(context.snapshot,context=root),policy=context.policy.model_copy(update={
+            'scopes':{'demo':ScopeGrant(contexts=['session'],subjects=['learner'],sources=['demo'])}}))
+        one = draft_step().model_copy(update={'step':PlanStep(id='one',agent='teacher',task='Find evidence',retrieval=RetrievalRequest(tool='search_documents',query='deployment',k=3)), 'required_capabilities':(capability,)})
+        plan = LearningPlanDraft(steps=(one,draft_step('dependent',depends_on=('one',)),draft_step('independent')))
+        owner=self
         class Lead:
-            def kickoff(self, prompt, response_format=None):
-                if response_format is not None:
-                    test.assertIs(response_format, ExecutionPlan)
-                    return plan_output if plan_output is not None else SimpleNamespace(pydantic=plan)
-                test.events.append(("synthesize",))
-                test.synthesis.append(prompt)
-                if synthesis_error:
-                    raise RuntimeError("synthesis unavailable")
-                return SimpleNamespace(raw="final answer")
+            def kickoff(self,prompt,response_format=None):
+                owner.prompts.append(prompt)
+                if response_format is LearningPlanDraft:
+                    value = plan_override if plan_override is not None else plan
+                elif response_format is SemanticReview:
+                    value = SemanticReview(verdict='ACCEPT',reason='Checked')
+                else:
+                    owner.events.append('synthesis')
+                    if failure == 'synthesis': raise RuntimeError('private provider text')
+                    value = LearningResponse(kind='ANSWER',content='Checked answer')
+                return SimpleNamespace(pydantic=value)
+        def search(query,k,*,scope):
+            owner.events.append('search')
+            if failure == 'search': raise RuntimeError('private source text')
+            owner.assertEqual(scope.source_scope_keys,('demo',))
+            return {'documents':[]}
+        def worker(config,brief):
+            import json
+            data=json.loads(brief.split('\nDATI_TASK\n')[1]); step=data['step_id']
+            owner.events.append(step)
+            if failure == 'worker' and step == 'one': raise RuntimeError('private worker text')
+            return WorkerOutput(kind='EXPLANATION',content='Evidence checked')
+        reg=registry('teacher','trainer',tools=('search_documents',))
+        orchestration=Orchestrator(lead_llm='llm',registry=reg,
+            task_tool=TaskTool(registry=reg,worker=worker,logger=logging.getLogger('test')),
+            search=search,settings=OrchestratorSettings(max_steps=6,max_context_chars=budget),logger=logging.getLogger('test'),
+            agent_factory=lambda **k:Lead(), lead_config=parse_agent_file(Path(__file__).resolve().parents[1]/'control/lead.md'), lead_skills=[])
+        return orchestration,context
 
-        def search(query, k):
-            self.events.append(("search", query, k))
-            if search_error:
-                raise RuntimeError("SECRET retrieval details")
-            return {"backend": "mock", "query": query, "k": k, "hits": [{
-                "id": "doc", "title": "Evidence", "text": "retrieved document "
-                + ("x" * 5000 if long_context else "facts"), "score": 1.0,
-                "source": "fixture", "metadata": {},
-            }]}
+    def test_executes_in_stable_order(self):
+        import json
+        orchestration,context=self.build()
+        self.assertEqual(orchestration.run(context.request,context=context).kind,'ANSWER')
+        self.assertEqual(self.events,['search','one','dependent','independent','synthesis'])
+        lead_data=json.loads(self.prompts[0].split('DATI\n',1)[1])
+        self.assertEqual(lead_data['workers'],[{'name':'teacher','description':'[teacher] teacher'}])
+        self.assertIn('kind ANSWER',next(prompt for prompt in self.prompts if prompt.startswith('SINTESI_FINALE')))
 
-        def worker(config, task):
-            self.events.append(("worker", config.name))
-            self.worker_prompts[config.name] = task
-            if worker_error and config.name == "agent-v":
-                raise RuntimeError("SECRET worker details")
-            return "research result " + ("y" * 5000 if long_context else "facts")
+    def test_lead_prompt_requires_capability_for_retrieval(self):
+        orchestration,context=self.build()
+        orchestration.run(context.request,context=context)
+        instruction=self.prompts[0].split('\nCONTRATTO\n',1)[0]
+        for part in ('retrieval', 'required_capabilities', 'search_documents',
+                     'ORCHESTRATOR_RETRIEVAL', 'read', 'scope', 'ActivityDefinition',
+                     'intent', 'activities vuoto', 'LearningOutcome', 'coverage vuoto'):
+            with self.subTest(part=part):
+                self.assertIn(part,instruction)
 
-        logger = logging.getLogger("test.orchestration")
-        return Orchestrator(
-            lead_llm="lead", registry=self.registry,
-            task_tool=TaskTool(registry=self.registry, worker=worker, logger=logger),
-            search=search, settings=self.settings, logger=logger,
-            agent_factory=lambda **kwargs: Lead(),
-        )
+    def test_plan_and_worker_ids_do_not_collide_when_step_is_named_plan(self):
+        from learning.planning import LearningPlanDraft
+        from tests.test_learning_planning import draft_step
+        orchestration,context=self.build(plan_override=LearningPlanDraft(steps=(draft_step('plan'),)))
+        orchestration.run(context.request,context=context)
+        ids=[record.id for record in orchestration.last_records]
+        self.assertEqual(len(ids),len(set(ids)))
 
-    def plan(self, *, independent=False, retrieval=True):
-        steps = [
-            PlanStep(id="review", agent="agent-x", task="Review research.",
-                     depends_on=("research",)),
-            PlanStep(id="research", agent="agent-v", task="Find evidence.",
-                     retrieval=RetrievalRequest(tool="search_documents",
-                                                query="technical query", k=3)
-                     if retrieval else None),
-        ]
-        if independent:
-            steps.append(PlanStep(id="independent", agent="agent-x", task="Separate analysis."))
-        return ExecutionPlan(steps=tuple(steps))
+    def test_preparation_teacher_retrieval_does_not_create_resource_proposal(self):
+        orchestration,context=self.build()
+        orchestration.search=lambda *args, **kwargs: {'documents':[{'text':'Source text','metadata':{
+            'source_scope':'demo','resource_key':'["source","1"]','source':'demo-document'}}]}
+        self.assertEqual(orchestration.run(context.request,context=context).kind,'ANSWER')
+        self.assertEqual(orchestration.last_proposals,[])
 
-    def test_executes_dependencies_in_order_and_bounds_untrusted_context(self):
-        orchestrator = self.build(self.plan(), long_context=True)
+    def test_preparation_citations_work_without_granting_resource_proposal_role(self):
+        from dataclasses import replace
+        import json
+        from learning.outputs import Citation, LearningResponse, ProposedChange, SemanticReview, WorkerOutput
+        from learning.planning import Capability, LearningPlanDraft, LearningStepDraft
+        from learning.policies import ScopeGrant
+        from tests.learning_fixtures import record, ref
+        from tests.test_learning_planning import run_context
+        from tests.test_learning_profiles import specialization
 
-        self.assertEqual(orchestrator.answer("Question"), "final answer")
-
-        self.assertEqual(self.events, [
-            ("search", "technical query", 3), ("worker", "agent-v"),
-            ("worker", "agent-x"), ("synthesize",),
-        ])
-        self.assertIn("retrieved document", self.worker_prompts["agent-v"])
-        self.assertIn("research result", self.worker_prompts["agent-x"])
-        for prompt in self.worker_prompts.values():
-            self.assertLessEqual(len(prompt), 1000)
-            self.assertIn("untrusted", prompt.lower())
-            self.assertTrue(prompt.endswith("\n[context truncated]"))
-        self.assertLessEqual(len(self.synthesis[0]), 1000)
-        self.assertIn("untrusted", self.synthesis[0].lower())
-        self.assertIn("[context truncated]", self.synthesis[0])
-        self.assertTrue(self.synthesis[0].endswith("\nQuestion:\nQuestion"))
-
-    def test_entire_plan_is_validated_before_search_or_worker(self):
-        cases = (
-            PlanStep(id="bad", agent="agent-x", task="Unauthorized search.",
-                     retrieval=RetrievalRequest(tool="search_documents", query="q", k=3)),
-            PlanStep(id="bad", agent="missing", task="Unknown worker."),
-            PlanStep(id="bad", agent="agent-x", task="Unknown dependency.",
-                     depends_on=("missing",)),
-        )
-        for step in cases:
-            with self.subTest(step=step.task):
-                plan = ExecutionPlan(steps=(
-                    PlanStep(id="valid", agent="agent-v", task="Run first."), step,
-                ))
-                with self.assertRaises(ValueError):
-                    self.build(plan).answer("Question")
-                self.assertEqual(self.events, [])
-
-    def test_rejects_missing_wrong_and_free_form_plans(self):
-        class DerivedPlan(ExecutionPlan):
-            pass
-
-        for output in (
-            SimpleNamespace(raw='{"steps": []}'),
-            SimpleNamespace(pydantic={"steps": []}),
-            SimpleNamespace(pydantic=DerivedPlan()),
+        capability = Capability(capability='search_documents', accessPath='ORCHESTRATOR_RETRIEVAL',
+            operations=('read',), scope='demo', purpose='Prepare from sources')
+        citation = Citation(source=ref('Resource', 'source'), supportedClaim='Source supports this design')
+        evidence = {'documents': [{'text': 'Source text', 'metadata': {
+            'source_scope': 'demo', 'resource_key': '["source","1"]', 'source': 'demo-document'}}]}
+        for role, name, intent, automatic_proposals in (
+            ('EVALUATOR', 'assessment-designer', 'ASSESS', 0),
+            ('CURATOR', 'resource-candidate-researcher', 'CURATE', 1),
         ):
-            with self.subTest(output=output):
-                with self.assertRaisesRegex(OrchestrationError, "^Lead returned an invalid execution plan$"):
-                    self.build(ExecutionPlan(), plan_output=output).answer("Question")
-                self.assertEqual(self.events, [])
+            with self.subTest(worker=name):
+                profile = specialization(role, name, (capability.model_dump(mode='json'),))
+                context = run_context(profile, intent=intent)
+                root = context.snapshot.context.model_copy(update={'fields': {
+                    **context.snapshot.context.fields, 'mode': 'PREPARATION', 'status': 'DRAFT'}})
+                context = replace(context, snapshot=replace(context.snapshot, context=root),
+                    policy=context.policy.model_copy(update={'scopes': {
+                        'demo': ScopeGrant(contexts=['session'], subjects=['learner'], sources=['demo'])}}))
+                draft = LearningPlanDraft(steps=(LearningStepDraft(
+                    step=PlanStep(id='prepare', agent=name, task='Prepare from sources',
+                        retrieval=RetrievalRequest(tool='search_documents', query='topic', k=1)),
+                    specialization=profile.ref, intent=intent, expected_output='CHANGE_PROPOSAL',
+                    required_capabilities=(capability,)),))
+                candidate = record('Topic', 'topic', {'name': 'Revised', 'definition': 'Proposal'}, '2')
+                proposal = ProposedChange(targets=(candidate.ref.model_copy(update={'version': '1'}),),
+                    candidates=(candidate,), explanation='Reviewed proposal')
+                briefs = []
+                class Lead:
+                    def kickoff(self, prompt, response_format=None):
+                        value = (draft if response_format is LearningPlanDraft else
+                            SemanticReview(verdict='ACCEPT', reason='Checked') if response_format is SemanticReview else
+                            LearningResponse(kind='ANSWER', content='Prepared design', citations=(citation,)))
+                        return SimpleNamespace(pydantic=value)
+                def worker(config, brief):
+                    briefs.append(json.loads(brief.split('\nDATI_TASK\n', 1)[1]))
+                    return WorkerOutput(kind='CHANGE_PROPOSAL', content='Prepared design',
+                        citations=(citation,), proposals=(proposal,))
+                reg = AgentRegistry((parse_agent_file(Path(__file__).resolve().parents[1]/'agents'/f'{name}.md'),))
+                orchestration = Orchestrator(lead_llm='offline', registry=reg,
+                    task_tool=TaskTool(registry=reg, worker=worker, logger=logging.getLogger('test')),
+                    search=lambda *a, **k: evidence, settings=OrchestratorSettings(max_steps=6),
+                    logger=logging.getLogger('test'), agent_factory=lambda **k: Lead(),
+                    lead_config=parse_agent_file(Path(__file__).resolve().parents[1]/'control/lead.md'), lead_skills=[])
+                response = orchestration.run(context.request, context=context)
+                self.assertEqual(response.kind, 'ANSWER')
+                self.assertEqual(response.citations, (citation,))
+                self.assertEqual(briefs[0]['source_refs'], [
+                    {'ref': ref('Resource', 'source'), 'resource_key': '["source","1"]'}])
+                self.assertEqual(len(orchestration.last_proposals), 1 + automatic_proposals)
+                self.assertEqual(orchestration.last_proposals[0][1], proposal)
+                if automatic_proposals:
+                    self.assertEqual(orchestration.last_proposals[1][1].candidates[0].ref, citation.source)
 
-    def test_retrieval_failure_skips_worker_and_dependents_but_runs_independent(self):
-        orchestrator = self.build(self.plan(independent=True), search_error=True)
-        with self.assertLogs("test.orchestration", level="ERROR") as captured:
-            self.assertEqual(orchestrator.answer("Question"), "final answer")
+    def test_retrieval_failure_skips_dependent_but_runs_independent(self):
+        orchestration,context=self.build(failure='search')
+        self.assertEqual(orchestration.run(context.request,context=context).kind,'PARTIAL_RESULT')
+        self.assertEqual(self.events,['search','independent','synthesis'])
 
-        self.assertEqual(self.events, [
-            ("search", "technical query", 3), ("worker", "agent-x"), ("synthesize",),
-        ])
-        self.assert_safe_partial_failure("retrieval_failed", captured.output)
+    def test_worker_failure_skips_dependent_but_runs_independent(self):
+        orchestration,context=self.build(failure='worker')
+        self.assertEqual(orchestration.run(context.request,context=context).kind,'PARTIAL_RESULT')
+        self.assertEqual(self.events,['search','one','independent','synthesis'])
+        self.assertNotIn('private worker text',self.prompts[-1])
 
-    def test_worker_failure_skips_dependents_but_runs_independent(self):
-        orchestrator = self.build(self.plan(independent=True, retrieval=False), worker_error=True)
-        with self.assertLogs("test.orchestration", level="ERROR") as captured:
-            self.assertEqual(orchestrator.answer("Question"), "final answer")
+    def test_wrong_plan_never_reaches_tools(self):
+        orchestration,context=self.build(plan_override=ExecutionPlan())
+        self.assertEqual(orchestration.run(context.request,context=context).kind,'FAILURE')
+        self.assertEqual(self.events,[])
 
-        self.assertEqual(self.events, [
-            ("worker", "agent-v"), ("worker", "agent-x"), ("synthesize",),
-        ])
-        self.assert_safe_partial_failure("worker_failed", captured.output)
+    def test_synthesis_failure_is_safe_failure(self):
+        orchestration,context=self.build(failure='synthesis')
+        result=orchestration.run(context.request,context=context)
+        self.assertEqual(result.kind,'FAILURE')
+        self.assertNotIn('private',result.content)
 
-    def assert_safe_partial_failure(self, label, logs):
-        context = self.synthesis[0]
-        for expected in ("research: failed", "review: skipped", "independent: success",
-                         label, "dependency_failed", "research result"):
-            self.assertIn(expected, context)
-        self.assertNotIn("SECRET", context)
-        self.assertNotIn("SECRET", " ".join(logs))
-
-    def test_all_failures_raise_without_synthesis(self):
-        for retrieval in (True, False):
-            with self.subTest(retrieval=retrieval):
-                self.events.clear()
-                orchestrator = self.build(self.plan(retrieval=retrieval),
-                                          search_error=retrieval, worker_error=not retrieval)
-                with self.assertLogs("test.orchestration", level="ERROR"):
-                    with self.assertRaisesRegex(OrchestrationError, "^All plan steps failed$"):
-                        orchestrator.answer("Question")
-                self.assertNotIn(("synthesize",), self.events)
-                self.assertNotIn(("worker", "agent-x"), self.events)
-
-    def test_synthesis_exception_propagates(self):
-        with self.assertRaisesRegex(RuntimeError, "^synthesis unavailable$"):
-            self.build(self.plan(), synthesis_error=True).answer("Question")
-        self.assertEqual(self.events[-1], ("synthesize",))
-
-    def test_tiny_context_limit_uses_truncated_marker(self):
-        self.settings = self.settings.model_copy(update={"max_context_chars": 5})
-        self.build(ExecutionPlan()).answer("Question")
-        self.assertEqual(self.synthesis, ["\n[con"])
-
-    def test_near_limit_question_preserves_execution_context(self):
-        self.settings = self.settings.model_copy(update={
-            "max_input_chars": 1000, "max_context_chars": 1000,
-        })
-
-        self.build(self.plan()).answer("q" * 1000)
-
-        research = self.worker_prompts["agent-v"]
-        review = self.worker_prompts["agent-x"]
-        synthesis = self.synthesis[0]
-        for prompt in (research, review, synthesis):
-            self.assertLessEqual(len(prompt), 1000)
-        self.assertIn("Find evidence.", research)
-        self.assertIn("retrieved document facts", research)
-        self.assertIn("Review research.", review)
-        self.assertIn("research result facts", review)
-        self.assertIn("research: success", synthesis)
-        self.assertIn("review: success", synthesis)
-        self.assertIn("research: research result facts", synthesis)
-        self.assertIn("review: research result facts", synthesis)
-
-    def test_synthesis_keeps_over_half_question_when_small_results_fit(self):
-        self.settings = self.settings.model_copy(update={"max_context_chars": 1000})
-        question = "q" * 600
-
-        self.build(self.plan(retrieval=False)).answer(question)
-
-        synthesis = self.synthesis[0]
-        self.assertLessEqual(len(synthesis), 1000)
-        self.assertIn(f"Question:\n{question}", synthesis)
-        self.assertIn("research: research result facts", synthesis)
-        self.assertIn("review: research result facts", synthesis)
-
-    def test_large_synthesis_result_preserves_question_statuses_and_useful_result(self):
-        self.settings = self.settings.model_copy(update={"max_context_chars": 400})
-
-        self.build(self.plan(retrieval=False), long_context=True).answer("Original question")
-
-        synthesis = self.synthesis[0]
-        self.assertLessEqual(len(synthesis), 400)
-        self.assertIn("Question:\nOriginal question", synthesis)
-        self.assertIn("research: success", synthesis)
-        self.assertIn("review: success", synthesis)
-        self.assertIn("research: research result", synthesis)
-        self.assertIn("[context truncated]", synthesis)
-
-
-if __name__ == "__main__":
-    unittest.main()
+    def test_required_contract_is_not_truncated(self):
+        orchestration,context=self.build(budget=20)
+        self.assertEqual(orchestration.run(context.request,context=context).kind,'CLARIFICATION')
+        self.assertEqual(self.prompts,[])

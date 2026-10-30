@@ -1,62 +1,7 @@
 include:
-  - compose.databases.yml
+  - compose.local.yml
 
 services:
-  vllm-generation:
-    image: vllm/vllm-openai-cpu:v0.28.0-x86_64
-    platform: linux/amd64
-    command:
-      - ${GENERATION_MODEL_ID:?set GENERATION_MODEL_ID in .env}
-      - --served-model-name
-      - local-model
-      - --port
-      - "8000"
-      - --dtype
-      - bfloat16
-      - --max-model-len
-      - "4096"
-      - --max-num-seqs
-      - "1"
-      - --language-model-only
-      - --enforce-eager
-      - --generation-config
-      - vllm
-    user: "0:0"
-    environment:
-      VLLM_API_KEY: ${VLLM_API_KEY:-}
-      VLLM_CPU_KVCACHE_SPACE: "1"
-      VLLM_CPU_OMP_THREADS_BIND: auto
-      VLLM_CPU_NUM_OF_RESERVED_CPU: "1"
-      VLLM_NO_USAGE_STATS: "1"
-      HF_HUB_DISABLE_TELEMETRY: "1"
-      HF_HUB_OFFLINE: "1"
-    ports:
-      - "127.0.0.1:8000:8000"
-    volumes:
-      - huggingface_cache:/root/.cache/huggingface
-      - vllm_generation_cache:/root/.cache/vllm
-    cpus: 8
-    mem_limit: 12g
-    shm_size: 4g
-    cap_add:
-      - SYS_NICE
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=5)"]
-      interval: 15s
-      timeout: 10s
-      retries: 20
-      start_period: 10m
-    init: true
-    restart: unless-stopped
-    security_opt:
-      - no-new-privileges:true
-      - seccomp=unconfined
-    logging:
-      driver: local
-      options:
-        max-size: "10m"
-        max-file: "3"
-
   tei-embedding:
     image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.9
     platform: linux/amd64
@@ -92,6 +37,24 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  qdrant:
+    image: qdrant/qdrant:v1.19.0
+    cpus: 1
+    mem_limit: 1g
+    environment:
+      QDRANT__SERVICE__API_KEY: ${QDRANT_API_KEY:-}
+    ports:
+      - "127.0.0.1:6333:6333"
+      - "127.0.0.1:6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/6333; printf \"GET /healthz HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3; read -r status <&3; [[ \"$$status\" == *\" 200 \"* ]]'"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
 volumes:
   huggingface_cache:
-  vllm_generation_cache:
+  qdrant_data:

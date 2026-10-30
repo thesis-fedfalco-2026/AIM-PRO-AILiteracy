@@ -1,0 +1,40 @@
+{
+  "policy_ref": {
+    "type": "PolicySet",
+    "id": "policy",
+    "version": "1"
+  },
+  "subjects": {
+    "learner": {
+      "roles": [
+        "LEARNER"
+      ],
+      "actions": {
+        "session": [
+          "read",
+          "interact",
+          "submit"
+        ]
+      }
+    },
+    "admin": {
+      "roles": [
+        "ADMINISTRATOR",
+        "CONTENT_RESPONSIBLE",
+        "ASSESSOR"
+      ],
+      "actions": {
+        "session": [
+          "read",
+          "interact",
+          "propose",
+          "decide",
+          "apply",
+          "bootstrap",
+          "submit"
+        ]
+      }
+    }
+  },
+  "scopes": {}
+}

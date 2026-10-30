@@ -2,9 +2,11 @@ from collections.abc import Callable, Collection, Mapping
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+from urllib.parse import urlparse
 import warnings
 
-from agent_system.config import AgentConfig, ConfigurationError, ModelCatalog
+from agent_system.config import ConfigurationError, ModelCatalog, LLMSettings, ResolvedAgentConfig
+from learning.outputs import WorkerOutput
 
 if TYPE_CHECKING:
     from crewai.skills import Skill
@@ -56,18 +58,34 @@ class LLMFactory:
         for name in profile_names:
             if name not in self.catalog.profiles:
                 raise ConfigurationError(f"Unknown model profile: {name}")
-            key_name = self.catalog.profiles[name].api_key_env
+            profile = self.catalog.profiles[name]
+            openrouter = urlparse(profile.base_url or "").hostname == "openrouter.ai"
+            free = openrouter and (profile.model.endswith(":free") or profile.model == "openrouter/free")
+            if (openrouter or profile.provider != "hosted_vllm") and not free and not profile.allow_paid:
+                raise ConfigurationError("Paid model requires allow_paid = true")
+            key_name = profile.api_key_env
             if not self.environ.get(key_name):
                 raise ConfigurationError(f"Set {key_name} in .env")
 
-    def __call__(self, profile_name: str) -> Any:
+    def validate_settings(self, profile_name: str, settings: LLMSettings) -> None:
+        self.validate({profile_name})
+        if self.catalog.profiles[profile_name].provider == "anthropic" and settings.temperature > 1:
+            raise ConfigurationError("Anthropic temperature must be between 0 and 1")
+
+    def __call__(self, profile_name: str, settings: LLMSettings | None = None) -> Any:
+        settings = self.catalog.settings if settings is None else settings
+        self.validate_settings(profile_name, settings)
         profile = self.catalog.profiles[profile_name]
-        settings = self.catalog.settings
+        openrouter = urlparse(profile.base_url or "").hostname == "openrouter.ai"
         client_factory = self.client_factory
         if client_factory is None:
             from crewai import LLM
 
             client_factory = LLM
+            if openrouter:
+                from agent_system.openrouter import OpenRouterCompletion
+
+                client_factory = OpenRouterCompletion
         return client_factory(
             provider=profile.provider,
             model=profile.model,
@@ -76,7 +94,10 @@ class LLMFactory:
             temperature=settings.temperature,
             top_p=settings.top_p,
             max_tokens=settings.max_tokens,
+            **({"stream": True} if profile.stream else {}),
             timeout=settings.timeout,
+            **({"extra_body": {"provider": {"max_price": {"prompt": 0, "completion": 0}}}}
+               if openrouter and (profile.model.endswith(":free") or profile.model == "openrouter/free") else {}),
         )
 
 
@@ -84,7 +105,7 @@ class CrewAIWorker:
     def __init__(
         self,
         *,
-        llm_factory: Callable[[str], Any],
+        llm_factory: Callable[[str, LLMSettings], Any],
         tools: Mapping[str, "BaseTool"],
         skills: Mapping[str, "Skill"],
         logger: logging.Logger,
@@ -96,7 +117,7 @@ class CrewAIWorker:
         self.logger = logger
         self.agent_factory = agent_factory
 
-    def run(self, config: AgentConfig, task: str) -> str:
+    def run(self, config: ResolvedAgentConfig, task: str) -> WorkerOutput:
         self.logger.info("Starting worker %s", config.name)
         agent_factory = self.agent_factory
         if agent_factory is None:
@@ -107,13 +128,17 @@ class CrewAIWorker:
             role=config.name,
             goal="Complete the assigned task accurately and return only the useful result.",
             backstory=config.system_prompt,
-            llm=self.llm_factory(config.model),
+            llm=self.llm_factory(config.profile, config.settings),
             tools=[
                 self.tools[name]
                 for name in config.tools
-                if name in self.tools
+                if name != "search_documents"
             ],
             skills=[self.skills[name] for name in config.skills] or None,
             allow_delegation=False,
         )
-        return output_text(agent.kickoff(task))
+        output = agent.kickoff(task, response_format=WorkerOutput)
+        result = getattr(output, "pydantic", None)
+        if type(result) is not WorkerOutput:
+            raise ValueError("Worker returned an invalid structured output")
+        return result

@@ -1,7 +1,7 @@
 ---
-name: agent-w
+name: policy-procedure-researcher
 description: Use this agent to research business policies, procedures, and exceptions.
-model: local
+profile: openrouter
 tools: [search_documents]
 skills: [evidence-search]
 ---

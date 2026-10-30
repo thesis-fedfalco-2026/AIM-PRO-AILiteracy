@@ -10,6 +10,7 @@ from mcp.client.stdio import StdioServerParameters, stdio_client
 
 from agent_system.config import ConfigurationError
 from document_search.backend import SearchResponse
+from document_search.contracts import SearchScope
 
 
 SEARCH_TOOL_NAME = "search_documents"
@@ -34,7 +35,7 @@ class DocumentSearchError(RuntimeError):
 
 
 def build_document_search_params(
-    base_dir: Path, environ: Mapping[str, str]
+    base_dir: Path, environ: Mapping[str, str], *, unlimited_text: bool = False,
 ) -> StdioServerParameters:
     backend = environ.get("SEARCH_BACKEND")
     if backend not in {"mock", "qdrant"}:
@@ -44,6 +45,8 @@ def build_document_search_params(
         "PYTHONPATH": str(base_dir.resolve()),
         "SEARCH_BACKEND": backend,
     }
+    if unlimited_text:
+        server_env["SEARCH_UNLIMITED_TEXT"] = "1"
     if backend == "qdrant":
         server_env.update(
             (key, environ[key]) for key in _QDRANT_ENV_KEYS if environ.get(key)
@@ -66,7 +69,7 @@ class DocumentSearchClient:
     def __init__(self, params: StdioServerParameters):
         self.params = params
 
-    def search(self, query: str, k: int) -> dict[str, Any]:
+    def search(self, query: str, k: int, *, scope: SearchScope) -> dict[str, Any]:
         async def call() -> dict[str, Any]:
             with TemporaryFile(mode="w+") as errlog:
                 async with stdio_client(self.params, errlog=errlog) as (read, write):
@@ -74,7 +77,7 @@ class DocumentSearchClient:
                         await session.initialize()
                         result = await session.call_tool(
                             SEARCH_TOOL_NAME,
-                            {"query": query, "k": k},
+                            {"query": query, "k": k, "scope": scope.model_dump(mode="json")},
                         )
             if result.isError or result.structuredContent is None:
                 raise DocumentSearchError("Document search failed")

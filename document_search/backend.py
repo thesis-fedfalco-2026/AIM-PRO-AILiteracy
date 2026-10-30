@@ -9,6 +9,7 @@ from typing import Any
 
 import httpx
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationError, field_validator
+from document_search.contracts import SearchScope, resource_key
 
 
 MAX_RESULTS = 20
@@ -121,7 +122,8 @@ def _bounded_documents(documents: list[Document]) -> tuple[list[dict[str, Any]],
             continue
         truncated = True
         metadata = candidate["metadata"]
-        candidate["metadata"] = {"source": metadata["source"]} if isinstance(metadata.get("source"), str) else {}
+        candidate["metadata"] = {key: metadata[key] for key in
+                                 ("source", "resource_key", "source_scope", "synthetic") if key in metadata}
         if _serialized_size(bounded + [candidate]) <= MAX_RESPONSE_CHARS:
             bounded.append(candidate)
             continue
@@ -147,29 +149,39 @@ class SearchBackend:
         self,
         *,
         embed: Callable[[str], Sequence[float]],
-        vector_search: Callable[[list[float], int], Sequence[Mapping[str, Any]]],
+        vector_search: Callable[[list[float], int, SearchScope], Sequence[Mapping[str, Any]]],
         dimensions: int,
+        unlimited_text: bool = False,
         close: Callable[[], None] = lambda: None,
     ):
         self._embed = embed
         self._vector_search = vector_search
         self._dimensions = dimensions
+        self._unlimited_text = unlimited_text
         self._close = close
 
-    def search_documents(self, query: str, k: int = 5) -> dict[str, Any]:
+    def search_documents(self, query: str, k: int = 5, *, scope: SearchScope) -> dict[str, Any]:
         _validate_query(query)
         _validate_k(k)
         retrieval_query = _retrieval_query(query)
+        scope = SearchScope.model_validate(scope)
+        if not scope.keys:
+            return SearchResponse(documents=[]).model_dump()
         try:
             vector = _vector(self._embed(retrieval_query), self._dimensions)
-            raw_documents = self._vector_search(vector, k)
+            raw_documents = self._vector_search(vector, k, scope)
             documents = [Document.model_validate(document) for document in raw_documents]
+            if len(documents) > k or any(not scope.matches(document.metadata) for document in documents):
+                raise SearchError("Search failed")
         except SearchError:
             raise
         except Exception:
             raise SearchError("Search failed") from None
         try:
-            documents, truncated = _bounded_documents(documents)
+            if self._unlimited_text:
+                documents, truncated = [document.model_dump() for document in documents], False
+            else:
+                documents, truncated = _bounded_documents(documents)
         except Exception:
             raise SearchError("Search failed") from None
         return SearchResponse(documents=documents, truncated=truncated).model_dump()
@@ -184,14 +196,16 @@ class SearchBackend:
 _MOCK_DOCUMENTS = (
     {
         "id": "mock-technical",
-        "text": "Technical deployment guide: deploy the service with the approved release procedure.",
-        "metadata": {"source": "technical-deployment-guide", "synthetic": True},
+        "text": "Technical deployment guide (synthetic): The approved release procedure is to verify the approved release tag, deploy the service through the approved pipeline, and check the service health endpoint. If the health check fails, roll back to the previous approved release.",
+        "metadata": {"source": "technical-deployment-guide", "synthetic": True,
+                     "resource_key": resource_key("technical-deployment-guide", "1"), "source_scope": "demo"},
         "vector": [1.0, 0.0],
     },
     {
         "id": "mock-reimbursement",
         "text": "Business reimbursement procedure: submit approved expense receipts within 30 days.",
-        "metadata": {"source": "business-reimbursement-procedure", "synthetic": True},
+        "metadata": {"source": "business-reimbursement-procedure", "synthetic": True,
+                     "resource_key": resource_key("business-reimbursement-procedure", "1"), "source_scope": "demo"},
         "vector": [0.0, 1.0],
     },
 )
@@ -206,9 +220,11 @@ def _mock_embed(query: str) -> list[float]:
     return [0.0, 0.0]
 
 
-def _mock_vector_search(vector: list[float], k: int) -> list[dict[str, Any]]:
+def _mock_vector_search(vector: list[float], k: int, scope: SearchScope) -> list[dict[str, Any]]:
     scored = []
     for document in _MOCK_DOCUMENTS:
+        if not scope.matches(document["metadata"]):
+            continue
         score = sum(left * right for left, right in zip(vector, document["vector"], strict=True))
         if score > 0:
             scored.append({
@@ -258,7 +274,7 @@ def build_backend(
     environ: Mapping[str, str] | None = None,
     *,
     embed: Callable[[str], Sequence[float]] | None = None,
-    vector_search: Callable[[list[float], int], Sequence[Mapping[str, Any]]] | None = None,
+    vector_search: Callable[[list[float], int, SearchScope], Sequence[Mapping[str, Any]]] | None = None,
     qdrant_factory: Callable[..., Any] | None = None,
     http_client_factory: Callable[..., httpx.Client] = httpx.Client,
 ) -> SearchBackend:
@@ -269,6 +285,7 @@ def build_backend(
             embed=embed or _mock_embed,
             vector_search=vector_search or _mock_vector_search,
             dimensions=2,
+            unlimited_text=environ.get("SEARCH_UNLIMITED_TEXT") == "1",
         )
     if backend != "qdrant":
         raise ConfigurationError("Invalid search backend")
@@ -286,10 +303,13 @@ def build_backend(
             args["api_key"] = settings.qdrant_api_key.get_secret_value()
         client = qdrant_factory(**args)
 
-        def qdrant_search(vector: list[float], k: int) -> list[dict[str, Any]]:
+        def qdrant_search(vector: list[float], k: int, scope: SearchScope) -> list[dict[str, Any]]:
             try:
+                from qdrant_client.models import Filter, FieldCondition, MatchAny
                 points = client.query_points(
-                    settings.qdrant_collection, query=vector, limit=k, with_payload=True
+                    settings.qdrant_collection, query=vector, limit=k, with_payload=True,
+                    query_filter=Filter(must=[FieldCondition(key=f"metadata.{scope.metadata_key}",
+                                                           match=MatchAny(any=list(scope.keys)))])
                 ).points
                 return [
                     {"id": str(point.id), "text": point.payload["text"], "metadata": dict(point.payload.get("metadata", {})), "score": point.score}
@@ -309,6 +329,7 @@ def build_backend(
             embed=embed or _http_embedder(settings, http_client),
             vector_search=vector_search or qdrant_search,
             dimensions=settings.embedding_dimensions,
+            unlimited_text=environ.get("SEARCH_UNLIMITED_TEXT") == "1",
             close=close,
         )
     except Exception:

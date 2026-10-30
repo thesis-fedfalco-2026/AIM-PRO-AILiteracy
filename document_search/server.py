@@ -10,6 +10,7 @@ from fastmcp.server.middleware import CallNext, Middleware, MiddlewareContext
 from pydantic import Field
 
 from document_search.backend import SearchBackend, SearchError, SearchResponse, build_backend
+from document_search.contracts import SearchScope
 
 
 class _SearchArgumentMiddleware(Middleware):
@@ -18,7 +19,7 @@ class _SearchArgumentMiddleware(Middleware):
     ) -> Any:
         arguments = context.message.arguments or {}
         if context.message.name == "search_documents" and (
-            "query" not in arguments or arguments.keys() - {"query", "k"}
+            "query" not in arguments or "scope" not in arguments or arguments.keys() - {"query", "k", "scope"}
         ):
             raise ToolError("Search request failed")
         return await call_next(context)
@@ -45,10 +46,11 @@ def create_server(environ: Mapping[str, str] | None = None) -> FastMCP:
     @server.tool(name="search_documents", description="Search synthetic mock documents or the configured Qdrant collection.")
     def search_documents(
         query: Annotated[Any, Field(json_schema_extra={"type": "string", "minLength": 1})],
+        scope: SearchScope,
         k: Annotated[Any, Field(json_schema_extra={"type": "integer", "minimum": 1, "maximum": 20})] = 5,
     ) -> SearchResponse:
         try:
-            return SearchResponse.model_validate(backend.search_documents(query, k))
+            return SearchResponse.model_validate(backend.search_documents(query, k, scope=scope))
         except (SearchError, ValueError):
             raise ToolError("Search request failed") from None
 

@@ -44,9 +44,11 @@ def validate_and_order_plan(
     if len(step_ids) != len(set(step_ids)):
         raise ValueError("Execution plan contains duplicate step IDs")
 
-    if any(len(step.task) > settings.max_task_chars for step in plan.steps):
+    if settings.max_task_chars is not None and any(
+        len(step.task) > settings.max_task_chars for step in plan.steps
+    ):
         raise ValueError("Plan step task exceeds maximum length")
-    if any(
+    if settings.max_input_chars is not None and any(
         step.retrieval is not None
         and len(step.retrieval.query) > settings.max_input_chars
         for step in plan.steps

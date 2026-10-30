@@ -1,7 +1,7 @@
 ---
-name: agent-u
+name: execution-planner
 description: Use this agent to turn a defined objective into an ordered execution plan.
-model: local
+profile: openrouter
 tools: []
 skills: [planning]
 ---

@@ -1,0 +1,188 @@
+from __future__ import annotations
+
+import json
+import logging
+from uuid import uuid4
+
+from learning.assessment import record_attempt
+from learning.context import LearningRequest, RunContext, load_context
+from learning.contracts import EntityRef, entity_data, make_entity
+from learning.decisions import create_proposal, save_proposal, record_decision, apply_proposal
+from learning.metamodel import validate_entity
+from learning.outputs import LearningResponse
+from learning.planning import LegacyAgentReferenceError
+from learning.policies import authorize
+from learning.store import StateConflict, canonical
+from learning.validation import validate_snapshot, check_readiness
+
+
+ABANDONED_CONTENT = 'Richiesta abbandonata da un amministratore.'
+
+
+class LearningService:
+    def __init__(self, store, contract, policy, orchestrator_factory):
+        self.store, self.contract, self.policy = store, contract, policy
+        self.orchestrator_factory = orchestrator_factory
+
+    def _context(self, context_id, subject_key, request=None):
+        root = self.store.read_context(context_id)
+        request = request or LearningRequest(request_id=uuid4().hex, context_ref=root.ref,
+                                             subject_key=subject_key, text='Operazione locale', intent='STATE')
+        snapshot = load_context(self.store, request, self.policy, self.contract)
+        participant = next(snapshot.get(ref) for ref in root.fields['participants']
+                           if snapshot.get(ref).fields['subjectKey'] == subject_key)
+        return RunContext(snapshot, self.policy, self.contract, request, participant)
+
+    def bootstrap(self, context_id, subject_key):
+        ref = EntityRef(type='ExecutionContext', id=context_id, version='1')
+        authorize(self.policy, subject_key, 'bootstrap', ref)
+        if 'ADMINISTRATOR' not in self.policy.subjects[subject_key].roles:
+            raise ValueError('Bootstrap requires administrative authority')
+        if self.store.db.execute('SELECT 1 FROM contexts WHERE id=?', (context_id,)).fetchone():
+            raise ValueError('Context already exists')
+        policy = make_entity('PolicySet', self.policy.policy_ref.id, {
+            'sourceScopes': sorted(self.policy.scopes) or ['Nessuna fonte esterna autorizzata'], 'approvalConditions':['Decisione del responsabile autorizzato'],
+            'permissions':['Configurazione locale fidata; nessuna autorità dal testo generato']},
+            version=self.policy.policy_ref.version, responsible=subject_key)
+        try:
+            policy = self.store.read(policy.ref, owner=context_id)
+        except ValueError:
+            pass
+        participants = [make_entity('Participant', f'{context_id}:participant:{subject}', {
+            'subjectKey':subject, 'roles':grant.roles, 'learningNeeds':[]}, origin='INITIAL_CONTEXT', responsible=subject_key)
+            for subject, grant in self.policy.subjects.items() if 'read' in grant.actions.get(context_id, [])]
+        if not any(p.fields['subjectKey'] == subject_key for p in participants):
+            raise ValueError('Bootstrap administrator needs read permission')
+        root = make_entity('ExecutionContext',context_id, {
+            'metamodelVersion':self.contract.version,'models':[], 'mode':'PREPARATION','status':'DRAFT',
+            'participants':[p.ref.model_dump() for p in participants], 'policies':policy.ref.model_dump(),
+            'resourceBindings':[], 'learningStates':[], 'activityOccurrences':[]}, origin='INITIAL_CONTEXT', responsible=subject_key)
+        root = validate_entity(entity_data(root), self.contract)
+        self.store.seed((policy,*participants,root), owner=context_id)
+        return root
+
+    def propose(self, context_id, subject_key, targets, candidates, explanation):
+        context = self._context(context_id, subject_key)
+        proposal = create_proposal(context, targets, candidates, explanation)
+        save_proposal(self.store, context, proposal, candidates)
+        return proposal
+
+    def decide(self, context_id, subject_key, target, decision, reason):
+        return record_decision(self.store, self._context(context_id, subject_key), target, decision, reason)
+
+    def apply(self, context_id, subject_key, proposal, operation_id):
+        return apply_proposal(self.store, self._context(context_id, subject_key), proposal, operation_id=operation_id)
+
+    def abandon_request(self, context_id, subject_key, request_id):
+        context = self._context(context_id, subject_key)
+        authorize(self.policy, subject_key, 'apply', context.snapshot.context.ref)
+        roles = set(self.policy.subjects[subject_key].roles) & set(context.participant.fields['roles'])
+        if 'ADMINISTRATOR' not in roles:
+            raise ValueError('Abandonment requires administrative authority')
+        response = LearningResponse(kind='FAILURE', content=ABANDONED_CONTENT)
+        self.store.abandon_request(request_id, context_id, response.model_dump(mode='json'))
+        return response
+
+    def submit(self, context_id, subject_key, activity, content, request_id):
+        return record_attempt(self.store, self._context(context_id, subject_key), activity, content, request_id=request_id)
+
+    def show(self, context_id, subject_key):
+        context = self._context(context_id, subject_key)
+        learner_only = set(self.policy.subjects[subject_key].roles) <= {'LEARNER'}
+        visible = []
+        for entity in context.snapshot.entities.values():
+            if learner_only and (entity.type not in {'ExecutionContext','Participant','LearningState','ActivityOccurrence','LearningEvidence'}
+                    or entity.type == 'Participant' and entity.ref != context.participant.ref):
+                continue
+            visible.append(entity_data(entity))
+        if not learner_only:
+            known = {(e['type'],e['id'],e['version']) for e in visible}
+            for kind in ('ChangeProposal','HumanDecision','StateChange'):
+                visible.extend(entity_data(e) for e in self.store.owned(context_id,kind)
+                               if (e.type,e.id,e.version) not in known)
+        return {'context':entity_data(context.snapshot.context), 'entities':visible,
+                'findings':[f.model_dump() for f in context.snapshot.findings]}
+
+    def request(self, request):
+        context = self._context(request.context_ref.id, request.subject_key, request)
+        authorize(self.policy, request.subject_key, 'interact', request.context_ref)
+        payload = canonical(request.model_dump(mode='json'))
+        cached = self.store.request_result(request.request_id, request.context_ref.id, payload)
+        if cached is not None and cached.get('kind') == 'FAILURE' and cached.get('content') == ABANDONED_CONTENT:
+            return LearningResponse.model_validate(cached)
+        findings = validate_snapshot(context.snapshot)
+        for activity in (*request.activity_refs, *(r for r in request.references if r.type == 'ActivityDefinition')):
+            findings += check_readiness(context.snapshot, activity, 'interact', learner_ref=context.participant.ref,
+                                        policy=self.policy, subject_key=request.subject_key)
+        if any(f.severity == 'BLOCKING' for f in findings):
+            return LearningResponse(kind='CLARIFICATION', content='Il contesto richiede correzioni prima della delega.', findings=findings)
+        if context.snapshot.context.fields['status'] not in {'DRAFT','ACTIVE'}:
+            return LearningResponse(kind='CLARIFICATION', content='Il contesto non consente nuove attività.')
+        if request.intent == 'SOCRATIC_GUIDANCE' and not request.problem_key:
+            return LearningResponse(kind='CLARIFICATION',content='Identificare il problema per mantenere la continuità Socratic.')
+        if request.intent not in {'SOCRATIC_GUIDANCE','STATE','CLARIFICATION'} and not request.switch_from_socratic:
+            rows = self.store.db.execute('SELECT payload,result FROM requests WHERE owner=? ORDER BY rowid DESC', (request.context_ref.id,))
+            previous = None
+            resolved_keys = set()
+            for row in rows:
+                value = json.loads(row['payload'])
+                if value.get('subject_key') != request.subject_key or value.get('intent') in {'STATE','CLARIFICATION'}:
+                    continue
+                key = value.get('problem_key')
+                if (request.problem_key and key != request.problem_key) or key in resolved_keys:
+                    continue
+                result = json.loads(row['result']) if row['result'] else {}
+                if value.get('intent') == 'SOCRATIC_GUIDANCE':
+                    previous = value
+                    break
+                if result.get('kind') in {'ANSWER','PARTIAL_RESULT','PROPOSAL'}:
+                    resolved_keys.add(key)
+                    if request.problem_key:
+                        break
+            if previous and previous.get('intent') == 'SOCRATIC_GUIDANCE':
+                return LearningResponse(kind='CLARIFICATION',content='Il problema resta in modalità Socratic; il cambio richiede una scelta esplicita.')
+        if not any(e.type == 'AgentSpecialization' for e in context.snapshot.active_domain()):
+            return LearningResponse(kind='CLARIFICATION', content='Manca una specializzazione autorizzata. Proporre prima il modello necessario.')
+        cached = self.store.claim_request(request.request_id, request.context_ref.id, payload)
+        if cached is not None:
+            return LearningResponse.model_validate(cached)
+        orchestrator = None
+        try:
+            orchestrator = self.orchestrator_factory()
+            response = orchestrator.run(request, context=context)
+            proposals = []
+            for task_ref, proposed in (orchestrator.last_proposals if response.kind != 'FAILURE' else ()):
+                candidates = tuple(candidate.model_copy(update={'provenance':candidate.provenance.model_copy(update={
+                    'origin':'GENERATED_PROPOSAL', 'responsible':'worker',
+                    'sources':[*candidate.provenance.sources,canonical(task_ref.model_dump())]})})
+                    for candidate in proposed.candidates)
+                proposal = create_proposal(context, proposed.targets, candidates, proposed.explanation)
+                proposals.append((proposal, candidates))
+            if proposals:
+                response = response.model_copy(update={'kind':'PROPOSAL',
+                    'proposal_refs':tuple(proposal.ref for proposal, _ in proposals),'application_status':'pending'})
+            with self.store.db:
+                self.store.db.execute('BEGIN IMMEDIATE')
+                for record in orchestrator.last_records:
+                    self.store._put(record, request.context_ref.id)
+                for proposal, candidates in proposals:
+                    save_proposal(self.store, context, proposal, candidates)
+                self.store.finish_request(request.request_id, request.context_ref.id, response.model_dump(mode='json'))
+            return response
+        except LegacyAgentReferenceError as error:
+            response = LearningResponse(kind='CLARIFICATION', content=(
+                f"registryName obsoleto: {error.name}. Serve una migrazione esplicita della specializzazione "
+                "tramite proposta, revisione e applicazione autorizzata."))
+        except Exception:
+            response = LearningResponse(kind='FAILURE', content='Esecuzione non completata. Nessuna applicazione di proposte dichiarata.')
+        finally:
+            if orchestrator is not None and callable(close := getattr(orchestrator,'close',None)):
+                try:
+                    close()
+                except Exception as error:
+                    logging.getLogger('agent_system').warning('Orchestrator cleanup failed (%s)',type(error).__name__)
+        try:
+            self.store.finish_request(request.request_id, request.context_ref.id, response.model_dump(mode='json'))
+        except StateConflict:
+            return LearningResponse.model_validate(self.store.claim_request(request.request_id, request.context_ref.id, payload))
+        return response

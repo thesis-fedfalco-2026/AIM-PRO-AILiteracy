@@ -1,0 +1,3175 @@
+{
+  "format": "agnostic-learning-metamodel",
+  "formatVersion": "1.0",
+  "metamodel": {
+    "id": "ALM",
+    "version": "1.0.0",
+    "date": "2026-10-27",
+    "language": "it",
+    "title": "Metamodello agnostico del sistema multi-agente di apprendimento",
+    "artifactRole": "Unica specifica normativa concettuale per il progetto finale.",
+    "purpose": "Fornire al Lead una visione stabile di obiettivi, conoscenza, attività, risorse, ruoli, evidenze e decisioni con cui pianificare e sintetizzare task di apprendimento in qualunque materia.",
+    "agnosticism": "Agnostico rispetto a disciplina, materia, esame, istituzione e piattaforma. Il contesto funzionale rimane deliberatamente quello dell’apprendimento.",
+    "immutability": "Questo contratto resta invariato durante tutte le sessioni. Nuovi domini, argomenti, risorse, rubriche e specializzazioni popolano modelli conformi; non modificano tipi, categorie o regole del metamodello. Nessun agente può estenderlo o riscriverlo.",
+    "status": "Specifica progettuale derivata dai documenti forniti; non attestazione di implementazione o di compatibilità eseguibile.",
+    "notation": "JSON dichiarativo autonomo. Non è un JSON Schema, un export importabile in jjodel, un prompt di implementazione o un programma. Le regole descrivono cosa controllare; un validatore futuro dovrà attuarle.",
+    "excluded": [
+      "JjScript e altri script di piattaforma",
+      "implementazioni e system prompt degli agenti",
+      "training o fine-tuning dei modelli",
+      "dettagli di framework, hosting, LMS e protocolli esterni",
+      "contenuti disciplinari",
+      "istanze di contenuto AIM-PRO",
+      "classi vuote, attributi senza uso metodologico e refusi di origine"
+    ]
+  },
+  "readingGuide": {
+    "leadCore": [
+      "leadPerspective",
+      "architectureContract",
+      "workerTaxonomy",
+      "operatingPolicies",
+      "workflow",
+      "normativeRules"
+    ],
+    "modelValidation": [
+      "notation",
+      "valueTypes",
+      "vocabularies",
+      "entityTypes",
+      "normativeRules"
+    ],
+    "integrationReview": [
+      "compatibilityMap",
+      "traceability",
+      "acceptanceScenarios"
+    ],
+    "singleSourceOfTruth": "Tutte le sezioni appartengono allo stesso metamodello. Nessuna sezione definisce agenti eseguibili; i profili sono descrizioni di responsabilità e ammissibilità."
+  },
+  "sourceCatalog": [
+    {
+      "id": "SRC_REQUEST",
+      "name": "Richiesta utente del 27 ottobre 2026",
+      "role": "Vincoli di destinazione: quattro categorie, specializzazione, minimo privilegio, metamodello fisso e flusso completo."
+    },
+    {
+      "id": "SRC_CONTEXT",
+      "name": "contesto-architettura-multi-agent.md",
+      "role": "Riepilogo architetturale e confini da preservare; non verifica del codice.",
+      "sha256": "6bfc2c01b7a64a64deaabbe42299e473e158739d08d4dd6fbd9d610d1097dd9d"
+    },
+    {
+      "id": "SRC_ABSTRACTION",
+      "name": "meta-modello-metodologico-agnostico.md",
+      "role": "Astrazione precedente, separazione dei livelli, evidenze e decisioni.",
+      "sha256": "05e37ca2dee16374fd0fc1c2166cfd15579ea7b069ea47e5993efb6d45d368b3"
+    },
+    {
+      "id": "SRC_ARCH",
+      "name": "uml-architecture.puml",
+      "role": "Componenti, responsabilità e contratti esistenti documentati.",
+      "sha256": "58f7ffe09aea3f0bfc9411e0ea7a910442a90c9bb3fe25495c68eba529f0766b"
+    },
+    {
+      "id": "SRC_SEQUENCE",
+      "name": "uml-sequence.puml",
+      "role": "Ordine di esecuzione, controlli e rami del flusso documentato.",
+      "sha256": "1ad0e19522ef21fa9a8aaa8d3bd526f8af95e25dc6e5a84f8ce9c101327f1472"
+    },
+    {
+      "id": "SRC_MEGAMODEL",
+      "name": "megamodel-full(2).json",
+      "role": "Struttura di origine: tipi e relazioni; le istanze di esempio non sono assunte conformi.",
+      "sha256": "d71dfbb26ea7353b8e8164503dfc7221d20336c2b57099384b99d22833604f05"
+    },
+    {
+      "id": "SRC_DESCRIPTORS",
+      "name": "special-descriptors(2).md",
+      "role": "Intenzioni metodologiche: erogazione, ruoli, risorse, approvazioni e provenienza.",
+      "sha256": "dd5e09af9a935a258ece801e972bdf9624629157733887aa28559d28d55408c0"
+    },
+    {
+      "id": "SRC_HELPER",
+      "name": "helper.md",
+      "role": "Chiarimenti su stato, risorse autorizzate, lacune e distinzione acquisito/verificato.",
+      "sha256": "9f92113d138dc6f90ed35213f33c772586fb948d41873e4cff03f55868b7fad4"
+    }
+  ],
+  "sourceAuthority": [
+    "La richiesta corrente definisce i requisiti del nuovo metamodello, incluse le quattro macro-categorie.",
+    "I due PUML definiscono il comportamento architetturale documentato; il contesto lo chiarisce. Nessun sorgente eseguibile è stato verificato.",
+    "Il megamodello è autorità sulle strutture esportate di origine, non sulla validità delle istanze o sulle capacità del sistema di destinazione.",
+    "Helper chiarisce e corregge la nota descrittiva. Il documento agnostico precedente è una base da integrare, non un vincolo a conservare errori o dipendenze di piattaforma.",
+    "Le formalizzazioni nuove sono requisiti di questa specifica, indicati nella tracciabilità. Le affermazioni esterne contenute nelle fonti non vengono adottate come requisiti."
+  ],
+  "layers": [
+    {
+      "id": "fixed_contract",
+      "meaning": "Tipi, cardinalità, categorie, invarianti, responsabilità e criteri di validazione definiti qui.",
+      "mutableDuringExecution": false
+    },
+    {
+      "id": "domain_configuration",
+      "meaning": "Modelli versionati di argomenti, risultati, percorsi, attività, strategie, risorse, rubriche, regole e specializzazioni approvate. Contengono i valori variabili della materia.",
+      "mutableDuringExecution": "Solo tramite proposta e decisione autorizzata; una sessione non adotta silenziosamente nuove versioni."
+    },
+    {
+      "id": "execution_state",
+      "meaning": "Contesto della singola sessione o erogazione, partecipanti, task, risposte, evidenze, valutazioni, decisioni e revisioni di stato.",
+      "mutableDuringExecution": "Solo tramite il controllo applicativo autorizzato; isolamento fra esecuzioni."
+    }
+  ],
+  "layerClarification": "Sono tre livelli funzionali. Anche i record di stato sono istanze dei tipi qui definiti; non si equiparano automaticamente questi livelli a M2/M1/M0 di una piattaforma.",
+  "leadPerspective": [
+    "Comprendi l’intento didattico della richiesta, il destinatario, i topic, il livello richiesto e il risultato osservabile atteso.",
+    "Usa solo modelli pertinenti e versioni applicabili al contesto corrente; separa fatti, evidenze, ipotesi, proposte e lacune.",
+    "Verifica se sono disponibili conoscenze, prerequisiti, risorse e criteri sufficienti per il tipo di risposta richiesto; non inventare parametri mancanti.",
+    "Scomponi richieste miste in compiti con uno scopo didattico principale ciascuno, mantenendo la copertura dell’obiettivo complessivo.",
+    "Scegli per ciascun compito un ruolo ammesso e una specializzazione già autorizzata e adeguata al topic; non creare una quinta categoria.",
+    "Proponi task e dipendenze, non chiamate dirette ai tool. L’Orchestrator mantiene il controllo dell’esecuzione.",
+    "Richiedi solo consultazioni pertinenti, entro il perimetro di fonti e risorse consentito; un risultato trovato non è già un materiale approvato.",
+    "Distingui completamento di un task, apprendimento osservato, acquisizione secondo criterio e verifica formale: sono fatti diversi.",
+    "Controlla output e fonti prima della sintesi. Mantieni i vincoli didattici fino alla risposta finale, soprattutto il divieto di soluzione nel modo Socratic.",
+    "Esponi esito, riferimenti utilizzati, limiti e proposte ancora pendenti. Una fonte sostiene solo le affermazioni che effettivamente documenta.",
+    "Richiedi una decisione umana soltanto quando prevista per quell’azione o quando manca una scelta essenziale; una lezione o un feedback ordinario non richiedono approvazione sistematica.",
+    "Indica le variazioni di stato giustificate dall’interazione; il controllo applicativo le valida e registra senza modificare questo metamodello."
+  ],
+  "architectureContract": [
+    {
+      "id": "ARC_LEAD",
+      "requirement": "Il Lead è il componente deliberativo: pianifica e sintetizza; non dispone di tool runtime e non invoca TaskTool o MCP."
+    },
+    {
+      "id": "ARC_ORCHESTRATOR",
+      "requirement": "L’Orchestrator è il controllo applicativo distinto dal Lead: carica il contesto disponibile, valida il piano, autorizza operazioni, gestisce risultati e deleghe."
+    },
+    {
+      "id": "ARC_TASKTOOL",
+      "requirement": "TaskTool è invocato programmaticamente dall’Orchestrator dopo la validazione; non è un tool del Lead né un worker."
+    },
+    {
+      "id": "ARC_WORKER",
+      "requirement": "Ogni step crea un nuovo Worker configurato. Un worker non eredita memoria, tool o autorità di altri worker; il contesto utile è trasferito esplicitamente."
+    },
+    {
+      "id": "ARC_ORDER",
+      "requirement": "Il piano dei task è un grafo aciclico eseguito in ordine topologico stabile e sequenziale. Indipendenza pedagogica e assenza di dipendenze non implicano esecuzione concorrente."
+    },
+    {
+      "id": "ARC_RETRIEVAL",
+      "requirement": "search_documents nei metadati autorizza il retrieval dello step, eseguito dall’Orchestrator prima del Worker. Non conferisce al Worker un tool di ricerca."
+    },
+    {
+      "id": "ARC_REGISTRY",
+      "requirement": "Il Lead seleziona agenti dal catalogo disponibile tramite riepiloghi; il controllo applicativo consulta le configurazioni complete. Un nome plausibile non rende esistente un agente."
+    },
+    {
+      "id": "ARC_CONTROL",
+      "requirement": "Controlli di forma, riferimenti, grafo e autorizzazioni sono responsabilità del controllo applicativo. Una dichiarazione del Lead non ne sostituisce l’esito."
+    },
+    {
+      "id": "ARC_NO_WRITE",
+      "requirement": "Lead e worker producono contenuti, valutazioni o proposte. Non applicano direttamente modifiche ai modelli, ai permessi o allo stato autorevole."
+    },
+    {
+      "id": "ARC_NO_EXTRA_AGENTS",
+      "requirement": "Lead, Orchestrator, TaskTool, registry e validatori sono responsabilità architetturali: non costituiscono ulteriori categorie di worker."
+    }
+  ],
+  "notation": {
+    "typeReference": "Un type è un nome di primitive, valueTypes, vocabularies o entityTypes. Il collegamento a un’entità indica un riferimento, non una copia o una proprietà esclusiva.",
+    "commonEntityFields": [
+      {
+        "name": "id",
+        "type": "Identifier",
+        "cardinality": "1",
+        "meaning": "Identità stabile, unica nel catalogo caricato."
+      },
+      {
+        "name": "version",
+        "type": "Version",
+        "cardinality": "1",
+        "meaning": "Versione della definizione o revisione del record; una modifica produce un’identità di versione distinguibile."
+      },
+      {
+        "name": "provenance",
+        "type": "Provenance",
+        "cardinality": "1",
+        "meaning": "Origine della definizione o del record e responsabilità della sua introduzione."
+      }
+    ],
+    "cardinality": {
+      "1": "Esattamente uno.",
+      "0..1": "Facoltativo, al massimo uno.",
+      "0..*": "Zero o più.",
+      "1..*": "Almeno uno."
+    },
+    "references": "Ogni riferimento a entità è rappresentato concettualmente da EntityRef, con tipo, id e versione esatta. Le strutture cicliche di riferimenti sono ammesse quando non vietate da una regola specifica.",
+    "unknown": "Un dato ignoto o non ancora osservato non è vero, falso o zero. Un valore facoltativo assente va interpretato secondo il contesto; le lacune operative sono dichiarate.",
+    "draftVsReady": "La conformità strutturale non garantisce utilizzabilità. Le cardinalità ammettono bozze dove indicato; le regole di prontezza impongono i contenuti necessari all’azione richiesta.",
+    "ownership": "La configurazione possiede le definizioni. Percorsi, blueprint, task e sessioni le referenziano senza duplicarle. Evidenze e risultati appartengono a una sola esecuzione.",
+    "semanticExtension": "Nuovi valori disciplinari si modellano come Topic, LearningOutcome, Strategy o altre istanze, senza aggiungere tipi o modificare le enumerazioni chiuse.",
+    "versionedHistory": "Le versioni precedenti restano indirizzabili quando citate da evidenze o decisioni. Due riferimenti con lo stesso id e versioni diverse indicano snapshot dello stesso oggetto, non oggetti di contesti diversi. La verifica di appartenenza usa l’identità stabile del contesto; la versione fissa lo snapshot applicabile.",
+    "candidateNamespace": "I candidati sono istanze degli stessi tipi, identificate e versionate ma non attive. Non possono sostenere stato verificato o autorizzare accessi prima dell’applicazione. Le proposte su definizioni nuove conservano sia la chiusura candidata sia la base autorizzata di destinazione."
+  },
+  "primitiveTypes": [
+    "Identifier",
+    "Version",
+    "Text",
+    "Boolean",
+    "Number",
+    "Timestamp",
+    "Locator"
+  ],
+  "valueTypes": {
+    "EntityRef": {
+      "fields": [
+        {
+          "name": "type",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Nome di un tipo di entità definito qui."
+        },
+        {
+          "name": "id",
+          "type": "Identifier",
+          "cardinality": "1",
+          "meaning": "Identificatore dell’oggetto."
+        },
+        {
+          "name": "version",
+          "type": "Version",
+          "cardinality": "1",
+          "meaning": "Versione fissata, non latest."
+        }
+      ],
+      "constraint": "Deve risolversi a un solo oggetto del tipo dichiarato nella chiusura autorizzata dei riferimenti."
+    },
+    "Provenance": {
+      "fields": [
+        {
+          "name": "origin",
+          "type": "ValueOrigin",
+          "cardinality": "1",
+          "meaning": "Origine del valore o artefatto."
+        },
+        {
+          "name": "sources",
+          "type": "Text",
+          "cardinality": "0..*",
+          "meaning": "Riferimenti a fonti, evidenze o record identificabili; non citazioni inventate."
+        },
+        {
+          "name": "responsible",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Persona o componente responsabile della produzione o acquisizione."
+        },
+        {
+          "name": "rationale",
+          "type": "Text",
+          "cardinality": "0..1",
+          "meaning": "Motivo di una scelta, inferenza o lacuna."
+        }
+      ],
+      "constraint": "Origine generata non equivale a confermata; provenienza non concede diritti di utilizzo."
+    },
+    "CapabilityGrant": {
+      "fields": [
+        {
+          "name": "capability",
+          "type": "Identifier",
+          "cardinality": "1",
+          "meaning": "Identità logica del tool, API o accesso a KB autorizzato."
+        },
+        {
+          "name": "accessPath",
+          "type": "AccessPath",
+          "cardinality": "1",
+          "meaning": "Retrieval mediato oppure tool runtime del worker."
+        },
+        {
+          "name": "operations",
+          "type": "Text",
+          "cardinality": "1..*",
+          "meaning": "Operazioni consentite; le modifiche autorevoli restano al controllo applicativo."
+        },
+        {
+          "name": "scope",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Risorse, topic, contesto e limiti dell’autorizzazione."
+        },
+        {
+          "name": "purpose",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Necessità rispetto al task."
+        }
+      ],
+      "constraint": "Descrive un permesso, non implementa il tool. Le credenziali e i segreti non fanno parte del contratto semantico."
+    },
+    "RubricCriterion": {
+      "fields": [
+        {
+          "name": "key",
+          "type": "Identifier",
+          "cardinality": "1",
+          "meaning": "Identità locale alla versione di rubrica."
+        },
+        {
+          "name": "outcomes",
+          "type": "LearningOutcome",
+          "cardinality": "1..*",
+          "meaning": "Risultati osservati dal criterio."
+        },
+        {
+          "name": "description",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Cosa viene giudicato."
+        },
+        {
+          "name": "levels",
+          "type": "RubricLevel",
+          "cardinality": "1..*",
+          "meaning": "Livelli distinguibili e descritti."
+        },
+        {
+          "name": "weight",
+          "type": "Number",
+          "cardinality": "0..1",
+          "meaning": "Peso solo se richiesto dalla regola di aggregazione."
+        }
+      ],
+      "constraint": "I livelli appartengono al criterio; significato di pesi e aggregazione deve essere specificato, non presunto."
+    },
+    "RubricLevel": {
+      "fields": [
+        {
+          "name": "key",
+          "type": "Identifier",
+          "cardinality": "1",
+          "meaning": "Identità locale al criterio."
+        },
+        {
+          "name": "descriptor",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Condizione osservabile che distingue il livello."
+        },
+        {
+          "name": "score",
+          "type": "Number",
+          "cardinality": "0..1",
+          "meaning": "Valore solo se definito dalla rubrica."
+        }
+      ],
+      "constraint": "Nessuna scala numerica o soglia universale è imposta dal metamodello."
+    },
+    "CriterionJudgment": {
+      "fields": [
+        {
+          "name": "criterionKey",
+          "type": "Identifier",
+          "cardinality": "1",
+          "meaning": "Criterio della rubrica fissata per la valutazione."
+        },
+        {
+          "name": "levelKey",
+          "type": "Identifier",
+          "cardinality": "0..1",
+          "meaning": "Livello assegnato; assente se non determinabile."
+        },
+        {
+          "name": "evidenceRefs",
+          "type": "LearningEvidence",
+          "cardinality": "1..*",
+          "meaning": "Evidenze specifiche che giustificano il giudizio."
+        },
+        {
+          "name": "reason",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Motivazione del giudizio o della sua indeterminatezza."
+        }
+      ],
+      "constraint": "Non assegnare il livello minimo per rappresentare evidenze mancanti."
+    },
+    "Finding": {
+      "fields": [
+        {
+          "name": "code",
+          "type": "Identifier",
+          "cardinality": "1",
+          "meaning": "Regola o classe di problema."
+        },
+        {
+          "name": "target",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Oggetto o compito interessato."
+        },
+        {
+          "name": "severity",
+          "type": "FindingSeverity",
+          "cardinality": "1",
+          "meaning": "Effetto sul compito richiesto."
+        },
+        {
+          "name": "reason",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Dato mancante, riferimento errato o vincolo violato."
+        },
+        {
+          "name": "resolution",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Chiarimento, fonte, decisione o correzione necessaria."
+        }
+      ],
+      "constraint": "Un problema locale non invalida automaticamente i task indipendenti validi."
+    },
+    "Citation": {
+      "fields": [
+        {
+          "name": "source",
+          "type": "Resource",
+          "cardinality": "1",
+          "meaning": "Fonte effettivamente usata e accessibile nel perimetro."
+        },
+        {
+          "name": "locator",
+          "type": "Text",
+          "cardinality": "0..1",
+          "meaning": "Sezione, pagina, passaggio o altro punto verificabile."
+        },
+        {
+          "name": "supportedClaim",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Affermazione o parte dell’output che la fonte sostiene."
+        }
+      ],
+      "constraint": "Un punteggio di retrieval misura pertinenza, non verità; una citazione non prova da sola la conclusione."
+    }
+  },
+  "vocabularies": {
+    "WorkerCategory": [
+      "TEACHER_TRAINER",
+      "CURATOR",
+      "EVALUATOR",
+      "SOCRATIC"
+    ],
+    "WorkerRole": [
+      "TEACHER",
+      "TRAINER",
+      "CURATOR",
+      "EVALUATOR",
+      "SOCRATIC"
+    ],
+    "Intent": [
+      "EXPLAIN",
+      "PRACTICE",
+      "CURATE",
+      "ASSESS",
+      "SOCRATIC_GUIDANCE"
+    ],
+    "ValueOrigin": [
+      "CONFIGURATION",
+      "GENERATED_PROPOSAL",
+      "INITIAL_CONTEXT",
+      "HUMAN_DECISION",
+      "OBSERVED_EVENT",
+      "UNRESOLVED_GAP"
+    ],
+    "PrerequisiteKind": [
+      "MANDATORY",
+      "RECOMMENDED",
+      "CO_REQUISITE",
+      "RECOMMENDED_SEQUENCE"
+    ],
+    "TruthStatus": [
+      "SATISFIED",
+      "NOT_SATISFIED",
+      "UNKNOWN"
+    ],
+    "ProcessKind": [
+      "PHASE",
+      "UNIT"
+    ],
+    "Composition": [
+      "SEQUENTIAL",
+      "INDEPENDENT"
+    ],
+    "InteractionFormat": [
+      "EXPOSITION",
+      "GUIDED_DIALOGUE",
+      "CHOICE",
+      "BINARY_DECISION",
+      "MATCHING",
+      "SHORT_STRUCTURED",
+      "CASE_ANALYSIS",
+      "CRITERIA_BASED_PRODUCT"
+    ],
+    "EvidenceKind": [
+      "OBJECTIVE_RESPONSE",
+      "CASE_RESULT",
+      "CRITERIA_BASED_PRODUCT",
+      "TOOL_TRACE",
+      "REFLECTIVE_RECORD",
+      "PEER_REVIEW",
+      "INTEGRITY_CHECK"
+    ],
+    "HumanRole": [
+      "LEARNER",
+      "CONTENT_RESPONSIBLE",
+      "ASSESSOR",
+      "OBSERVER",
+      "ADMINISTRATOR"
+    ],
+    "ContextMode": [
+      "PREPARATION",
+      "LEARNING"
+    ],
+    "ContextStatus": [
+      "DRAFT",
+      "ACTIVE",
+      "PAUSED",
+      "CLOSED"
+    ],
+    "AccessPath": [
+      "ORCHESTRATOR_RETRIEVAL",
+      "WORKER_TOOL"
+    ],
+    "ProposalStatus": [
+      "DRAFT",
+      "VALIDATED",
+      "AWAITING_DECISION",
+      "APPROVED",
+      "REJECTED",
+      "APPLIED",
+      "STALE"
+    ],
+    "DecisionKind": [
+      "APPROVE",
+      "REJECT",
+      "REQUEST_REVISION"
+    ],
+    "ProgressStatus": [
+      "NOT_OBSERVED",
+      "IN_PROGRESS",
+      "ACQUIRED"
+    ],
+    "VerificationStatus": [
+      "UNVERIFIED",
+      "PENDING_CONFIRMATION",
+      "VERIFIED"
+    ],
+    "EvaluationMode": [
+      "FORMATIVE",
+      "FORMAL"
+    ],
+    "TaskStatus": [
+      "PENDING",
+      "SUCCEEDED",
+      "FAILED",
+      "SKIPPED"
+    ],
+    "OutputKind": [
+      "EXPLANATION",
+      "GUIDED_PRACTICE",
+      "SUPPORT_MATERIAL",
+      "ASSESSMENT",
+      "SOCRATIC_TURN",
+      "CHANGE_PROPOSAL"
+    ],
+    "FindingSeverity": [
+      "BLOCKING",
+      "WARNING",
+      "INFORMATION"
+    ],
+    "ResponseKind": [
+      "ANSWER",
+      "PROPOSAL",
+      "CLARIFICATION",
+      "PARTIAL_RESULT",
+      "FAILURE"
+    ],
+    "ActivityStatus": [
+      "NOT_STARTED",
+      "IN_PROGRESS",
+      "COMPLETED",
+      "SKIPPED"
+    ]
+  },
+  "workerTaxonomy": {
+    "closed": true,
+    "categories": [
+      {
+        "category": "TEACHER_TRAINER",
+        "label": "A. Teacher & Trainer",
+        "roles": [
+          {
+            "role": "TEACHER",
+            "intent": "EXPLAIN",
+            "responsibility": "Didattica diretta: spiegazioni, lezioni, concetti teorici ed esempi pertinenti al dominio e al livello richiesto.",
+            "outputs": [
+              "EXPLANATION"
+            ],
+            "boundary": "Non certifica la competenza sulla base della propria spiegazione."
+          },
+          {
+            "role": "TRAINER",
+            "intent": "PRACTICE",
+            "responsibility": "Esercitazioni semplici e pratica guidata per consolidare concetti già introdotti, con feedback formativo.",
+            "outputs": [
+              "GUIDED_PRACTICE"
+            ],
+            "boundary": "Non sostituisce una verifica strutturata o una decisione formale dell’Evaluator e del responsabile umano."
+          }
+        ]
+      },
+      {
+        "category": "CURATOR",
+        "label": "B. Curator",
+        "roles": [
+          {
+            "role": "CURATOR",
+            "intent": "CURATE",
+            "responsibility": "Ricerca mediata da strumenti autorizzati, selezione, sintesi e generazione di riassunti, mappe, schede e risorse integrative pertinenti al topic.",
+            "outputs": [
+              "SUPPORT_MATERIAL",
+              "CHANGE_PROPOSAL"
+            ],
+            "boundary": "Proporre materiale non equivale ad approvarne il binding a un contesto."
+          }
+        ]
+      },
+      {
+        "category": "EVALUATOR",
+        "label": "C. Evaluator",
+        "roles": [
+          {
+            "role": "EVALUATOR",
+            "intent": "ASSESS",
+            "responsibility": "Progetta ed eroga test, quiz e verifiche su uno o più topic e valuta risposte effettivamente ricevute mediante criteri espliciti.",
+            "outputs": [
+              "ASSESSMENT",
+              "CHANGE_PROPOSAL"
+            ],
+            "boundary": "Può dare feedback e giudizi formativi autorizzati; le valutazioni formali e lo stato verificato richiedono le decisioni previste. Un test generato senza risposta non è una valutazione dell’apprendente."
+          }
+        ]
+      },
+      {
+        "category": "SOCRATIC",
+        "label": "D. Socratic",
+        "roles": [
+          {
+            "role": "SOCRATIC",
+            "intent": "SOCRATIC_GUIDANCE",
+            "responsibility": "Guida all’elaborazione autonoma con domande puntuali, indizi progressivi e stimoli di riflessione.",
+            "outputs": [
+              "SOCRATIC_TURN"
+            ],
+            "boundary": "Non fornisce mai la risposta diretta, il risultato finale o una sequenza di indizi che equivalga a una soluzione rivelata. Il vincolo vale anche per sintesi, fonti mostrate e dipendenze ricevute."
+          }
+        ]
+      }
+    ],
+    "assignment": "Ogni specializzazione e ogni task appartengono a una sola categoria e adottano un solo ruolo. Teacher e Trainer sono ruoli distinti della stessa categoria A. Richieste miste richiedono task distinti.",
+    "adHocSpecialization": "Prima dell’impiego si fissano ruolo, dominio/topic, livello, obiettivo, contesto pertinente, vincoli e capacità necessarie. La specializzazione è un vincolo semantico: non prescrive fine-tuning né implementa prompt o training.",
+    "runtimeCompatibility": "Nel runtime documentato il piano deve scegliere un nome già risolvibile nel registry. Il task può affinare obiettivo e contesto di quel profilo senza ampliarne autorità o tool. Un profilo mancante è una lacuna da risolvere prima della delega, non un agente che il Lead può inventare."
+  },
+  "entityTypes": [
+    {
+      "name": "DomainModel",
+      "instanceLayer": "domain_configuration",
+      "purpose": "Contenitore semantico versionato di una materia; non aggiunge classi al metamodello.",
+      "fields": [
+        {
+          "name": "name",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Nome del dominio."
+        },
+        {
+          "name": "scope",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Confini della materia e del livello coperto."
+        },
+        {
+          "name": "topics",
+          "type": "Topic",
+          "cardinality": "1..*",
+          "meaning": "Topic disponibili."
+        },
+        {
+          "name": "outcomes",
+          "type": "LearningOutcome",
+          "cardinality": "0..*",
+          "meaning": "Risultati osservabili definiti."
+        },
+        {
+          "name": "classifications",
+          "type": "Text",
+          "cardinality": "0..*",
+          "meaning": "Classificazioni e livelli propri del dominio, con significato esplicito."
+        },
+        {
+          "name": "definitions",
+          "type": "EntityRef",
+          "cardinality": "0..*",
+          "meaning": "Definizioni versionate pertinenti: OutcomeGroup, Prerequisite, Strategy, LearningDesign, ProcessNode, ActivityDefinition, ResourceRequirement, Resource, AssessmentSpecification, Rubric, RuleDefinition, PolicySet e AgentSpecialization. Costituiscono il catalogo del modello; i riferimenti condivisi non duplicano gli oggetti."
+        }
+      ],
+      "ruleRefs": [
+        "R01",
+        "R02",
+        "R03"
+      ]
+    },
+    {
+      "name": "Topic",
+      "instanceLayer": "domain_configuration",
+      "purpose": "Argomento identificabile, distinto da un risultato di apprendimento.",
+      "fields": [
+        {
+          "name": "name",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Nome del topic."
+        },
+        {
+          "name": "definition",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Significato e confini."
+        },
+        {
+          "name": "parentTopics",
+          "type": "Topic",
+          "cardinality": "0..*",
+          "meaning": "Gerarchia aciclica fra argomenti."
+        },
+        {
+          "name": "relatedTopics",
+          "type": "Topic",
+          "cardinality": "0..*",
+          "meaning": "Relazioni associative, non prerequisiti impliciti."
+        }
+      ],
+      "ruleRefs": [
+        "R02",
+        "R04"
+      ]
+    },
+    {
+      "name": "LearningOutcome",
+      "instanceLayer": "domain_configuration",
+      "purpose": "Risultato atteso descrivibile e osservabile, riusabile fra attività.",
+      "fields": [
+        {
+          "name": "statement",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Che cosa il soggetto dovrà conoscere, fare o dimostrare."
+        },
+        {
+          "name": "topics",
+          "type": "Topic",
+          "cardinality": "1..*",
+          "meaning": "Argomenti interessati."
+        },
+        {
+          "name": "kind",
+          "type": "Text",
+          "cardinality": "0..1",
+          "meaning": "Categoria definita dal modello, per esempio conoscenza, abilità o disposizione."
+        },
+        {
+          "name": "targetLevel",
+          "type": "Text",
+          "cardinality": "0..1",
+          "meaning": "Livello definito dal dominio, non scala universale."
+        },
+        {
+          "name": "achievementRule",
+          "type": "RuleDefinition",
+          "cardinality": "0..1",
+          "meaning": "Criterio per dichiarare acquisizione."
+        },
+        {
+          "name": "verificationRule",
+          "type": "RuleDefinition",
+          "cardinality": "0..1",
+          "meaning": "Criterio e decisione per dichiarare verifica formale."
+        }
+      ],
+      "ruleRefs": [
+        "R02",
+        "R12",
+        "R13"
+      ]
+    },
+    {
+      "name": "OutcomeGroup",
+      "instanceLayer": "domain_configuration",
+      "purpose": "Aggregato di risultati con obiettivi obbligatori e opzionali.",
+      "fields": [
+        {
+          "name": "name",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Identità leggibile dell’aggregato."
+        },
+        {
+          "name": "requiredOutcomes",
+          "type": "LearningOutcome",
+          "cardinality": "1..*",
+          "meaning": "Risultati necessari."
+        },
+        {
+          "name": "optionalOutcomes",
+          "type": "LearningOutcome",
+          "cardinality": "0..*",
+          "meaning": "Risultati aggiuntivi che non sostituiscono quelli necessari."
+        }
+      ],
+      "ruleRefs": [
+        "R02",
+        "R05"
+      ]
+    },
+    {
+      "name": "Prerequisite",
+      "instanceLayer": "domain_configuration",
+      "purpose": "Relazione pedagogica esplicita; non dipendenza fra worker.",
+      "fields": [
+        {
+          "name": "dependent",
+          "type": "EntityRef",
+          "cardinality": "1",
+          "meaning": "ActivityDefinition, ProcessNode, LearningOutcome o OutcomeGroup cui si applica."
+        },
+        {
+          "name": "requiredTarget",
+          "type": "EntityRef",
+          "cardinality": "1",
+          "meaning": "LearningOutcome o OutcomeGroup richiesto."
+        },
+        {
+          "name": "kind",
+          "type": "PrerequisiteKind",
+          "cardinality": "1",
+          "meaning": "Forza del vincolo."
+        },
+        {
+          "name": "satisfactionRule",
+          "type": "RuleDefinition",
+          "cardinality": "0..1",
+          "meaning": "Come decidere SATISFIED, NOT_SATISFIED o UNKNOWN nel contesto."
+        }
+      ],
+      "ruleRefs": [
+        "R02",
+        "R05"
+      ]
+    },
+    {
+      "name": "Strategy",
+      "instanceLayer": "domain_configuration",
+      "purpose": "Metodo pedagogico selezionabile; non ruolo di agente né fase obbligatoria.",
+      "fields": [
+        {
+          "name": "name",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Nome della strategia."
+        },
+        {
+          "name": "family",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Famiglia metodologica descritta dal modello."
+        },
+        {
+          "name": "rationale",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Perché è adatta al risultato e al destinatario."
+        },
+        {
+          "name": "constraints",
+          "type": "Text",
+          "cardinality": "0..*",
+          "meaning": "Condizioni di uso, limiti e indicazioni di adattamento."
+        }
+      ],
+      "ruleRefs": [
+        "R03",
+        "R06"
+      ]
+    },
+    {
+      "name": "LearningDesign",
+      "instanceLayer": "domain_configuration",
+      "purpose": "Percorso riusabile composto da fasi e unità; facoltativo per interazioni isolate.",
+      "fields": [
+        {
+          "name": "name",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Nome del percorso."
+        },
+        {
+          "name": "outcomes",
+          "type": "LearningOutcome",
+          "cardinality": "1..*",
+          "meaning": "Obiettivi complessivi."
+        },
+        {
+          "name": "root",
+          "type": "ProcessNode",
+          "cardinality": "1",
+          "meaning": "Fase radice del percorso."
+        },
+        {
+          "name": "strategies",
+          "type": "Strategy",
+          "cardinality": "0..*",
+          "meaning": "Orientamenti generali."
+        },
+        {
+          "name": "assessmentSpecs",
+          "type": "AssessmentSpecification",
+          "cardinality": "0..*",
+          "meaning": "Verifiche riferite al percorso."
+        }
+      ],
+      "ruleRefs": [
+        "R02",
+        "R06",
+        "R07"
+      ]
+    },
+    {
+      "name": "ProcessNode",
+      "instanceLayer": "domain_configuration",
+      "purpose": "Unifica fase composta e unità operativa mantenendo la composizione ricorsiva.",
+      "fields": [
+        {
+          "name": "name",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Nome della fase o unità."
+        },
+        {
+          "name": "kind",
+          "type": "ProcessKind",
+          "cardinality": "1",
+          "meaning": "PHASE contiene nodi; UNIT contiene attività."
+        },
+        {
+          "name": "outcomes",
+          "type": "LearningOutcome",
+          "cardinality": "1..*",
+          "meaning": "Obiettivo locale."
+        },
+        {
+          "name": "children",
+          "type": "ProcessNode",
+          "cardinality": "0..*",
+          "meaning": "Figli diretti della sola PHASE, in ordine esplicito quando sequenziali."
+        },
+        {
+          "name": "composition",
+          "type": "Composition",
+          "cardinality": "0..1",
+          "meaning": "SEQUENTIAL oppure INDEPENDENT per la sola PHASE."
+        },
+        {
+          "name": "activities",
+          "type": "ActivityDefinition",
+          "cardinality": "0..*",
+          "meaning": "Attività della sola UNIT; sono riferimenti a definizioni riusabili."
+        },
+        {
+          "name": "strategies",
+          "type": "Strategy",
+          "cardinality": "0..*",
+          "meaning": "Strategie pertinenti all’unità."
+        },
+        {
+          "name": "completionRule",
+          "type": "RuleDefinition",
+          "cardinality": "0..1",
+          "meaning": "Condizione di completamento della fase o unità."
+        },
+        {
+          "name": "estimatedDuration",
+          "type": "Text",
+          "cardinality": "0..1",
+          "meaning": "Durata stimata, distinta da un calendario effettivo."
+        }
+      ],
+      "ruleRefs": [
+        "R02",
+        "R06",
+        "R07"
+      ]
+    },
+    {
+      "name": "ActivityDefinition",
+      "instanceLayer": "domain_configuration",
+      "purpose": "Azione di apprendimento riusabile. L’impiego e il tentativo concreto sono registrati nello stato.",
+      "fields": [
+        {
+          "name": "instruction",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Consegna o obiettivo operativo."
+        },
+        {
+          "name": "intent",
+          "type": "Intent",
+          "cardinality": "1",
+          "meaning": "Scopo didattico principale."
+        },
+        {
+          "name": "format",
+          "type": "InteractionFormat",
+          "cardinality": "1",
+          "meaning": "Forma dell’interazione, indipendente dalla materia."
+        },
+        {
+          "name": "outcomes",
+          "type": "LearningOutcome",
+          "cardinality": "1..*",
+          "meaning": "Risultati trattati."
+        },
+        {
+          "name": "resourceRequirements",
+          "type": "ResourceRequirement",
+          "cardinality": "0..*",
+          "meaning": "Risorse necessarie; una conversazione autonoma può non richiederne."
+        },
+        {
+          "name": "expectedEvidence",
+          "type": "EvidenceKind",
+          "cardinality": "0..*",
+          "meaning": "Evidenze attese se l’attività osserva una prestazione."
+        },
+        {
+          "name": "assessmentSpec",
+          "type": "AssessmentSpecification",
+          "cardinality": "0..1",
+          "meaning": "Specifica di valutazione applicabile."
+        },
+        {
+          "name": "strategies",
+          "type": "Strategy",
+          "cardinality": "0..*",
+          "meaning": "Metodi didattici adottati."
+        }
+      ],
+      "ruleRefs": [
+        "R02",
+        "R07",
+        "R08",
+        "R11"
+      ]
+    },
+    {
+      "name": "ResourceRequirement",
+      "instanceLayer": "domain_configuration",
+      "purpose": "Bisogno di materiale; non ancora una risorsa selezionata.",
+      "fields": [
+        {
+          "name": "purpose",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Quale lacuna didattica soddisfare."
+        },
+        {
+          "name": "outcomes",
+          "type": "LearningOutcome",
+          "cardinality": "1..*",
+          "meaning": "Risultati da supportare."
+        },
+        {
+          "name": "constraints",
+          "type": "Text",
+          "cardinality": "1..*",
+          "meaning": "Pertinenza, livello, lingua, formato e altri requisiti effettivamente necessari."
+        },
+        {
+          "name": "mandatory",
+          "type": "Boolean",
+          "cardinality": "1",
+          "meaning": "Se l’assenza impedisce l’attività interessata."
+        }
+      ],
+      "ruleRefs": [
+        "R07",
+        "R08"
+      ]
+    },
+    {
+      "name": "Resource",
+      "instanceLayer": "domain_configuration",
+      "purpose": "Fonte o materiale didattico con provenienza, derivazioni e condizioni d’uso.",
+      "fields": [
+        {
+          "name": "title",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Nome del materiale."
+        },
+        {
+          "name": "contentOrLocator",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Contenuto oppure riferimento risolvibile al materiale."
+        },
+        {
+          "name": "topics",
+          "type": "Topic",
+          "cardinality": "1..*",
+          "meaning": "Pertinenza dichiarata."
+        },
+        {
+          "name": "outcomes",
+          "type": "LearningOutcome",
+          "cardinality": "0..*",
+          "meaning": "Risultati supportati."
+        },
+        {
+          "name": "language",
+          "type": "Text",
+          "cardinality": "0..1",
+          "meaning": "Lingua, quando rilevante per la selezione."
+        },
+        {
+          "name": "usageConditions",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Condizioni note di accesso e utilizzo; ignoto non equivale a uso autorizzato."
+        },
+        {
+          "name": "derivedFrom",
+          "type": "Resource",
+          "cardinality": "0..*",
+          "meaning": "Fonti o materiali progenitori, incluse sintesi generate."
+        }
+      ],
+      "ruleRefs": [
+        "R02",
+        "R08",
+        "R09"
+      ]
+    },
+    {
+      "name": "AssessmentSpecification",
+      "instanceLayer": "domain_configuration",
+      "purpose": "Blueprint riusabile o verifica locale con criteri, evidenze e copertura.",
+      "fields": [
+        {
+          "name": "outcomes",
+          "type": "LearningOutcome",
+          "cardinality": "1..*",
+          "meaning": "Risultati da valutare."
+        },
+        {
+          "name": "activities",
+          "type": "ActivityDefinition",
+          "cardinality": "1..*",
+          "meaning": "Item o attività valutative riusate tramite riferimento."
+        },
+        {
+          "name": "allowedEvidence",
+          "type": "EvidenceKind",
+          "cardinality": "1..*",
+          "meaning": "Tipi di evidenza ammissibili."
+        },
+        {
+          "name": "rubric",
+          "type": "Rubric",
+          "cardinality": "0..1",
+          "meaning": "Griglia analitica quando richiesta dal tipo di verifica."
+        },
+        {
+          "name": "decisionRule",
+          "type": "RuleDefinition",
+          "cardinality": "0..1",
+          "meaning": "Regola di giudizio, soglie e aggregazione; necessaria per un esito automatico."
+        },
+        {
+          "name": "administrationConstraints",
+          "type": "Text",
+          "cardinality": "0..*",
+          "meaning": "Vincoli espliciti su tempi, tentativi, aiuti e integrità."
+        },
+        {
+          "name": "answerKey",
+          "type": "Text",
+          "cardinality": "0..1",
+          "meaning": "Criteri di correttezza o soluzioni riservate, separati dal materiale mostrato all’apprendente."
+        }
+      ],
+      "ruleRefs": [
+        "R07",
+        "R10",
+        "R11",
+        "R12"
+      ]
+    },
+    {
+      "name": "Rubric",
+      "instanceLayer": "domain_configuration",
+      "purpose": "Griglia versionata con criteri e livelli descritti.",
+      "fields": [
+        {
+          "name": "name",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Nome della griglia."
+        },
+        {
+          "name": "criteria",
+          "type": "RubricCriterion",
+          "cardinality": "1..*",
+          "meaning": "Criteri con chiavi uniche."
+        },
+        {
+          "name": "aggregationRule",
+          "type": "RuleDefinition",
+          "cardinality": "0..1",
+          "meaning": "Come combinare i giudizi; facoltativa per feedback solo analitico."
+        }
+      ],
+      "ruleRefs": [
+        "R10",
+        "R12"
+      ]
+    },
+    {
+      "name": "RuleDefinition",
+      "instanceLayer": "domain_configuration",
+      "purpose": "Criterio dichiarativo di soddisfacimento, completamento o decisione; nessun codice incorporato.",
+      "fields": [
+        {
+          "name": "purpose",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Che cosa decide la regola."
+        },
+        {
+          "name": "inputs",
+          "type": "Text",
+          "cardinality": "1..*",
+          "meaning": "Evidenze o valori necessari e loro significato."
+        },
+        {
+          "name": "condition",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Condizione non ambigua; può essere qualitativa o quantitativa."
+        },
+        {
+          "name": "outcome",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Effetto quando la condizione è soddisfatta e quando non lo è."
+        },
+        {
+          "name": "unknownBehavior",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Trattamento di input mancanti o non determinabili."
+        },
+        {
+          "name": "approvalRequirement",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Decisione umana richiesta o autorizzazione già vigente per questo tipo di esito."
+        }
+      ],
+      "ruleRefs": [
+        "R05",
+        "R06",
+        "R12",
+        "R13"
+      ]
+    },
+    {
+      "name": "PolicySet",
+      "instanceLayer": "domain_configuration",
+      "purpose": "Politiche versionate del contesto, entro i limiti fissi di questo metamodello.",
+      "fields": [
+        {
+          "name": "sourceScopes",
+          "type": "Text",
+          "cardinality": "1..*",
+          "meaning": "Perimetri di fonti consultabili in preparazione e in apprendimento."
+        },
+        {
+          "name": "approvalConditions",
+          "type": "Text",
+          "cardinality": "1..*",
+          "meaning": "Quali modifiche richiedono quale responsabile umano."
+        },
+        {
+          "name": "permissions",
+          "type": "Text",
+          "cardinality": "1..*",
+          "meaning": "Azioni consentite per ruolo umano e ambito."
+        },
+        {
+          "name": "operatingLimits",
+          "type": "Text",
+          "cardinality": "0..*",
+          "meaning": "Limiti applicabili di task, contesto, ricerca, tentativi e durata; valori definiti dal sistema, non inventati dal Lead."
+        }
+      ],
+      "ruleRefs": [
+        "R08",
+        "R14",
+        "R15",
+        "R20"
+      ]
+    },
+    {
+      "name": "AgentSpecialization",
+      "instanceLayer": "domain_configuration",
+      "purpose": "Descrizione di ammissibilità di un worker, senza implementazione o system prompt.",
+      "fields": [
+        {
+          "name": "registryName",
+          "type": "Identifier",
+          "cardinality": "1",
+          "meaning": "Nome risolvibile nel registry del sistema."
+        },
+        {
+          "name": "category",
+          "type": "WorkerCategory",
+          "cardinality": "1",
+          "meaning": "Una delle quattro categorie."
+        },
+        {
+          "name": "role",
+          "type": "WorkerRole",
+          "cardinality": "1",
+          "meaning": "Un solo ruolo coerente con la categoria."
+        },
+        {
+          "name": "topics",
+          "type": "Topic",
+          "cardinality": "1..*",
+          "meaning": "Ambito per cui il profilo è idoneo."
+        },
+        {
+          "name": "competenceScope",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Livello e capacità didattiche dichiarati."
+        },
+        {
+          "name": "skills",
+          "type": "Identifier",
+          "cardinality": "0..*",
+          "meaning": "Competenze procedurali autorizzate, non permessi impliciti."
+        },
+        {
+          "name": "capabilities",
+          "type": "CapabilityGrant",
+          "cardinality": "0..*",
+          "meaning": "Sole capacità concesse al profilo."
+        },
+        {
+          "name": "constraints",
+          "type": "Text",
+          "cardinality": "0..*",
+          "meaning": "Ulteriori limiti della specializzazione."
+        }
+      ],
+      "ruleRefs": [
+        "R14",
+        "R15",
+        "R16"
+      ]
+    },
+    {
+      "name": "ExecutionContext",
+      "instanceLayer": "execution_state",
+      "purpose": "Singola sessione o erogazione indipendente, anche per un solo apprendente.",
+      "fields": [
+        {
+          "name": "metamodelVersion",
+          "type": "Version",
+          "cardinality": "1",
+          "meaning": "Versione di questo contratto fissata all’avvio."
+        },
+        {
+          "name": "models",
+          "type": "DomainModel",
+          "cardinality": "0..*",
+          "meaning": "Modelli e versioni pertinenti caricati. Nessun modello è ammesso soltanto in un contesto DRAFT di preparazione; LEARNING/ACTIVE richiede almeno un modello pertinente valido."
+        },
+        {
+          "name": "learningDesign",
+          "type": "LearningDesign",
+          "cardinality": "0..1",
+          "meaning": "Percorso seguito, se esiste; non obbligatorio per una richiesta isolata."
+        },
+        {
+          "name": "mode",
+          "type": "ContextMode",
+          "cardinality": "1",
+          "meaning": "PREPARATION oppure LEARNING."
+        },
+        {
+          "name": "status",
+          "type": "ContextStatus",
+          "cardinality": "1",
+          "meaning": "Ciclo di vita della sessione."
+        },
+        {
+          "name": "participants",
+          "type": "Participant",
+          "cardinality": "1..*",
+          "meaning": "Soggetti e ruoli nel contesto."
+        },
+        {
+          "name": "policies",
+          "type": "PolicySet",
+          "cardinality": "1",
+          "meaning": "Politiche applicabili."
+        },
+        {
+          "name": "resourceBindings",
+          "type": "ResourceBinding",
+          "cardinality": "0..*",
+          "meaning": "Materiali selezionati per il contesto."
+        },
+        {
+          "name": "learningStates",
+          "type": "LearningState",
+          "cardinality": "0..*",
+          "meaning": "Stati degli apprendenti per risultato."
+        },
+        {
+          "name": "schedule",
+          "type": "Text",
+          "cardinality": "0..1",
+          "meaning": "Date e vincoli realmente definiti; assenza non si colma dalla sola durata."
+        },
+        {
+          "name": "activityOccurrences",
+          "type": "ActivityOccurrence",
+          "cardinality": "0..*",
+          "meaning": "Occorrenze delle attività nella sessione; il completamento dei nodi è derivato dalle occorrenze pertinenti e dalla regola del nodo."
+        }
+      ],
+      "ruleRefs": [
+        "R01",
+        "R02",
+        "R08",
+        "R13",
+        "R20"
+      ]
+    },
+    {
+      "name": "Participant",
+      "instanceLayer": "execution_state",
+      "purpose": "Soggetto umano con ruoli contestuali, distinto da qualsiasi agente.",
+      "fields": [
+        {
+          "name": "subjectKey",
+          "type": "Identifier",
+          "cardinality": "1",
+          "meaning": "Identità del soggetto, eventualmente pseudonima."
+        },
+        {
+          "name": "roles",
+          "type": "HumanRole",
+          "cardinality": "1..*",
+          "meaning": "Ruoli umani ammessi nel contesto."
+        },
+        {
+          "name": "learningNeeds",
+          "type": "Text",
+          "cardinality": "0..*",
+          "meaning": "Obiettivi, livello dichiarato, preferenze e vincoli pertinenti."
+        },
+        {
+          "name": "authorizations",
+          "type": "Text",
+          "cardinality": "0..*",
+          "meaning": "Azioni e ambiti attribuiti dalla politica; il ruolo da solo non prova il permesso."
+        }
+      ],
+      "ruleRefs": [
+        "R03",
+        "R13",
+        "R14"
+      ]
+    },
+    {
+      "name": "ResourceBinding",
+      "instanceLayer": "execution_state",
+      "purpose": "Selezione approvata di un materiale per un uso nel contesto.",
+      "fields": [
+        {
+          "name": "context",
+          "type": "ExecutionContext",
+          "cardinality": "1",
+          "meaning": "Contesto cui si applica il binding."
+        },
+        {
+          "name": "resource",
+          "type": "Resource",
+          "cardinality": "1",
+          "meaning": "Risorsa e versione selezionate."
+        },
+        {
+          "name": "requirement",
+          "type": "ResourceRequirement",
+          "cardinality": "0..1",
+          "meaning": "Requisito soddisfatto, se il binding proviene da un’attività."
+        },
+        {
+          "name": "usageScope",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Destinatari, attività e usi ammessi."
+        },
+        {
+          "name": "approvalDecision",
+          "type": "HumanDecision",
+          "cardinality": "0..1",
+          "meaning": "Decisione del responsabile; necessaria prima dell’uso approvato."
+        },
+        {
+          "name": "valid",
+          "type": "Boolean",
+          "cardinality": "1",
+          "meaning": "Validità attuale rispetto a versione, revoche e autorizzazioni."
+        },
+        {
+          "name": "reviewPayloadKey",
+          "type": "Identifier",
+          "cardinality": "1",
+          "meaning": "Identità immutabile del contenuto sostanziale da approvare, verificata dal controllo applicativo. Cambia se cambiano contenuto, effetti, evidenze determinanti o versioni di base; non cambia per soli stato amministrativo, collegamento alla decisione o registrazione dell’applicazione."
+        }
+      ],
+      "ruleRefs": [
+        "R08",
+        "R09",
+        "R20"
+      ]
+    },
+    {
+      "name": "LearningState",
+      "instanceLayer": "execution_state",
+      "purpose": "Stato per soggetto e risultato; separa progresso e verifica.",
+      "fields": [
+        {
+          "name": "context",
+          "type": "ExecutionContext",
+          "cardinality": "1",
+          "meaning": "Esecuzione proprietaria."
+        },
+        {
+          "name": "learner",
+          "type": "Participant",
+          "cardinality": "1",
+          "meaning": "Apprendente."
+        },
+        {
+          "name": "outcome",
+          "type": "LearningOutcome",
+          "cardinality": "1",
+          "meaning": "Risultato e versione applicabili."
+        },
+        {
+          "name": "progress",
+          "type": "ProgressStatus",
+          "cardinality": "1",
+          "meaning": "NOT_OBSERVED, IN_PROGRESS o ACQUIRED secondo regola."
+        },
+        {
+          "name": "verification",
+          "type": "VerificationStatus",
+          "cardinality": "1",
+          "meaning": "UNVERIFIED, PENDING_CONFIRMATION o VERIFIED."
+        },
+        {
+          "name": "basis",
+          "type": "Evaluation",
+          "cardinality": "0..*",
+          "meaning": "Valutazioni e relative evidenze che sostengono lo stato."
+        }
+      ],
+      "ruleRefs": [
+        "R11",
+        "R12",
+        "R13",
+        "R20"
+      ]
+    },
+    {
+      "name": "LearningEvidence",
+      "instanceLayer": "execution_state",
+      "purpose": "Osservazione o produzione dell’apprendente, non semplicemente testo generato da un agente.",
+      "fields": [
+        {
+          "name": "context",
+          "type": "ExecutionContext",
+          "cardinality": "1",
+          "meaning": "Esecuzione proprietaria."
+        },
+        {
+          "name": "learner",
+          "type": "Participant",
+          "cardinality": "1",
+          "meaning": "Soggetto a cui si riferisce."
+        },
+        {
+          "name": "activity",
+          "type": "ActivityDefinition",
+          "cardinality": "1",
+          "meaning": "Definizione e versione dell’attività."
+        },
+        {
+          "name": "occurrence",
+          "type": "ActivityOccurrence",
+          "cardinality": "1",
+          "meaning": "Occorrenza e tentativo specifici, identificati e versionati. Soggetto, attività e contesto devono coincidere con quelli dell’evidenza."
+        },
+        {
+          "name": "outcomes",
+          "type": "LearningOutcome",
+          "cardinality": "1..*",
+          "meaning": "Risultati osservati."
+        },
+        {
+          "name": "kind",
+          "type": "EvidenceKind",
+          "cardinality": "1",
+          "meaning": "Tipo effettivamente raccolto."
+        },
+        {
+          "name": "contentOrLocator",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Risposta, prodotto o traccia osservabile."
+        },
+        {
+          "name": "observedAt",
+          "type": "Timestamp",
+          "cardinality": "1",
+          "meaning": "Momento dell’osservazione."
+        }
+      ],
+      "ruleRefs": [
+        "R02",
+        "R11",
+        "R20"
+      ]
+    },
+    {
+      "name": "Evaluation",
+      "instanceLayer": "execution_state",
+      "purpose": "Giudizio su evidenze ricevute, con criteri e responsabilità.",
+      "fields": [
+        {
+          "name": "context",
+          "type": "ExecutionContext",
+          "cardinality": "1",
+          "meaning": "Contesto della valutazione."
+        },
+        {
+          "name": "evidence",
+          "type": "LearningEvidence",
+          "cardinality": "1..*",
+          "meaning": "Evidenze valutate."
+        },
+        {
+          "name": "specification",
+          "type": "AssessmentSpecification",
+          "cardinality": "1",
+          "meaning": "Regole e rubrica applicate, con versione."
+        },
+        {
+          "name": "mode",
+          "type": "EvaluationMode",
+          "cardinality": "1",
+          "meaning": "Feedback formativo oppure valutazione formale."
+        },
+        {
+          "name": "criterionJudgments",
+          "type": "CriterionJudgment",
+          "cardinality": "0..*",
+          "meaning": "Necessari se la specifica prevede una rubrica."
+        },
+        {
+          "name": "result",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Esito motivato o non determinabile; nessuna soglia inventata."
+        },
+        {
+          "name": "assistedBy",
+          "type": "AgentSpecialization",
+          "cardinality": "0..1",
+          "meaning": "Specializzazione AI che ha contribuito; assenza significa nessuna assistenza registrata."
+        },
+        {
+          "name": "humanDecision",
+          "type": "HumanDecision",
+          "cardinality": "0..1",
+          "meaning": "Conferma richiesta per una valutazione formale o secondo politica."
+        },
+        {
+          "name": "reviewPayloadKey",
+          "type": "Identifier",
+          "cardinality": "1",
+          "meaning": "Identità immutabile del contenuto sostanziale da approvare, verificata dal controllo applicativo. Cambia se cambiano contenuto, effetti, evidenze determinanti o versioni di base; non cambia per soli stato amministrativo, collegamento alla decisione o registrazione dell’applicazione."
+        }
+      ],
+      "ruleRefs": [
+        "R10",
+        "R11",
+        "R12",
+        "R13"
+      ]
+    },
+    {
+      "name": "ChangeProposal",
+      "instanceLayer": "execution_state",
+      "purpose": "Candidato a una modifica di modelli, risorse approvate o stato autorevole.",
+      "fields": [
+        {
+          "name": "context",
+          "type": "ExecutionContext",
+          "cardinality": "1",
+          "meaning": "Ambito della proposta."
+        },
+        {
+          "name": "targets",
+          "type": "EntityRef",
+          "cardinality": "1..*",
+          "meaning": "Oggetti/versioni interessati; per creazioni, versioni dei contenitori o della base di applicazione."
+        },
+        {
+          "name": "proposedChange",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Differenza proposta e risultato atteso; non comando eseguibile."
+        },
+        {
+          "name": "justification",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Motivo, evidenze e conseguenze."
+        },
+        {
+          "name": "findings",
+          "type": "Finding",
+          "cardinality": "0..*",
+          "meaning": "Esito dei controlli e lacune."
+        },
+        {
+          "name": "status",
+          "type": "ProposalStatus",
+          "cardinality": "1",
+          "meaning": "Stato del ciclo di proposta."
+        },
+        {
+          "name": "decision",
+          "type": "HumanDecision",
+          "cardinality": "0..1",
+          "meaning": "Decisione ricevuta."
+        },
+        {
+          "name": "baseContextVersion",
+          "type": "Version",
+          "cardinality": "1",
+          "meaning": "Revisione rispetto alla quale si propone la modifica."
+        },
+        {
+          "name": "reviewPayloadKey",
+          "type": "Identifier",
+          "cardinality": "1",
+          "meaning": "Identità immutabile del contenuto sostanziale da approvare, verificata dal controllo applicativo. Cambia se cambiano contenuto, effetti, evidenze determinanti o versioni di base; non cambia per soli stato amministrativo, collegamento alla decisione o registrazione dell’applicazione."
+        },
+        {
+          "name": "candidateDefinitions",
+          "type": "EntityRef",
+          "cardinality": "0..*",
+          "meaning": "Oggetti candidati di creazione o revisione, mantenuti in un insieme di proposta distinto dalle definizioni attive. I loro riferimenti si risolvono nel candidato o nei modelli autorizzati, mai mediante applicazione anticipata."
+        }
+      ],
+      "ruleRefs": [
+        "R01",
+        "R19",
+        "R20"
+      ]
+    },
+    {
+      "name": "HumanDecision",
+      "instanceLayer": "execution_state",
+      "purpose": "Decisione attribuibile a una persona autorizzata, su un oggetto e una versione precisi.",
+      "fields": [
+        {
+          "name": "context",
+          "type": "ExecutionContext",
+          "cardinality": "1",
+          "meaning": "Ambito della decisione."
+        },
+        {
+          "name": "decider",
+          "type": "Participant",
+          "cardinality": "1",
+          "meaning": "Responsabile umano autorizzato."
+        },
+        {
+          "name": "target",
+          "type": "EntityRef",
+          "cardinality": "1",
+          "meaning": "Proposta, valutazione o binding cui si riferisce la decisione."
+        },
+        {
+          "name": "decision",
+          "type": "DecisionKind",
+          "cardinality": "1",
+          "meaning": "Approva, rifiuta o richiede revisione."
+        },
+        {
+          "name": "reason",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Motivazione e condizioni."
+        },
+        {
+          "name": "decidedAt",
+          "type": "Timestamp",
+          "cardinality": "1",
+          "meaning": "Momento della decisione."
+        },
+        {
+          "name": "reviewedPayloadKey",
+          "type": "Identifier",
+          "cardinality": "1",
+          "meaning": "Identità del contenuto esaminato nella versione indicata da target. Deve coincidere con il reviewPayloadKey del contenuto applicato."
+        },
+        {
+          "name": "coveredPayloadKeys",
+          "type": "Identifier",
+          "cardinality": "1..*",
+          "meaning": "Contenuti sostanziali esplicitamente coperti dalla decisione: include reviewedPayloadKey e gli eventuali binding o valutazioni candidati esaminati dentro una proposta. L’insieme è verificato dal controllo applicativo, non ampliato dagli agenti."
+        }
+      ],
+      "ruleRefs": [
+        "R13",
+        "R19",
+        "R20"
+      ]
+    },
+    {
+      "name": "TaskPlan",
+      "instanceLayer": "execution_state",
+      "purpose": "Piano concettuale dei task del Lead, proiettabile nel piano tipizzato già documentato.",
+      "fields": [
+        {
+          "name": "context",
+          "type": "ExecutionContext",
+          "cardinality": "1",
+          "meaning": "Contesto e revisione alla pianificazione."
+        },
+        {
+          "name": "request",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Richiesta interpretata con obiettivo e vincoli."
+        },
+        {
+          "name": "tasks",
+          "type": "WorkerTask",
+          "cardinality": "0..*",
+          "meaning": "Task in ordine di proposta; le dipendenze determinano l’ordine valido."
+        },
+        {
+          "name": "expectedCoverage",
+          "type": "LearningOutcome",
+          "cardinality": "0..*",
+          "meaning": "Risultati da trattare, se la richiesta richiede attività disciplinari."
+        },
+        {
+          "name": "findings",
+          "type": "Finding",
+          "cardinality": "0..*",
+          "meaning": "Lacune e condizioni che delimitano il piano."
+        }
+      ],
+      "ruleRefs": [
+        "R07",
+        "R16",
+        "R17",
+        "R18"
+      ]
+    },
+    {
+      "name": "WorkerTask",
+      "instanceLayer": "execution_state",
+      "purpose": "Unità di delega ad una sola specializzazione, distinta dall’attività dell’apprendente.",
+      "fields": [
+        {
+          "name": "stepKey",
+          "type": "Identifier",
+          "cardinality": "1",
+          "meaning": "ID unico all’interno del piano, corrispondente a PlanStep.id."
+        },
+        {
+          "name": "specialization",
+          "type": "AgentSpecialization",
+          "cardinality": "1",
+          "meaning": "Profilo autorizzato da usare."
+        },
+        {
+          "name": "intent",
+          "type": "Intent",
+          "cardinality": "1",
+          "meaning": "Scopo principale."
+        },
+        {
+          "name": "brief",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Consegna con topic, livello, obiettivo, perimetro, vincoli e formato atteso."
+        },
+        {
+          "name": "activities",
+          "type": "ActivityDefinition",
+          "cardinality": "0..*",
+          "meaning": "Attività da preparare, erogare o valutare."
+        },
+        {
+          "name": "dependsOn",
+          "type": "WorkerTask",
+          "cardinality": "0..*",
+          "meaning": "Task dello stesso piano il cui output è necessario."
+        },
+        {
+          "name": "requiredCapabilities",
+          "type": "CapabilityGrant",
+          "cardinality": "0..*",
+          "meaning": "Sole capacità necessarie al task."
+        },
+        {
+          "name": "retrievalNeed",
+          "type": "Text",
+          "cardinality": "0..1",
+          "meaning": "Bisogno informativo; nel piano runtime diventa una RetrievalRequest autorizzata."
+        },
+        {
+          "name": "expectedOutput",
+          "type": "OutputKind",
+          "cardinality": "1",
+          "meaning": "Contratto semantico atteso."
+        }
+      ],
+      "ruleRefs": [
+        "R14",
+        "R15",
+        "R16",
+        "R17",
+        "R18"
+      ]
+    },
+    {
+      "name": "TaskResult",
+      "instanceLayer": "execution_state",
+      "purpose": "Esito di una delega, compreso il caso di errore o salto.",
+      "fields": [
+        {
+          "name": "task",
+          "type": "WorkerTask",
+          "cardinality": "1",
+          "meaning": "Task cui risponde."
+        },
+        {
+          "name": "status",
+          "type": "TaskStatus",
+          "cardinality": "1",
+          "meaning": "Esito del controllo applicativo: SUCCEEDED solo dopo ammissibilità dell’output, non per il solo ritorno tecnico del worker."
+        },
+        {
+          "name": "content",
+          "type": "Text",
+          "cardinality": "0..1",
+          "meaning": "Output del worker, se disponibile."
+        },
+        {
+          "name": "citations",
+          "type": "Citation",
+          "cardinality": "0..*",
+          "meaning": "Fonti a sostegno del contenuto."
+        },
+        {
+          "name": "proposals",
+          "type": "ChangeProposal",
+          "cardinality": "0..*",
+          "meaning": "Modifiche suggerite, ancora non applicate."
+        },
+        {
+          "name": "findings",
+          "type": "Finding",
+          "cardinality": "0..*",
+          "meaning": "Limiti, errori sanitizzati e non conformità."
+        },
+        {
+          "name": "coverage",
+          "type": "LearningOutcome",
+          "cardinality": "0..*",
+          "meaning": "Risultati realmente trattati; non automaticamente acquisiti."
+        }
+      ],
+      "ruleRefs": [
+        "R09",
+        "R16",
+        "R18",
+        "R21"
+      ]
+    },
+    {
+      "name": "StateChange",
+      "instanceLayer": "execution_state",
+      "purpose": "Variazione registrata dal componente autorizzato; collega causa, controllo e nuovo stato.",
+      "fields": [
+        {
+          "name": "context",
+          "type": "ExecutionContext",
+          "cardinality": "1",
+          "meaning": "Esecuzione modificata."
+        },
+        {
+          "name": "baseVersion",
+          "type": "Version",
+          "cardinality": "1",
+          "meaning": "Revisione attesa prima dell’applicazione."
+        },
+        {
+          "name": "newVersion",
+          "type": "Version",
+          "cardinality": "1",
+          "meaning": "Revisione risultante."
+        },
+        {
+          "name": "cause",
+          "type": "EntityRef",
+          "cardinality": "1",
+          "meaning": "Evidenza, valutazione, proposta o risultato che giustifica l’aggiornamento."
+        },
+        {
+          "name": "authorizationBasis",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Politica già vigente oppure HumanDecision identificabile; mai permesso attribuito dal worker a sé stesso."
+        },
+        {
+          "name": "change",
+          "type": "Text",
+          "cardinality": "1",
+          "meaning": "Che cosa è variato e perché."
+        },
+        {
+          "name": "recordedAt",
+          "type": "Timestamp",
+          "cardinality": "1",
+          "meaning": "Momento della registrazione."
+        }
+      ],
+      "ruleRefs": [
+        "R13",
+        "R19",
+        "R20"
+      ]
+    },
+    {
+      "name": "ActivityOccurrence",
+      "instanceLayer": "execution_state",
+      "purpose": "Impiego concreto di un’attività per un soggetto, con progresso e tentativo propri.",
+      "fields": [
+        {
+          "name": "context",
+          "type": "ExecutionContext",
+          "cardinality": "1",
+          "meaning": "Contesto proprietario e snapshot di avvio."
+        },
+        {
+          "name": "learner",
+          "type": "Participant",
+          "cardinality": "1",
+          "meaning": "Apprendente coinvolto."
+        },
+        {
+          "name": "activity",
+          "type": "ActivityDefinition",
+          "cardinality": "1",
+          "meaning": "Definizione e versione impiegate."
+        },
+        {
+          "name": "processNode",
+          "type": "ProcessNode",
+          "cardinality": "0..1",
+          "meaning": "Unità di provenienza quando l’attività è parte di un percorso."
+        },
+        {
+          "name": "attemptKey",
+          "type": "Identifier",
+          "cardinality": "1",
+          "meaning": "Tentativo distinguibile; il riuso non sovrascrive le occorrenze precedenti."
+        },
+        {
+          "name": "status",
+          "type": "ActivityStatus",
+          "cardinality": "1",
+          "meaning": "Avanzamento dell’attività dell’apprendente, distinto da TaskStatus."
+        },
+        {
+          "name": "completionRule",
+          "type": "RuleDefinition",
+          "cardinality": "0..1",
+          "meaning": "Criterio applicabile se il completamento deve essere inferito automaticamente."
+        },
+        {
+          "name": "evidence",
+          "type": "LearningEvidence",
+          "cardinality": "0..*",
+          "meaning": "Evidenze collegate, anche in versioni successive dell’occorrenza."
+        }
+      ],
+      "ruleRefs": [
+        "R02",
+        "R06",
+        "R11",
+        "R20"
+      ]
+    }
+  ],
+  "operatingPolicies": {
+    "leastPrivilege": [
+      "Per ogni task, l’insieme di capacità necessarie deve essere incluso nelle capacità del profilo, della politica del contesto e dell’implementazione disponibile.",
+      "Le capacità effettivamente esposte non devono eccedere quelle necessarie. Se il runtime espone tutti i tool di AgentConfig, scegliere un profilo già minimo; un divieto scritto nel task non realizza isolamento.",
+      "Se non esiste un profilo sufficientemente ristretto, bloccare quella delega e segnalare il requisito di configurazione o di enforcement. Non assumere filtraggio dei tool per step: non è documentato nei PUML.",
+      "Un task senza necessità di tool usa un insieme vuoto. Le skills non autorizzano accessi a dati o API.",
+      "Gli output delle dipendenze trasferiscono dati pertinenti e provenienza, mai permessi, credenziali o autorità. Ogni nuovo worker riceve solo il contesto necessario.",
+      "Le fonti e i risultati di retrieval sono contenuti da esaminare; non possono ridefinire i ruoli, le politiche o i permessi del sistema."
+    ],
+    "retrieval": {
+      "preparation": "Consultazioni entro le fonti autorizzate dalla politica; il Curator propone selezioni o materiali generati con provenienza. I candidati non diventano automaticamente binding approvati.",
+      "learning": "Consultazioni limitate alle risorse approvate e legate a quell’ExecutionContext, pertinenti al task e consentite al partecipante.",
+      "enforcement": "Il filtro delle risorse deve essere garantito dal controllo applicativo o dal backend prima di trasferire evidenze al worker. Una query testuale con il nome del corso non è un controllo di autorizzazione.",
+      "missingResource": "Una risorsa obbligatoria irrisolta blocca l’attività che la richiede. Si può chiedere chiarimento, proporre un’alternativa da approvare oppure svolgere un task indipendente coperto dalle risorse disponibili.",
+      "noExternalResource": "Un dialogo, un chiarimento o un esercizio originale può non richiedere risorse esterne se la politica lo consente. Va distinta l’elaborazione generata dalle affermazioni attribuite a fonti; non si simulano citazioni.",
+      "candidateDiscoveryBoundary": "Una nuova ricerca di candidati esterni al perimetro LEARNING richiede un contesto PREPARATION distinto, con autorizzazioni proprie. Il contesto di apprendimento segnala la lacuna; non trasmette automaticamente dati dell’apprendente o permessi al contesto di preparazione. Il Curator può proporre una risorsa; il binding nel contesto LEARNING richiede comunque decisione e applicazione. Se tale contesto autorizzato non è disponibile, la ricerca non parte."
+    },
+    "humanAuthority": {
+      "ordinaryInteraction": "Spiegazioni, esercizi, domande socratiche, quiz e feedback formativo possono essere erogati entro politiche già autorizzate senza una decisione umana aggiuntiva a ogni turno.",
+      "requiredDecisions": "Modifiche a modelli approvati, nuove rubriche o soglie, binding di materiali, cambi di perimetro e valutazioni formali richiedono il responsabile competente. La verifica formale di un risultato richiede sempre conferma umana autorizzata oltre a regole ed evidenze valide.",
+      "automaticRecords": "Il controllo applicativo può registrare richiesta, esiti dei task, consegna, feedback e progresso non verificato sulla base delle autorizzazioni vigenti. La registrazione di un evento non rende vera una conclusione pedagogica.",
+      "learnerVsAuthority": "L’utente corrente può scegliere il proprio obiettivo o metodo didattico; non ottiene per questo il diritto di modificare rubriche, valutazioni formali o risorse di un corso altrui.",
+      "pendingDecision": "In assenza di decisione, la proposta resta pendente e lo stato autorevole interessato non cambia. Rifiuto e richiesta di revisione sono esiti registrabili, non approvazioni implicite."
+    },
+    "socraticContinuity": [
+      "Il vincolo Socratic si applica al singolo obiettivo o problema per il quale è attivo, dal briefing alla sintesi finale.",
+      "Il Lead non aggiunge alla risposta socratica la soluzione ottenuta da Teacher, Curator o Evaluator. I materiali e le citazioni presentati non devono svelarla indirettamente.",
+      "Una richiesta mista può produrre task su argomenti distinti; non può aggirare il vincolo sullo stesso problema mediante un altro ruolo.",
+      "Si attende la risposta dell’apprendente prima dell’indizio successivo quando il progresso dipende da essa. Nessun loop di turni o risposta del discente è simulato.",
+      "L’eventuale cambio a spiegazione diretta deve essere una scelta esplicita dell’utente compatibile con la politica. Avvia un nuovo task Teacher; il worker Socratic non cambia ruolo."
+    ],
+    "assessment": [
+      "Generare una verifica, ricevere una risposta e valutarla sono momenti distinti. La valutazione richiede evidenze dell’apprendente.",
+      "Le soluzioni e le chiavi di correzione riservate non sono incluse nel materiale mostrato all’apprendente prima del momento consentito.",
+      "Trainer consolida e offre feedback; Evaluator gestisce test strutturati e giudizi. I criteri applicati devono essere identificabili.",
+      "Rubriche, soglie, livelli, pesi, tempi e regole di aggregazione appartengono ai modelli approvati; se mancanti si producono bozze o feedback descrittivo, non esiti formali inventati.",
+      "Il successo tecnico della delega non equivale al successo didattico dell’apprendente. L’assenza di evidenza non equivale a competenza assente."
+    ],
+    "pedagogicalComposition": [
+      "Gerarchia del percorso, strategia didattica, prerequisiti, ordine delle attività e dipendenze fra task sono relazioni distinte.",
+      "Una fase SEQUENTIAL dichiara l’ordine dei figli e le condizioni di completamento. Una fase INDEPENDENT ammette figli senza ordine reciproco, ma definisce comunque la condizione di completamento complessiva.",
+      "INDEPENDENT astrae la composizione parallela della fonte senza richiedere esecuzione concorrente dei worker: il runtime resta sequenziale.",
+      "Un co-requisito richiede una regola esplicita di soddisfacimento congiunto; non impone lo stesso istante di avvio.",
+      "Adattamento al progresso significa scelta motivata del successivo task o di un nuovo piano dopo osservazioni disponibili. Non introduce JjScript, cicli o guardie eseguibili nel PlanStep esistente."
+    ],
+    "strategyFamilies": [
+      {
+        "family": "Orientamento e comprensione",
+        "examples": [
+          "conoscenze di base",
+          "esemplificazione",
+          "esplorazione delle possibilità",
+          "analisi di casi",
+          "esplorazione guidata",
+          "esplorazione autonoma"
+        ]
+      },
+      {
+        "family": "Analisi riflessiva",
+        "examples": [
+          "negoziazione dei ruoli",
+          "valutazione dei risultati",
+          "riflessione documentata",
+          "confronto riflessivo",
+          "riflessione mediata da supporti"
+        ]
+      },
+      {
+        "family": "Elaborazione collaborativa",
+        "examples": [
+          "supporto fra pari",
+          "condivisione di risorse e strategie",
+          "supporto di comunità",
+          "co-produzione",
+          "adattamento informato da supporti",
+          "interrogazione e revisione iterative"
+        ]
+      },
+      {
+        "family": "Esecuzione situata",
+        "examples": [
+          "prova assistita in scala ridotta",
+          "applicazione nel contesto reale",
+          "integrazione della dimensione emotiva",
+          "raffinamento della progettazione",
+          "uso responsabile degli strumenti"
+        ]
+      },
+      {
+        "family": "Disposizione del soggetto",
+        "examples": [
+          "reazioni emotive espresse",
+          "atteggiamenti e convinzioni dichiarati",
+          "autoefficacia percepita"
+        ]
+      }
+    ],
+    "strategyFamilyStatus": "Vocabolario orientativo de-dominizzato dalla fonte, non enumerazione chiusa né sequenza prescritta. Le strategie effettive sono istanze di Strategy; non si inferiscono stati emotivi o caratteristiche personali dal solo comportamento.",
+    "bootstrap": [
+      "Il sistema parte dal metamodello fisso e da una configurazione fidata di identità, ruoli, autorizzazioni e PolicySet; tali permessi non vengono inventati dal Lead né ricavati dai documenti disciplinari.",
+      "Se manca il primo modello di dominio, il controllo applicativo può aprire un ExecutionContext DRAFT in modalità PREPARATION, con partecipanti e politica validi e models vuoto. Questo stato non dichiara una sessione didattica pronta.",
+      "Una ChangeProposal di creazione riferisce come target il contesto DRAFT o il contenitore/versione esistente; contiene la definizione candidata del nuovo modello con i suoi topic e riferimenti, ancora non attiva. La validazione comprende tutto l’insieme candidato, consentendo collegamenti fra oggetti nuovi solo se risolvibili al suo interno.",
+      "Una volta validata e approvata dal responsabile autorizzato, la proposta viene applicata e il contesto può fissare le versioni dei modelli. Il passaggio ad ACTIVE/LEARNING richiede il contesto pertinente pronto.",
+      "Se mancano persino politica iniziale, identità o autorizzazione del responsabile, si restituisce una richiesta di configurazione/chiarimento senza deleghe o ampliamenti di permessi."
+    ]
+  },
+  "workflow": {
+    "semantics": "Un ciclo per richiesta, con sospensione esplicita quando serve un input umano. Le fasi definiscono responsabilità e condizioni, non implementano un motore.",
+    "stages": [
+      {
+        "id": "U",
+        "name": "Richiesta utente + contesto",
+        "owner": "Orchestrator",
+        "inputs": [
+          "richiesta",
+          "identità e autorizzazioni disponibili"
+        ],
+        "actions": [
+          "Rifiutare input vuoto o fuori dai limiti applicabili.",
+          "Distinguere intento didattico e azioni sullo stato."
+        ],
+        "outputs": [
+          "richiesta contestualizzata"
+        ],
+        "next": [
+          "C"
+        ]
+      },
+      {
+        "id": "C",
+        "name": "Caricamento dei modelli pertinenti e dello stato corrente",
+        "owner": "Controllo applicativo",
+        "inputs": [
+          "richiesta contestualizzata",
+          "metamodello fisso"
+        ],
+        "actions": [
+          "Selezionare modelli, chiusura dei riferimenti e revisioni applicabili.",
+          "Caricare soltanto contesto, partecipanti, politiche, stato e risorse autorizzati.",
+          "Per contesto nuovo o non disponibile, dichiararlo: non inventare progressi precedenti."
+        ],
+        "outputs": [
+          "snapshot pertinente e versionato"
+        ],
+        "next": [
+          "V"
+        ]
+      },
+      {
+        "id": "V",
+        "name": "Validazione di struttura, riferimenti e prontezza",
+        "owner": "Controllo applicativo",
+        "inputs": [
+          "snapshot",
+          "metamodello fisso"
+        ],
+        "actions": [
+          "Controllare tipi, cardinalità, identità, versioni, riferimenti e invarianti.",
+          "Valutare prontezza per l’azione: prerequisiti, risorse, criteri e autorizzazioni.",
+          "Isolare lacune locali; riferimenti obbligatori invalidi impediscono il task interessato."
+        ],
+        "outputs": [
+          "contesto validato",
+          "rilievi e confini operativi"
+        ],
+        "next": [
+          "P",
+          "O"
+        ]
+      },
+      {
+        "id": "P",
+        "name": "Orchestrazione: piano dei compiti",
+        "owner": "Lead per la proposta; Orchestrator per validazione e ordine",
+        "inputs": [
+          "contesto validato",
+          "riepiloghi agenti disponibili"
+        ],
+        "actions": [
+          "Associare intenti a ruoli, specializzazioni e output attesi.",
+          "Esplicitare dipendenze e consultazioni necessarie.",
+          "Validare nuovamente il piano prodotto: forma, limiti, ID, profili, permessi, riferimenti delle dipendenze e assenza di cicli.",
+          "Ordinare topologicamente gli step in modo stabile."
+        ],
+        "outputs": [
+          "piano autorizzato e ordinato oppure rilievi"
+        ],
+        "next": [
+          "R",
+          "S",
+          "O"
+        ]
+      },
+      {
+        "id": "R",
+        "name": "Consultazioni e retrieval autorizzati",
+        "owner": "Orchestrator",
+        "inputs": [
+          "prossimo step eseguibile",
+          "perimetro di fonti"
+        ],
+        "actions": [
+          "Se una dipendenza non è SUCCEEDED dopo il suo controllo di ammissibilità, saltare lo step e registrarne la causa.",
+          "Se lo step richiede retrieval autorizzato, recuperare, filtrare e associare le fonti prima del worker.",
+          "Se non serve retrieval, proseguire senza consultazioni."
+        ],
+        "outputs": [
+          "briefing con input pertinenti e fonti autorizzate oppure esito di errore/salto"
+        ],
+        "next": [
+          "A",
+          "R",
+          "S"
+        ]
+      },
+      {
+        "id": "A",
+        "name": "TaskTool: esecuzione degli agenti",
+        "owner": "Orchestrator → TaskTool → nuovo Worker",
+        "inputs": [
+          "configurazione risolta dal registry",
+          "briefing validato"
+        ],
+        "actions": [
+          "Creare il worker specializzato dello step con i soli accessi necessari.",
+          "Ricevere l’output come provvisorio. Prima di dichiararlo SUCCEEDED, verificare ammissibilità rispetto a contratto del task, ruolo, fonti, perimetro e copertura minima.",
+          "Un output semanticamente respinto produce FAILED con il rilievo pertinente; non è trasferibile ai task dipendenti. Questi vengono SKIPPED secondo la regola delle dipendenze.",
+          "Per ogni trasferimento a un altro task, selezionare solo il contenuto ammissibile per il destinatario: un output Teacher valido non autorizza l’invio della soluzione a un task Socratic sullo stesso problema.",
+          "Registrare TaskResult e continuare con il prossimo step nel piano, mai assumendo memoria dell’istanza precedente."
+        ],
+        "outputs": [
+          "risultato dello step"
+        ],
+        "next": [
+          "R",
+          "S"
+        ]
+      },
+      {
+        "id": "S",
+        "name": "Controllo degli output e sintesi",
+        "owner": "Controllo applicativo + Lead",
+        "inputs": [
+          "stati, risultati e fonti entro limiti di contesto"
+        ],
+        "actions": [
+          "Ricontrollare a livello complessivo pertinenza, riferimenti, copertura, vincoli di ruolo e separazione fatti/proposte; i controlli di ammissibilità per step sono già avvenuti prima delle dipendenze.",
+          "Trattare un output non conforme come non utilizzabile; non occultare le violazioni nella sintesi.",
+          "Sintetizzare gli esiti utilizzabili senza attribuire successo a obiettivi non coperti."
+        ],
+        "outputs": [
+          "risposta controllata o esito di fallimento"
+        ],
+        "next": [
+          "O"
+        ]
+      },
+      {
+        "id": "O",
+        "name": "Risposta con fonti oppure proposta",
+        "owner": "Lead tramite Orchestrator",
+        "inputs": [
+          "sintesi",
+          "rilievi",
+          "eventuali modifiche proposte"
+        ],
+        "actions": [
+          "Restituire ANSWER, PROPOSAL, CLARIFICATION, PARTIAL_RESULT o FAILURE secondo l’esito.",
+          "Mostrare le fonti effettivamente utilizzate e le lacune rilevanti; non inventare riferimenti.",
+          "Rendere la proposta e le sue conseguenze comprensibili al decisore."
+        ],
+        "outputs": [
+          "risposta all’utente",
+          "eventuale proposta pendente"
+        ],
+        "next": [
+          "H",
+          "D"
+        ]
+      },
+      {
+        "id": "H",
+        "name": "Decisione umana quando richiesta",
+        "owner": "Persona autorizzata nel contesto",
+        "inputs": [
+          "proposta o valutazione concreta",
+          "fonti e controlli"
+        ],
+        "actions": [
+          "Approvare, rifiutare o richiedere revisione sull’oggetto e sulla versione indicati.",
+          "Finché non arriva la decisione, sospendere la sola applicazione che la richiede."
+        ],
+        "outputs": [
+          "HumanDecision o attesa esplicita"
+        ],
+        "next": [
+          "D"
+        ]
+      },
+      {
+        "id": "D",
+        "name": "Aggiornamento dello stato",
+        "owner": "Controllo applicativo autorizzato",
+        "inputs": [
+          "eventi osservati",
+          "decisione o politica già vigente"
+        ],
+        "actions": [
+          "Ricontrollare autorizzazione, conformità e compatibilità della revisione.",
+          "Registrare gli eventi ammessi e applicare solo le modifiche autorizzate.",
+          "Mantenere indipendenti progresso, verifica, stato delle proposte e successo dei task.",
+          "Restituire l’esito della registrazione: proposta approvata ma non applicata non è una modifica effettiva."
+        ],
+        "outputs": [
+          "nuova revisione con provenienza oppure conflitto dichiarato"
+        ],
+        "next": []
+      }
+    ],
+    "transitionRules": [
+      "U→C→V è obbligatorio per un ciclo accettato; un errore di input termina prima della pianificazione.",
+      "V→O quando mancano informazioni essenziali o i task richiesti non sono ammissibili; V→P per la porzione validata.",
+      "P→R con almeno uno step valido; P→S per piano vuoto ammesso; P→O per piano respinto senza esecuzione.",
+      "R→A per step ammissibile; R→R salta al prossimo step finito o saltato; R→S quando non restano step. Ogni transizione avanza nel piano finito: nessun ciclo aperto.",
+      "A→R se restano step; A→S altrimenti. Il retrieval è per step, non obbligatoriamente un unico blocco globale prima di tutti gli agenti.",
+      "O→H solo per azioni che richiedono una decisione. O→D per registrazioni già autorizzate. Nessuna decisione umana fittizia viene creata per rappresentare il bypass.",
+      "H→D dopo una decisione; in attesa si può registrare soltanto lo stato pendente. Rifiuto o revisione non autorizzano l’applicazione proposta.",
+      "Una correzione del contesto o una nuova risposta dell’apprendente può avviare un nuovo ciclo da U/C. Retry e replanning automatici non sono presunti nel runtime documentato."
+    ],
+    "failureSemantics": [
+      "Piano ciclico, agente sconosciuto o retrieval non autorizzato: nessuna esecuzione del piano invalido.",
+      "Dipendenza FAILED o SKIPPED: il task dipendente è SKIPPED con causa esplicita.",
+      "Errore di retrieval: non fingere fonti recuperate. Se necessario al compito, fallisce lo step; un’alternativa priva di ricerca richiede una nuova valutazione di ammissibilità.",
+      "Piano non vuoto con tutti gli step falliti o saltati: fallimento dell’orchestrazione; messaggio comprensibile senza dettagli sensibili.",
+      "Almeno uno step riuscito consente la sintesi documentata, ma la risposta è parziale se mancano risultati necessari. Il Lead non colma arbitrariamente le parti fallite.",
+      "Piano vuoto consentito per chiarimenti, limiti, stato o sintesi di risultati già disponibili. Non è una via per aggirare la delega specialistica richiesta dalla didattica.",
+      "Esito del worker formalmente ricevuto ma semanticamente non conforme: contenuto escluso dalla risposta e dagli aggiornamenti finché non corretto. Tale gate semantico è requisito del flusso finale, non comportamento attestato dai PUML."
+    ]
+  },
+  "normativeRules": [
+    {
+      "id": "R01",
+      "scope": "immutabilità e livelli",
+      "requirement": "Il metamodello è fisso. Modelli disciplinari e stato possono variare nei limiti delle politiche; nessuna proposta può modificare tipi, categorie o invarianti durante l’esecuzione. Un contesto DRAFT/PREPARATION può precedere il primo modello, purché identità e politica provengano dalla configurazione fidata. Un contesto LEARNING/ACTIVE non può avere models vuoto.",
+      "onViolation": "Rifiutare la modifica al contratto e descrivere il limite."
+    },
+    {
+      "id": "R02",
+      "scope": "identità e riferimenti",
+      "requirement": "Ogni entità ha id, versione e provenienza. Ogni riferimento risolve un oggetto del tipo atteso e della versione esatta; i riferimenti di sessione restano nel contesto autorizzato. DomainModel.definitions può riferire soltanto definizioni del livello domain_configuration. Il caricamento segue la chiusura dei riferimenti pertinenti, includendo le versioni storiche necessarie alle evidenze e alle decisioni.",
+      "onViolation": "Bloccare gli usi dipendenti dal riferimento invalido; non risolvere per somiglianza del nome."
+    },
+    {
+      "id": "R03",
+      "scope": "agnosticismo e ruoli",
+      "requirement": "Topic, classificazioni, scale, contesti e strategie sono dati dei modelli. Ruoli umani, ruoli worker e componenti di controllo restano distinti.",
+      "onViolation": "Correggere il mapping senza aggiungere categorie di agenti o tassonomie disciplinari fisse."
+    },
+    {
+      "id": "R04",
+      "scope": "gerarchia dei topic",
+      "requirement": "La relazione parentTopics non ha cicli. Le relazioni associative possono essere cicliche e non implicano prerequisiti.",
+      "onViolation": "Segnalare il ciclo gerarchico; non vietare indiscriminatamente cicli semantici fra pacchetti o riferimenti."
+    },
+    {
+      "id": "R05",
+      "scope": "prerequisiti",
+      "requirement": "Un prerequisito MANDATORY deve essere SATISFIED secondo una regola definita prima dell’attività dipendente. UNKNOWN non vale SATISFIED. RECOMMENDED e RECOMMENDED_SEQUENCE producono rilievi; CO_REQUISITE richiede una politica di soddisfacimento congiunto. Cicli di obblighi che impediscono l’avvio sono invalidi.",
+      "onViolation": "Bloccare il task dipendente, proporre ripasso o diagnosi del prerequisito; non bloccare una diagnosi che non dipenda dall’obiettivo ancora non acquisito."
+    },
+    {
+      "id": "R06",
+      "scope": "composizione del percorso",
+      "requirement": "LearningDesign.root è una PHASE. Una PHASE pronta contiene almeno un figlio e nessuna attività diretta; una UNIT pronta contiene almeno un’attività e nessun figlio. La gerarchia è aciclica, con un solo genitore per nodo nel percorso. Composizione e condizione di completamento sono esplicite prima di avanzamento automatico. La chiusura di un nodo usa lo stato delle ActivityOccurrence pertinenti e la sua regola; COMPLETED non prova acquisizione e SKIPPED non vale completamento salvo esplicita regola autorizzata. Un’istanza WorkerTask terminata non completa automaticamente l’attività del discente.",
+      "onViolation": "Permettere una bozza dichiarata; impedire avanzamento non determinabile. Le attività riusabili restano riferimenti, non contenimenti multipli."
+    },
+    {
+      "id": "R07",
+      "scope": "copertura e prontezza",
+      "requirement": "Un percorso pronto copre i suoi risultati mediante le attività delle unità. Ogni verifica copre gli esiti che dichiara di valutare. Un task copre il proprio obiettivo oppure dichiara la parte mancante.",
+      "onViolation": "Segnalare risultati scoperti; non confondere presenza nel catalogo con appartenenza al percorso o copertura effettiva."
+    },
+    {
+      "id": "R08",
+      "scope": "uso delle risorse",
+      "requirement": "In LEARNING una risorsa usata deve avere un binding valido, approvato e coerente con il contesto, il destinatario e il compito. PREPARATION ammette candidati entro il perimetro autorizzato. Un requisito obbligatorio deve essere soddisfatto prima dell’attività. La scoperta di risorse fuori perimetro è possibile soltanto in un distinto contesto PREPARATION autorizzato, non come eccezione implicita al filtro di LEARNING.",
+      "onViolation": "Bloccare l’accesso o il task interessato; proporre materiale alternativo senza approvarlo automaticamente."
+    },
+    {
+      "id": "R09",
+      "scope": "fonti e provenienza",
+      "requirement": "Distinguere fonte, condizioni d’uso, materiale derivato, citazione e affermazione. Le risorse generate dichiarano l’origine e le fonti realmente usate. Un punteggio di ricerca non conferisce attendibilità o approvazione.",
+      "onViolation": "Eliminare citazioni non verificabili e affermazioni non sostenute oppure qualificarle come ipotesi o proposta."
+    },
+    {
+      "id": "R10",
+      "scope": "rubrica",
+      "requirement": "Le chiavi dei criteri sono uniche nella rubrica e quelle dei livelli nel criterio. Ogni CriterionJudgment riferisce chiavi esistenti nella versione applicata e le evidenze pertinenti. Pesi e aggregazione sono richiesti soltanto se previsti dalla regola.",
+      "onViolation": "Nessun punteggio aggregato o giudizio formale finché la griglia necessaria è incompleta."
+    },
+    {
+      "id": "R11",
+      "scope": "evidenza",
+      "requirement": "L’evidenza effettiva riferisce soggetto, contesto, attività, occorrenza/tentativo, risultati e versioni. Il tipo deve essere ammesso dalla specifica di valutazione. Il testo prodotto dall’agente e il successo tecnico del task non sono di per sé prova dell’apprendimento. I riferimenti a soggetto, contesto e attività dell’evidenza devono concordare con l’ActivityOccurrence indicata. La sua versione storica identifica il tentativo anche se lo stato dell’occorrenza evolve.",
+      "onViolation": "Rifiutare il collegamento valutativo non fondato; conservare eventualmente l’evento come interazione, senza attribuire competenza."
+    },
+    {
+      "id": "R12",
+      "scope": "regole di esito",
+      "requirement": "Un’acquisizione o un giudizio determinato richiedono regole definite e input sufficienti. Una descrizione ambigua o libera nella fonte non diventa automaticamente un predicato eseguibile. Mancanza di evidenza o di criterio produce UNKNOWN/non determinabile.",
+      "onViolation": "Fornire feedback descrittivo o proposta di criterio; non inventare soglie, livelli, pesi o successo."
+    },
+    {
+      "id": "R13",
+      "scope": "stato verificato e responsabilità",
+      "requirement": "VERIFIED richiede ACQUIRED secondo criterio, evidenze ammissibili, verificationRule soddisfatta, valutazione formale e conferma di un umano autorizzato. ACQUIRED può essere registrato con regola approvata e autorizzazione vigente senza equivalere a verifica.",
+      "onViolation": "Mantenere UNVERIFIED o PENDING_CONFIRMATION; non rilasciare certificazioni implicite."
+    },
+    {
+      "id": "R14",
+      "scope": "minimo privilegio",
+      "requirement": "Capacità necessarie del task ⊆ capacità autorizzate da profilo e contesto. Capacità effettivamente esposte al worker ⊆ capacità necessarie. Tool, API, KB e dati seguono lo stesso vincolo di ambito.",
+      "onViolation": "Scegliere un profilo minimo già configurato o bloccare la delega; il prompt non sostituisce l’enforcement."
+    },
+    {
+      "id": "R15",
+      "scope": "accesso e isolamento",
+      "requirement": "L’autorizzazione al retrieval mediato non espone automaticamente un tool al worker. Nessun worker eredita diritti da Lead, task precedenti o fonti recuperate; le letture sono limitate al contesto necessario.",
+      "onViolation": "Rimuovere accessi e contenuti eccedenti prima di delegare; se non possibile, non eseguire."
+    },
+    {
+      "id": "R16",
+      "scope": "ruolo e output",
+      "requirement": "Ogni specializzazione ha una categoria e un ruolo della tassonomia chiusa. Intento, output e topic del task sono coerenti con quel profilo. Il vincolo Socratic non ammette soluzioni dirette o rivelate indirettamente, anche nella sintesi.",
+      "onViolation": "Separare intenti misti in task appropriati; rifiutare o correggere output che violano il contratto."
+    },
+    {
+      "id": "R17",
+      "scope": "piano",
+      "requirement": "Gli step hanno ID unici, agenti esistenti e dipendenze nello stesso piano, senza auto-dipendenze né cicli. Il controllo applicativo verifica limiti e autorizzazioni e applica un ordinamento topologico stabile sequenziale.",
+      "onViolation": "Rifiutare il piano invalido prima di chiamare retrieval o TaskTool."
+    },
+    {
+      "id": "R18",
+      "scope": "esiti e copertura",
+      "requirement": "Una dipendenza non riuscita impedisce lo step dipendente. Un piano non vuoto senza successi termina in errore. La sintesi usa soltanto output utilizzabili e dichiara esplicitamente una copertura parziale. SUCCEEDED nel flusso finale richiede anche il controllo semantico per step; il solo completamento della chiamata non basta. Il controllo avviene prima che l’output possa diventare input di un task dipendente.",
+      "onViolation": "Non trasformare fallimenti, skip o contenuti respinti in risultati riusciti."
+    },
+    {
+      "id": "R19",
+      "scope": "proposte e decisioni",
+      "requirement": "Una proposta conforme resta una proposta fino alla decisione richiesta. Solo un responsabile autorizzato può approvarla; approvazione e applicazione sono eventi distinti. Richiesta di revisione comporta una nuova versione da riesaminare. La decisione riferisce la versione effettivamente esaminata e il suo reviewedPayloadKey. Una nuova revisione che aggiunge soltanto stato o collegamento alla decisione conserva l’approvazione se il contenuto sostanziale è invariato. Il controllo applicativo verifica l’identità del contenuto, senza fidarsi di una chiave dichiarata dall’agente. Una decisione su ChangeProposal può approvare anche binding o valutazioni inclusi nel candidato: il loro reviewPayloadKey deve comparire in coveredPayloadKeys ed essere parte del contenuto realmente esaminato. Un oggetto aggiunto o modificato dopo la revisione non eredita l’approvazione della proposta.",
+      "onViolation": "Lasciare la proposta pendente, rifiutata o da rivedere senza applicarla."
+    },
+    {
+      "id": "R20",
+      "scope": "consistenza dello stato",
+      "requirement": "Applicare una modifica solo se autorizzazione, versioni di base, riferimenti e vincoli restano validi. Registrare causa, autore/controllore, decisione o politica, revisione precedente e successiva. Non reinterpretare evidenze storiche con una nuova rubrica. I soli eventi di audit o gli aggiornamenti amministrativi della proposta non modificano la revisione dello stato autorevole su cui essa si basa. Le modifiche sostanziali di quel contesto richiedono invece il controllo della base. La storia di una valutazione o di un binding approvati resta ricostruibile anche dopo successive revisioni amministrative.",
+      "onViolation": "Marcare la proposta STALE in caso di revisione incompatibile; rivalidare e, se cambia l’oggetto approvato, richiedere una nuova decisione."
+    },
+    {
+      "id": "R21",
+      "scope": "risposta finale",
+      "requirement": "La risposta distingue contenuto fondato, inferenza esplicita, lacune e proposte. Riporta fonti effettivamente usate quando il contenuto è basato su fonti; preserva il ruolo didattico e non dichiara aggiornamenti non applicati.",
+      "onViolation": "Correggere la sintesi o fornire un esito parziale/chiarimento; nessuna risposta fittizia a copertura di un errore."
+    }
+  ],
+  "outputContract": {
+    "workerMinimum": [
+      "tipo di output atteso",
+      "contenuto coerente con ruolo e obiettivo",
+      "copertura effettiva",
+      "fonti utilizzate e provenienza del materiale generato",
+      "lacune o limiti rilevanti",
+      "eventuali proposte distinte dai fatti"
+    ],
+    "finalResponseMinimum": [
+      "tipo di risposta",
+      "contenuto utile all’utente nel modo didattico scelto",
+      "fonti verificabili quando utilizzate",
+      "obiettivi coperti e limiti sostanziali",
+      "decisione richiesta, solo se necessaria",
+      "stato di eventuali aggiornamenti: proposto, approvato, applicato o non applicato"
+    ],
+    "implementationBoundary": "Questi sono contratti semantici. I PUML documentano output dei worker e risposta finale come testo; non si presume che siano già record strutturati o validati secondo questi campi."
+  },
+  "compatibilityMap": [
+    {
+      "concern": "Separazione Lead / Orchestrator",
+      "documented": "Lead produce ExecutionPlan e sintesi; Orchestrator valida ed esegue.",
+      "metamodel": "architectureContract, TaskPlan e workflow P/S.",
+      "status": "PRESERVED",
+      "boundary": "Nessun tool aggiunto al Lead."
+    },
+    {
+      "concern": "Piano tipizzato",
+      "documented": "ExecutionPlan.steps; PlanStep.id, agent, task, depends_on, retrieval.",
+      "metamodel": "TaskPlan.tasks → steps; WorkerTask.stepKey → id; specialization.registryName → agent; brief → task; dependsOn.stepKey → depends_on; retrievalNeed → retrieval quando autorizzato.",
+      "status": "SEMANTIC_PROJECTION",
+      "boundary": "I riferimenti pedagogici e gli output attesi integrano il briefing o un contesto controllato; non sono nuovi campi già supportati da PlanStep. Prima dell’invio il controllo risolve i riferimenti e costruisce il briefing autorizzato; il testo task non è una via per introdurre istruzioni o accessi che superino i permessi."
+    },
+    {
+      "concern": "RetrievalRequest",
+      "documented": "tool=search_documents, query e k tra 1 e 20; ricerca prima del worker.",
+      "metamodel": "Il bisogno informativo diventa richiesta concreta solo dopo verifica dei permessi.",
+      "status": "PRESERVED",
+      "boundary": "1..20 è un limite dell’adattatore documentato, non una regola pedagogica universale. Il filtro per binding approvati non è mostrato nei PUML ed è un requisito ulteriore. Document.id/metadata devono consentire l’associazione verificabile alla Resource e al binding/versione ammessi; in assenza di tale mapping il risultato non viene presentato come fonte approvata."
+    },
+    {
+      "concern": "Registry e specializzazione",
+      "documented": "AgentConfig: name, description, model, tools, skills, system_prompt, source; al Lead solo name/description.",
+      "metamodel": "AgentSpecialization descrive categoria, ruolo e ambito associati a configurazioni esistenti.",
+      "status": "PARTLY_REQUIRES_SUPPORT",
+      "boundary": "Non si aggiungono campi a AgentConfig implicitamente. La classificazione semantica e la sua verifica devono essere rese disponibili dal sistema; la selezione resta vincolata al registry reale."
+    },
+    {
+      "concern": "Tool minimi",
+      "documented": "Il worker viene creato usando skills/tools della configurazione.",
+      "metamodel": "R14 e R15 richiedono accessi strettamente necessari per il singolo task.",
+      "status": "PARTLY_REQUIRES_SUPPORT",
+      "boundary": "Si ottiene compatibilità con profili già minimi; il filtraggio dinamico dei tool non è attestato. Se mancano entrambi, il requisito non è soddisfatto."
+    },
+    {
+      "concern": "Creazione per step e ordine",
+      "documented": "Nuovo worker per step; ordinamento topologico stabile; esecuzione sequenziale.",
+      "metamodel": "WorkerTask e TaskResult, contesto esplicito per ogni delega.",
+      "status": "PRESERVED",
+      "boundary": "Nessuna memoria autonoma del worker, esecuzione concorrente o coppia Architect/Builder interna ai worker."
+    },
+    {
+      "concern": "Errori, skip e piano vuoto",
+      "documented": "Skip su dipendenza non riuscita; errore se tutti gli step falliscono/saltano; sintesi con piano vuoto o almeno un successo.",
+      "metamodel": "workflow.failureSemantics e R18.",
+      "status": "PRESERVED_WITH_SEMANTIC_CONSTRAINTS",
+      "boundary": "I dettagli di tutti gli errori non sono esplicitati dal sorgente. Nei PUML il ritorno del worker è marcato success; la validazione semantica per step, prima del riuso dell’output nelle dipendenze, è un requisito aggiunto. Non può essere rinviata alla sola sintesi finale."
+    },
+    {
+      "concern": "Caricamento modelli e verifica preliminare",
+      "documented": "Sono mostrati caricamento configurazioni e validazione del piano; non un repository di modelli pedagogici con risoluzione delle versioni.",
+      "metamodel": "workflow C/V; EntityRef; DomainModel; regole di copertura e prontezza.",
+      "status": "REQUIRED_NOT_DOCUMENTED",
+      "boundary": "Contratto del flusso finale, da supportare dal controllo applicativo senza attribuirne l’esistenza al codice attuale."
+    },
+    {
+      "concern": "Stato, approvazioni e audit",
+      "documented": "Il runtime MAS mostra stati degli step; persistenza dell’apprendimento e decisioni umane non sono nei PUML. Helper e nota li propongono per il runtime di origine.",
+      "metamodel": "ExecutionContext, LearningState, ChangeProposal, HumanDecision e StateChange.",
+      "status": "REQUIRED_NOT_DOCUMENTED",
+      "boundary": "Definizioni concettuali necessarie al flusso richiesto, non implementazioni presenti."
+    },
+    {
+      "concern": "Valutazioni, rubriche e fonti",
+      "documented": "Il megamodello contiene blueprint, tipi di evidenza e rubricKey; mancano rubriche complete e regole operative.",
+      "metamodel": "AssessmentSpecification, Rubric, RuleDefinition, Evaluation e Citation.",
+      "status": "FORMALIZED_REQUIREMENT",
+      "boundary": "Lo schema stabilisce quali dati servono. Soglie, criteri specifici, chiavi di correzione e contenuti restano modelli variabili."
+    },
+    {
+      "concern": "Dialogo iterativo e aggiornamento dei piani",
+      "documented": "Una chiamata answer(question) produce un piano, esegue gli step e sintetizza.",
+      "metamodel": "Nuovi turni possono ripartire da un contesto aggiornato.",
+      "status": "REQUIRED_NOT_DOCUMENTED_FOR_PERSISTENT_DIALOGUE",
+      "boundary": "Nessun branching eseguibile, retry o replanning automatico viene attribuito al piano esistente."
+    }
+  ],
+  "traceability": [
+    {
+      "sourceRefs": [
+        "SRC_REQUEST"
+      ],
+      "sourceConcept": "Quattro macro-categorie e specializzazione prima dell’uso",
+      "adoptedAs": [
+        "workerTaxonomy",
+        "AgentSpecialization",
+        "WorkerTask",
+        "R14",
+        "R15",
+        "R16"
+      ],
+      "treatment": "Requisito corrente, tassonomia chiusa con cinque ruoli in quattro categorie."
+    },
+    {
+      "sourceRefs": [
+        "SRC_ARCH",
+        "SRC_SEQUENCE",
+        "SRC_CONTEXT"
+      ],
+      "sourceConcept": "Lead senza tool, controllo Python, TaskTool, registry, worker per step e retrieval mediato",
+      "adoptedAs": [
+        "architectureContract",
+        "workflow",
+        "compatibilityMap"
+      ],
+      "treatment": "Confini preservati; nessuna trasposizione dei poteri degli agenti descritti nella nota di origine."
+    },
+    {
+      "sourceRefs": [
+        "SRC_MEGAMODEL",
+        "SRC_ABSTRACTION"
+      ],
+      "sourceConcept": "Competencies::Competency, Certification Design::CompetencyCluster, Prerequisite e Domain",
+      "adoptedAs": [
+        "DomainModel",
+        "Topic",
+        "LearningOutcome",
+        "OutcomeGroup",
+        "Prerequisite"
+      ],
+      "treatment": "Categorie specifiche AIM-PRO rimosse; topic distinto dal risultato atteso; soddisfacimento dei prerequisiti formalizzato come requisito."
+    },
+    {
+      "sourceRefs": [
+        "SRC_MEGAMODEL",
+        "SRC_ABSTRACTION"
+      ],
+      "sourceConcept": "Scenario::Scenario, APhase, Phase, PhaseGroup, Module e Goal",
+      "adoptedAs": [
+        "LearningDesign",
+        "ProcessNode",
+        "ActivityDefinition",
+        "R06",
+        "R07"
+      ],
+      "treatment": "Fase/gruppo unificati nel nodo composto; obiettivi espressi come riferimenti ai risultati. Conservata la ricorsione; ordine e completamento esplicitati. Parallelismo pedagogico astratto come indipendenza compatibile con task sequenziali."
+    },
+    {
+      "sourceRefs": [
+        "SRC_MEGAMODEL",
+        "SRC_ABSTRACTION"
+      ],
+      "sourceConcept": "iSQD: cinque famiglie e 25 strategie concrete",
+      "adoptedAs": [
+        "Strategy",
+        "operatingPolicies.strategyFamilies"
+      ],
+      "treatment": "Rimossa la gerarchia di classi specifica; le strategie diventano dati selezionabili e non sequenza obbligatoria né categorie di worker."
+    },
+    {
+      "sourceRefs": [
+        "SRC_MEGAMODEL"
+      ],
+      "sourceConcept": "Activities::Activity e sei specializzazioni",
+      "adoptedAs": [
+        "ActivityDefinition",
+        "InteractionFormat",
+        "EvidenceKind"
+      ],
+      "treatment": "Conservati consegna, risultati, forma ed evidenze; aggiunte esposizione e dialogo per coprire Teacher e Socratic. Nessuna istanza astratta o item incompleto viene copiato."
+    },
+    {
+      "sourceRefs": [
+        "SRC_MEGAMODEL",
+        "SRC_HELPER"
+      ],
+      "sourceConcept": "Resources::Resource, OER, GeneratedOER e ResourceBinding proposto",
+      "adoptedAs": [
+        "ResourceRequirement",
+        "Resource",
+        "ResourceBinding",
+        "Citation"
+      ],
+      "treatment": "Separati bisogno, candidato, fonte, materiale derivato, condizioni d’uso e selezione approvata. Relazione risorsa-attività 0..* anziché 1..*: risorse esterne obbligatorie solo quando richieste, così sono ammessi dialoghi autonomi senza citazioni fittizie."
+    },
+    {
+      "sourceRefs": [
+        "SRC_MEGAMODEL",
+        "SRC_HELPER",
+        "SRC_DESCRIPTORS"
+      ],
+      "sourceConcept": "AssessmentBlueprint, CustomAssessment, RubricTask e rubricKey",
+      "adoptedAs": [
+        "AssessmentSpecification",
+        "Rubric",
+        "RubricCriterion",
+        "RubricLevel",
+        "RuleDefinition",
+        "Evaluation"
+      ],
+      "treatment": "Unificati blueprint riusabile e verifica locale; rubriche e regole sono formalizzazioni necessarie, non ricostruzioni di uno schema Offering non allegato."
+    },
+    {
+      "sourceRefs": [
+        "SRC_HELPER",
+        "SRC_DESCRIPTORS",
+        "SRC_ABSTRACTION"
+      ],
+      "sourceConcept": "Offering, partecipanti, evidenze, acquisito/verificato e decisioni responsabili",
+      "adoptedAs": [
+        "ExecutionContext",
+        "Participant",
+        "LearningEvidence",
+        "LearningState",
+        "HumanDecision",
+        "StateChange",
+        "ActivityOccurrence"
+      ],
+      "treatment": "Generalizzata l’erogazione in sessione/contesto. Il percorso è facoltativo per richieste isolate; versioni ed evidenze restano obbligatorie dove necessarie."
+    },
+    {
+      "sourceRefs": [
+        "SRC_HELPER",
+        "SRC_DESCRIPTORS"
+      ],
+      "sourceConcept": "Proposta → controllo → approvazione → applicazione; sei origini dei valori",
+      "adoptedAs": [
+        "ChangeProposal",
+        "Provenance",
+        "ValueOrigin",
+        "R19",
+        "R20"
+      ],
+      "treatment": "Applicazione separata dalla decisione. Eventi ordinari registrabili secondo politica; verifiche formali e modifiche autorevoli mantengono controllo umano."
+    },
+    {
+      "sourceRefs": [
+        "SRC_MEGAMODEL",
+        "SRC_ABSTRACTION"
+      ],
+      "sourceConcept": "Profili duplicati Users::iSQD_Profile e Scenario::iSQD_Profile; Educators; metadati di piattaforma",
+      "adoptedAs": [
+        "Participant",
+        "sourceAuthority"
+      ],
+      "treatment": "Profili consolidati; classi vuote, digital twin, URI interni, refusi ed enumerazioni inutilizzate eliminati. Ruolo umano Teacher non confuso con agente TEACHER."
+    },
+    {
+      "sourceRefs": [
+        "SRC_REQUEST",
+        "SRC_HELPER",
+        "SRC_ARCH"
+      ],
+      "sourceConcept": "Flusso completo richiesto oltre la sola risposta testuale",
+      "adoptedAs": [
+        "workflow",
+        "compatibilityMap"
+      ],
+      "treatment": "Aggiunta validazione prima della pianificazione e conservata validazione del piano dopo la sua produzione. Stato persistente, approvazioni e filtro delle risorse dichiarati requisiti non attestati."
+    }
+  ],
+  "acceptanceScenarios": [
+    {
+      "id": "CASE01",
+      "situation": "Richiesta di spiegazione su topic noto; esiste un profilo Teacher minimo e materiale approvato pertinente.",
+      "expected": "Piano Teacher, retrieval solo se utile e autorizzato, spiegazione con fonti usate; nessuna acquisizione o verifica attribuita per il solo ascolto.",
+      "ruleRefs": [
+        "R08",
+        "R14",
+        "R16",
+        "R21"
+      ]
+    },
+    {
+      "id": "CASE02",
+      "situation": "Richiesta mista di lezione, pratica e verifica.",
+      "expected": "Task distinti Teacher, Trainer, Evaluator con dipendenze solo dove necessarie. Il test può essere generato ora; la valutazione aspetta le risposte reali dell’utente.",
+      "ruleRefs": [
+        "R11",
+        "R16",
+        "R17"
+      ]
+    },
+    {
+      "id": "CASE03",
+      "situation": "Guida Socratic sullo stesso problema per cui un output precedente contiene la soluzione.",
+      "expected": "La soluzione non viene mostrata né mascherata da indizio. Domanda o suggerimento limitato; attesa dell’elaborazione dell’utente. Il Lead preserva il vincolo.",
+      "ruleRefs": [
+        "R15",
+        "R16",
+        "R21"
+      ]
+    },
+    {
+      "id": "CASE04",
+      "situation": "Manca o è ignoto un prerequisito obbligatorio.",
+      "expected": "L’attività dipendente non parte; possibile ripasso o diagnosi del prerequisito. La raccomandazione non obbligatoria produce soltanto un rilievo.",
+      "ruleRefs": [
+        "R05"
+      ]
+    },
+    {
+      "id": "CASE05",
+      "situation": "In LEARNING manca una risorsa. Un Curator, in un distinto contesto PREPARATION autorizzato, trova un candidato non ancora legato alla sessione didattica.",
+      "expected": "Il tutor non usa né recupera il candidato non approvato. Dal contesto PREPARATION nasce una proposta di risorsa; per il contesto LEARNING si propone e approva un binding, poi il controllo applicativo lo applica. Nessun trasferimento automatico di dati o permessi fra i contesti.",
+      "ruleRefs": [
+        "R08",
+        "R19",
+        "R20"
+      ]
+    },
+    {
+      "id": "CASE06",
+      "situation": "Il profilo esistente possiede tool eccedenti e il runtime non può limitarli per task.",
+      "expected": "Nessuna delega a quel profilo; scegliere un profilo minimo idoneo o segnalare la lacuna. Scrivere “non usare” nel prompt non soddisfa il requisito.",
+      "ruleRefs": [
+        "R14",
+        "R15"
+      ]
+    },
+    {
+      "id": "CASE07",
+      "situation": "Quiz ricevuto e risposta disponibile, ma soglia o rubrica necessaria non definite.",
+      "expected": "Feedback descrittivo o proposta di criteri; nessun esito formale, acquisizione o verifica inventati.",
+      "ruleRefs": [
+        "R10",
+        "R11",
+        "R12",
+        "R13"
+      ]
+    },
+    {
+      "id": "CASE08",
+      "situation": "Piano con riferimento di dipendenza inesistente o ciclo.",
+      "expected": "Rifiuto prima di qualsiasi retrieval o delega.",
+      "ruleRefs": [
+        "R02",
+        "R17"
+      ]
+    },
+    {
+      "id": "CASE09",
+      "situation": "Uno step fallisce, il suo dipendente viene saltato e un task indipendente riesce.",
+      "expected": "Sintesi solo delle parti riuscite, lacune esplicite e nessun aggiornamento basato sulla parte fallita. Se nessuno riesce, fallimento dell’orchestrazione.",
+      "ruleRefs": [
+        "R18",
+        "R20",
+        "R21"
+      ]
+    },
+    {
+      "id": "CASE10",
+      "situation": "Una proposta approvata si riferisce a una revisione di stato ormai incompatibile.",
+      "expected": "Nessuna applicazione; proposta STALE, rivalidazione e nuova decisione se cambia il contenuto oggetto dell’approvazione.",
+      "ruleRefs": [
+        "R19",
+        "R20"
+      ]
+    },
+    {
+      "id": "CASE11",
+      "situation": "Due sessioni condividono lo stesso modello; l’apprendente completa un’attività in una sola.",
+      "expected": "Evidenza e stato aggiornati soltanto nel contesto proprietario. Ogni riuso conserva occorrenza, tentativo e versione.",
+      "ruleRefs": [
+        "R02",
+        "R11",
+        "R20"
+      ]
+    },
+    {
+      "id": "CASE12",
+      "situation": "Richiesta isolata senza percorso completo, calendario o attività già modellata.",
+      "expected": "Chiarire o proporre la definizione minima dell’attività e dei risultati necessari. Nessun corso artificiale obbligatorio. Una spiegazione ordinaria può essere erogata; per registrarla come evidenza valutativa servono i riferimenti richiesti.",
+      "ruleRefs": [
+        "R07",
+        "R11",
+        "R12"
+      ]
+    },
+    {
+      "id": "CASE13",
+      "situation": "Modello strutturalmente valido ma unità pronta dichiarata senza attività o obiettivi coperti.",
+      "expected": "Bozza non pronta, con rilievi di completezza; non presentarla come percorso eseguibile.",
+      "ruleRefs": [
+        "R06",
+        "R07"
+      ]
+    },
+    {
+      "id": "CASE14",
+      "situation": "Serve una specializzazione che il registry non contiene.",
+      "expected": "Lacuna esplicita; nessun nome inventato in PlanStep.agent. Affinamento semantico ammesso solo per un profilo già idoneo e autorizzato.",
+      "ruleRefs": [
+        "R14",
+        "R16",
+        "R17"
+      ]
+    },
+    {
+      "id": "CASE15",
+      "situation": "Valutazione formale positiva dell’Evaluator senza conferma del responsabile umano.",
+      "expected": "Eventuale acquisizione solo se già autorizzata da regola; verifica resta pendente o non verificata. L’agente non è il decisore umano.",
+      "ruleRefs": [
+        "R12",
+        "R13",
+        "R19"
+      ]
+    },
+    {
+      "id": "CASE16",
+      "situation": "Fase pedagogicamente indipendente con due attività entrambe necessarie al completamento.",
+      "expected": "Attività schedulabili senza ordine pedagogico reciproco; task eseguiti comunque uno alla volta. La fase non si chiude prima della condizione di completamento dichiarata.",
+      "ruleRefs": [
+        "R06",
+        "R17"
+      ]
+    },
+    {
+      "id": "CASE17",
+      "situation": "Un output viene restituito tecnicamente dal worker ma viola il contratto, prima di un task che ne dipende.",
+      "expected": "Controllo immediato prima del riuso: TaskResult FAILED; task dipendente SKIPPED. Nessun contenuto respinto raggiunge il suo briefing.",
+      "ruleRefs": [
+        "R15",
+        "R16",
+        "R18"
+      ]
+    },
+    {
+      "id": "CASE18",
+      "situation": "Una decisione approva una versione della proposta; la revisione successiva aggiunge solo status APPROVED e il collegamento alla decisione.",
+      "expected": "La decisione resta valida per lo stesso reviewPayloadKey verificato. Cambiare l’effetto della proposta richiede invece nuova identità del contenuto e nuova decisione.",
+      "ruleRefs": [
+        "R19",
+        "R20"
+      ]
+    },
+    {
+      "id": "CASE19",
+      "situation": "Prima richiesta di una materia priva di DomainModel, con identità e PolicySet iniziali validi.",
+      "expected": "DRAFT/PREPARATION con models vuoto; proposta di modello candidato collegata al contesto di base; validazione e decisione prima dell’attivazione. Senza autorizzazioni iniziali si chiede configurazione e non si delega.",
+      "ruleRefs": [
+        "R01",
+        "R02",
+        "R14",
+        "R19"
+      ]
+    },
+    {
+      "id": "CASE20",
+      "situation": "Un nuovo dominio usa una tassonomia disciplinare propria e chiama il responsabile umano docente.",
+      "expected": "La tassonomia viene modellata come dati senza cambiare classi o categorie. Il docente umano non viene scambiato per il worker TEACHER e i suoi permessi non sono trasferiti al worker.",
+      "ruleRefs": [
+        "R01",
+        "R03",
+        "R14",
+        "R16"
+      ]
+    },
+    {
+      "id": "CASE21",
+      "situation": "Due topic si riferiscono reciprocamente come argomenti correlati; un altro insieme propone una gerarchia parentTopics ciclica.",
+      "expected": "Le relazioni associative reciproche sono ammesse; il ciclo gerarchico è respinto. Nessuna delle due relazioni viene trasformata implicitamente in prerequisito o dipendenza di task.",
+      "ruleRefs": [
+        "R04",
+        "R05",
+        "R17"
+      ]
+    },
+    {
+      "id": "CASE22",
+      "situation": "Una risorsa ha alto punteggio di retrieval ma non sostiene una frase della sintesi; un riassunto è stato generato da più materiali.",
+      "expected": "La frase non riceve una citazione fittizia o un’attendibilità derivata dal punteggio. Il riassunto dichiara origine generata e materiali realmente usati; condizioni d’uso e approvazione sono verificate separatamente.",
+      "ruleRefs": [
+        "R08",
+        "R09",
+        "R21"
+      ]
+    }
+  ],
+  "acceptanceScenarioStatus": "Casi di accettazione della specifica, non test eseguiti sul runtime. Il controllo del presente file riguarda sintassi, riferimenti interni, copertura dei requisiti e revisione documentale.",
+  "nonGoalsAndOpenValues": {
+    "notDelivered": [
+      "codice del runtime",
+      "implementazioni di worker",
+      "prompt di sistema",
+      "formato di training",
+      "connettori o motore di regole",
+      "modelli disciplinari già popolati",
+      "migrazione automatica dai file di origine"
+    ],
+    "intentionallyVariable": [
+      "dominio, topic e risultati concreti",
+      "livelli e criteri disciplinari",
+      "rubriche, soglie e chiavi di correzione",
+      "strumenti reali e specializzazioni disponibili",
+      "politiche di risorse, autorizzazioni e responsabili",
+      "calendario, durate e limiti operativi"
+    ],
+    "minimalEnablement": "Per un task bastano modelli pertinenti, profilo idoneo, permessi e dati necessari a quel task. Per registrare evidenze, valutare o aggiornare lo stato verificato occorrono anche le definizioni e decisioni previste. Le lacune non si colmano modificando il metamodello."
+  },
+  "designDecisions": [
+    {
+      "choice": "Un solo JSON dichiarativo, leggibile e con riferimenti tipizzati.",
+      "reason": "Mantiene una specifica unica analoga per funzione al megamodello, senza fingere un formato importabile o un’implementazione.",
+      "origin": "Scelta di formalizzazione per questa consegna."
+    },
+    {
+      "choice": "Controllo semantico prima di ogni riuso di output, oltre al controllo della sintesi.",
+      "reason": "Impedisce propagazione di fonti non ammesse, soluzioni vietate o risultati non conformi.",
+      "origin": "Precisazione del requisito di controllo; capacità non attestata nei PUML."
+    },
+    {
+      "choice": "Approvazione del contenuto sostanziale con identità stabile, separata dalle revisioni amministrative.",
+      "reason": "Evita che registrare una decisione renda immediatamente invalida la decisione stessa.",
+      "origin": "Formalizzazione nuova di proposta, decisione e applicazione."
+    },
+    {
+      "choice": "Contesto di preparazione distinto per scoprire materiali nuovi.",
+      "reason": "Conserva senza eccezioni implicite il perimetro dei materiali approvati nel tutoraggio.",
+      "origin": "Integrazione dei due perimetri descritti da helper."
+    },
+    {
+      "choice": "Bootstrap fidato e contesto DRAFT senza modelli, con proposte candidate isolate.",
+      "reason": "Consente di preparare un nuovo dominio senza fingere una configurazione pronta o attribuire permessi al Lead.",
+      "origin": "Formalizzazione nuova, non funzionalità attestata nel runtime."
+    },
+    {
+      "choice": "Occorrenza dell’attività separata dalla definizione e dal task del worker.",
+      "reason": "Consente riuso, tentativi e avanzamento osservabile senza confondere apprendimento e completamento tecnico.",
+      "origin": "Integrazione di percorso riusabile e stato runtime."
+    }
+  ]
+}

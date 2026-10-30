@@ -1,7 +1,7 @@
 ---
-name: agent-x
+name: answer-reviewer
 description: Use this agent to review a draft answer for correctness and unsupported claims.
-model: local
+profile: openrouter
 tools: []
 skills: [answer-review]
 ---

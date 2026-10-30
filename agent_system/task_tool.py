@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field, PrivateAttr, field_validator
 
 from agent_system.config import AgentConfig
 from agent_system.registry import AgentRegistry
+from learning.outputs import WorkerOutput
 
 
 class TaskInput(BaseModel):
@@ -36,12 +37,12 @@ class TaskTool(BaseTool):
     description: str = "Delegate one focused task to an available specialized agent."
     args_schema: type[BaseModel] = TaskInput
     registry: AgentRegistry = Field(exclude=True)
-    worker: Callable[[AgentConfig, str], str] = Field(exclude=True)
+    worker: Callable[[AgentConfig, str], WorkerOutput] = Field(exclude=True)
     logger: logging.Logger = Field(exclude=True)
     # ponytail: one lock per tool; per-agent locks if measured throughput requires it.
     _worker_lock: Lock = PrivateAttr(default_factory=Lock)
 
-    def _run(self, agent_name: str, task: str) -> str:
+    def _run(self, agent_name: str, task: str) -> WorkerOutput:
         config = self.registry.get(agent_name)
         self.logger.info("Delegating to worker %s", config.name)
         try:

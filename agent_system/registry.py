@@ -5,7 +5,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
-from agent_system.config import AgentConfig, AgentSummary, ConfigurationError, parse_agent_file
+from agent_system.config import AgentConfig, AgentSummary, ConfigurationError, parse_agent_file, CategoryConfig, LLMSettings, resolve_agent
 
 
 class AgentRegistry:
@@ -24,9 +24,12 @@ class AgentRegistry:
         cls,
         directory: Path,
         *,
-        models: Collection[str],
+        profiles: Collection[str],
         tools: Mapping[str, Any],
         skills: Mapping[str, Any],
+        settings: LLMSettings,
+        categories: Mapping[str, CategoryConfig] | None = None,
+        excluded_names: Collection[str] = (),
     ) -> AgentRegistry:
         try:
             if not directory.is_dir():
@@ -36,24 +39,18 @@ class AgentRegistry:
             raise ConfigurationError(
                 f"Cannot enumerate agent directory {directory}: {error}"
             ) from error
-        configs = [parse_agent_file(path) for path in paths]
-        registry = cls(configs)
-        for config in configs:
-            unknown_tools = set(config.tools) - tools.keys()
-            unknown_skills = set(config.skills) - skills.keys()
-            if config.model not in models:
-                raise ConfigurationError(
-                    f"Agent {config.name} references unknown model: {config.model}"
-                )
-            if unknown_tools:
-                raise ConfigurationError(
-                    f"Agent {config.name} references unknown tools: {sorted(unknown_tools)}"
-                )
-            if unknown_skills:
-                raise ConfigurationError(
-                    f"Agent {config.name} references unknown skills: {sorted(unknown_skills)}"
-                )
-        return registry
+        categories = {} if categories is None else categories
+        for category in categories.values():
+            if set(category.required_skills) - skills.keys() or set(category.allowed_tools) - tools.keys():
+                raise ConfigurationError(f"Category {category.name} references unknown skills or tools")
+        configs = []
+        for path in paths:
+            config = parse_agent_file(path)
+            if config.name in excluded_names:
+                raise ConfigurationError(f"Lead cannot be registered as a worker: {config.name}")
+            configs.append(resolve_agent(config, categories=categories, settings=settings,
+                                         profiles=profiles, tools=tools, skills=skills))
+        return cls(configs)
 
     def get(self, name: str) -> AgentConfig:
         try:
@@ -64,9 +61,9 @@ class AgentRegistry:
 
     def summaries(self) -> tuple[AgentSummary, ...]:
         return tuple(
-            AgentSummary(name=config.name, description=config.description)
+            AgentSummary(name=config.name, description=(f"[{config.category}] {config.description}" if config.category else config.description))
             for config in self._agents.values()
         )
 
-    def model_names(self) -> frozenset[str]:
-        return frozenset(config.model for config in self._agents.values())
+    def profile_names(self) -> frozenset[str]:
+        return frozenset(config.profile for config in self._agents.values())

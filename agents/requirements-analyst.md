@@ -1,7 +1,7 @@
 ---
-name: agent-z
+name: requirements-analyst
 description: Use this agent to extract requirements, constraints, and acceptance criteria.
-model: local
+profile: openrouter
 tools: []
 skills: [requirements-analysis]
 ---

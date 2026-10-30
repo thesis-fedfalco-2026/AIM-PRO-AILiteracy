@@ -1,3 +1,7 @@
+from document_search.contracts import SearchScope, resource_key
+
+TEST_SCOPE = SearchScope(mode="PREPARATION", source_scope_keys=("demo",))
+
 import asyncio
 from pathlib import Path
 import sys
@@ -46,7 +50,7 @@ class McpStdioTest(unittest.IsolatedAsyncioTestCase):
                     self.assertEqual(document["properties"]["score"]["type"], "number")
                     self.assertEqual(output["properties"]["truncated"]["type"], "boolean")
                     result = await asyncio.wait_for(
-                        client.call_tool("search_documents", {"query": "deployment", "k": 1}), timeout=5
+                        client.call_tool("search_documents", {"scope": TEST_SCOPE.model_dump(mode="json"), **{"query": "deployment", "k": 1}}), timeout=5
                     )
                     self.assertFalse(result.isError)
                     self.assertEqual(result.structuredContent["documents"][0]["id"], "mock-technical")
@@ -73,7 +77,7 @@ class McpStdioTest(unittest.IsolatedAsyncioTestCase):
                     ):
                         with self.subTest(arguments=arguments):
                             result = await asyncio.wait_for(
-                                client.call_tool("search_documents", arguments), timeout=5
+                                client.call_tool("search_documents", {"scope": TEST_SCOPE.model_dump(mode="json"), **arguments}), timeout=5
                             )
                             content = "\n".join(
                                 block.text for block in result.content if hasattr(block, "text")
@@ -86,14 +90,14 @@ class McpStdioTest(unittest.IsolatedAsyncioTestCase):
 
     async def test_backend_failure_does_not_return_empty_result(self):
         backend = type("Backend", (), {
-            "search_documents": lambda self, query, k: (_ for _ in ()).throw(SearchError("SENTINEL_PRIVATE")),
+            "search_documents": lambda self, query, k, *, scope: (_ for _ in ()).throw(SearchError("SENTINEL_PRIVATE")),
             "close": lambda self: None,
         })()
         with patch("document_search.server.build_backend", return_value=backend):
             server = create_server({})
             async with Client(server) as client:
                 result = await client.call_tool(
-                    "search_documents", {"query": "deployment", "k": 1}, raise_on_error=False
+                    "search_documents", {"scope": TEST_SCOPE.model_dump(mode="json"), **{"query": "deployment", "k": 1}}, raise_on_error=False
                 )
         content = "\n".join(block.text for block in result.content if hasattr(block, "text"))
         self.assertTrue(result.is_error)

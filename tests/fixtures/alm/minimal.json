@@ -1,0 +1,108 @@
+[
+  {
+    "type": "Topic",
+    "id": "topic",
+    "version": "1",
+    "provenance": {
+      "origin": "CONFIGURATION",
+      "sources": [],
+      "responsible": "fixture"
+    },
+    "fields": {
+      "name": "Concetti di base",
+      "definition": "Dominio sintetico"
+    }
+  },
+  {
+    "type": "DomainModel",
+    "id": "model",
+    "version": "1",
+    "provenance": {
+      "origin": "CONFIGURATION",
+      "sources": [],
+      "responsible": "fixture"
+    },
+    "fields": {
+      "name": "Demo",
+      "scope": "Introduzione",
+      "topics": [
+        {
+          "type": "Topic",
+          "id": "topic",
+          "version": "1"
+        }
+      ]
+    }
+  },
+  {
+    "type": "PolicySet",
+    "id": "policy",
+    "version": "1",
+    "provenance": {
+      "origin": "CONFIGURATION",
+      "sources": [],
+      "responsible": "fixture"
+    },
+    "fields": {
+      "sourceScopes": [
+        "demo"
+      ],
+      "approvalConditions": [
+        "Responsabile autorizzato"
+      ],
+      "permissions": [
+        "Configurazione amministrativa locale"
+      ]
+    }
+  },
+  {
+    "type": "Participant",
+    "id": "learner",
+    "version": "1",
+    "provenance": {
+      "origin": "CONFIGURATION",
+      "sources": [],
+      "responsible": "fixture"
+    },
+    "fields": {
+      "subjectKey": "learner",
+      "roles": [
+        "LEARNER"
+      ]
+    }
+  },
+  {
+    "type": "ExecutionContext",
+    "id": "session",
+    "version": "1",
+    "provenance": {
+      "origin": "CONFIGURATION",
+      "sources": [],
+      "responsible": "fixture"
+    },
+    "fields": {
+      "metamodelVersion": "1.0.0",
+      "models": [
+        {
+          "type": "DomainModel",
+          "id": "model",
+          "version": "1"
+        }
+      ],
+      "mode": "LEARNING",
+      "status": "ACTIVE",
+      "participants": [
+        {
+          "type": "Participant",
+          "id": "learner",
+          "version": "1"
+        }
+      ],
+      "policies": {
+        "type": "PolicySet",
+        "id": "policy",
+        "version": "1"
+      }
+    }
+  }
+]
