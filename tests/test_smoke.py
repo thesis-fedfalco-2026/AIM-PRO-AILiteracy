@@ -6,9 +6,36 @@ from unittest.mock import patch
 import smoke
 from document_search.backend import build_backend
 from tests.learning_runtime import demo_orchestrator
+from learning.outputs import WorkerOutput
 
 
 class SmokeTest(unittest.TestCase):
+    def test_synthetic_source_limits_are_explicit_in_worker_brief(self):
+        backend = build_backend({'SEARCH_BACKEND': 'mock'})
+        self.addCleanup(backend.close)
+        orchestrator = demo_orchestrator(backend.search_documents)
+        with patch('smoke.build_orchestrator', return_value=orchestrator), \
+                patch('smoke.load_dotenv'), redirect_stdout(StringIO()):
+            self.assertEqual(smoke.main([]), 0)
+        brief = next(prompt for kind, prompt in orchestrator.test_events if kind == 'worker')
+        constraints = brief.rsplit('\n', 1)[0]
+        self.assertIn('synthetic examples', constraints)
+        self.assertIn('not a verified real-world procedure', constraints)
+        self.assertIn('completed deployment or rollback', constraints)
+
+    def test_worker_rejection_logs_rule_and_verdict_without_private_content(self):
+        backend = build_backend({'SEARCH_BACKEND': 'mock'})
+        self.addCleanup(backend.close)
+        orchestrator = demo_orchestrator(backend.search_documents)
+        orchestrator.task_tool.worker = lambda *args: WorkerOutput(
+            kind='ASSESSMENT', content='PRIVATE_WORKER_CONTENT')
+        with patch('smoke.build_orchestrator', return_value=orchestrator), \
+                patch('smoke.load_dotenv'), redirect_stdout(StringIO()), \
+                self.assertLogs('test', level='WARNING') as logs:
+            self.assertEqual(smoke.main([]), 1)
+        self.assertTrue(any('codes=R18, semantic_review=ACCEPT' in line for line in logs.output))
+        self.assertNotIn('PRIVATE_WORKER_CONTENT', '\n'.join(logs.output))
+
     def test_smoke_rejects_profile_redirected_to_another_provider(self):
         catalog=smoke.load_model_catalog(smoke.BASE_DIR/'model.properties')
         catalog.profiles['openrouter']=catalog.profiles['openrouter'].model_copy(update={'base_url':'https://api.openai.com/v1','model':'gpt-4.1-mini'})

@@ -74,7 +74,11 @@ class Orchestrator:
                   "ACCEPT solo se contenuto pertinente, copertura onesta, citazioni realmente probanti e ruolo rispettato. "
                   "Rifiuta soluzioni o indizi equivalenti nel modo Socratic, anche nelle fonti e nella sintesi. "
                   "Rifiuta dichiarazioni di aggiornamenti, approvazioni o acquisizioni non dimostrati. "
-                  "I materiali sintetici non sono evidenze reali. Se non determinabile usa UNCERTAIN.\n" +
+                  "Synthetic materials are not real-world evidence, but may support an explanation explicitly "
+                  "limited to the synthetic example, without claiming verified real-world procedures or completed operations. "
+                  "Empty coverage is valid when no outcomes are assigned; empty findings is valid when there are no "
+                  "gaps relative to the task and source limitations are stated in the content. "
+                  "If undetermined, use UNCERTAIN.\n" +
                   canonical({"intent": context.request.intent, "problem": context.request.problem_key, **payload}))
         try:
             result = self._call(prompt, SemanticReview)
@@ -187,6 +191,10 @@ class Orchestrator:
                         review = self._review(context, {"stage": "WORKER", "task": brief,
                             "output": output.pydantic.model_dump(mode="json")})
                         outcomes[step.id] = check_worker_output(task, output.pydantic, context, review=review)
+                        if outcomes[step.id].fields["status"] != "SUCCEEDED":
+                            self.logger.warning("Worker %s rejected (codes=%s, semantic_review=%s)",
+                                step.id, ",".join(f["code"] for f in outcomes[step.id].fields["findings"]),
+                                review.verdict)
                         return outcomes[step.id].fields["status"] == "SUCCEEDED", output
 
                     crew_task = DelegatedTask(name=step.id, description=brief,
