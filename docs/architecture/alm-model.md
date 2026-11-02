@@ -445,6 +445,8 @@ the same metamodel classes or an importable jjodel graph.
 
 The [versioned authoring architecture](authoring-lifecycle.md) introduces local
 application records such as ProjectManifest and ReleaseManifest, persisted as
-existing Resources. They are not additional ALM entity types. Their executable
-reference cycle does not change this normative model or claim production
-completion of the dedicated #9/#10 generators.
+existing Resources. They are not additional ALM entity types. The
+[production project service](authoring-projects.md) persists project selections
+through those existing entities. Release/import operations remain
+reference-only; neither this service nor its acceptance cycle changes the
+normative model or completes the dedicated #9/#10 generators.

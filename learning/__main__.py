@@ -25,6 +25,18 @@ def parse_args(argv=None):
     commands = parser.add_subparsers(dest='command', required=True)
     commands.add_parser('bootstrap')
     commands.add_parser('show')
+    initialize = commands.add_parser('init-authoring-project', help='Propose a project from an approved/applied Curator syllabus')
+    initialize.add_argument('project_id')
+    initialize.add_argument('--syllabus', required=True, help='Exact syllabus Resource EntityRef JSON')
+    initialize.add_argument('--base-context', required=True, help='Exact base ExecutionContext EntityRef JSON')
+    initialize.add_argument('--request-id', required=True)
+    revise = commands.add_parser('revise-authoring-project', help='Propose exact artifact selections and design definitions')
+    revise.add_argument('bundle', type=Path, help='ProjectRevision JSON: project, base_context, design, artifacts, candidates, explanation')
+    revise.add_argument('--request-id', required=True)
+    inspect = commands.add_parser('show-authoring-project', help='Inspect current selections, approval receipts and stale dependencies')
+    inspect.add_argument('project_id')
+    pinned = commands.add_parser('show-project-syllabus', help='Resolve the approved syllabus through an exact current project revision')
+    pinned.add_argument('project', help='Exact project Resource EntityRef JSON')
     propose = commands.add_parser('propose')
     propose.add_argument('bundle', type=Path, help='JSON: targets, candidates, explanation')
     decide = commands.add_parser('decide')
@@ -128,6 +140,19 @@ def main(argv=None):
                 result = entity_data(service.bootstrap(args.context,args.subject))
             elif command == 'show':
                 result = service.show(args.context,args.subject)
+            elif command == 'init-authoring-project':
+                result = service.initialize_authoring_project(args.context, args.subject, {
+                    'project_id': args.project_id, 'syllabus': EntityRef.model_validate_json(args.syllabus),
+                    'base_context': EntityRef.model_validate_json(args.base_context)},
+                    request_id=args.request_id).model_dump(mode='json')
+            elif command == 'revise-authoring-project':
+                result = service.revise_authoring_project(args.context, args.subject,
+                    json.loads(args.bundle.read_text()), request_id=args.request_id).model_dump(mode='json')
+            elif command == 'show-authoring-project':
+                result = service.inspect_authoring_project(args.context, args.subject, args.project_id).model_dump(mode='json')
+            elif command == 'show-project-syllabus':
+                result = service.approved_project_syllabus(args.context, args.subject,
+                    EntityRef.model_validate_json(args.project)).model_dump(mode='json')
             elif command == 'propose':
                 bundle = json.loads(args.bundle.read_text())
                 if not isinstance(bundle, dict) or any(

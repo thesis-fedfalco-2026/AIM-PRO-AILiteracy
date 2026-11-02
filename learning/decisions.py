@@ -273,4 +273,12 @@ def apply_proposal(store: LearningStore, context: RunContext, proposal: EntityRe
         "cause": current.ref.model_dump(), "authorizationBasis": canonical(decision.ref.model_dump()),
         "change": current.fields["proposedChange"], "recordedAt": datetime.now(timezone.utc).isoformat()},
         origin="HUMAN_DECISION", responsible=context.request.subject_key)
-    return store.commit_change(change, (*applied, status), expected_version=root.version, operation_id=operation_id)
+    def project_precondition():
+        from learning.context import load_context
+        from learning.projects import validate_project_application
+        if _latest(store, current, root.id) != current:
+            raise StateConflict('Proposal decision changed before application')
+        fresh = replace(context, snapshot=load_context(store, context.request, context.policy, context.contract))
+        validate_project_application(store, fresh, candidates)
+    return store.commit_change(change, (*applied, status), expected_version=root.version,
+                               operation_id=operation_id, precondition=project_precondition)

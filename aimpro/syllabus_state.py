@@ -171,8 +171,34 @@ def resolve(store, context, design_ref):
             links.append(EntityRef.model_validate(link['syllabus']))
     if len(links) != 1 or links[0].type != 'Resource':
         raise ValueError('Syllabus outline requires one exact payload link')
-    syllabus = context.snapshot.get(links[0])
+    approved = resolve_artifact(store, context, links[0])
+    if approved.artifact.outline != design_ref:
+        raise ValueError('Syllabus payload belongs to another outline')
+    return approved
+
+
+def resolve_artifact(store, context, syllabus_ref):
+    """Resolve a pinned syllabus through its original applied candidate closure.
+
+    Callers authorize the owning context and select the Resource explicitly. The
+    current composite design need not be the original Curator outline.
+    """
+    root = context.snapshot.context
+    syllabus = store.read(EntityRef.model_validate(syllabus_ref), owner=root.id)
+    if syllabus.type != 'Resource':
+        raise ValueError('A syllabus Resource is required')
     artifact = SyllabusArtifact.model_validate_json(syllabus.fields['contentOrLocator'])
+    design_ref = artifact.outline
+    # Only an owning-context applied proposal can supply historical definitions.
+    owners = [p for p in store.owned(root.id, 'ChangeProposal')
+              if p.fields['status'] == 'APPLIED' and
+              syllabus.ref.model_dump() in p.fields['candidateDefinitions']]
+    if len(owners) != 1:
+        raise ValueError('Syllabus requires one applied owning-context proposal')
+    saved = proposal_candidates(store, owners[0])
+    snapshot = replace(context.snapshot, entities={**context.snapshot.entities, **{c.ref: c for c in saved}})
+    context = replace(context, snapshot=snapshot)
+    design = context.snapshot.get(design_ref)
     if (artifact.context_id != root.id or artifact.outline != design_ref or
             artifact.source_snapshot.type != 'Resource' or
             artifact.source_snapshot.model_dump() not in syllabus.fields['derivedFrom']):
@@ -198,8 +224,9 @@ def resolve(store, context, design_ref):
             raise ValueError('Applied syllabus candidates differ from their reviewed payload')
         decision = store.read(EntityRef.model_validate(proposal.fields['decision']), owner=root.id)
         reviewed = store.read(EntityRef.model_validate(decision.fields['target']), owner=root.id)
+        decider = store.read(EntityRef.model_validate(decision.fields['decider']), owner=root.id)
         entities = {**context.snapshot.entities, **{c.ref: c for c in saved},
-                    proposal.ref: proposal, reviewed.ref: reviewed, decision.ref: decision}
+                    proposal.ref: proposal, reviewed.ref: reviewed, decision.ref: decision, decider.ref: decider}
         if not approval_valid(proposal, replace(context.snapshot, entities=entities), context.policy):
             raise ValueError('Syllabus approval does not cover the exact payload or current authority')
         for change in store.owned(root.id, 'StateChange'):

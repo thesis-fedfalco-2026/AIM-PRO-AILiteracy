@@ -1,17 +1,19 @@
 # Versioned authoring projects and frozen learning releases
 
-Status: architecture proposal with an executable reference slice. The repository
-owner requested this design and a complete cycle using simulated agents before
-implementing the dedicated generators in #9 and #10.
+Status: production authoring-project service/CLI with executable acceptance.
+Release/import operations remain reference-only. The repository owner requested
+this design and a complete cycle using simulated agents before implementing the
+dedicated generators in #9 and #10.
 
 For the existing entity model, its cardinalities and the distinction between
 configuration and execution state, see [the ALM conceptual model](alm-model.md).
 
 The reference contracts are in [`learning/authoring.py`](../../learning/authoring.py).
 The acceptance scenarios are in
-[`tests/test_authoring_cycle.py`](../../tests/test_authoring_cycle.py). The project
-and release commands described below are the target application interface, not
-new CLI commands already available in the prototype.
+[`tests/test_authoring_cycle.py`](../../tests/test_authoring_cycle.py). Production
+project operations are implemented in `learning/projects.py`; see
+[the authoring-project CLI guide](authoring-projects.md). Release/import commands
+described below remain the target application interface.
 
 ## Problem and decision
 
@@ -25,7 +27,7 @@ LearningDesign and the matching syllabus outline. Adding an assessment or teachi
 activity creates a new composite design. Reusing that current-design resolver as
 the only authoring handoff would therefore reject a still-approved syllabus.
 
-The application will maintain an explicit project selection of independently
+The application maintains an explicit project selection of independently
 versioned artifacts. Each artifact records exact generation dependencies. A
 reviewed release freezes one compatible selection and its domain definitions.
 Delivery contexts import a specific release and own their learner state and
@@ -128,10 +130,13 @@ dependency revisions. An unrelated context edit can make a pending proposal
 stale even when its content remains useful; recovery is an explicit rebased
 proposal with fresh review, not silent replay of its old authorization.
 
-The read-only reference helpers do not implement job reservation or new write
-commands. Production command adapters must hold a consistent read transaction for
-resolving inputs and recheck their base before atomic writes. Existing generic
-proposal application already rejects stale context versions.
+The read-only reference helpers do not implement job reservation or write
+commands. The production project service holds a SQLite write transaction through
+input resolution, request reservation and atomic proposal/result persistence;
+inspection and syllabus resolution each use one read transaction. Application
+rechecks project and artifact approval/dependency conditions under its final write
+lock, in addition to the existing context compare-and-swap. Future model-backed
+generation must reserve inputs before external work and recheck before writes.
 
 ## Dependency freshness and focused revision
 
@@ -162,9 +167,9 @@ slice conservatively tracks whole artifact versions.
 
 The reference `review_receipt` proves the syllabus artifact's original approved
 payload independently of the evolving composite design. The existing
-`show-aimpro-syllabus` current-outline behavior is unchanged. Future project
-commands must use the explicit selection/receipt boundary rather than quietly
-broadening that older CLI's meaning.
+`show-aimpro-syllabus` current-outline behavior is unchanged. Production
+`show-project-syllabus` uses the explicit project selection/receipt boundary;
+the older CLI keeps its current-exact-outline meaning.
 
 ## Release, delivery and history
 
@@ -222,7 +227,7 @@ It does not touch the existing SCN01 demo or approve the real pending syllabus.
 | Real production mechanism exercised | Simulated boundary |
 | --- | --- |
 | AIM-PRO source preparation, typed Curator checks and candidate mapping | Curator output, Lead verdict and corpus search response |
-| New project/dependency/release reference contracts and receipt validation | Future #9/#10 role adapters constructing ALM candidates |
+| Production project initialization/revisions, stable syllabus resolution, dependency contracts and receipt validation | Future #9/#10 role adapters constructing ALM candidates; release/import command adapters |
 | LearningService proposals, exact human-review payloads, decisions and application | Test operator explicitly records synthetic decisions |
 | CrewAI Flow, registry authorization, TaskTool, output guards and SQLite request results | Lead plans/reviews/synthesis and Teacher/Trainer outputs; an Evaluator worker is also simulated for the learner-permission rejection case |
 | Evaluation validation and reviewed application under actual assessor permissions | Future assessor-facing adapter generates the typed formative Evaluation candidate |
@@ -247,18 +252,20 @@ The acceptance covers:
 7. Rejection of an Evaluator proposal produced under learner-only permissions,
    without granting that learner broader state-change authority.
 
-This is an executable architecture specification, not delivery of #9/#10, a new
-production release CLI, a semantic-quality benchmark, or a complete observed
-activity-completion workflow. The existing ALM engine performs the authoritative
-state transitions; the future authoring adapters and integration commands remain
-to be implemented. No issue closure follows merely from this specification.
+This delivers production project operations and an executable architecture
+specification for subsequent stages. It does not deliver #9/#10, a production
+release CLI, a semantic-quality benchmark or a complete observed activity-completion
+workflow. The existing ALM engine performs authoritative state transitions; the
+future generators, release/import commands and assessor-facing evaluation adapter
+remain to be implemented. No issue closure follows merely from this specification.
 
 ## Implementation sequence after architecture review
 
 1. Review these contracts, boundaries and acceptance assertions with the owner.
-2. Add production project persistence/commands and stable approved-artifact
-   resolution around the reference contracts, with request replay, transaction
-   boundaries and review receipts preserved.
+2. Delivered locally: production project persistence/commands and stable
+   approved-syllabus resolution, with request replay, transaction boundaries,
+   review receipts and application-time revalidation. See the CLI guide and
+   `tests/test_authoring_projects.py`; publication is a separate authorized step.
 3. Implement the dedicated Evaluator adapter (#9), then Teacher/Trainer authoring
    adapters (#10), replacing fixture outputs while retaining these assertions.
 4. Add production release/import commands and a guided review surface using the

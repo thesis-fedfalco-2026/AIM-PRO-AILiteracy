@@ -128,6 +128,12 @@ StateChange. Pending, rejected, approved-but-unapplied, foreign and superseded
 outlines are rejected. Recorded provenance is not an independent authentication
 of the original source or pedagogical equivalence.
 
+For authoring beyond the original outline, initialize an explicit approved
+project selection using [the production project commands](../architecture/authoring-projects.md).
+`show-project-syllabus` preserves access to the exact original Curator approval
+as assessment and instructional definitions evolve. Project initialization and
+each revision still require separate human review/application.
+
 This approved outline is the integration entry point for the dedicated Evaluator
 work in #9 and Teacher/Trainer authoring from an approved syllabus in #10. Those
 generators remain separate work; the learner-side demo does not implement them.

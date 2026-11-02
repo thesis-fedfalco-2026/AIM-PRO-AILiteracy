@@ -58,6 +58,12 @@ the Lead reviews it, and a human approves/applies the exact pending payload.
 See [the Curator workflow](docs/aimpro/curator-syllabus.md); outline approval
 keeps PREPARATION/DRAFT and does not activate learning.
 
+Production authoring projects select an approved/applied Curator syllabus and
+exact artifact versions through reviewed immutable revisions. Use
+`init-authoring-project`, `revise-authoring-project`, `show-authoring-project`
+and `show-project-syllabus`; see the [project CLI guide](docs/architecture/authoring-projects.md).
+Dedicated #9/#10 generators and production release/import commands remain pending.
+
 ## Installation
 
 Python 3 is required, along with Docker Compose 2.20.3 or later only for real search.

@@ -176,6 +176,24 @@ class LearningService:
             authorize(self.policy, subject_key, 'propose', context.snapshot.context.ref)
             return resolve(self.store, context, design)
 
+    def initialize_authoring_project(self, context_id, subject_key, command, *, request_id):
+        from learning.projects import ProjectInitialization, propose_project
+        return propose_project(self, context_id, subject_key,
+            ProjectInitialization.model_validate(command), request_id)
+
+    def revise_authoring_project(self, context_id, subject_key, command, *, request_id):
+        from learning.projects import ProjectRevision, propose_project
+        return propose_project(self, context_id, subject_key,
+            ProjectRevision.model_validate(command), request_id)
+
+    def inspect_authoring_project(self, context_id, subject_key, project_id):
+        from learning.projects import inspect_project
+        return inspect_project(self, context_id, subject_key, project_id)
+
+    def approved_project_syllabus(self, context_id, subject_key, project):
+        from learning.projects import approved_project_syllabus
+        return approved_project_syllabus(self, context_id, subject_key, project)
+
     def prepare_aimpro_execution(self, context_id, subject_key, *, learner, scope_name=None):
         from aimpro.execution_setup import prepare_execution
         return prepare_execution(self.store, self._context(context_id, subject_key),

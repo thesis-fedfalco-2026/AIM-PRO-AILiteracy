@@ -181,7 +181,7 @@ class LearningStore:
         return None if row is None else validate_entity(json.loads(row[0]), self.contract)
 
     def commit_change(self, change: Entity, entities: tuple[Entity, ...], *, expected_version: str,
-                      operation_id: str) -> Entity:
+                      operation_id: str, precondition=None) -> Entity:
         owner = change.fields["context"]["id"]
         fingerprint = hashlib.sha256(canonical([entity_data(change), [entity_data(e) for e in entities],
                                                  expected_version]).encode()).hexdigest()
@@ -195,6 +195,8 @@ class LearningStore:
             current = self.read_context(owner)
             if current.version != expected_version or change.fields["baseVersion"] != expected_version:
                 raise StateConflict("Context revision has changed")
+            if precondition is not None:
+                precondition()
             new_version = change.fields["newVersion"]
             if new_version == expected_version or not any(
                 e.type == "ExecutionContext" and e.id == owner and e.version == new_version for e in entities

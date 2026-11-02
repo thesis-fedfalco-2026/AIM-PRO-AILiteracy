@@ -106,8 +106,9 @@ def review_receipt(store, context, resource):
             continue
         decision = store.read(EntityRef.model_validate(proposal.fields['decision']), owner=root.id)
         reviewed = store.read(EntityRef.model_validate(decision.fields['target']), owner=root.id)
+        decider = store.read(EntityRef.model_validate(decision.fields['decider']), owner=root.id)
         entities = {**context.snapshot.entities, **{c.ref: c for c in saved},
-                    proposal.ref: proposal, decision.ref: decision, reviewed.ref: reviewed}
+                    proposal.ref: proposal, decision.ref: decision, reviewed.ref: reviewed, decider.ref: decider}
         if not approval_valid(proposal, replace(context.snapshot, entities=entities), context.policy):
             continue
         for change in store.owned(root.id, 'StateChange'):
@@ -115,7 +116,10 @@ def review_receipt(store, context, resource):
             if cause.id != proposal.id or change.fields['authorizationBasis'] != canonical(decision.ref.model_dump()):
                 continue
             applied = store.read(cause, owner=root.id)
+            candidate_root = next((c for c in saved if c.type == 'ExecutionContext'), None)
             if (applied.fields.get('status') == 'APPROVED' and
+                    change.fields['context']['id'] == root.id and
+                    (candidate_root is None or change.fields['newVersion'] == candidate_root.version) and
                     change.fields['baseVersion'] == proposal.fields['baseContextVersion'] and
                     review_payload_key(applied, saved) == proposal.fields['reviewPayloadKey']):
                 return ReviewReceipt(proposal=proposal.ref, decision=decision.ref, change=change.ref)

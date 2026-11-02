@@ -1,8 +1,9 @@
 """Simulated role adapters for the executable architecture specification.
 
-Only model/retrieval outputs and future authoring adapters are fixtures. All
-proposals, human decisions, applications, runtime delegation and attempts use
-the existing services. This does not implement production generators #9/#10.
+Only model/retrieval outputs, future generators and release/import adapters are
+fixtures. Project initialization/revisions, proposals, human decisions,
+applications, runtime delegation and attempts use production services. This does
+not implement production generators #9/#10.
 """
 
 import json
@@ -11,8 +12,9 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from aimpro.audit import DEFAULT_PROJECT
-from learning.authoring import (ArtifactSelection, ProjectManifest, prepare_release,
+from learning.authoring import (ArtifactSelection, prepare_release,
                                 released_entities, review_receipt)
+from learning.projects import ProjectInitialization, ProjectRevision
 from learning.context import LearningRequest
 from learning.contracts import EntityRef, entity_data, make_entity
 from learning.decisions import proposal_candidates
@@ -60,7 +62,6 @@ class SimulatedAuthoring:
     def __init__(self, service):
         self.service = service
         self.events = []
-        self.selected = []
         self.definitions = {}
         self.project = None
         self.stage = 0
@@ -96,14 +97,19 @@ class SimulatedAuthoring:
         for e in saved:
             if e.type not in {'ExecutionContext', 'DomainModel', 'Topic', 'LearningOutcome'}:
                 self.definitions[e.id] = e
-        self.selected = [
-            ArtifactSelection(key='source', kind='SOURCE', resource=self.source.ref),
-            ArtifactSelection(key='syllabus', kind='SYLLABUS', resource=self.syllabus.ref,
-                              depends_on=(self.source.ref,))]
+        result = self.service.initialize_authoring_project(AUTH, 'admin',
+            ProjectInitialization(project_id='synthetic-course',
+                base_context=self.service.store.read_context(AUTH).ref, syllabus=self.syllabus.ref),
+            request_id='initialize-project')
+        initialization = self.service.store.read(result.proposal, owner=AUTH)
+        self.review_and_apply(AUTH, initialization, 'initialize-project')
+        self.project = self.service.store.read(result.project, owner=AUTH)
+        self.domain = self.service.store.read(result.domain, owner=AUTH)
+        self.design = self.outline
         return proposal
 
     def assessment(self, version='1'):
-        review_receipt(self.service.store, self.context(), self.syllabus)
+        self.service.approved_project_syllabus(AUTH, 'admin', self.project.ref)
         self.events.append('EVALUATOR_AUTHORING')
         requirement = entity('ResourceRequirement', 'course:assess-source', {
             'purpose': 'Review the exact source for a fictional assessment response.',
@@ -132,7 +138,7 @@ class SimulatedAuthoring:
         return artifact, (requirement, rubric, spec, activity), (self.syllabus.ref,)
 
     def content(self, role, assessment, version='1'):
-        review_receipt(self.service.store, self.context(), self.syllabus)
+        self.service.approved_project_syllabus(AUTH, 'admin', self.project.ref)
         review_receipt(self.service.store, self.context(), assessment)
         self.events.append(role.upper() + '_AUTHORING')
         teaching = role == 'teacher'
@@ -171,7 +177,6 @@ class SimulatedAuthoring:
         version = str(self.stage)
         selected = ArtifactSelection(key=kind.lower(), kind=kind, resource=artifact.ref,
             depends_on=dependencies, definitions=tuple(e.ref for e in definitions))
-        self.selected = [a for a in self.selected if a.key != selected.key] + [selected]
         self.definitions.update({e.id: e for e in (artifact, *definitions)})
         activities = [self.definitions[key] for key in ('course:explain', 'course:practice', 'course:assess') if key in self.definitions]
         rules = [entity('RuleDefinition', 'course:' + key, {
@@ -189,25 +194,16 @@ class SimulatedAuthoring:
             'root': ref(phase), 'outcomes': [ref(self.outcome)],
             'assessmentSpecs': [ref(self.definitions['course:assessment'])]}, version)
         self.definitions.update({e.id: e for e in (*rules, unit, phase, design)})
-        manifest = ProjectManifest(project_id='synthetic-course', authoring_context=AUTH,
-            previous=self.project.ref if self.project else None, design=design.ref,
-            required_kinds=('SOURCE', 'SYLLABUS', 'ASSESSMENT', 'TEACHER_CONTENT', 'TRAINER_CONTENT'),
-            artifacts=tuple(self.selected))
-        project = entity('Resource', 'course:project', {'title': 'Versioned authoring project',
-            'contentOrLocator': manifest.model_dump_json(), 'topics': [ref(self.topic)],
-            'derivedFrom': [a.resource.model_dump() for a in self.selected],
-            'usageConditions': 'Authoring selection; publication and delivery are separate.'}, version)
-        domain = entity('DomainModel', 'course:model', {'name': 'Synthetic course project',
-            'scope': 'Versioned authoring configuration.', 'topics': [ref(self.topic)],
-            'outcomes': [ref(self.outcome)], 'definitions': [ref(e) for e in self.definitions.values()] + [ref(project)]}, version)
         root = self.service.store.read_context(AUTH)
-        models = [m for m in root.fields['models'] if m['id'] != domain.id]
-        updated = entity('ExecutionContext', AUTH, {**root.fields,
-            'models': [*models, ref(domain)], 'learningDesign': ref(design)}, 'project-' + version)
-        proposal = self.service.propose(AUTH, 'admin', (root.ref,),
-            (artifact, *definitions, *rules, unit, phase, design, project, domain, updated),
-            'Simulated ' + kind + ' output and explicit project selection; no automatic approval.')
-        self.project, self.domain, self.design = project, domain, design
+        result = self.service.revise_authoring_project(AUTH, 'admin', ProjectRevision(
+            project=self.project.ref, base_context=root.ref, design=design.ref,
+            artifacts=(selected,), candidates=(artifact, *definitions, *rules, unit, phase, design),
+            explanation='Simulated ' + kind + ' output; exact production project selection.'),
+            request_id='project-stage-' + version)
+        proposal = self.service.store.read(result.proposal, owner=AUTH)
+        self.project = next(c for c in proposal_candidates(self.service.store, proposal) if c.ref == result.project)
+        self.domain = next(c for c in proposal_candidates(self.service.store, proposal) if c.ref == result.domain)
+        self.design = design
         return proposal
 
     def release(self, version='1', approve=False):
