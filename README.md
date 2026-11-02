@@ -1,5 +1,9 @@
 # ALM prototype with CrewAI agents
 
+For a colleague presentation, follow the [SCN01 step-by-step demo runbook](docs/demo/scn01-colleague-runbook.md).
+It provides a fresh isolated database, explicit review steps, live MCP checks,
+Teacher/Trainer commands and expected state changes using a fixed illustrative workshop.
+
 Local application for managing an ALM learning context with state and tracking in SQLite. A Lead agent plans tasks, specialized agents produce responses, and code checks permissions, sources and results. Generation uses OpenRouter by default; search uses the WP3 PostgreSQL corpus through MCP, with mock data for synthetic tests and optional Qdrant/TEI retrieval.
 
 - [ALM metamodel 1.0.0](docs/resources/metamodello-agnostico-apprendimento.json)

@@ -119,8 +119,14 @@ def _scope(context: RunContext, draft: LearningStepDraft) -> tuple[SearchScope, 
         key = resource_key(resource.id, resource.version)
         if key not in policy.scopes[binding.fields["usageScope"]].resources:
             continue
-        if context.request.topic_refs and not set(context.request.topic_refs) & {EntityRef.model_validate(t) for t in resource.fields["topics"]}:
-            continue
+        if context.request.topic_refs:
+            topics = {EntityRef.model_validate(t) for t in resource.fields['topics']}
+            requirement = binding.fields.get('requirement')
+            if requirement and any(requirement in snap.get(a).fields['resourceRequirements'] for a in draft.activities):
+                for outcome in snap.get(requirement).fields['outcomes']:
+                    topics.update(EntityRef.model_validate(t) for t in snap.get(outcome).fields['topics'])
+            if not set(context.request.topic_refs) & topics:
+                continue
         resources[key] = resource
     return SearchScope(mode=mode, resource_keys=tuple(sorted(resources))), tuple(resources.values())
 

@@ -1,0 +1,6 @@
+SYNTHETIC DEMO SUBMISSION — prepared by the operator, not a real learner performance.
+
+My prompt: Write a polite payment-reminder email to fictional customer Demo Shop about fictional invoice DEMO-001 for EUR 240, due 15 May 2024. Use only fictional details.
+
+Choice 1: I included invoice identity and amount to make the task and context specific.
+Choice 2: I requested a polite tone to avoid an unnecessarily confrontational message.

@@ -160,6 +160,25 @@ class LearningService:
             return LearningResponse.model_validate(self.store.claim_request(request_id, context_id, payload))
         return response
 
+    def propose_aimpro_bindings(self, context_id, subject_key, teaching_proposal, selections):
+        from aimpro.bindings import propose_bindings
+        return propose_bindings(self.store, self._context(context_id, subject_key), teaching_proposal, selections)
+
+    def prepare_aimpro_execution(self, context_id, subject_key, *, learner, scope_name=None):
+        from aimpro.execution_setup import prepare_execution
+        return prepare_execution(self.store, self._context(context_id, subject_key),
+                                 learner=learner, scope_name=scope_name)
+
+    def export_aimpro_trace(self, context_id, subject_key, project, *, scenario='SCN01',
+                            competencies='elena_usecase_competencies'):
+        from aimpro.trace import export_trace
+        # Keep root, history and candidate reads in one SQLite snapshot.
+        with self.store.db:
+            self.store.db.execute('BEGIN')
+            context = self._context(context_id, subject_key)
+            return export_trace(self.store, context, project, scenario=scenario,
+                                competencies=competencies)
+
     def show(self, context_id, subject_key):
         context = self._context(context_id, subject_key)
         learner_only = set(self.policy.subjects[subject_key].roles) <= {'LEARNER'}

@@ -222,6 +222,97 @@ export has not been run as part of these automated checks.
 
 ## Teaching generation and local execution state
 
+### Prepare explicit resource bindings for human review
+
+After inspecting a pending corpus-grounded teaching proposal, the local operator
+can prepare explicit activity/requirement/resource selections with
+`propose-aimpro-bindings`. This command does not call a model or retrieve content.
+Each selection contains exact `activity`, `requirement` and `resource` EntityRefs
+plus `usage_scope`. The source must be a current, pending teaching proposal in a
+PREPARATION/DRAFT context. Referenced candidates, requirement membership, corpus
+identity/version provenance and scope permissions are checked.
+
+The operation creates a new proposal containing the original teaching candidates
+and selected ResourceBindings, with a new proposed context version linking them.
+It leaves the original proposal and the current context unchanged. Bindings have
+no approvalDecision; their reviewedPayloadKey is computed by the normal proposal
+service. Any previous decision on another payload grants no approval here.
+Reviewed/rejected/applied teaching proposals cannot be silently amended through
+this command. The new proposal must go through its own `decide` and `apply`.
+
+```bash
+.venv/bin/python -m learning \
+  --db /path/to/state.sqlite --policy /path/to/policy.json \
+  --subject author --context workshop \
+  propose-aimpro-bindings '<pending teaching proposal EntityRef JSON>' \
+  /path/to/binding-selections.json
+```
+
+The command proposes selections, not their pedagogical or legal validity. Even
+after human approval/application the context stays PREPARATION/DRAFT, and learner
+permission for exact resource keys and explicit progression rules are still
+required. The generated domain model also does not add operational
+AgentSpecialization definitions: those must be explicitly configured and
+authorized before learning requests can delegate to workers. Repeating the
+command creates another pending proposal, as with the
+existing generic `propose` operation; it is not an idempotent generation request.
+
+### Prepare local execution configuration
+
+`prepare-aimpro-execution` proposes the configuration needed after a teaching
+design and corpus bindings have been reviewed and applied:
+
+```bash
+.venv/bin/python -m learning \
+  --db /path/to/state.sqlite --policy /path/to/current-policy.json \
+  --subject author --context workshop \
+  prepare-aimpro-execution --learner learner \
+  --learning-scope workshop-learning \
+  --policy-preview /path/to/new-policy-preview.json
+```
+
+The selected learner must already be a learner-only policy subject and context
+participant. Every mandatory activity resource requirement needs a currently
+approved binding and current source-scope permission. The command does not
+overwrite existing scopes or policy files. It refuses existing learner history
+or operational configuration that would require an explicit migration.
+
+The resulting pending proposal contains two local operational specializations:
+`lesson-explainer` (TEACHER) and `guided-practice-coach` (TRAINER), with mediated
+read-only retrieval. Registry files are checked rather than invented. Process
+nodes receive versioned completion rules using the existing `all_completed`
+handler: every direct child must explicitly be COMPLETED, SKIPPED is insufficient,
+and missing inputs remain UNKNOWN. No scoring, acquisition or verification rule
+is added.
+
+A separate context-specific LEARNING scope has the exact resource keys and
+activity ids, and an empty source-scope list. Adding the learner does not broaden
+the author's existing corpus-wide PREPARATION scope. The binding versions are
+revised to the new usage scope with approvalDecision removed, so the changed
+audience/effects need a fresh review. Until application, the currently approved
+bindings and policy remain unchanged.
+
+The full proposed trusted policy is included in the new PolicySet candidate and
+written to a new preview file. It has a new policy reference version. Approval
+and application use the current policy; after application, subsequent commands
+must use the exact proposed new policy file because the context's PolicySet
+version changes. Applying this configuration still leaves PREPARATION/DRAFT;
+activation remains a separate reviewed state change.
+
+The preview reports eligible workers and readiness findings. Pending binding
+revisions normally produce R08 findings until their new payload is approved;
+these are not hidden by reusing the old decision. Synthetic lifecycle tests
+cover separate approval, policy-version switching, later explicit activation
+and exact resource retrieval for the scenario topic. Topic relevance may come
+through the explicitly selected activity's approved requirement/outcomes, so a
+stable corpus-title Topic does not incorrectly exclude a resource approved for
+the scenario's D04 topic. Approval and policy exact-key filters still apply.
+
+The present `submit` path records observed attempts as IN_PROGRESS. Configuring
+process rules does not create activity-completion observations or course
+completion. A subsequent observed completion workflow remains necessary before
+claiming that an entire path has finished.
+
 ### Optional corpus grounding through MCP
 
 `generate-aimpro` accepts `--source-scope wp3 --query '"prompt engineering"' --k 1`.
@@ -364,3 +455,11 @@ round-trip, schema-copy equivalence and pedagogical completeness remain unverifi
 The adapter and generated validator do not invoke an LLM, search for resources
 or approve proposals. The explicit Lead `--run` and `generate-aimpro` paths invoke
 the model; only the latter persists a pending local proposal.
+
+
+## Runtime trace without changing AIM-PRO
+
+See [the execution-state sidecar](execution-trace.md) for exact source lineage,
+historical evidence/evaluation/proposal/decision/change records, access control
+and the read-only `export-aimpro-trace` command. Runtime records remain ALM
+entities; the external metamodel has no native runtime equivalents.

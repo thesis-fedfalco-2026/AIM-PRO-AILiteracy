@@ -155,6 +155,9 @@ def generate(data: LeadInput, *, lead, max_context_chars=None):
         "AIMPRO_DIDACTIC_GENERATION: produce a teaching draft, never an approved syllabus. "
         "Produce exactly one unit per supplied learning target; never repeat a unit or target id. "
         "Within each unit, use distinct activities only when they have distinct learner purposes. "
+        "Use EXPLAIN for demonstrations/explanations and PRACTICE for observation, annotation and guided "
+        "writing exercises. Use ASSESS only when the activity's primary purpose is an assessment by an "
+        "Evaluator. Having an analytic rubric does not by itself make an instructional activity ASSESS. "
         "Cite the target's own pedagogical practices "
         "by exact source ids. Every source_practice_ids entry must come from allowed_practice_ids_by_target "
         "for that unit's source_target_id. Strategy container ids are not practice ids. "
@@ -187,6 +190,8 @@ def generate(data: LeadInput, *, lead, max_context_chars=None):
     verdict = call(
         "AIMPRO_DIDACTIC_REVIEW: check the draft against the source targets, practices, audience "
         "and constraints. Reject conflicting or irrelevant material, invented curated sources, "
+        "Check that each activity intent matches its primary purpose; do not label ordinary demonstrations "
+        "or practice as ASSESS solely because they include feedback criteria. Reject such intent mismatches. "
         "unearned approvals or changes to AIM-PRO. Check that assessment criteria and levels "
         "are only proposals, without unsupported passing rules. Check that material contains usable "
         "teaching content rather than only a list of planned assets, and that rubric levels have "

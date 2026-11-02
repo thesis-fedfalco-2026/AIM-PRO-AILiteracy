@@ -56,6 +56,17 @@ def parse_args(argv=None):
     generate.add_argument('--source-scope', help='Explicit policy/source scope for corpus grounding')
     generate.add_argument('--query', help='Corpus search query, required with --source-scope')
     generate.add_argument('--k', type=int, default=5, choices=range(1, 21))
+    trace = commands.add_parser('export-aimpro-trace', help='Read-only ALM execution history linked to unchanged AIM-PRO objects')
+    trace.add_argument('project', type=Path)
+    trace.add_argument('--scenario', default='SCN01')
+    trace.add_argument('--competencies', default='elena_usecase_competencies')
+    bindings = commands.add_parser('propose-aimpro-bindings', help='Propose explicit resource selections with a pending teaching design')
+    bindings.add_argument('proposal', help='Pending teaching ChangeProposal EntityRef in JSON')
+    bindings.add_argument('selections', type=Path, help='JSON list: activity, requirement, resource EntityRefs and usage_scope')
+    setup = commands.add_parser('prepare-aimpro-execution', help='Propose reviewed worker, learner-scope and completion configuration')
+    setup.add_argument('--learner', required=True)
+    setup.add_argument('--learning-scope')
+    setup.add_argument('--policy-preview', type=Path, required=True, help='New file for the proposed trusted policy; does not replace the current policy')
     return parser.parse_args(argv)
 
 
@@ -128,6 +139,20 @@ def main(argv=None):
                 result = service.abandon_request(args.context,args.subject,args.request_id).model_dump(mode='json')
             elif command == 'submit':
                 result = entity_data(service.submit(args.context,args.subject,EntityRef.model_validate_json(args.activity),args.content,args.request_id))
+            elif command == 'export-aimpro-trace':
+                result = service.export_aimpro_trace(args.context, args.subject, args.project,
+                    scenario=args.scenario, competencies=args.competencies)
+            elif command == 'prepare-aimpro-execution':
+                if args.policy_preview.exists() or not args.policy_preview.parent.is_dir():
+                    raise ValueError('Choose a new policy preview file in an existing directory')
+                result = service.prepare_aimpro_execution(args.context, args.subject,
+                    learner=args.learner, scope_name=args.learning_scope)
+                with args.policy_preview.open('x', encoding='utf-8') as preview:
+                    json.dump(result['policy_preview'], preview, ensure_ascii=False, indent=2)
+                    preview.write('\n')
+            elif command == 'propose-aimpro-bindings':
+                result = entity_data(service.propose_aimpro_bindings(args.context, args.subject,
+                    EntityRef.model_validate_json(args.proposal), json.loads(args.selections.read_text())))
             elif command == 'generate-aimpro':
                 result = service.generate_aimpro(args.context, args.subject, args.project,
                     request_id=args.request_id, lead_factory=_aimpro_lead,

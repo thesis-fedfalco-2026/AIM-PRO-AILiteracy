@@ -1,0 +1,1891 @@
+{
+  "format": "scn01-demo-workshop-v1",
+  "synthetic_demo": true,
+  "description": "Fixed illustrative local ALM projection of SCN01; no human decisions, attempts or learning states are included.",
+  "source_sha256": "2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c",
+  "resource_key": "[\"wp3:32c2119d5504\",\"31057b5b35cfcfa5f31ee406f855477a\"]",
+  "entities": [
+    {
+      "type": "ActivityDefinition",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:0",
+      "version": "94f17343f557497581b0bb7f875ce669",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169384659_USER_127\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Align local instructional interactions with the approved Teacher/Trainer roles; preserve materials, analytic criteria and exact source bindings."
+      },
+      "fields": {
+        "instruction": "Watch the adviser build a payment-reminder prompt live in a chat window. The adviser will show a weak version, one change that made the output worse, and an improved version. Notice each decision the adviser speaks out loud: role, recipient, details, tone, and constraints.\n\nSource task constraints (verbatim):\nOne evening workshop\nuse fictional customer details only.",
+        "intent": "EXPLAIN",
+        "format": "CRITERIA_BASED_PRODUCT",
+        "outcomes": [
+          {
+            "type": "LearningOutcome",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+            "version": "1"
+          }
+        ],
+        "resourceRequirements": [
+          {
+            "type": "ResourceRequirement",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:0:requirement",
+            "version": "1"
+          }
+        ],
+        "expectedEvidence": [
+          "CRITERIA_BASED_PRODUCT"
+        ],
+        "assessmentSpec": {
+          "type": "AssessmentSpecification",
+          "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:0:assessment",
+          "version": "5a026f4b04084c63a95ee7a966b8791d"
+        },
+        "strategies": [
+          {
+            "type": "Strategy",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:strategy:Pointer1792169384659_USER_127",
+            "version": "1"
+          }
+        ]
+      }
+    },
+    {
+      "type": "ActivityDefinition",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:1",
+      "version": "278c62ce54b14d4e9d3d3af2d144828e",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169384659_USER_127\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Align local instructional interactions with the approved Teacher/Trainer roles; preserve materials, analytic criteria and exact source bindings."
+      },
+      "fields": {
+        "instruction": "Listen to a peer micro-business owner show two prompts she has used for routine customer messages: one that worked poorly and one she revised. Note what she changed and why. All customer details in her examples are fictional.\n\nSource task constraints (verbatim):\nOne evening workshop\nuse fictional customer details only.",
+        "intent": "EXPLAIN",
+        "format": "CRITERIA_BASED_PRODUCT",
+        "outcomes": [
+          {
+            "type": "LearningOutcome",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+            "version": "1"
+          }
+        ],
+        "resourceRequirements": [
+          {
+            "type": "ResourceRequirement",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:1:requirement",
+            "version": "1"
+          }
+        ],
+        "expectedEvidence": [
+          "CRITERIA_BASED_PRODUCT"
+        ],
+        "assessmentSpec": {
+          "type": "AssessmentSpecification",
+          "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:1:assessment",
+          "version": "44e9f383b77d48c3afb0fa97860d1fb0"
+        },
+        "strategies": [
+          {
+            "type": "Strategy",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:strategy:Pointer1792169384659_USER_127",
+            "version": "1"
+          }
+        ]
+      }
+    },
+    {
+      "type": "ActivityDefinition",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:2",
+      "version": "358b8676c2b34343884bae48b1c71953",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169384659_USER_127\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Align local instructional interactions with the approved Teacher/Trainer roles; preserve materials, analytic criteria and exact source bindings."
+      },
+      "fields": {
+        "instruction": "While watching the live modelling and the peer owner examples, tick each prompt move you observe on the card: role, recipient, task, details, tone, constraints, call to action. You may tick the same move more than once if you see it in different examples.\n\nSource task constraints (verbatim):\nOne evening workshop\nuse fictional customer details only.",
+        "intent": "PRACTICE",
+        "format": "CRITERIA_BASED_PRODUCT",
+        "outcomes": [
+          {
+            "type": "LearningOutcome",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+            "version": "1"
+          }
+        ],
+        "resourceRequirements": [
+          {
+            "type": "ResourceRequirement",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:2:requirement",
+            "version": "1"
+          }
+        ],
+        "expectedEvidence": [
+          "CRITERIA_BASED_PRODUCT"
+        ],
+        "assessmentSpec": {
+          "type": "AssessmentSpecification",
+          "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:2:assessment",
+          "version": "72d969d7df69488fa72feb1634005c68"
+        },
+        "strategies": [
+          {
+            "type": "Strategy",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:strategy:Pointer1792169384659_USER_127",
+            "version": "1"
+          }
+        ]
+      }
+    },
+    {
+      "type": "ActivityDefinition",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:3",
+      "version": "382e62c8e9ee44d3943eff1d54d490ff",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169384659_USER_127\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Align local instructional interactions with the approved Teacher/Trainer roles; preserve materials, analytic criteria and exact source bindings."
+      },
+      "fields": {
+        "instruction": "Work in pairs. Read the thinking-aloud transcript. Each time the adviser names or demonstrates a prompt move, write the move name, the line number where it happens, and what changed in the model output. Then compare your annotations with another pair.\n\nSource task constraints (verbatim):\nOne evening workshop\nuse fictional customer details only.",
+        "intent": "PRACTICE",
+        "format": "CRITERIA_BASED_PRODUCT",
+        "outcomes": [
+          {
+            "type": "LearningOutcome",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+            "version": "1"
+          }
+        ],
+        "resourceRequirements": [
+          {
+            "type": "ResourceRequirement",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:3:requirement",
+            "version": "1"
+          }
+        ],
+        "expectedEvidence": [
+          "CRITERIA_BASED_PRODUCT"
+        ],
+        "assessmentSpec": {
+          "type": "AssessmentSpecification",
+          "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:3:assessment",
+          "version": "494bbffb30d14935973fe57a2bf04347"
+        },
+        "strategies": [
+          {
+            "type": "Strategy",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:strategy:Pointer1792169384659_USER_127",
+            "version": "1"
+          }
+        ]
+      }
+    },
+    {
+      "type": "ActivityDefinition",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:4",
+      "version": "e5830327e5ac480a89d4f95f74b13634",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169384659_USER_127\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Align local instructional interactions with the approved Teacher/Trainer roles; preserve materials, analytic criteria and exact source bindings."
+      },
+      "fields": {
+        "instruction": "Choose one routine customer message from your own business (for example, a payment reminder or a social media post). Write a prompt for an LLM using only fictional customer details. Then explain two choices you made in the prompt and what effect you expected each to have.\n\nSource task constraints (verbatim):\nOne evening workshop\nuse fictional customer details only.",
+        "intent": "PRACTICE",
+        "format": "CRITERIA_BASED_PRODUCT",
+        "outcomes": [
+          {
+            "type": "LearningOutcome",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+            "version": "1"
+          }
+        ],
+        "resourceRequirements": [
+          {
+            "type": "ResourceRequirement",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:4:requirement",
+            "version": "1"
+          }
+        ],
+        "expectedEvidence": [
+          "CRITERIA_BASED_PRODUCT"
+        ],
+        "assessmentSpec": {
+          "type": "AssessmentSpecification",
+          "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:4:assessment",
+          "version": "bdadab7a235c4bb9b7ace67b5ab55064"
+        },
+        "strategies": [
+          {
+            "type": "Strategy",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:strategy:Pointer1792169384659_USER_127",
+            "version": "1"
+          }
+        ]
+      }
+    },
+    {
+      "type": "AgentSpecialization",
+      "id": "execution-3b51559a11de4bb0af8817d47ac0317f:guided-practice-coach",
+      "version": "1",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [],
+        "responsible": "demo-author"
+      },
+      "fields": {
+        "registryName": "guided-practice-coach",
+        "category": "TEACHER_TRAINER",
+        "role": "TRAINER",
+        "topics": [
+          {
+            "type": "Topic",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:topic:Pointer1792169354742_USER_109",
+            "version": "1"
+          }
+        ],
+        "competenceScope": "Local proposed teaching design derived from AIM-PRO; source findings remain in the source snapshot.",
+        "skills": [],
+        "capabilities": [
+          {
+            "capability": "search_documents",
+            "accessPath": "ORCHESTRATOR_RETRIEVAL",
+            "operations": [
+              "read"
+            ],
+            "scope": "scn01-learning",
+            "purpose": "Use only the exact approved resource versions for this workshop."
+          }
+        ],
+        "constraints": [
+          "No state changes, approval claims or inferred competency acquisition.",
+          "Respect fictional customer data and the approved source constraints."
+        ]
+      }
+    },
+    {
+      "type": "AgentSpecialization",
+      "id": "execution-3b51559a11de4bb0af8817d47ac0317f:lesson-explainer",
+      "version": "1",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [],
+        "responsible": "demo-author"
+      },
+      "fields": {
+        "registryName": "lesson-explainer",
+        "category": "TEACHER_TRAINER",
+        "role": "TEACHER",
+        "topics": [
+          {
+            "type": "Topic",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:topic:Pointer1792169354742_USER_109",
+            "version": "1"
+          }
+        ],
+        "competenceScope": "Local proposed teaching design derived from AIM-PRO; source findings remain in the source snapshot.",
+        "skills": [],
+        "capabilities": [
+          {
+            "capability": "search_documents",
+            "accessPath": "ORCHESTRATOR_RETRIEVAL",
+            "operations": [
+              "read"
+            ],
+            "scope": "scn01-learning",
+            "purpose": "Use only the exact approved resource versions for this workshop."
+          }
+        ],
+        "constraints": [
+          "No state changes, approval claims or inferred competency acquisition.",
+          "Respect fictional customer data and the approved source constraints."
+        ]
+      }
+    },
+    {
+      "type": "AssessmentSpecification",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:0:assessment",
+      "version": "5a026f4b04084c63a95ee7a966b8791d",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169384659_USER_127\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Align local instructional interactions with the approved Teacher/Trainer roles; preserve materials, analytic criteria and exact source bindings."
+      },
+      "fields": {
+        "outcomes": [
+          {
+            "type": "LearningOutcome",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+            "version": "1"
+          }
+        ],
+        "activities": [
+          {
+            "type": "ActivityDefinition",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:0",
+            "version": "94f17343f557497581b0bb7f875ce669"
+          }
+        ],
+        "allowedEvidence": [
+          "CRITERIA_BASED_PRODUCT"
+        ],
+        "rubric": {
+          "type": "Rubric",
+          "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:0:rubric",
+          "version": "1"
+        },
+        "administrationConstraints": [
+          "One evening workshop",
+          "use fictional customer details only."
+        ]
+      }
+    },
+    {
+      "type": "AssessmentSpecification",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:1:assessment",
+      "version": "44e9f383b77d48c3afb0fa97860d1fb0",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169384659_USER_127\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Align local instructional interactions with the approved Teacher/Trainer roles; preserve materials, analytic criteria and exact source bindings."
+      },
+      "fields": {
+        "outcomes": [
+          {
+            "type": "LearningOutcome",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+            "version": "1"
+          }
+        ],
+        "activities": [
+          {
+            "type": "ActivityDefinition",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:1",
+            "version": "278c62ce54b14d4e9d3d3af2d144828e"
+          }
+        ],
+        "allowedEvidence": [
+          "CRITERIA_BASED_PRODUCT"
+        ],
+        "rubric": {
+          "type": "Rubric",
+          "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:1:rubric",
+          "version": "1"
+        },
+        "administrationConstraints": [
+          "One evening workshop",
+          "use fictional customer details only."
+        ]
+      }
+    },
+    {
+      "type": "AssessmentSpecification",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:2:assessment",
+      "version": "72d969d7df69488fa72feb1634005c68",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169384659_USER_127\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Align local instructional interactions with the approved Teacher/Trainer roles; preserve materials, analytic criteria and exact source bindings."
+      },
+      "fields": {
+        "outcomes": [
+          {
+            "type": "LearningOutcome",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+            "version": "1"
+          }
+        ],
+        "activities": [
+          {
+            "type": "ActivityDefinition",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:2",
+            "version": "358b8676c2b34343884bae48b1c71953"
+          }
+        ],
+        "allowedEvidence": [
+          "CRITERIA_BASED_PRODUCT"
+        ],
+        "rubric": {
+          "type": "Rubric",
+          "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:2:rubric",
+          "version": "1"
+        },
+        "administrationConstraints": [
+          "One evening workshop",
+          "use fictional customer details only."
+        ]
+      }
+    },
+    {
+      "type": "AssessmentSpecification",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:3:assessment",
+      "version": "494bbffb30d14935973fe57a2bf04347",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169384659_USER_127\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Align local instructional interactions with the approved Teacher/Trainer roles; preserve materials, analytic criteria and exact source bindings."
+      },
+      "fields": {
+        "outcomes": [
+          {
+            "type": "LearningOutcome",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+            "version": "1"
+          }
+        ],
+        "activities": [
+          {
+            "type": "ActivityDefinition",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:3",
+            "version": "382e62c8e9ee44d3943eff1d54d490ff"
+          }
+        ],
+        "allowedEvidence": [
+          "CRITERIA_BASED_PRODUCT"
+        ],
+        "rubric": {
+          "type": "Rubric",
+          "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:3:rubric",
+          "version": "1"
+        },
+        "administrationConstraints": [
+          "One evening workshop",
+          "use fictional customer details only."
+        ]
+      }
+    },
+    {
+      "type": "AssessmentSpecification",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:4:assessment",
+      "version": "bdadab7a235c4bb9b7ace67b5ab55064",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169384659_USER_127\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Align local instructional interactions with the approved Teacher/Trainer roles; preserve materials, analytic criteria and exact source bindings."
+      },
+      "fields": {
+        "outcomes": [
+          {
+            "type": "LearningOutcome",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+            "version": "1"
+          }
+        ],
+        "activities": [
+          {
+            "type": "ActivityDefinition",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:4",
+            "version": "e5830327e5ac480a89d4f95f74b13634"
+          }
+        ],
+        "allowedEvidence": [
+          "CRITERIA_BASED_PRODUCT"
+        ],
+        "rubric": {
+          "type": "Rubric",
+          "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:4:rubric",
+          "version": "1"
+        },
+        "administrationConstraints": [
+          "One evening workshop",
+          "use fictional customer details only."
+        ]
+      }
+    },
+    {
+      "type": "DomainModel",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:model",
+      "version": "f818c2d3b1604437addbce0bb47ca2d8",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169048382_USER_72\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Align local instructional interactions with the approved Teacher/Trainer roles; preserve materials, analytic criteria and exact source bindings."
+      },
+      "fields": {
+        "name": "Watching the prompts: writing a first business prompt",
+        "scope": "Local proposed teaching design derived from AIM-PRO; source findings remain in the source snapshot.",
+        "topics": [
+          {
+            "type": "Topic",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:topic:Pointer1792169354742_USER_109",
+            "version": "1"
+          }
+        ],
+        "outcomes": [
+          {
+            "type": "LearningOutcome",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+            "version": "1"
+          }
+        ],
+        "classifications": [],
+        "definitions": [
+          {
+            "type": "Resource",
+            "id": "wp3:32c2119d5504",
+            "version": "31057b5b35cfcfa5f31ee406f855477a"
+          },
+          {
+            "type": "Strategy",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:strategy:Pointer1792169384659_USER_127",
+            "version": "1"
+          },
+          {
+            "type": "ResourceRequirement",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:0:requirement",
+            "version": "1"
+          },
+          {
+            "type": "Resource",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:0:material",
+            "version": "1"
+          },
+          {
+            "type": "ActivityDefinition",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:0",
+            "version": "94f17343f557497581b0bb7f875ce669"
+          },
+          {
+            "type": "Rubric",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:0:rubric",
+            "version": "1"
+          },
+          {
+            "type": "AssessmentSpecification",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:0:assessment",
+            "version": "5a026f4b04084c63a95ee7a966b8791d"
+          },
+          {
+            "type": "ResourceRequirement",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:1:requirement",
+            "version": "1"
+          },
+          {
+            "type": "Resource",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:1:material",
+            "version": "1"
+          },
+          {
+            "type": "ActivityDefinition",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:1",
+            "version": "278c62ce54b14d4e9d3d3af2d144828e"
+          },
+          {
+            "type": "Rubric",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:1:rubric",
+            "version": "1"
+          },
+          {
+            "type": "AssessmentSpecification",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:1:assessment",
+            "version": "44e9f383b77d48c3afb0fa97860d1fb0"
+          },
+          {
+            "type": "ResourceRequirement",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:2:requirement",
+            "version": "1"
+          },
+          {
+            "type": "Resource",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:2:material",
+            "version": "1"
+          },
+          {
+            "type": "ActivityDefinition",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:2",
+            "version": "358b8676c2b34343884bae48b1c71953"
+          },
+          {
+            "type": "Rubric",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:2:rubric",
+            "version": "1"
+          },
+          {
+            "type": "AssessmentSpecification",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:2:assessment",
+            "version": "72d969d7df69488fa72feb1634005c68"
+          },
+          {
+            "type": "ResourceRequirement",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:3:requirement",
+            "version": "1"
+          },
+          {
+            "type": "Resource",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:3:material",
+            "version": "1"
+          },
+          {
+            "type": "ActivityDefinition",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:3",
+            "version": "382e62c8e9ee44d3943eff1d54d490ff"
+          },
+          {
+            "type": "Rubric",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:3:rubric",
+            "version": "1"
+          },
+          {
+            "type": "AssessmentSpecification",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:3:assessment",
+            "version": "494bbffb30d14935973fe57a2bf04347"
+          },
+          {
+            "type": "ResourceRequirement",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:4:requirement",
+            "version": "1"
+          },
+          {
+            "type": "Resource",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:4:material",
+            "version": "1"
+          },
+          {
+            "type": "ActivityDefinition",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:4",
+            "version": "e5830327e5ac480a89d4f95f74b13634"
+          },
+          {
+            "type": "Rubric",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:4:rubric",
+            "version": "1"
+          },
+          {
+            "type": "AssessmentSpecification",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:4:assessment",
+            "version": "bdadab7a235c4bb9b7ace67b5ab55064"
+          },
+          {
+            "type": "ProcessNode",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0",
+            "version": "88b66ef76f674948926670f2971666d5"
+          },
+          {
+            "type": "ProcessNode",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:phase",
+            "version": "e59a4c20b89f4cb9890db120aa64e6f6"
+          },
+          {
+            "type": "LearningDesign",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:design",
+            "version": "14fceaa59ea04c97ae0ded96bceafb05"
+          },
+          {
+            "type": "RuleDefinition",
+            "id": "execution-3b51559a11de4bb0af8817d47ac0317f:completion:aimpro-ee16a69afd054e60b5ce8b95ff2aefea:phase",
+            "version": "1"
+          },
+          {
+            "type": "RuleDefinition",
+            "id": "execution-3b51559a11de4bb0af8817d47ac0317f:completion:aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0",
+            "version": "1"
+          },
+          {
+            "type": "AgentSpecialization",
+            "id": "execution-3b51559a11de4bb0af8817d47ac0317f:lesson-explainer",
+            "version": "1"
+          },
+          {
+            "type": "AgentSpecialization",
+            "id": "execution-3b51559a11de4bb0af8817d47ac0317f:guided-practice-coach",
+            "version": "1"
+          }
+        ]
+      }
+    },
+    {
+      "type": "LearningDesign",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:design",
+      "version": "14fceaa59ea04c97ae0ded96bceafb05",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169048382_USER_72\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Align local instructional interactions with the approved Teacher/Trainer roles; preserve materials, analytic criteria and exact source bindings."
+      },
+      "fields": {
+        "name": "Watching the prompts: writing a first business prompt",
+        "outcomes": [
+          {
+            "type": "LearningOutcome",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+            "version": "1"
+          }
+        ],
+        "root": {
+          "type": "ProcessNode",
+          "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:phase",
+          "version": "e59a4c20b89f4cb9890db120aa64e6f6"
+        },
+        "strategies": [
+          {
+            "type": "Strategy",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:strategy:Pointer1792169384659_USER_127",
+            "version": "1"
+          }
+        ],
+        "assessmentSpecs": [
+          {
+            "type": "AssessmentSpecification",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:0:assessment",
+            "version": "5a026f4b04084c63a95ee7a966b8791d"
+          },
+          {
+            "type": "AssessmentSpecification",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:1:assessment",
+            "version": "44e9f383b77d48c3afb0fa97860d1fb0"
+          },
+          {
+            "type": "AssessmentSpecification",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:2:assessment",
+            "version": "72d969d7df69488fa72feb1634005c68"
+          },
+          {
+            "type": "AssessmentSpecification",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:3:assessment",
+            "version": "494bbffb30d14935973fe57a2bf04347"
+          },
+          {
+            "type": "AssessmentSpecification",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:4:assessment",
+            "version": "bdadab7a235c4bb9b7ace67b5ab55064"
+          }
+        ]
+      }
+    },
+    {
+      "type": "LearningOutcome",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+      "version": "1",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169221668_USER_96\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Local ALM projection of an AIM-PRO teaching draft; not a source modification or approval."
+      },
+      "fields": {
+        "statement": "Identify relevant prompting choices and construct a first prompt for a task from one’s own business.",
+        "topics": [
+          {
+            "type": "Topic",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:topic:Pointer1792169354742_USER_109",
+            "version": "1"
+          }
+        ]
+      }
+    },
+    {
+      "type": "ProcessNode",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:phase",
+      "version": "e59a4c20b89f4cb9890db120aa64e6f6",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169048382_USER_72\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Align local instructional interactions with the approved Teacher/Trainer roles; preserve materials, analytic criteria and exact source bindings."
+      },
+      "fields": {
+        "name": "Watching the prompts: writing a first business prompt",
+        "kind": "PHASE",
+        "outcomes": [
+          {
+            "type": "LearningOutcome",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+            "version": "1"
+          }
+        ],
+        "children": [
+          {
+            "type": "ProcessNode",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0",
+            "version": "88b66ef76f674948926670f2971666d5"
+          }
+        ],
+        "composition": "SEQUENTIAL",
+        "activities": [],
+        "strategies": [],
+        "completionRule": {
+          "type": "RuleDefinition",
+          "id": "execution-3b51559a11de4bb0af8817d47ac0317f:completion:aimpro-ee16a69afd054e60b5ce8b95ff2aefea:phase",
+          "version": "1"
+        }
+      }
+    },
+    {
+      "type": "ProcessNode",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0",
+      "version": "88b66ef76f674948926670f2971666d5",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169221668_USER_96\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Align local instructional interactions with the approved Teacher/Trainer roles; preserve materials, analytic criteria and exact source bindings."
+      },
+      "fields": {
+        "name": "Watching the prompts: writing a first business prompt",
+        "kind": "UNIT",
+        "outcomes": [
+          {
+            "type": "LearningOutcome",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+            "version": "1"
+          }
+        ],
+        "children": [],
+        "activities": [
+          {
+            "type": "ActivityDefinition",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:0",
+            "version": "94f17343f557497581b0bb7f875ce669"
+          },
+          {
+            "type": "ActivityDefinition",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:1",
+            "version": "278c62ce54b14d4e9d3d3af2d144828e"
+          },
+          {
+            "type": "ActivityDefinition",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:2",
+            "version": "358b8676c2b34343884bae48b1c71953"
+          },
+          {
+            "type": "ActivityDefinition",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:3",
+            "version": "382e62c8e9ee44d3943eff1d54d490ff"
+          },
+          {
+            "type": "ActivityDefinition",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:4",
+            "version": "e5830327e5ac480a89d4f95f74b13634"
+          }
+        ],
+        "strategies": [],
+        "completionRule": {
+          "type": "RuleDefinition",
+          "id": "execution-3b51559a11de4bb0af8817d47ac0317f:completion:aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0",
+          "version": "1"
+        }
+      }
+    },
+    {
+      "type": "Resource",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:0:material",
+      "version": "1",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169384659_USER_127\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}",
+          "{\"corpus_citations\":[{\"document_ids\":[\"wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:0\"],\"resource_id\":\"wp3:32c2119d5504\",\"resource_version\":\"31057b5b35cfcfa5f31ee406f855477a\",\"supported_claim\":\"Prompt engineering is the design and optimization of prompts to deliver consistent and quality responses, and users improve outputs by iteratively refining prompts in multi-turn conversation rather than expecting a perfect first try.\"}]}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Local ALM projection of an AIM-PRO teaching draft; not a source modification or approval."
+      },
+      "fields": {
+        "title": "Live modelling: adviser builds a payment-reminder prompt thinking aloud",
+        "contentOrLocator": "The adviser opens a blank LLM chat and types: 'Write a payment reminder.' The output is polite but has no customer, amount, or deadline. The adviser says: 'That is too vague. A real customer would ignore it.' Next the adviser types: 'You are a small business owner. Write a payment reminder to a fictional customer for an unpaid invoice.' The output names a business context but still invents or omits the customer name and amount. The adviser says: 'Better, but it still lacks specifics.' Then the adviser adds: 'Be firm and demand payment immediately.' The output becomes aggressive and threatens legal action. The adviser says: 'This made it worse. A stronger tone is not always better.' Finally the adviser types: 'You are the owner of a fictional design studio. Write a polite payment reminder to a fictional customer named Samira Patel for invoice INV-2024-047 (£185 for website maintenance), issued 14 days ago. Ask for payment within 7 days. Offer to discuss if there is a problem. Keep it under 100 words.' The output names a fictional customer, gives an invoice reference and amount, sets a deadline, and stays polite. The adviser says: 'Those are prompt moves: role, recipient, details, tone, and constraint. I used only fictional details—no real customer names or real invoices.'\n\n## Thinking aloud: building a first payment-reminder prompt\n\nAdviser: I need a payment reminder for a fictional customer. Let me start with what feels natural: 'Write a payment reminder.' That is all I give the model. Here is what comes back. [Shows output.] It is polite, but it does not say who owes what, or by when. A real customer would ignore it. So the first prompt move I can see is: the prompt is too vague. It lacks role, recipient, and specifics. Adviser: Let me add a role and a task: 'You are a small business owner. Write a payment reminder to a fictional customer for an unpaid invoice.' [Shows output.] Better. It knows it is a business context. But it still invents the customer name and amount, or leaves them blank. It does not know the invoice is £185 or that it is two weeks overdue. Adviser: Now I want to test whether tone words change the result. I will add: 'Be firm and demand payment immediately.' [Shows output.] This made it worse. The model sounds aggressive and threatens legal action. For a first message to a long-standing customer, that could damage the relationship. So tone is a prompt move, and a stronger tone is not always better. Adviser: Let me revise: 'You are the owner of a fictional design studio. Write a polite payment reminder to a fictional customer named Samira Patel for invoice INV-2024-047 (£185 for website maintenance), issued 14 days ago. Ask for payment within 7 days. Offer to discuss if there is a problem. Keep it under 100 words.' [Shows output.] This version names a fictional customer, gives an invoice reference and amount, sets a clear deadline, and keeps the tone polite. Those are prompt moves: role, recipient, details, tone, and constraint. Notice I used only fictional details—no real customer names or real invoices. Adviser: Your turn. Pick one routine message from your own business and try it.\n\n## Weak, worse, and improved payment-reminder prompts\n\nWeak prompt: 'Write a payment reminder.' Worse prompt (one change that made output worse): 'You are a small business owner. Write a payment reminder to a fictional customer for an unpaid invoice. Be firm and demand payment immediately.' Improved prompt: 'You are the owner of a fictional design studio. Write a polite payment reminder to a fictional customer named Samira Patel for invoice INV-2024-047 (£185 for website maintenance), issued 14 days ago. Ask for payment within 7 days. Offer to discuss if there is a problem. Keep it under 100 words.'\n\nSource task constraints (verbatim):\nOne evening workshop\nuse fictional customer details only.",
+        "topics": [
+          {
+            "type": "Topic",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:topic:Pointer1792169354742_USER_109",
+            "version": "1"
+          }
+        ],
+        "outcomes": [
+          {
+            "type": "LearningOutcome",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+            "version": "1"
+          }
+        ],
+        "usageConditions": "Generated teaching draft pending human review; not a curated or approved source.",
+        "derivedFrom": [
+          {
+            "type": "Resource",
+            "id": "wp3:32c2119d5504",
+            "version": "31057b5b35cfcfa5f31ee406f855477a"
+          }
+        ]
+      }
+    },
+    {
+      "type": "Resource",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:1:material",
+      "version": "1",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169384659_USER_127\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}",
+          "{\"corpus_citations\":[{\"document_ids\":[\"wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:0\"],\"resource_id\":\"wp3:32c2119d5504\",\"resource_version\":\"31057b5b35cfcfa5f31ee406f855477a\",\"supported_claim\":\"Prompt engineering is the design and optimization of prompts to deliver consistent and quality responses, and users improve outputs by iteratively refining prompts in multi-turn conversation rather than expecting a perfect first try.\"}]}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Local ALM projection of an AIM-PRO teaching draft; not a source modification or approval."
+      },
+      "fields": {
+        "title": "Peer owner shows her own prompts, failures included",
+        "contentOrLocator": "Peer owner Maya runs a fictional bakery called 'Rose & Crumb' in the fictional town of Brackley. First prompt (failed): 'Post on Facebook about our cakes.' The output was generic, with no location, no offer, and no call to action. Second prompt (revised): 'Write a Facebook post for a fictional bakery called Rose & Crumb in fictional town Brackley. Announce a fictional weekend sourdough workshop on Saturday 14 June at 10am. Mention that places are limited to 8. Keep it friendly and under 90 words. Include a fictional booking email bookings@roseandcrumb.example.' Maya says: 'The first one was too vague, so nobody knew where we were or how to book. The second one gave the model a place, a date, a limit, and a tone.'\n\n## Peer owner prompts: failed and revised\n\nPeer owner: Maya, fictional bakery 'Rose & Crumb', fictional town Brackley. Failed prompt: 'Post on Facebook about our cakes.' Revised prompt: 'Write a Facebook post for a fictional bakery called Rose & Crumb in fictional town Brackley. Announce a fictional weekend sourdough workshop on Saturday 14 June at 10am. Mention that places are limited to 8. Keep it friendly and under 90 words. Include a fictional booking email bookings@roseandcrumb.example.' Maya's comment: 'The first one was too vague, so nobody knew where we were or how to book. The second one gave the model a place, a date, a limit, and a tone.'\n\nSource task constraints (verbatim):\nOne evening workshop\nuse fictional customer details only.",
+        "topics": [
+          {
+            "type": "Topic",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:topic:Pointer1792169354742_USER_109",
+            "version": "1"
+          }
+        ],
+        "outcomes": [
+          {
+            "type": "LearningOutcome",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+            "version": "1"
+          }
+        ],
+        "usageConditions": "Generated teaching draft pending human review; not a curated or approved source.",
+        "derivedFrom": [
+          {
+            "type": "Resource",
+            "id": "wp3:32c2119d5504",
+            "version": "31057b5b35cfcfa5f31ee406f855477a"
+          }
+        ]
+      }
+    },
+    {
+      "type": "Resource",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:2:material",
+      "version": "1",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169384659_USER_127\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}",
+          "{\"corpus_citations\":[{\"document_ids\":[\"wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:0\"],\"resource_id\":\"wp3:32c2119d5504\",\"resource_version\":\"31057b5b35cfcfa5f31ee406f855477a\",\"supported_claim\":\"Prompt engineering is the design and optimization of prompts to deliver consistent and quality responses, and users improve outputs by iteratively refining prompts in multi-turn conversation rather than expecting a perfect first try.\"}]}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Local ALM projection of an AIM-PRO teaching draft; not a source modification or approval."
+      },
+      "fields": {
+        "title": "Tick prompt moves on a card while watching",
+        "contentOrLocator": "Prompt moves card (tick box version): [ ] Role — who is speaking (for example, small business owner). [ ] Recipient — who the message is for (for example, fictional customer Samira Patel). [ ] Task — what the message should do (for example, request payment). [ ] Details — names, amounts, invoice references, dates (for example, invoice INV-2024-047, £185). [ ] Tone — polite, firm, friendly (for example, polite but clear). [ ] Constraints — word count, deadline, format (for example, under 100 words, pay within 7 days). [ ] Call to action — what the customer should do next (for example, pay within 7 days or contact us if there is a problem).\n\n## Prompt moves observation card\n\nPrompt moves card — tick each move you observe while watching the adviser and the peer owner. You may tick a move more than once. [ ] Role — who is speaking. [ ] Recipient — who the message is for. [ ] Task — what the message should do. [ ] Details — names, amounts, invoice references, dates. [ ] Tone — polite, firm, friendly. [ ] Constraints — word count, deadline, format. [ ] Call to action — what the customer should do next. Notes: ...\n\nSource task constraints (verbatim):\nOne evening workshop\nuse fictional customer details only.",
+        "topics": [
+          {
+            "type": "Topic",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:topic:Pointer1792169354742_USER_109",
+            "version": "1"
+          }
+        ],
+        "outcomes": [
+          {
+            "type": "LearningOutcome",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+            "version": "1"
+          }
+        ],
+        "usageConditions": "Generated teaching draft pending human review; not a curated or approved source.",
+        "derivedFrom": [
+          {
+            "type": "Resource",
+            "id": "wp3:32c2119d5504",
+            "version": "31057b5b35cfcfa5f31ee406f855477a"
+          }
+        ]
+      }
+    },
+    {
+      "type": "Resource",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:3:material",
+      "version": "1",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169384659_USER_127\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}",
+          "{\"corpus_citations\":[{\"document_ids\":[\"wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:0\"],\"resource_id\":\"wp3:32c2119d5504\",\"resource_version\":\"31057b5b35cfcfa5f31ee406f855477a\",\"supported_claim\":\"Prompt engineering is the design and optimization of prompts to deliver consistent and quality responses, and users improve outputs by iteratively refining prompts in multi-turn conversation rather than expecting a perfect first try.\"}]}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Local ALM projection of an AIM-PRO teaching draft; not a source modification or approval."
+      },
+      "fields": {
+        "title": "Annotate the thinking-aloud transcript in pairs",
+        "contentOrLocator": "Transcript annotation worksheet: table with columns Line(s), Prompt move observed, What changed in output. Rows are blank for learner completion. The transcript to annotate is mat_transcript_thinking_aloud.\n\n## Transcript annotation worksheet\n\nWork in pairs. Read the transcript 'Thinking aloud: building a first payment-reminder prompt'. Each time the adviser names or demonstrates a prompt move, write the move name, the line number where it happens, and what changed in the model output. Table: | Line(s) | Prompt move observed | What changed in output | | 1–4 | | | | 5–8 | | | | 9–12 | | | | 13–16 | | | | 17–20 | | | Compare your annotations with another pair. Did you notice the same moves? Did you notice the same change that made the output worse?\n\n## Thinking aloud: building a first payment-reminder prompt\n\nAdviser: I need a payment reminder for a fictional customer. Let me start with what feels natural: 'Write a payment reminder.' That is all I give the model. Here is what comes back. [Shows output.] It is polite, but it does not say who owes what, or by when. A real customer would ignore it. So the first prompt move I can see is: the prompt is too vague. It lacks role, recipient, and specifics. Adviser: Let me add a role and a task: 'You are a small business owner. Write a payment reminder to a fictional customer for an unpaid invoice.' [Shows output.] Better. It knows it is a business context. But it still invents the customer name and amount, or leaves them blank. It does not know the invoice is £185 or that it is two weeks overdue. Adviser: Now I want to test whether tone words change the result. I will add: 'Be firm and demand payment immediately.' [Shows output.] This made it worse. The model sounds aggressive and threatens legal action. For a first message to a long-standing customer, that could damage the relationship. So tone is a prompt move, and a stronger tone is not always better. Adviser: Let me revise: 'You are the owner of a fictional design studio. Write a polite payment reminder to a fictional customer named Samira Patel for invoice INV-2024-047 (£185 for website maintenance), issued 14 days ago. Ask for payment within 7 days. Offer to discuss if there is a problem. Keep it under 100 words.' [Shows output.] This version names a fictional customer, gives an invoice reference and amount, sets a clear deadline, and keeps the tone polite. Those are prompt moves: role, recipient, details, tone, and constraint. Notice I used only fictional details—no real customer names or real invoices. Adviser: Your turn. Pick one routine message from your own business and try it.\n\nSource task constraints (verbatim):\nOne evening workshop\nuse fictional customer details only.",
+        "topics": [
+          {
+            "type": "Topic",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:topic:Pointer1792169354742_USER_109",
+            "version": "1"
+          }
+        ],
+        "outcomes": [
+          {
+            "type": "LearningOutcome",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+            "version": "1"
+          }
+        ],
+        "usageConditions": "Generated teaching draft pending human review; not a curated or approved source.",
+        "derivedFrom": [
+          {
+            "type": "Resource",
+            "id": "wp3:32c2119d5504",
+            "version": "31057b5b35cfcfa5f31ee406f855477a"
+          }
+        ]
+      }
+    },
+    {
+      "type": "Resource",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:4:material",
+      "version": "1",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169384659_USER_127\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}",
+          "{\"corpus_citations\":[{\"document_ids\":[\"wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:0\"],\"resource_id\":\"wp3:32c2119d5504\",\"resource_version\":\"31057b5b35cfcfa5f31ee406f855477a\",\"supported_claim\":\"Prompt engineering is the design and optimization of prompts to deliver consistent and quality responses, and users improve outputs by iteratively refining prompts in multi-turn conversation rather than expecting a perfect first try.\"}]}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Local ALM projection of an AIM-PRO teaching draft; not a source modification or approval."
+      },
+      "fields": {
+        "title": "Write a first prompt for your own business and explain two choices",
+        "contentOrLocator": "Write-your-own-prompt worksheet: Step 1 — Choose your message type (payment reminder or social media post). Step 2 — Write your prompt below using only fictional names, invoice references, and amounts. Step 3 — Explain Choice 1: what you chose and why. Step 4 — Explain Choice 2: what you chose and why. Step 5 — Check: did I use any real customer names or real invoice data? If yes, replace them with fictional details.\n\n## Write your first business prompt\n\nStep 1: Choose one routine customer message from your own business (payment reminder or social media post). Step 2: Write a prompt for an LLM below. Use only fictional customer details — no real names, real invoice numbers, or real personal data. My prompt: ________________________________________________________ Step 3: Explain Choice 1. What did you choose in your prompt, and what effect did you expect? ________________________________________________________ Step 4: Explain Choice 2. What did you choose in your prompt, and what effect did you expect? ________________________________________________________ Step 5: Check. Did you use any real customer names or real invoice data? If yes, replace them with fictional details before finishing.\n\n## Weak, worse, and improved payment-reminder prompts\n\nWeak prompt: 'Write a payment reminder.' Worse prompt (one change that made output worse): 'You are a small business owner. Write a payment reminder to a fictional customer for an unpaid invoice. Be firm and demand payment immediately.' Improved prompt: 'You are the owner of a fictional design studio. Write a polite payment reminder to a fictional customer named Samira Patel for invoice INV-2024-047 (£185 for website maintenance), issued 14 days ago. Ask for payment within 7 days. Offer to discuss if there is a problem. Keep it under 100 words.'\n\nSource task constraints (verbatim):\nOne evening workshop\nuse fictional customer details only.",
+        "topics": [
+          {
+            "type": "Topic",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:topic:Pointer1792169354742_USER_109",
+            "version": "1"
+          }
+        ],
+        "outcomes": [
+          {
+            "type": "LearningOutcome",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+            "version": "1"
+          }
+        ],
+        "usageConditions": "Generated teaching draft pending human review; not a curated or approved source.",
+        "derivedFrom": [
+          {
+            "type": "Resource",
+            "id": "wp3:32c2119d5504",
+            "version": "31057b5b35cfcfa5f31ee406f855477a"
+          }
+        ]
+      }
+    },
+    {
+      "type": "Resource",
+      "id": "wp3:32c2119d5504",
+      "version": "31057b5b35cfcfa5f31ee406f855477a",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "[\"wp3:32c2119d5504\",\"31057b5b35cfcfa5f31ee406f855477a\"]",
+          "wp3"
+        ],
+        "responsible": "corpus-retrieval"
+      },
+      "fields": {
+        "title": "Prompt Engineering Fundamentals",
+        "contentOrLocator": "https://github.com/microsoft/generative-ai-for-beginners/blob/main/04-prompt-engineering-fundamentals/README.md",
+        "topics": [
+          {
+            "type": "Topic",
+            "id": "corpus-topic:wp3",
+            "version": "1"
+          }
+        ],
+        "outcomes": [],
+        "usageConditions": "Corpus licence assertion: MIT. Usage and provenance require human review; no local resource approval is implied.",
+        "derivedFrom": []
+      }
+    },
+    {
+      "type": "ResourceRequirement",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:0:requirement",
+      "version": "1",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169221668_USER_96\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Local ALM projection of an AIM-PRO teaching draft; not a source modification or approval."
+      },
+      "fields": {
+        "purpose": "Select and approve teaching resources and review the generated material before use.",
+        "outcomes": [
+          {
+            "type": "LearningOutcome",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+            "version": "1"
+          }
+        ],
+        "constraints": [
+          "Source integration findings remain unresolved until explicitly reviewed.",
+          "One evening workshop",
+          "use fictional customer details only."
+        ],
+        "mandatory": true
+      }
+    },
+    {
+      "type": "ResourceRequirement",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:1:requirement",
+      "version": "1",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169221668_USER_96\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Local ALM projection of an AIM-PRO teaching draft; not a source modification or approval."
+      },
+      "fields": {
+        "purpose": "Select and approve teaching resources and review the generated material before use.",
+        "outcomes": [
+          {
+            "type": "LearningOutcome",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+            "version": "1"
+          }
+        ],
+        "constraints": [
+          "Source integration findings remain unresolved until explicitly reviewed.",
+          "One evening workshop",
+          "use fictional customer details only."
+        ],
+        "mandatory": true
+      }
+    },
+    {
+      "type": "ResourceRequirement",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:2:requirement",
+      "version": "1",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169221668_USER_96\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Local ALM projection of an AIM-PRO teaching draft; not a source modification or approval."
+      },
+      "fields": {
+        "purpose": "Select and approve teaching resources and review the generated material before use.",
+        "outcomes": [
+          {
+            "type": "LearningOutcome",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+            "version": "1"
+          }
+        ],
+        "constraints": [
+          "Source integration findings remain unresolved until explicitly reviewed.",
+          "One evening workshop",
+          "use fictional customer details only."
+        ],
+        "mandatory": true
+      }
+    },
+    {
+      "type": "ResourceRequirement",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:3:requirement",
+      "version": "1",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169221668_USER_96\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Local ALM projection of an AIM-PRO teaching draft; not a source modification or approval."
+      },
+      "fields": {
+        "purpose": "Select and approve teaching resources and review the generated material before use.",
+        "outcomes": [
+          {
+            "type": "LearningOutcome",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+            "version": "1"
+          }
+        ],
+        "constraints": [
+          "Source integration findings remain unresolved until explicitly reviewed.",
+          "One evening workshop",
+          "use fictional customer details only."
+        ],
+        "mandatory": true
+      }
+    },
+    {
+      "type": "ResourceRequirement",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:4:requirement",
+      "version": "1",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169221668_USER_96\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Local ALM projection of an AIM-PRO teaching draft; not a source modification or approval."
+      },
+      "fields": {
+        "purpose": "Select and approve teaching resources and review the generated material before use.",
+        "outcomes": [
+          {
+            "type": "LearningOutcome",
+            "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+            "version": "1"
+          }
+        ],
+        "constraints": [
+          "Source integration findings remain unresolved until explicitly reviewed.",
+          "One evening workshop",
+          "use fictional customer details only."
+        ],
+        "mandatory": true
+      }
+    },
+    {
+      "type": "Rubric",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:0:rubric",
+      "version": "1",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169384659_USER_127\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Local ALM projection of an AIM-PRO teaching draft; not a source modification or approval."
+      },
+      "fields": {
+        "name": "Live modelling: adviser builds a payment-reminder prompt thinking aloud — draft analytic rubric",
+        "criteria": [
+          {
+            "key": "prompt_structure_and_specificity",
+            "outcomes": [
+              {
+                "type": "LearningOutcome",
+                "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+                "version": "1"
+              }
+            ],
+            "description": "The prompt includes recipient, task, and business-specific details appropriate to a routine customer message.",
+            "levels": [
+              {
+                "key": "L1",
+                "descriptor": "The prompt contains no recipient, task, or business detail; it is a single vague phrase such as 'Write a reminder.'"
+              },
+              {
+                "key": "L2",
+                "descriptor": "The prompt includes either a recipient or a task, but not both, and lacks business-specific details such as invoice amount or due date."
+              },
+              {
+                "key": "L3",
+                "descriptor": "The prompt includes a recipient, a task, and at least two business-specific details, for example fictional customer name, invoice reference, amount, or overdue period."
+              },
+              {
+                "key": "L4",
+                "descriptor": "The prompt includes a recipient, a task, business-specific details, and an explicit tone or length constraint appropriate to a customer message."
+              }
+            ]
+          },
+          {
+            "key": "explanation_of_choices",
+            "outcomes": [
+              {
+                "type": "LearningOutcome",
+                "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+                "version": "1"
+              }
+            ],
+            "description": "The learner explains two prompt choices and links each to an expected effect on the output.",
+            "levels": [
+              {
+                "key": "L1",
+                "descriptor": "The learner gives no explanation or says 'I just wrote it.'"
+              },
+              {
+                "key": "L2",
+                "descriptor": "The learner identifies one choice, for example 'I added a name,' but does not say why."
+              },
+              {
+                "key": "L3",
+                "descriptor": "The learner explains two choices and links each to an effect on the output, for example 'I added the invoice amount so the customer knows what is owed.'"
+              },
+              {
+                "key": "L4",
+                "descriptor": "The learner explains two choices, links each to an effect, and identifies one change they tried that made the output worse and why."
+              }
+            ]
+          },
+          {
+            "key": "fictional_data_only",
+            "outcomes": [
+              {
+                "type": "LearningOutcome",
+                "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+                "version": "1"
+              }
+            ],
+            "description": "The prompt uses entirely fictional customer details and no real personal data.",
+            "levels": [
+              {
+                "key": "L1",
+                "descriptor": "The prompt uses real customer names, real invoice numbers, or real personal data."
+              },
+              {
+                "key": "L2",
+                "descriptor": "The prompt mixes fictional names with real-looking invoice formats, amounts, or contact details."
+              },
+              {
+                "key": "L3",
+                "descriptor": "The prompt uses entirely fictional customer names, invoice references, and amounts throughout, with no real personal data."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "Rubric",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:1:rubric",
+      "version": "1",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169384659_USER_127\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Local ALM projection of an AIM-PRO teaching draft; not a source modification or approval."
+      },
+      "fields": {
+        "name": "Peer owner shows her own prompts, failures included — draft analytic rubric",
+        "criteria": [
+          {
+            "key": "prompt_structure_and_specificity",
+            "outcomes": [
+              {
+                "type": "LearningOutcome",
+                "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+                "version": "1"
+              }
+            ],
+            "description": "The prompt includes recipient, task, and business-specific details appropriate to a routine customer message.",
+            "levels": [
+              {
+                "key": "L1",
+                "descriptor": "The prompt contains no recipient, task, or business detail; it is a single vague phrase such as 'Write a reminder.'"
+              },
+              {
+                "key": "L2",
+                "descriptor": "The prompt includes either a recipient or a task, but not both, and lacks business-specific details such as invoice amount or due date."
+              },
+              {
+                "key": "L3",
+                "descriptor": "The prompt includes a recipient, a task, and at least two business-specific details, for example fictional customer name, invoice reference, amount, or overdue period."
+              },
+              {
+                "key": "L4",
+                "descriptor": "The prompt includes a recipient, a task, business-specific details, and an explicit tone or length constraint appropriate to a customer message."
+              }
+            ]
+          },
+          {
+            "key": "explanation_of_choices",
+            "outcomes": [
+              {
+                "type": "LearningOutcome",
+                "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+                "version": "1"
+              }
+            ],
+            "description": "The learner explains two prompt choices and links each to an expected effect on the output.",
+            "levels": [
+              {
+                "key": "L1",
+                "descriptor": "The learner gives no explanation or says 'I just wrote it.'"
+              },
+              {
+                "key": "L2",
+                "descriptor": "The learner identifies one choice, for example 'I added a name,' but does not say why."
+              },
+              {
+                "key": "L3",
+                "descriptor": "The learner explains two choices and links each to an effect on the output, for example 'I added the invoice amount so the customer knows what is owed.'"
+              },
+              {
+                "key": "L4",
+                "descriptor": "The learner explains two choices, links each to an effect, and identifies one change they tried that made the output worse and why."
+              }
+            ]
+          },
+          {
+            "key": "fictional_data_only",
+            "outcomes": [
+              {
+                "type": "LearningOutcome",
+                "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+                "version": "1"
+              }
+            ],
+            "description": "The prompt uses entirely fictional customer details and no real personal data.",
+            "levels": [
+              {
+                "key": "L1",
+                "descriptor": "The prompt uses real customer names, real invoice numbers, or real personal data."
+              },
+              {
+                "key": "L2",
+                "descriptor": "The prompt mixes fictional names with real-looking invoice formats, amounts, or contact details."
+              },
+              {
+                "key": "L3",
+                "descriptor": "The prompt uses entirely fictional customer names, invoice references, and amounts throughout, with no real personal data."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "Rubric",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:2:rubric",
+      "version": "1",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169384659_USER_127\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Local ALM projection of an AIM-PRO teaching draft; not a source modification or approval."
+      },
+      "fields": {
+        "name": "Tick prompt moves on a card while watching — draft analytic rubric",
+        "criteria": [
+          {
+            "key": "prompt_structure_and_specificity",
+            "outcomes": [
+              {
+                "type": "LearningOutcome",
+                "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+                "version": "1"
+              }
+            ],
+            "description": "The prompt includes recipient, task, and business-specific details appropriate to a routine customer message.",
+            "levels": [
+              {
+                "key": "L1",
+                "descriptor": "The prompt contains no recipient, task, or business detail; it is a single vague phrase such as 'Write a reminder.'"
+              },
+              {
+                "key": "L2",
+                "descriptor": "The prompt includes either a recipient or a task, but not both, and lacks business-specific details such as invoice amount or due date."
+              },
+              {
+                "key": "L3",
+                "descriptor": "The prompt includes a recipient, a task, and at least two business-specific details, for example fictional customer name, invoice reference, amount, or overdue period."
+              },
+              {
+                "key": "L4",
+                "descriptor": "The prompt includes a recipient, a task, business-specific details, and an explicit tone or length constraint appropriate to a customer message."
+              }
+            ]
+          },
+          {
+            "key": "explanation_of_choices",
+            "outcomes": [
+              {
+                "type": "LearningOutcome",
+                "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+                "version": "1"
+              }
+            ],
+            "description": "The learner explains two prompt choices and links each to an expected effect on the output.",
+            "levels": [
+              {
+                "key": "L1",
+                "descriptor": "The learner gives no explanation or says 'I just wrote it.'"
+              },
+              {
+                "key": "L2",
+                "descriptor": "The learner identifies one choice, for example 'I added a name,' but does not say why."
+              },
+              {
+                "key": "L3",
+                "descriptor": "The learner explains two choices and links each to an effect on the output, for example 'I added the invoice amount so the customer knows what is owed.'"
+              },
+              {
+                "key": "L4",
+                "descriptor": "The learner explains two choices, links each to an effect, and identifies one change they tried that made the output worse and why."
+              }
+            ]
+          },
+          {
+            "key": "fictional_data_only",
+            "outcomes": [
+              {
+                "type": "LearningOutcome",
+                "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+                "version": "1"
+              }
+            ],
+            "description": "The prompt uses entirely fictional customer details and no real personal data.",
+            "levels": [
+              {
+                "key": "L1",
+                "descriptor": "The prompt uses real customer names, real invoice numbers, or real personal data."
+              },
+              {
+                "key": "L2",
+                "descriptor": "The prompt mixes fictional names with real-looking invoice formats, amounts, or contact details."
+              },
+              {
+                "key": "L3",
+                "descriptor": "The prompt uses entirely fictional customer names, invoice references, and amounts throughout, with no real personal data."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "Rubric",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:3:rubric",
+      "version": "1",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169384659_USER_127\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Local ALM projection of an AIM-PRO teaching draft; not a source modification or approval."
+      },
+      "fields": {
+        "name": "Annotate the thinking-aloud transcript in pairs — draft analytic rubric",
+        "criteria": [
+          {
+            "key": "prompt_structure_and_specificity",
+            "outcomes": [
+              {
+                "type": "LearningOutcome",
+                "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+                "version": "1"
+              }
+            ],
+            "description": "The prompt includes recipient, task, and business-specific details appropriate to a routine customer message.",
+            "levels": [
+              {
+                "key": "L1",
+                "descriptor": "The prompt contains no recipient, task, or business detail; it is a single vague phrase such as 'Write a reminder.'"
+              },
+              {
+                "key": "L2",
+                "descriptor": "The prompt includes either a recipient or a task, but not both, and lacks business-specific details such as invoice amount or due date."
+              },
+              {
+                "key": "L3",
+                "descriptor": "The prompt includes a recipient, a task, and at least two business-specific details, for example fictional customer name, invoice reference, amount, or overdue period."
+              },
+              {
+                "key": "L4",
+                "descriptor": "The prompt includes a recipient, a task, business-specific details, and an explicit tone or length constraint appropriate to a customer message."
+              }
+            ]
+          },
+          {
+            "key": "explanation_of_choices",
+            "outcomes": [
+              {
+                "type": "LearningOutcome",
+                "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+                "version": "1"
+              }
+            ],
+            "description": "The learner explains two prompt choices and links each to an expected effect on the output.",
+            "levels": [
+              {
+                "key": "L1",
+                "descriptor": "The learner gives no explanation or says 'I just wrote it.'"
+              },
+              {
+                "key": "L2",
+                "descriptor": "The learner identifies one choice, for example 'I added a name,' but does not say why."
+              },
+              {
+                "key": "L3",
+                "descriptor": "The learner explains two choices and links each to an effect on the output, for example 'I added the invoice amount so the customer knows what is owed.'"
+              },
+              {
+                "key": "L4",
+                "descriptor": "The learner explains two choices, links each to an effect, and identifies one change they tried that made the output worse and why."
+              }
+            ]
+          },
+          {
+            "key": "fictional_data_only",
+            "outcomes": [
+              {
+                "type": "LearningOutcome",
+                "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+                "version": "1"
+              }
+            ],
+            "description": "The prompt uses entirely fictional customer details and no real personal data.",
+            "levels": [
+              {
+                "key": "L1",
+                "descriptor": "The prompt uses real customer names, real invoice numbers, or real personal data."
+              },
+              {
+                "key": "L2",
+                "descriptor": "The prompt mixes fictional names with real-looking invoice formats, amounts, or contact details."
+              },
+              {
+                "key": "L3",
+                "descriptor": "The prompt uses entirely fictional customer names, invoice references, and amounts throughout, with no real personal data."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "Rubric",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:4:rubric",
+      "version": "1",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169384659_USER_127\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Local ALM projection of an AIM-PRO teaching draft; not a source modification or approval."
+      },
+      "fields": {
+        "name": "Write a first prompt for your own business and explain two choices — draft analytic rubric",
+        "criteria": [
+          {
+            "key": "prompt_structure_and_specificity",
+            "outcomes": [
+              {
+                "type": "LearningOutcome",
+                "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+                "version": "1"
+              }
+            ],
+            "description": "The prompt includes recipient, task, and business-specific details appropriate to a routine customer message.",
+            "levels": [
+              {
+                "key": "L1",
+                "descriptor": "The prompt contains no recipient, task, or business detail; it is a single vague phrase such as 'Write a reminder.'"
+              },
+              {
+                "key": "L2",
+                "descriptor": "The prompt includes either a recipient or a task, but not both, and lacks business-specific details such as invoice amount or due date."
+              },
+              {
+                "key": "L3",
+                "descriptor": "The prompt includes a recipient, a task, and at least two business-specific details, for example fictional customer name, invoice reference, amount, or overdue period."
+              },
+              {
+                "key": "L4",
+                "descriptor": "The prompt includes a recipient, a task, business-specific details, and an explicit tone or length constraint appropriate to a customer message."
+              }
+            ]
+          },
+          {
+            "key": "explanation_of_choices",
+            "outcomes": [
+              {
+                "type": "LearningOutcome",
+                "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+                "version": "1"
+              }
+            ],
+            "description": "The learner explains two prompt choices and links each to an expected effect on the output.",
+            "levels": [
+              {
+                "key": "L1",
+                "descriptor": "The learner gives no explanation or says 'I just wrote it.'"
+              },
+              {
+                "key": "L2",
+                "descriptor": "The learner identifies one choice, for example 'I added a name,' but does not say why."
+              },
+              {
+                "key": "L3",
+                "descriptor": "The learner explains two choices and links each to an effect on the output, for example 'I added the invoice amount so the customer knows what is owed.'"
+              },
+              {
+                "key": "L4",
+                "descriptor": "The learner explains two choices, links each to an effect, and identifies one change they tried that made the output worse and why."
+              }
+            ]
+          },
+          {
+            "key": "fictional_data_only",
+            "outcomes": [
+              {
+                "type": "LearningOutcome",
+                "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:outcome:Pointer1792169221668_USER_96",
+                "version": "1"
+              }
+            ],
+            "description": "The prompt uses entirely fictional customer details and no real personal data.",
+            "levels": [
+              {
+                "key": "L1",
+                "descriptor": "The prompt uses real customer names, real invoice numbers, or real personal data."
+              },
+              {
+                "key": "L2",
+                "descriptor": "The prompt mixes fictional names with real-looking invoice formats, amounts, or contact details."
+              },
+              {
+                "key": "L3",
+                "descriptor": "The prompt uses entirely fictional customer names, invoice references, and amounts throughout, with no real personal data."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "RuleDefinition",
+      "id": "execution-3b51559a11de4bb0af8817d47ac0317f:completion:aimpro-ee16a69afd054e60b5ce8b95ff2aefea:phase",
+      "version": "1",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [],
+        "responsible": "demo-author"
+      },
+      "fields": {
+        "purpose": "Complete this process node only when every direct child is explicitly COMPLETED.",
+        "inputs": [
+          "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0"
+        ],
+        "condition": "Every direct child status equals COMPLETED; SKIPPED does not count as completed.",
+        "outcome": "Process completion only. This rule does not assign acquisition, a grade or verification.",
+        "unknownBehavior": "Missing or unrecognized statuses remain UNKNOWN; do not infer completion.",
+        "approvalRequirement": "Human-reviewed configuration and actual recorded child completion; a submission alone is insufficient."
+      }
+    },
+    {
+      "type": "RuleDefinition",
+      "id": "execution-3b51559a11de4bb0af8817d47ac0317f:completion:aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0",
+      "version": "1",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [],
+        "responsible": "demo-author"
+      },
+      "fields": {
+        "purpose": "Complete this process node only when every direct child is explicitly COMPLETED.",
+        "inputs": [
+          "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:0",
+          "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:1",
+          "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:2",
+          "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:3",
+          "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:unit:0:activity:4"
+        ],
+        "condition": "Every direct child status equals COMPLETED; SKIPPED does not count as completed.",
+        "outcome": "Process completion only. This rule does not assign acquisition, a grade or verification.",
+        "unknownBehavior": "Missing or unrecognized statuses remain UNKNOWN; do not infer completion.",
+        "approvalRequirement": "Human-reviewed configuration and actual recorded child completion; a submission alone is insufficient."
+      }
+    },
+    {
+      "type": "Strategy",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:strategy:Pointer1792169384659_USER_127",
+      "version": "1",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169384659_USER_127\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Local ALM projection of an AIM-PRO teaching draft; not a source modification or approval."
+      },
+      "fields": {
+        "name": "ModellingAIPractices",
+        "family": "iSQD pedagogical practice",
+        "rationale": "Watching before doing lowers the threshold for novices. Modelling builds prompting competence only if the decisions are made visible and learners then use them in a prompt of their own; a polished demo of finished outputs would build familiarity, not competence.",
+        "constraints": [
+          "One evening workshop",
+          "use fictional customer details only."
+        ]
+      }
+    },
+    {
+      "type": "Topic",
+      "id": "aimpro-ee16a69afd054e60b5ce8b95ff2aefea:topic:Pointer1792169354742_USER_109",
+      "version": "1",
+      "provenance": {
+        "origin": "GENERATED_PROPOSAL",
+        "sources": [
+          "{\"metamodel_fingerprint\":\"b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003\",\"source_ids\":[\"Pointer1792169354742_USER_109\"],\"source_sha256\":\"2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c\"}"
+        ],
+        "responsible": "demo-author",
+        "rationale": "Local ALM projection of an AIM-PRO teaching draft; not a source modification or approval."
+      },
+      "fields": {
+        "name": "AI Interaction & Prompting",
+        "definition": "Effectively interact with AI systems through prompt engineering",
+        "parentTopics": [],
+        "relatedTopics": []
+      }
+    },
+    {
+      "type": "Topic",
+      "id": "corpus-topic:wp3",
+      "version": "1",
+      "provenance": {
+        "origin": "CONFIGURATION",
+        "sources": [],
+        "responsible": "corpus-retrieval"
+      },
+      "fields": {
+        "name": "wp3 source corpus",
+        "definition": "Versioned source catalogue accessed through an authorized MCP search scope.",
+        "parentTopics": [],
+        "relatedTopics": []
+      }
+    }
+  ]
+}
