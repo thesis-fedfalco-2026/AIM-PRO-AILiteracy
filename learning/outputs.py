@@ -12,18 +12,29 @@ from document_search.contracts import resource_key
 
 def discovered_resources(task: AuthorizedTask, evidence: dict) -> tuple[Entity, ...]:
     resources = []
+    grouped = {}
     for document in evidence.get("documents", []):
         key = document["metadata"].get("resource_key")
         if not isinstance(key, str):
             raise ValueError("Discovered material requires a versioned source identity")
+        grouped.setdefault(key, []).append(document)
+    for key, documents in grouped.items():
         identity, version = json.loads(key)
+        metadata = documents[0]["metadata"]
+        text = "\n\n".join(dict.fromkeys(document["text"] for document in documents))
+        locator = metadata.get("uri")
+        if locator:
+            text = f"{locator}\n\n{text}"
+        conditions = "Usage conditions must be checked before use in LEARNING."
+        if metadata.get("licence"):
+            conditions += f" WP3 licence: {metadata['licence']}; verdict: {metadata.get('licence_verdict', 'unknown')}."
         resource = make_entity("Resource", identity, {
-            "title": document["metadata"].get("source", identity), "contentOrLocator": document["text"],
+            "title": metadata.get("title") or metadata.get("source", identity), "contentOrLocator": text,
             "topics": task.specialization.fields["topics"], "outcomes": [], "derivedFrom": [],
-            "usageConditions": "Usage conditions must be checked before use in LEARNING."},
+            "usageConditions": conditions},
             version=version, origin="GENERATED_PROPOSAL", responsible="orchestrator-retrieval")
         resource = resource.model_copy(update={"provenance": resource.provenance.model_copy(update={
-            "sources": [key, document["metadata"]["source_scope"]]})})
+            "sources": [key, metadata["source_scope"]]})})
         resources.append(resource)
     return tuple(resources)
 

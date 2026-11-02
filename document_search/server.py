@@ -43,7 +43,7 @@ def create_server(environ: Mapping[str, str] | None = None) -> FastMCP:
         middleware=[_SearchArgumentMiddleware()],
     )
 
-    @server.tool(name="search_documents", description="Search synthetic mock documents or the configured Qdrant collection.")
+    @server.tool(name="search_documents", description="Search authorized WP3 PostgreSQL resources or the configured search backend.")
     def search_documents(
         query: Annotated[Any, Field(json_schema_extra={"type": "string", "minLength": 1})],
         scope: SearchScope,

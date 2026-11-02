@@ -39,7 +39,7 @@ def build_document_search_params(
     base_dir: Path, environ: Mapping[str, str], *, unlimited_text: bool = False,
 ) -> StdioServerParameters:
     backend = environ.get("SEARCH_BACKEND")
-    if backend not in {"mock", "qdrant"}:
+    if backend not in {"mock", "qdrant", "postgres"}:
         raise ConfigurationError("Invalid search backend")
     server_env = {
         "LC_ALL": "C",
@@ -48,6 +48,8 @@ def build_document_search_params(
     }
     if unlimited_text:
         server_env["SEARCH_UNLIMITED_TEXT"] = "1"
+    if backend == "postgres" and environ.get("WP3_DATABASE_URL"):
+        server_env["WP3_DATABASE_URL"] = environ["WP3_DATABASE_URL"]
     if backend == "qdrant":
         server_env.update(
             (key, environ[key]) for key in _QDRANT_ENV_KEYS if environ.get(key)

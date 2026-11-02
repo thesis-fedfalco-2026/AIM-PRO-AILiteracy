@@ -280,6 +280,10 @@ def build_backend(
 ) -> SearchBackend:
     environ = os.environ if environ is None else environ
     backend = environ.get("SEARCH_BACKEND")
+    if backend == "postgres":
+        from document_search.postgres import build_postgres_backend
+
+        return build_postgres_backend(environ)
     if backend == "mock":
         return SearchBackend(
             embed=embed or _mock_embed,

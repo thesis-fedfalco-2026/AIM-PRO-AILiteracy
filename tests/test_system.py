@@ -671,11 +671,14 @@ class ApplicationTest(unittest.TestCase):
 
         self.assertNotRegex(readme, r"(?m)^HF_TOKEN=\S+")
 
-    def test_compose_defaults_to_retrieval_and_embedding_with_local_generation_opt_in(self):
+    def test_compose_defaults_to_wp3_with_vector_and_local_generation_opt_in(self):
         compose = yaml.safe_load((main.BASE_DIR / "docker-compose.yml").read_text())
         local = yaml.safe_load((main.BASE_DIR / "compose.local.yml").read_text())
 
-        self.assertEqual(compose["include"], ["compose.local.yml"])
+        self.assertEqual(compose["include"], ["compose.local.yml", "compose.wp3.yml"])
+        wp3 = yaml.safe_load((main.BASE_DIR / "compose.wp3.yml").read_text())["services"]["wp3-postgres"]
+        self.assertNotIn("profiles", wp3)
+        self.assertIn("wp3_data:/var/lib/postgresql", wp3["volumes"])
         self.assertEqual(set(compose["services"]), {"tei-embedding", "qdrant"})
         self.assertEqual({name for name, service in local["services"].items()
                           if "observability" not in service.get("profiles", [])}, {"vllm-generation"})
@@ -687,7 +690,8 @@ class ApplicationTest(unittest.TestCase):
         generation = local["services"]["vllm-generation"]
         embedding = compose["services"]["tei-embedding"]
         self.assertEqual(generation["profiles"], ["local"])
-        self.assertNotIn("profiles", embedding)
+        self.assertEqual(embedding["profiles"], ["vector"])
+        self.assertEqual(compose["services"]["qdrant"]["profiles"], ["vector"])
         generation_command = generation["command"]
         embedding_command = embedding["command"]
 
@@ -714,7 +718,7 @@ class ApplicationTest(unittest.TestCase):
         )
         self.assertEqual(embedding_command, [
             "--model-id",
-            "${EMBEDDING_MODEL_ID:?set EMBEDDING_MODEL_ID in .env}",
+            "${EMBEDDING_MODEL_ID:-google/embeddinggemma-300m}",
             "--dtype",
             "float32",
             "--huggingface-hub-cache",
