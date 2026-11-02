@@ -47,6 +47,12 @@ def parse_args(argv=None):
     submit.add_argument('activity', help='EntityRef in JSON')
     submit.add_argument('content')
     submit.add_argument('--request-id', required=True)
+    generate = commands.add_parser('generate-aimpro', help='Generate a teaching draft as a pending local proposal')
+    generate.add_argument('project', type=Path)
+    generate.add_argument('--request-id', required=True)
+    generate.add_argument('--scenario', default='SCN01')
+    generate.add_argument('--competencies', default='elena_usecase_competencies')
+    generate.add_argument('--root-id')
     return parser.parse_args(argv)
 
 
@@ -61,6 +67,13 @@ def _orchestrator():
     for handler in logging.getLogger().handlers:
         handler.addFilter(logging.Filter('agent_system'))
     return build_orchestrator()
+
+
+def _aimpro_lead():
+    from main import build_aimpro_lead
+    from crewai.events.utils.console_formatter import set_suppress_console_output
+    set_suppress_console_output(True)
+    return build_aimpro_lead()
 
 
 def main(argv=None):
@@ -103,6 +116,10 @@ def main(argv=None):
                 result = service.abandon_request(args.context,args.subject,args.request_id).model_dump(mode='json')
             elif command == 'submit':
                 result = entity_data(service.submit(args.context,args.subject,EntityRef.model_validate_json(args.activity),args.content,args.request_id))
+            elif command == 'generate-aimpro':
+                result = service.generate_aimpro(args.context, args.subject, args.project,
+                    request_id=args.request_id, lead_factory=_aimpro_lead,
+                    scenario=args.scenario, competencies=args.competencies, root_id=args.root_id).model_dump(mode='json')
             else:
                 request = LearningRequest(request_id=args.request_id or uuid4().hex,
                     context_ref=store.read_context(args.context).ref, subject_key=args.subject,text=args.question,

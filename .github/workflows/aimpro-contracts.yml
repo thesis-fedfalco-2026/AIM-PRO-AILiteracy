@@ -14,4 +14,4 @@ jobs:
           python-version: '3.11'
       - run: python -m pip install pydantic==2.12.5
       - run: python -m aimpro.generate --check
-      - run: python -m unittest tests.test_aimpro_audit tests.test_aimpro_adapter tests.test_aimpro_contracts tests.test_aimpro_lead -v
+      - run: python -m unittest tests.test_aimpro_audit tests.test_aimpro_adapter tests.test_aimpro_contracts tests.test_aimpro_lead tests.test_aimpro_didactic -v

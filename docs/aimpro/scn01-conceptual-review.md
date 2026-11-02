@@ -101,11 +101,20 @@ the AIM-PRO metamodel to satisfy the runtime.
   schemas. Exact fingerprints and cited source ids are checked on the structured
   response. Deterministic findings remain in the result even if omitted from the
   model's prose. This is not an ALM `LearningRequest` or executable worker plan;
-  authoring generation/delegation and execution integration remain downstream.
-- **#7**: map execution state through local, reviewed contracts before changing
-  the current runtime. No automatic approval or learner-state migration.
-- **#8/#11**: grounded syllabus generation still needs curated resources and the
-  Lead integration; the scenario's practice description alone is insufficient.
+  Teaching generation now uses a separate local draft contract and the pending
+  proposal workflow described below. Worker delegation is not yet implemented
+  for this AIM-PRO generation path.
+- **#7**: local draft mapping now uses the existing ALM proposal/decision/application
+  lifecycle. It does not remodel AIM-PRO or move execution state into the external
+  metamodel. Approval and application preserve PREPARATION/DRAFT; no learner state
+  is assigned. Full operational activation still needs resources and rules.
+- **#8/#10**: teaching draft generation is available through the Lead, including
+  units, material and activities. It does not yet use a delegated Curator/Teacher
+  network. Curated-resource-grounded syllabus generation remains incomplete.
+- **#9**: analytic rubric criteria/levels can be proposed with activities. No
+  scores, aggregation, pass rules, actual evaluation or acquisition are generated.
+- **#11**: curated resources and Qdrant ingestion remain external prerequisites
+  for grounded generation and authorized learning use.
 
 ## Reproduce and inspect
 
@@ -208,6 +217,79 @@ Tests cover the end-to-end path with a deterministic replacement Lead, including
 the `--run` entry point and runtime configuration. A real-model review of this
 export has not been run as part of these automated checks.
 
+## Teaching generation and local execution state
+
+The local `DidacticDraft` contract describes generated units linked to exact
+source target ids, concrete activities linked to those targets' practice ids,
+draft material, instructions and optional analytic criteria/levels. It is an
+application output contract, not an addition to AIM-PRO. A draft must cover
+exactly the source targets. Unknown practices, fingerprint mismatches, duplicate
+rubric keys and assessment activities without analytic criteria are rejected.
+
+Generation makes two structured Lead calls: the draft and its semantic review
+against the source. REJECT and UNCERTAIN do not produce a proposal. The reviewer
+checks audience, target/practice alignment, source constraints, invented sources
+and unsupported approvals. Semantic review is a model judgment, not a substitute
+for human review. Both calls respect the full-context budget without truncation.
+There are no automatic retries or delegated workers in this implementation.
+
+The host maps the accepted draft into the existing **local ALM** configuration:
+
+| Source or generated content | Local representation |
+| --- | --- |
+| Referenced source competencies | Topics, preserving source titles/descriptions |
+| Source learning targets | Learning outcomes, preserving target statements |
+| Source pedagogical practices | Strategies with source rationale |
+| Generated units and activities | Process nodes, activity definitions and learning design |
+| Generated teaching text | Draft resources without an approval binding |
+| Proposed rubric criteria/levels | Analytic rubric and assessment specification, without numerical or passing rules |
+| Integration context | Additional domain model plus a proposed new context version |
+
+Each generated activity has a mandatory resource requirement. Generated material
+does not satisfy this automatically: no `ResourceBinding` is produced. Original
+task constraints are appended verbatim to materials and learner instructions.
+An unapproved source-snapshot resource preserves the complete selected input,
+schemas, original values and diagnostics for human review; it is explicitly a
+provenance record rather than a curated teaching source. Candidate provenance
+records source ids and both fingerprints. Candidates use a fresh local identity
+namespace, without changing any AIM-PRO object.
+
+The `LearningService.generate_aimpro` operation checks `propose` permission
+before reading the project or constructing the Lead. It requires a
+PREPARATION/DRAFT context and a unique request id. It stores generated candidates
+and the `ChangeProposal` in the same transaction as the terminal request result.
+Reusing a completed request returns its recorded result without a second model
+call; changing its source/subject payload is a conflict. Rejected drafts, failed
+writes, concurrent context changes and administrator abandonment do not leave
+partial teaching candidates. Interrupted pending requests use the existing
+administrator `abandon` mechanism and a new request id for a new attempt.
+
+Example using an existing context and policy:
+
+```bash
+.venv/bin/python -m learning \
+  --db /path/to/state.sqlite --policy /path/to/policy.json \
+  --subject author --context workshop \
+  generate-aimpro docs/resources/aimpro-megamodel-2026-11-02.json \
+  --request-id workshop-teaching-1
+```
+
+The command calls the configured Lead and returns a `LearningResponse` of kind
+PROPOSAL on success. The existing `decide` command exposes candidates for review
+and records a human decision; `apply` then applies the exact approved payload.
+Before application the current context is unchanged. After application the
+design is available in local configuration, while the context remains
+PREPARATION/DRAFT. Neither generation, decision nor import creates evidence,
+activity occurrences, evaluation results, acquired outcomes or verification.
+
+Activation remains blocked by existing readiness checks: approved resource
+bindings and explicit progression/completion rules are still needed. Actual
+attempts and assessments continue through the existing `submit` and reviewed
+evaluation workflow. Tests use a temporary SQLite database and a deterministic
+replacement Lead to exercise the CLI, generation, human decision, application,
+replay, rejection, atomic rollback, stale context and abandonment. They do not
+constitute a real-model pedagogical evaluation or a live learner run.
+
 The audit checks the two selected models against canonical definitions, nested
 ownership, reference existence, snapshots, field names, multiplicities, EString
 values and enum literals. It is not a complete jjodel validator. The generated
@@ -215,4 +297,5 @@ validator adds strict primitive and reference-type checks for the selected
 scenario closure; global containment ownership/cycle rules, export/import
 round-trip, schema-copy equivalence and pedagogical completeness remain unverified.
 The adapter and generated validator do not invoke an LLM, search for resources
-or approve proposals. Only the explicit Lead `--run` path invokes the model.
+or approve proposals. The explicit Lead `--run` and `generate-aimpro` paths invoke
+the model; only the latter persists a pending local proposal.

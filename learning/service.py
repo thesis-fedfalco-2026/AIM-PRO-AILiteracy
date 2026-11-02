@@ -86,6 +86,57 @@ class LearningService:
     def submit(self, context_id, subject_key, activity, content, request_id):
         return record_attempt(self.store, self._context(context_id, subject_key), activity, content, request_id=request_id)
 
+    def generate_aimpro(self, context_id, subject_key, project, *, request_id, lead_factory,
+                        scenario='SCN01', competencies='elena_usecase_competencies', root_id=None):
+        from aimpro.lead import prepare_input
+        from aimpro.didactic import generate
+        from aimpro.execution import candidates as map_candidates
+
+        context = self._context(context_id, subject_key)
+        authorize(self.policy, subject_key, 'propose', context.snapshot.context.ref)
+        # Validate the request identity before reading source data or invoking a model.
+        LearningRequest(request_id=request_id, context_ref=context.snapshot.context.ref,
+                        subject_key=subject_key, text='Generate AIM-PRO teaching draft', intent='STATE')
+        data = prepare_input(project, scenario=scenario, competencies=competencies, root_id=root_id)
+        payload = canonical({'operation': 'AIMPRO_GENERATE', 'subject_key': subject_key, 'intent': 'STATE',
+            'source_sha256': data.source.source_sha256, 'root_id': data.source.root_id,
+            'metamodel_fingerprint': data.metamodel_fingerprint})
+        cached = self.store.request_result(request_id, context_id, payload)
+        if cached is not None:
+            return LearningResponse.model_validate(cached)
+        root = context.snapshot.context
+        if (root.fields['mode'], root.fields['status']) != ('PREPARATION', 'DRAFT'):
+            raise ValueError('Didactic generation requires a PREPARATION DRAFT context')
+        cached = self.store.claim_request(request_id, context_id, payload)
+        if cached is not None:
+            return LearningResponse.model_validate(cached)
+        try:
+            lead, budget = lead_factory()
+            draft = generate(data, lead=lead, max_context_chars=budget)
+            candidates = map_candidates(data, draft, context)
+            explanation = 'Import a generated teaching draft into local ALM configuration only. ' + canonical({
+                'source_sha256': data.source.source_sha256, 'metamodel_fingerprint': data.metamodel_fingerprint,
+                'source_diagnostics': data.source.diagnostics, 'contract_findings': data.findings,
+                'remaining_work': ['Review source gaps and generated materials', 'Select and approve required resources',
+                                   'Define progression and assessment rules before activation']})
+            proposal = create_proposal(context, (root.ref,), candidates, explanation)
+            response = LearningResponse(kind='PROPOSAL', content='Teaching draft awaits human review; no learning execution or progress is assigned.',
+                proposal_refs=(proposal.ref,), application_status='pending')
+            with self.store.db:
+                self.store.db.execute('BEGIN IMMEDIATE')
+                if self.store.read_context(context_id).version != root.version:
+                    raise StateConflict('Context changed during didactic generation')
+                save_proposal(self.store, context, proposal, candidates)
+                self.store.finish_request(request_id, context_id, response.model_dump(mode='json'))
+            return response
+        except Exception:
+            response = LearningResponse(kind='FAILURE', content='Teaching generation did not complete; no proposal was applied.')
+        try:
+            self.store.finish_request(request_id, context_id, response.model_dump(mode='json'))
+        except StateConflict:
+            return LearningResponse.model_validate(self.store.claim_request(request_id, context_id, payload))
+        return response
+
     def show(self, context_id, subject_key):
         context = self._context(context_id, subject_key)
         learner_only = set(self.policy.subjects[subject_key].roles) <= {'LEARNER'}

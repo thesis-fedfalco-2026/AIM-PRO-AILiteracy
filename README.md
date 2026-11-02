@@ -24,6 +24,17 @@ This path builds only the Lead, preserves deterministic findings in its result,
 and does not invoke workers, retrieval, approvals or SQLite writes. It uses the
 Lead profile and credentials from the existing configuration and `.env`.
 
+To generate teaching units, materials, activities and proposed analytic rubrics,
+use `python -m learning` with the required `--db`, `--policy`, `--subject` and
+`--context` options, followed by
+`generate-aimpro docs/resources/aimpro-megamodel-2026-11-02.json --request-id teaching-1`.
+This requires `propose` permission and a `PREPARATION/DRAFT` context. The configured
+Lead generates and semantically reviews a draft, then the service stores a
+pending proposal in the existing SQLite lifecycle. Review it through `decide`
+and apply it through `apply`; neither operation starts learning or records
+learner achievement. Required resources and progression rules remain explicit
+gaps before activation. See the [integration workflow](docs/aimpro/scn01-conceptual-review.md#teaching-generation-and-local-execution-state).
+
 ## Installation
 
 Python 3 is required, along with Docker Compose 2.20.3 or later only for real search.
