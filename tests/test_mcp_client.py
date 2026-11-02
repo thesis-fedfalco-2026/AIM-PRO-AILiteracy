@@ -198,11 +198,15 @@ for line in sys.stdin:
                     self.fail(stderr.read())
 
             self.assertFalse(result.isError)
+            child_environment = result.structuredContent["environment"]
+            if sys.platform == "darwin":
+                # macOS adds this interpreter locale hint even after execve with an explicit env.
+                child_environment.pop("__CF_USER_TEXT_ENCODING", None)
             self.assertEqual(
-                result.structuredContent["environment"],
+                child_environment,
                 {
                     "LC_ALL": "C",
-                    "PYTHONPATH": str(root),
+                    "PYTHONPATH": str(root.resolve()),
                     "SEARCH_BACKEND": "mock",
                 },
             )

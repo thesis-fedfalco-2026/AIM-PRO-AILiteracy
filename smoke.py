@@ -23,7 +23,9 @@ from dotenv import load_dotenv
 
 QUESTION = (
     "What deployment procedure does the synthetic technical deployment guide prescribe? "
-    "Use one Teacher task with authorized search_documents retrieval, query deployment, k 3. "
+    "Use one Teacher task with worker step.agent lesson-explainer and specialization reference "
+    "{type: AgentSpecialization, id: teacher-demo, version: 1}. "
+    "Use authorized search_documents retrieval, query deployment, k 3. "
     "Cite the actual Resource reference supplied in source_refs. "
     "State explicitly that these are synthetic example steps, not a verified real-world procedure or completed deployment."
 )
@@ -117,6 +119,17 @@ def main(argv=None):
         print(f"FAIL: {type(error).__name__}; see agent_system diagnostics")
         return 1
     return 0
+
+
+_command_main = main
+
+
+def main(argv=None):
+    from agent_system.telemetry import flush
+    try:
+        return _command_main(argv)
+    finally:
+        flush()
 
 
 if __name__ == "__main__":

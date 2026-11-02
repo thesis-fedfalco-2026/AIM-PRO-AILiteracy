@@ -677,7 +677,12 @@ class ApplicationTest(unittest.TestCase):
 
         self.assertEqual(compose["include"], ["compose.local.yml"])
         self.assertEqual(set(compose["services"]), {"tei-embedding", "qdrant"})
-        self.assertEqual(set(local["services"]), {"vllm-generation"})
+        self.assertEqual({name for name, service in local["services"].items()
+                          if "observability" not in service.get("profiles", [])}, {"vllm-generation"})
+        observability = {name: service for name, service in local["services"].items()
+                         if "observability" in service.get("profiles", [])}
+        self.assertEqual(len(observability), 6)
+        self.assertEqual(observability["langfuse-web"]["ports"], ["127.0.0.1:3000:3000"])
         self.assertNotIn("sqlite", compose["services"])
         generation = local["services"]["vllm-generation"]
         embedding = compose["services"]["tei-embedding"]
@@ -736,7 +741,8 @@ class ApplicationTest(unittest.TestCase):
         self.assertNotIn("cap_add", embedding)
         self.assertEqual(embedding["security_opt"], ["no-new-privileges:true"])
         self.assertEqual(set(compose["volumes"]), {"huggingface_cache", "qdrant_data"})
-        self.assertEqual(set(local["volumes"]), {"vllm_generation_cache"})
+        self.assertEqual(set(local["volumes"]), {"vllm_generation_cache", "langfuse_postgres",
+                                                     "langfuse_clickhouse", "langfuse_redis", "langfuse_minio"})
 
         qdrant_service = compose["services"]["qdrant"]
         self.assertEqual(qdrant_service["mem_limit"], "1g")

@@ -116,5 +116,16 @@ def main(argv=None):
         return 2
 
 
+_command_main = main
+
+
+def main(argv=None):
+    from agent_system.telemetry import flush
+    try:
+        return _command_main(argv)
+    finally:
+        flush()
+
+
 if __name__ == '__main__':
     raise SystemExit(main())

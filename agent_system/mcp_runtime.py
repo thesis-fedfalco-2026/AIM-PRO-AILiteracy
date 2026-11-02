@@ -11,6 +11,7 @@ from mcp.client.stdio import StdioServerParameters, stdio_client
 from agent_system.config import ConfigurationError
 from document_search.backend import SearchResponse
 from document_search.contracts import SearchScope
+from agent_system import telemetry
 
 
 SEARCH_TOOL_NAME = "search_documents"
@@ -69,6 +70,7 @@ class DocumentSearchClient:
     def __init__(self, params: StdioServerParameters):
         self.params = params
 
+    @telemetry.traced("document_search", "retriever", inputs=lambda self, query, k, *, scope: {"query": query, "k": k, "scope": scope})
     def search(self, query: str, k: int, *, scope: SearchScope) -> dict[str, Any]:
         async def call() -> dict[str, Any]:
             with TemporaryFile(mode="w+") as errlog:

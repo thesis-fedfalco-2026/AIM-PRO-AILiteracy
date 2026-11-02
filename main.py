@@ -12,6 +12,11 @@ import warnings
 BASE_DIR = Path(__file__).resolve().parent
 os.environ.setdefault("XDG_DATA_HOME", str(BASE_DIR / ".cache"))
 
+# Keep CrewAI's own cloud collector off, independently of Langfuse and of
+# consent previously recorded by other CrewAI projects on this machine.
+from agent_system.telemetry import configure_vendor_privacy
+configure_vendor_privacy(BASE_DIR)
+
 with warnings.catch_warnings():
     warnings.filterwarnings(
         "ignore",
@@ -49,6 +54,8 @@ def build_orchestrator(
 ) -> Orchestrator:
     catalog = model_catalog if model_catalog is not None else load_model_catalog(base_dir / "model.properties")
     runtime_environ = os.environ if environ is None else environ
+    from agent_system.telemetry import initialize
+    initialize(runtime_environ)
     local_tools = {} if tools is None else tools
     if SEARCH_TOOL_NAME in local_tools:
         raise ConfigurationError("search_documents is reserved for MCP retrieval")

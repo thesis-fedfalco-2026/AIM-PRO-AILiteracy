@@ -114,6 +114,15 @@ class OutputsTest(unittest.TestCase):
             logger=logging.getLogger("test"), agent_factory=Lead, lead_config=parse_agent_file(Path(__file__).resolve().parents[1]/'control/lead.md'), lead_skills=[])
         return orchestrator, context
 
+    def test_plan_prompt_pairs_registry_names_with_exact_specialization_refs(self):
+        orchestrator, context = self.build((draft_step(),))
+        orchestrator.run(context.request, context=context)
+        prompt = self.lead_prompts[0]
+        delegations = json.loads(prompt.split("DELEGHE_AUTORIZZATE\n", 1)[1].split("\nCONTRATTO", 1)[0])
+        self.assertEqual(delegations, [{"step.agent": "teacher", "specialization": specialization().ref.model_dump(),
+                                       "role": "TEACHER"}])
+        self.assertIn("type deve essere AgentSpecialization", prompt)
+
     def test_failed_semantic_step_skips_dependent_but_runs_independent(self):
         orchestrator, context = self.build((draft_step(), draft_step("dependent", depends_on=("one",)), draft_step("independent")), reject=True)
         response = orchestrator.run(context.request, context=context)

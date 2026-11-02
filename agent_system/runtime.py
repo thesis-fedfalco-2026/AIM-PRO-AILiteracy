@@ -7,6 +7,7 @@ import warnings
 
 from agent_system.config import ConfigurationError, ModelCatalog, LLMSettings, ResolvedAgentConfig
 from learning.outputs import WorkerOutput
+from agent_system import telemetry
 
 if TYPE_CHECKING:
     from crewai.skills import Skill
@@ -117,6 +118,7 @@ class CrewAIWorker:
         self.logger = logger
         self.agent_factory = agent_factory
 
+    @telemetry.traced("worker.call", "generation", inputs=lambda self, config, task: {"agent": config.name, "profile": config.profile, "prompt": task})
     def run(self, config: ResolvedAgentConfig, task: str) -> WorkerOutput:
         self.logger.info("Starting worker %s", config.name)
         agent_factory = self.agent_factory
