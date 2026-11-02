@@ -164,6 +164,18 @@ class LearningService:
         from aimpro.bindings import propose_bindings
         return propose_bindings(self.store, self._context(context_id, subject_key), teaching_proposal, selections)
 
+    def generate_aimpro_syllabus(self, context_id, subject_key, project, **kwargs):
+        from aimpro.syllabus_service import generate_syllabus
+        return generate_syllabus(self, context_id, subject_key, project, **kwargs)
+
+    def approved_aimpro_syllabus(self, context_id, subject_key, design):
+        from aimpro.syllabus_state import resolve
+        with self.store.db:
+            self.store.db.execute('BEGIN')
+            context = self._context(context_id, subject_key)
+            authorize(self.policy, subject_key, 'propose', context.snapshot.context.ref)
+            return resolve(self.store, context, design)
+
     def prepare_aimpro_execution(self, context_id, subject_key, *, learner, scope_name=None):
         from aimpro.execution_setup import prepare_execution
         return prepare_execution(self.store, self._context(context_id, subject_key),

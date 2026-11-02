@@ -47,15 +47,23 @@ def parse_args(argv=None):
     submit.add_argument('activity', help='EntityRef in JSON')
     submit.add_argument('content')
     submit.add_argument('--request-id', required=True)
-    generate = commands.add_parser('generate-aimpro', help='Generate a teaching draft as a pending local proposal')
-    generate.add_argument('project', type=Path)
-    generate.add_argument('--request-id', required=True)
-    generate.add_argument('--scenario', default='SCN01')
-    generate.add_argument('--competencies', default='elena_usecase_competencies')
-    generate.add_argument('--root-id')
-    generate.add_argument('--source-scope', help='Explicit policy/source scope for corpus grounding')
-    generate.add_argument('--query', help='Corpus search query, required with --source-scope')
-    generate.add_argument('--k', type=int, default=5, choices=range(1, 21))
+    for name, description in (
+        ('generate-aimpro', 'Generate a teaching draft as a pending local proposal'),
+        ('generate-aimpro-syllabus', 'Delegate a corpus-grounded syllabus proposal to the Curator'),
+    ):
+        generate = commands.add_parser(name, help=description)
+        generate.add_argument('project', type=Path)
+        generate.add_argument('--request-id', required=True)
+        generate.add_argument('--scenario', default='SCN01')
+        generate.add_argument('--competencies', default='elena_usecase_competencies')
+        generate.add_argument('--root-id')
+        generate.add_argument('--source-scope', required=name == 'generate-aimpro-syllabus',
+                              help='Explicit policy/source scope for corpus grounding')
+        generate.add_argument('--query', required=name == 'generate-aimpro-syllabus',
+                              help='Corpus search query, required with --source-scope')
+        generate.add_argument('--k', type=int, default=5, choices=range(1, 21))
+    syllabus = commands.add_parser('show-aimpro-syllabus', help='Resolve the exact approved/applied current syllabus')
+    syllabus.add_argument('design', help='Current LearningDesign EntityRef in JSON')
     trace = commands.add_parser('export-aimpro-trace', help='Read-only ALM execution history linked to unchanged AIM-PRO objects')
     trace.add_argument('project', type=Path)
     trace.add_argument('--scenario', default='SCN01')
@@ -97,6 +105,13 @@ def _aimpro_search():
     from agent_system.mcp_runtime import DocumentSearchClient, build_document_search_params
     load_dotenv(BASE_DIR / '.env')
     return DocumentSearchClient(build_document_search_params(BASE_DIR, os.environ, unlimited_text=True)).search
+
+
+def _aimpro_authoring():
+    from main import build_aimpro_authoring
+    from crewai.events.utils.console_formatter import set_suppress_console_output
+    set_suppress_console_output(True)
+    return build_aimpro_authoring()
 
 
 def main(argv=None):
@@ -159,6 +174,15 @@ def main(argv=None):
                     scenario=args.scenario, competencies=args.competencies, root_id=args.root_id,
                     source_scope=args.source_scope, query=args.query, k=args.k,
                     search_factory=_aimpro_search if args.source_scope else None).model_dump(mode='json')
+            elif command == 'generate-aimpro-syllabus':
+                result = service.generate_aimpro_syllabus(args.context, args.subject, args.project,
+                    request_id=args.request_id, authoring_factory=_aimpro_authoring,
+                    scenario=args.scenario, competencies=args.competencies, root_id=args.root_id,
+                    source_scope=args.source_scope, query=args.query, k=args.k,
+                    search_factory=_aimpro_search).model_dump(mode='json')
+            elif command == 'show-aimpro-syllabus':
+                result = service.approved_aimpro_syllabus(args.context, args.subject,
+                    EntityRef.model_validate_json(args.design)).model_dump(mode='json')
             else:
                 request = LearningRequest(request_id=args.request_id or uuid4().hex,
                     context_ref=store.read_context(args.context).ref, subject_key=args.subject,text=args.question,

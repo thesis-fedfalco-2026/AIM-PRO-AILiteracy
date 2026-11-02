@@ -3,7 +3,8 @@
 Status: local integration foundation for issues #1, #2, #3 and #6. The external
 AIM-PRO metamodel and jjodel export are outside this repository's responsibility
 and must remain unchanged. Issue #4 is an upstream concern, not a prerequisite
-for implementing a read-only adapter here. No issue is claimed complete.
+for implementing a read-only adapter here. Issues #1–#4 retain their original
+scopes and remain open.
 
 ## Source and ownership boundary
 
@@ -108,9 +109,12 @@ the AIM-PRO metamodel to satisfy the runtime.
   lifecycle. It does not remodel AIM-PRO or move execution state into the external
   metamodel. Approval and application preserve PREPARATION/DRAFT; no learner state
   is assigned. Full operational activation still needs resources and rules.
-- **#8/#10**: teaching draft generation is available through the Lead, including
-  units, material and activities. It does not yet use a delegated Curator/Teacher
-  network. Curated-resource-grounded syllabus generation remains incomplete.
+- **#8**: a separate [Curator syllabus workflow](curator-syllabus.md) delegates
+  a typed corpus-grounded outline to `syllabus-designer`, followed by Lead review
+  and a pending human-review proposal. Exact approved/applied syllabuses can be
+  resolved for subsequent authoring. Draft units remain unready for activation.
+- **#10**: the existing combined Lead path generates units, material and activities.
+  Author-side Teacher/Trainer generation from an approved syllabus remains open.
 - **#9**: analytic rubric criteria/levels can be proposed with activities. No
   scores, aggregation, pass rules, actual evaluation or acquisition are generated.
 - **#11**: the PostgreSQL/MCP resource handoff is available. Teaching generation
@@ -221,6 +225,10 @@ the `--run` entry point and runtime configuration. A real-model review of this
 export has not been run as part of these automated checks.
 
 ## Teaching generation and local execution state
+
+For the separate delegated Curator path and approved-syllabus handoff, see
+[Curator syllabus authoring](curator-syllabus.md). The combined `generate-aimpro`
+path described below still generates teaching drafts through the Lead.
 
 ### Prepare explicit resource bindings for human review
 

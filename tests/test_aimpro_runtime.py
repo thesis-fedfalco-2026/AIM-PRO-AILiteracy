@@ -11,6 +11,28 @@ import main
 
 
 class AimproRuntimeTest(unittest.TestCase):
+    def test_authoring_builder_creates_distinct_registry_curator_and_review_lead(self):
+        from aimpro.syllabus import SyllabusDraft
+        from tests.syllabus_fixtures import syllabus
+        catalog = load_model_catalog(main.BASE_DIR / 'model.properties')
+        calls = []
+        def factory(**kwargs):
+            calls.append(kwargs)
+            return SimpleNamespace(kickoff=lambda prompt, response_format: SimpleNamespace(pydantic=syllabus()))
+        with patch.object(main, 'DocumentSearchClient', side_effect=AssertionError('MCP is service mediated')):
+            dispatcher, lead, budget = main.build_aimpro_authoring(model_catalog=catalog,
+                environ={'OPENROUTER_API_KEY': 'test'}, client_factory=lambda **kwargs: kwargs,
+                agent_factory=factory)
+        self.assertEqual([c['role'] for c in calls], ['lead'])
+        self.assertEqual([s.name for s in dispatcher.registry.summaries()], ['syllabus-designer'])
+        result = dispatcher.run('syllabus-designer', 'Assigned source and evidence')
+        self.assertIs(type(result), SyllabusDraft)
+        self.assertEqual([c['role'] for c in calls], ['lead', 'syllabus-designer'])
+        self.assertIsNot(calls[0]['llm'], calls[1]['llm'])
+        self.assertTrue(all(c['tools'] == [] and not c['allow_delegation'] for c in calls))
+        self.assertIn('CATEGORY curator', calls[1]['backstory'])
+        self.assertIsNone(budget)
+
     def test_builder_uses_configured_lead_without_search_or_workers(self):
         catalog = load_model_catalog(main.BASE_DIR / "model.properties")
         calls = []

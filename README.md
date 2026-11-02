@@ -45,6 +45,13 @@ exact resource versions and excerpt citations, and proposes source resources
 without approving bindings. Empty or truncated retrieval does not silently
 fall back to ungrounded generation.
 
+For dedicated Curator syllabus proposals, use `generate-aimpro-syllabus` with
+mandatory `--source-scope` and `--query`. The Curator generates a typed outline,
+the Lead reviews it, and a human approves/applies the exact pending payload.
+`show-aimpro-syllabus` resolves the approved version for subsequent authoring.
+See [the Curator workflow](docs/aimpro/curator-syllabus.md); outline approval
+keeps PREPARATION/DRAFT and does not activate learning.
+
 ## Installation
 
 Python 3 is required, along with Docker Compose 2.20.3 or later only for real search.
