@@ -113,8 +113,11 @@ the AIM-PRO metamodel to satisfy the runtime.
   network. Curated-resource-grounded syllabus generation remains incomplete.
 - **#9**: analytic rubric criteria/levels can be proposed with activities. No
   scores, aggregation, pass rules, actual evaluation or acquisition are generated.
-- **#11**: curated resources and Qdrant ingestion remain external prerequisites
-  for grounded generation and authorized learning use.
+- **#11**: the PostgreSQL/MCP resource handoff is available. Teaching generation
+  can explicitly retrieve a named authorized source scope through the existing
+  MCP client and preserve exact resource/version/segment identity. Qdrant
+  ingestion is not required for this corpus. Local approval/binding and the
+  relevant LEARNING policy remain separate prerequisites for learner use.
 
 ## Reproduce and inspect
 
@@ -219,18 +222,80 @@ export has not been run as part of these automated checks.
 
 ## Teaching generation and local execution state
 
+### Optional corpus grounding through MCP
+
+`generate-aimpro` accepts `--source-scope wp3 --query '"prompt engineering"' --k 1`.
+The selected policy must contain a scope grant named `wp3` with `sources: [wp3]`,
+the context id, the proposing subject and read operation. Scope authorization
+is checked before constructing the search client or Lead; a policy that merely
+allows proposals does not authorize corpus access. No demo policy is modified.
+Omitting these flags retains source-scenario-only draft generation.
+
+The CLI loads `.env` explicitly and builds `DocumentSearchClient` using the
+existing `build_document_search_params(..., unlimited_text=True)`. Database
+configuration stays inside the scoped MCP process and is not part of the Lead
+input. Truncated responses, missing identity/version/title/URI/licence metadata,
+out-of-scope documents, duplicate segment ids and conflicting version metadata
+are rejected. No results means no grounded generation, not a silent ungrounded
+fallback. A targeted lexical query is necessary; a broad query can return
+scientifically valid but pedagogically unrelated material.
+
+Retrieved chunks are grouped by exact resource key and retained with original
+metadata in a typed evidence section of the Lead input. Each grounded unit needs
+at least one corpus citation, declaring exact resource identity and version in
+separate fields, segment ids and a supported claim. The host serializes the
+combined resource key. Unknown versions/segments are rejected deterministically; the
+semantic reviewer must additionally check support and relevance. Source-id
+validation alone does not prove that a citation supports a claim.
+
+Only cited corpus resources become local Resource candidates, preserving the
+external identity and version. Their canonical fields use stable locators and
+catalogue metadata with a stable source-title Topic; variable retrieved excerpts stay
+in the source snapshot so different queries cannot assign different chunk text
+to the same resource version. Generated teaching resources use `derivedFrom`
+references to those exact candidates. Available corpus metadata/licence is an
+assertion to review, not a local approval. No ResourceBinding is automatically
+created and no LEARNING permission is inferred. Binding to a requirement and
+any learner/topic policy mapping still need an explicit reviewed configuration.
+
+The request replay identity includes source scope, query and k. Search executes
+after request reservation; completed replays do not repeat retrieval or model
+calls even if the live corpus has changed. The preserved input snapshot records
+the excerpts used for that specific generation.
+
 The local `DidacticDraft` contract describes generated units linked to exact
 source target ids, concrete activities linked to those targets' practice ids,
 draft material, instructions and optional analytic criteria/levels. It is an
 application output contract, not an addition to AIM-PRO. A draft must cover
 exactly the source targets. Unknown practices, fingerprint mismatches, duplicate
 rubric keys and assessment activities without analytic criteria are rejected.
+The local contract requires exactly one generated unit per source target;
+repeating the target as duplicate units is rejected before semantic review.
+The generation prompt supplies an explicit allowed-practice-id map for every
+target, so strategy containers are not confused with concrete practices.
+
+Activities may supply typed supporting materials (transcript, worksheet, prompt
+example or other content) and declare the unit-local material keys they require.
+Different activities in a unit may reuse the same transcript or worksheet.
+Duplicate keys inside an activity, conflicting content for a shared unit key,
+and missing declared dependencies are rejected before semantic review. Complete
+supporting content, including dependencies supplied by other activities in the
+same unit, is appended to each dependent activity's local teaching resource
+when the proposal candidates are built; no external AIM-PRO schema is changed.
 
 Generation makes two structured Lead calls: the draft and its semantic review
 against the source. REJECT and UNCERTAIN do not produce a proposal. The reviewer
 checks audience, target/practice alignment, source constraints, invented sources
 and unsupported approvals. Semantic review is a model judgment, not a substitute
 for human review. Both calls respect the full-context budget without truncation.
+The structured verdict must additionally confirm supporting-material completeness
+and the absence of activities used solely for source attribution or technical
+provenance. ACCEPT with either check false is rejected. The reviewer must check
+prose references as well as declared material dependencies; titles and placeholders
+do not count as complete transcripts or worksheets. Missing curated source
+resources remain explicit external gaps and are distinct from missing locally
+generated exercise assets. These checks reduce known failures but do not prove
+that a model's completeness judgment is correct.
 There are no automatic retries or delegated workers in this implementation.
 
 The host maps the accepted draft into the existing **local ALM** configuration:

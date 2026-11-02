@@ -1,6 +1,6 @@
 # ALM prototype with CrewAI agents
 
-Local application for managing an ALM learning context with state and tracking in SQLite. A Lead agent plans tasks, specialized agents produce responses, and code checks permissions, sources and results. Generation uses OpenRouter by default; search uses `mock` for synthetic tests or Qdrant and TEI for real documents.
+Local application for managing an ALM learning context with state and tracking in SQLite. A Lead agent plans tasks, specialized agents produce responses, and code checks permissions, sources and results. Generation uses OpenRouter by default; search uses the WP3 PostgreSQL corpus through MCP, with mock data for synthetic tests and optional Qdrant/TEI retrieval.
 
 - [ALM metamodel 1.0.0](docs/resources/metamodello-agnostico-apprendimento.json)
 - [Domain specification](docs/resources/2026-10-27-specifica.md)
@@ -34,6 +34,12 @@ pending proposal in the existing SQLite lifecycle. Review it through `decide`
 and apply it through `apply`; neither operation starts learning or records
 learner achievement. Required resources and progression rules remain explicit
 gaps before activation. See the [integration workflow](docs/aimpro/scn01-conceptual-review.md#teaching-generation-and-local-execution-state).
+For WP3-backed drafting, append `--source-scope wp3 --query '"prompt engineering"' --k 1`.
+The policy must explicitly authorize read access to source `wp3` for that subject
+and context. Retrieval uses the existing MCP client with full metadata, retains
+exact resource versions and excerpt citations, and proposes source resources
+without approving bindings. Empty or truncated retrieval does not silently
+fall back to ungrounded generation.
 
 ## Installation
 
@@ -46,6 +52,8 @@ python -m pip install -r requirements.txt
 ```
 
 ## Configuration
+
+For the real WP3 corpus, follow the [WP3 setup and architecture decision](docs/wp3/integration.md): `SEARCH_BACKEND=postgres` and `docker compose up -d --wait wp3-postgres`. PostgreSQL persists the restored dump in a named volume and search uses the existing local MCP server.
 
 Create `.env` in the project root. For testing with synthetic documents, set `OPENROUTER_API_KEY` and `SEARCH_BACKEND=mock`. This mode does not require Docker. Do not add the key to the repository.
 
@@ -63,7 +71,7 @@ To search real documents, set `SEARCH_BACKEND=qdrant` and configure the followin
 
 After accepting the embedding model license, populate the shared cache once before starting TEI offline.
 
-`HF_TOKEN` is needed only for the initial download and is not passed to running services. Start services with `docker compose up -d`; TEI listens on `127.0.0.1:9000` and Qdrant on `127.0.0.1:6333` (HTTP) and `6334` (gRPC).
+`HF_TOKEN` is needed only for the initial download and is not passed to running services. Start vector services with `docker compose --profile vector up -d tei-embedding qdrant`; TEI listens on `127.0.0.1:9000` and Qdrant on `127.0.0.1:6333` (HTTP) and `6334` (gRPC).
 
 This project **does not create or populate** the Qdrant collection. Document ingestion is external: EmbeddingGemma requires 768-dimensional vectors and data with `text`, `metadata.source` and `metadata.source_scope` for PREPARATION, or `metadata.resource_key` for LEARNING. PREPARATION search requires an authorized source scope; LEARNING requires bound, approved resources with exact versions.
 

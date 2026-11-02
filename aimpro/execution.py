@@ -3,7 +3,7 @@
 from uuid import uuid4
 
 from aimpro.contracts import encoded
-from aimpro.didactic import checked_draft
+from aimpro.didactic import checked_draft, unit_materials
 from aimpro.lead import ReviewError
 from learning.contracts import Provenance, entity_data, make_entity
 from learning.metamodel import validate_entity
@@ -67,9 +67,34 @@ def candidates(data, draft, context):
         "topics": [ref(t) for t in topics.values()],
         "usageConditions": "Provenance record for review only; not a curated teaching source or approved resource."},
         [data.source.root_id])
+    corpus_resources = {}
+    cited_keys = {c.resource_key for u in draft.units for a in u.activities for c in a.corpus_citations}
+    if cited_keys:
+        scope = data.corpus_evidence.source_scope
+        corpus_topic = validate_entity(entity_data(make_entity('Topic', 'corpus-topic:' + scope, {
+            'name': scope + ' source corpus',
+            'definition': 'Versioned source catalogue accessed through an authorized MCP search scope.'},
+            responsible='corpus-retrieval')), context.contract)
+        result.append(corpus_topic)
+        for source in data.corpus_evidence.resources:
+            if source.key not in cited_keys:
+                continue
+            # Stable locators/metadata avoid assigning different excerpt sets to the same version.
+            # The exact retrieved excerpts remain in the proposal's input snapshot resource.
+            resource = make_entity('Resource', source.identity, {
+                'title': source.title, 'contentOrLocator': source.uri, 'topics': [ref(corpus_topic)],
+                'usageConditions': 'Corpus licence assertion: ' + source.licence +
+                    '. Usage and provenance require human review; no local resource approval is implied.'},
+                version=source.version, origin='GENERATED_PROPOSAL', responsible='corpus-retrieval')
+            resource = resource.model_copy(update={'provenance': resource.provenance.model_copy(update={
+                'sources': [source.key, source.source_scope]})})
+            resource = validate_entity(entity_data(resource), context.contract)
+            result.append(resource)
+            corpus_resources[source.key] = resource
     strategies = {}
     units, specifications = [], []
     for i, unit in enumerate(draft.units):
+        shared_materials = unit_materials(unit)
         outcome = outcomes[unit.source_target_id]
         activities = []
         for j, activity in enumerate(unit.activities):
@@ -87,17 +112,26 @@ def candidates(data, draft, context):
                 "constraints": ["Source integration findings remain unresolved until explicitly reviewed.", *constraints]},
                 [unit.source_target_id])
             material = activity.material
+            material_keys = list(dict.fromkeys([m.key for m in activity.supporting_materials] + list(activity.required_material_keys)))
+            for material_key in material_keys:
+                supporting = shared_materials[material_key]
+                material += "\n\n## " + supporting.title + "\n\n" + supporting.content
             instruction = activity.instruction
             if constraints:
                 suffix = "\n\nSource task constraints (verbatim):\n" + "\n".join(constraints)
                 material += suffix
                 instruction += suffix
-            make("Resource", key + ":material", {
+            generated_resource = make("Resource", key + ":material", {
                 "title": activity.title, "contentOrLocator": material,
                 "topics": [ref(topics[oid]) for oid in index[unit.source_target_id].references["competency"]],
                 "outcomes": [ref(outcome)],
+                "derivedFrom": [ref(corpus_resources[k]) for k in dict.fromkeys(c.resource_key for c in activity.corpus_citations)],
                 "usageConditions": "Generated teaching draft pending human review; not a curated or approved source."},
                 activity.source_practice_ids)
+            if activity.corpus_citations:
+                result[-1] = generated_resource.model_copy(update={'provenance': generated_resource.provenance.model_copy(update={
+                    'sources': [*generated_resource.provenance.sources, encoded({
+                        'corpus_citations': [c.model_dump(mode='json') for c in activity.corpus_citations]})]})})
             spec_ref = {"type": "AssessmentSpecification", "id": f"{prefix}:{key}:assessment", "version": "1"}
             fields = {"instruction": instruction, "intent": activity.intent,
                 "format": "CRITERIA_BASED_PRODUCT" if activity.criteria else

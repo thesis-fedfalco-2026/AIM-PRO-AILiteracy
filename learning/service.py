@@ -87,13 +87,24 @@ class LearningService:
         return record_attempt(self.store, self._context(context_id, subject_key), activity, content, request_id=request_id)
 
     def generate_aimpro(self, context_id, subject_key, project, *, request_id, lead_factory,
-                        scenario='SCN01', competencies='elena_usecase_competencies', root_id=None):
+                        scenario='SCN01', competencies='elena_usecase_competencies', root_id=None,
+                        source_scope=None, query=None, k=5, search_factory=None):
         from aimpro.lead import prepare_input
         from aimpro.didactic import generate
         from aimpro.execution import candidates as map_candidates
 
         context = self._context(context_id, subject_key)
         authorize(self.policy, subject_key, 'propose', context.snapshot.context.ref)
+        if source_scope is not None:
+            from learning.policies import scope_allows
+            if (not scope_allows(self.policy, source_scope, context_id, subject_key) or
+                    source_scope not in self.policy.scopes[source_scope].sources):
+                raise ValueError('Corpus source scope is not authorized')
+            if (not isinstance(query, str) or not query.strip() or type(k) is not int or
+                    not 1 <= k <= 20 or search_factory is None):
+                raise ValueError('Corpus retrieval requires a query, valid limit and search factory')
+        elif query is not None:
+            raise ValueError('Corpus retrieval requires an explicit authorized source scope')
         # Validate the request identity before reading source data or invoking a model.
         LearningRequest(request_id=request_id, context_ref=context.snapshot.context.ref,
                         subject_key=subject_key, text='Generate AIM-PRO teaching draft', intent='STATE')
@@ -101,6 +112,9 @@ class LearningService:
         payload = canonical({'operation': 'AIMPRO_GENERATE', 'subject_key': subject_key, 'intent': 'STATE',
             'source_sha256': data.source.source_sha256, 'root_id': data.source.root_id,
             'metamodel_fingerprint': data.metamodel_fingerprint})
+        if source_scope is not None:
+            payload = canonical({'authoring': json.loads(payload), 'source_scope': source_scope,
+                                 'query': query.strip(), 'k': k})
         cached = self.store.request_result(request_id, context_id, payload)
         if cached is not None:
             return LearningResponse.model_validate(cached)
@@ -111,6 +125,15 @@ class LearningService:
         if cached is not None:
             return LearningResponse.model_validate(cached)
         try:
+            if source_scope is not None:
+                from document_search.contracts import SearchScope
+                from aimpro.retrieval import evidence_from_response
+                result = search_factory()(query.strip(), k,
+                    scope=SearchScope(mode='PREPARATION', source_scope_keys=(source_scope,)))
+                evidence = evidence_from_response(query.strip(), source_scope, k, result)
+                if not evidence.resources:
+                    raise ValueError('No corpus evidence returned; grounded generation cannot proceed')
+                data = data.model_copy(update={'corpus_evidence': evidence})
             lead, budget = lead_factory()
             draft = generate(data, lead=lead, max_context_chars=budget)
             candidates = map_candidates(data, draft, context)

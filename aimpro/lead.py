@@ -4,25 +4,20 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import Field
 
 from aimpro.adapter import ScenarioInput
 from aimpro.audit import DEFAULT_PROJECT
 from aimpro.contracts import Contracts, encoded, type_name
 from aimpro.validation import validate_scenario
-
-
-Text = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+from aimpro.lead_types import Record, Text
+from aimpro.retrieval import CorpusEvidence
 
 
 class ReviewError(ValueError):
     """A fixed diagnostic safe to display without source/provider content."""
-
-
-class Record(BaseModel):
-    model_config = ConfigDict(extra="forbid", frozen=True, hide_input_in_errors=True)
 
 
 class LeadInput(Record):
@@ -34,6 +29,7 @@ class LeadInput(Record):
     transport_conversions: tuple[dict, ...]
     validated_objects: tuple[dict, ...]
     domain_schemas: dict[str, dict]
+    corpus_evidence: CorpusEvidence | None = None
 
 
 class Observation(Record):

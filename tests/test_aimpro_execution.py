@@ -68,6 +68,9 @@ class AimproExecutionTest(unittest.TestCase):
                 self.assertIn('use fictional customer details only.', item.fields['instruction'])
                 self.assertTrue(item.fields['resourceRequirements'])
         self.assertFalse(any(e.type in {'ResourceBinding', 'LearningState', 'Evaluation', 'RuleDefinition'} for e in saved))
+        materials = [e.fields['contentOrLocator'] for e in saved if e.type == 'Resource']
+        self.assertTrue(any('## Synthetic thinking-aloud transcript' in text and
+                            'fictional customer Alex' in text for text in materials))
 
     def test_imported_design_cannot_activate_with_unresolved_resources_and_rules(self):
         response = self.generate()
@@ -101,6 +104,83 @@ class AimproExecutionTest(unittest.TestCase):
         self.assertEqual(self.generate().kind, 'FAILURE')
         self.assertEqual(self.store.owned('session', 'ChangeProposal'), ())
         self.assertEqual(self.store.read_context('session'), self.root)
+
+    def test_incomplete_supporting_material_leaves_no_candidates(self):
+        self.lead.supporting_materials_complete = False
+        self.assertEqual(self.generate().kind, 'FAILURE')
+        self.assertEqual(self.store.owned('session', 'ChangeProposal'), ())
+        self.assertEqual(self.store.read_context('session'), self.root)
+
+    def test_shared_transcript_is_included_in_each_dependent_activity_material(self):
+        value = self.lead.value
+        first, second = value.units[0].activities
+        second = second.model_copy(update={'required_material_keys': ('demo-transcript',)})
+        unit = value.units[0].model_copy(update={'activities': (first, second)})
+        self.lead.value = value.model_copy(update={'units': (unit,)})
+        response = self.generate()
+        self.assertEqual(response.kind, 'PROPOSAL')
+        proposal = self.store.read(response.proposal_refs[0], owner='session')
+        saved = proposal_candidates(self.store, proposal)
+        dependent = next(e for e in saved if e.type == 'Resource' and e.fields['title'] == second.title)
+        self.assertIn('## Synthetic thinking-aloud transcript', dependent.fields['contentOrLocator'])
+        self.assertIn('fictional customer Alex', dependent.fields['contentOrLocator'])
+
+    def test_grounding_is_authorized_persisted_and_replayed_without_retrieval(self):
+        from learning.policies import ScopeGrant
+        from tests.test_aimpro_retrieval import grounded, response, KEY
+        self.service.policy = self.service.policy.model_copy(update={'scopes': {
+            'wp3': ScopeGrant(contexts=['session'], subjects=['admin'], sources=['wp3'])}})
+        _, self.lead.value = grounded()
+        search = Mock(return_value=response())
+        search_factory = Mock(return_value=search)
+        def call():
+            return self.service.generate_aimpro('session', 'admin', DEFAULT_PROJECT,
+                request_id='grounded', lead_factory=self.factory, source_scope='wp3',
+                query='prompting', k=3, search_factory=search_factory)
+        result = call()
+        self.assertEqual(result.kind, 'PROPOSAL')
+        self.assertEqual(call(), result)
+        self.assertEqual(search.call_count, 1)
+        self.assertEqual(search.call_args.kwargs['scope'].source_scope_keys, ('wp3',))
+        proposal = self.store.read(result.proposal_refs[0], owner='session')
+        saved = proposal_candidates(self.store, proposal)
+        corpus = next(e for e in saved if e.id == 'wp3:test')
+        self.assertEqual(corpus.version, 'v1')
+        self.assertEqual(corpus.fields['contentOrLocator'], 'https://example.org/guide')
+        self.assertIn(KEY, corpus.provenance.sources)
+        self.assertTrue(any(corpus.ref.model_dump() in e.fields.get('derivedFrom', []) for e in saved))
+        snapshot = next(e for e in saved if e.type == 'Resource' and 'source snapshot' in e.fields['title'])
+        self.assertIn('chunk-1', snapshot.fields['contentOrLocator'])
+        self.assertFalse(any(e.type == 'ResourceBinding' for e in saved))
+        self.service.decide('session', 'admin', proposal.ref, 'APPROVE', 'Reviewed synthetic corpus and draft')
+        self.service.apply('session', 'admin', proposal.ref, 'grounded-import')
+        next_result = self.service.generate_aimpro('session', 'admin', DEFAULT_PROJECT,
+            request_id='grounded-next', lead_factory=self.factory, source_scope='wp3',
+            query='prompting', k=3, search_factory=search_factory)
+        self.assertEqual(next_result.kind, 'PROPOSAL')
+        next_proposal = self.store.read(next_result.proposal_refs[0], owner='session')
+        next_corpus = next(e for e in proposal_candidates(self.store, next_proposal) if e.id == corpus.id)
+        self.assertEqual(next_corpus, corpus)
+
+    def test_wp3_is_not_implicitly_authorized(self):
+        search = Mock()
+        with self.assertRaises(ValueError):
+            self.service.generate_aimpro('session', 'admin', DEFAULT_PROJECT, request_id='denied',
+                lead_factory=self.factory, source_scope='wp3', query='prompting', search_factory=search)
+        search.assert_not_called()
+        self.factory.assert_not_called()
+
+    def test_empty_or_truncated_corpus_does_not_reach_lead(self):
+        from learning.policies import ScopeGrant
+        from tests.test_aimpro_retrieval import response
+        self.service.policy = self.service.policy.model_copy(update={'scopes': {
+            'wp3': ScopeGrant(contexts=['session'], subjects=['admin'], sources=['wp3'])}})
+        for i, result in enumerate(({'documents': [], 'truncated': False}, {**response(), 'truncated': True})):
+            response_value = self.service.generate_aimpro('session', 'admin', DEFAULT_PROJECT,
+                request_id=f'no-evidence-{i}', lead_factory=self.factory, source_scope='wp3',
+                query='prompting', search_factory=lambda: lambda *a, **kw: result)
+            self.assertEqual(response_value.kind, 'FAILURE')
+        self.factory.assert_not_called()
 
     def test_final_write_failure_rolls_back_proposal(self):
         original = self.store.finish_request
