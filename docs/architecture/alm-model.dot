@@ -1,0 +1,59 @@
+digraph ALM {
+  graph [
+    rankdir=TB,
+    bgcolor="#f7f9fc",
+    fontname="Helvetica",
+    fontsize=23,
+    label="ALM 1.0.0 | Agnostic Learning Metamodel",
+    labelloc=t,
+    pad=0.38,
+    nodesep=0.42,
+    ranksep=0.65,
+    splines=polyline
+  ];
+  node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=13,
+        color="#b9c8d8", fontcolor="#17324d", fillcolor="white", margin="0.23,0.18"];
+  edge [fontname="Helvetica", fontsize=11, color="#7c8da5", fontcolor="#42556d", arrowsize=0.75];
+
+  subgraph cluster_domain {
+    label="DOMAIN CONFIGURATION | 16 entity types";
+    labelloc=t;
+    fontsize=16;
+    fontcolor="#155e75";
+    color="#98ccd6";
+    style="rounded,filled";
+    fillcolor="#eaf6f8";
+    margin=20;
+    { rank=same;
+      knowledge [label="KNOWLEDGE AND GOALS\n\nDomainModel\nTopic\nLearningOutcome\nOutcomeGroup\nPrerequisite"];
+      design [label="LEARNING DESIGN\n\nStrategy\nLearningDesign\nProcessNode\nActivityDefinition\nRuleDefinition"];
+      support [label="RESOURCES AND CONFIGURATION\n\nResourceRequirement\nResource\nAssessmentSpecification\nRubric\nPolicySet\nAgentSpecialization"];
+    }
+    knowledge -> design [label="outcomes and pedagogy"];
+    design -> support [label="materials, criteria and scope"];
+  }
+
+  subgraph cluster_execution {
+    label="EXECUTION STATE | 13 entity types";
+    labelloc=t;
+    fontsize=16;
+    fontcolor="#574194";
+    color="#c6b6df";
+    style="rounded,filled";
+    fillcolor="#f2edf9";
+    margin=20;
+    { rank=same;
+      context [label="CONTEXT AND ACCESS\n\nExecutionContext\nParticipant\nResourceBinding"];
+      observation [label="LEARNER OBSERVATIONS\n\nActivityOccurrence\nLearningEvidence\nEvaluation\nLearningState"];
+      control [label="DELEGATION AND GOVERNANCE\n\nTaskPlan\nWorkerTask\nTaskResult\nChangeProposal\nHumanDecision\nStateChange"];
+    }
+    context -> observation [label="contextualized attempts"];
+    control -> observation [label="authorized state changes", constraint=false];
+    observation -> control [style=invis];
+  }
+
+  design -> observation [style=invis, minlen=1];
+
+  note [shape=plain, fontsize=12, fontcolor="#42556d", label="Documentation groups, not additional classes or ownership boundaries.\nEntity references pin type + id + version. See alm-model.md for declared cardinalities.\nModel ACCEPT, human APPROVE, applied changes and learner acquisition are separate outcomes."];
+  observation -> note [style=invis];
+}

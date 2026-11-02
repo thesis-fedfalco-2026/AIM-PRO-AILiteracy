@@ -4,9 +4,15 @@ For a colleague presentation, follow the [SCN01 step-by-step demo runbook](docs/
 It provides a fresh isolated database, explicit review steps, live MCP checks,
 Teacher/Trainer commands and expected state changes using a fixed illustrative workshop.
 
+The [versioned authoring architecture](docs/architecture/authoring-lifecycle.md)
+defines independently reviewed artifacts, frozen releases and separate delivery
+contexts. Its executable acceptance test uses simulated agents and the existing
+ALM lifecycle; production #9/#10 generators and release commands remain pending.
+
 Local application for managing an ALM learning context with state and tracking in SQLite. A Lead agent plans tasks, specialized agents produce responses, and code checks permissions, sources and results. Generation uses OpenRouter by default; search uses the WP3 PostgreSQL corpus through MCP, with mock data for synthetic tests and optional Qdrant/TEI retrieval.
 
 - [ALM metamodel 1.0.0](docs/resources/metamodello-agnostico-apprendimento.json)
+- [ALM conceptual model: diagrams, relationships and lifecycle](docs/architecture/alm-model.md)
 - [Domain specification](docs/resources/2026-10-27-specifica.md)
 
 Work on the AIM-PRO integration starts with the [SCN01 integration review and issue dependency path](docs/aimpro/scn01-conceptual-review.md).
