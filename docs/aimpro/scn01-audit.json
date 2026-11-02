@@ -1,0 +1,130 @@
+{
+  "source_sha256": "2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c",
+  "models": [
+    {
+      "name": "SCN01",
+      "metamodel": "iSQD",
+      "object_count": 7,
+      "classes": {
+        "Familiarization": 1,
+        "LearnerPersona": 2,
+        "LearningTarget": 1,
+        "LearningTask": 1,
+        "ModellingAIPractices": 1,
+        "Scenario": 1
+      },
+      "cross_model_references": [
+        {
+          "source": "Pointer1792169221668_USER_96",
+          "field": "competency",
+          "target": "Pointer1792169354742_USER_109"
+        }
+      ]
+    },
+    {
+      "name": "elena_usecase_competencies",
+      "metamodel": "Competencies",
+      "object_count": 13,
+      "classes": {
+        "Competency": 13
+      },
+      "cross_model_references": []
+    }
+  ],
+  "finding_counts": {
+    "CARDINALITY": 1,
+    "ENUM_VALUE": 4,
+    "UNTYPED_VOCABULARY_VALUE": 2
+  },
+  "findings": [
+    {
+      "code": "CARDINALITY",
+      "model": "SCN01",
+      "object_id": "Pointer1792169221668_USER_96",
+      "object_name": "LearningTarget_0",
+      "field": "resources",
+      "count": 0,
+      "lower": 1,
+      "upper": -1
+    },
+    {
+      "code": "ENUM_VALUE",
+      "model": "elena_usecase_competencies",
+      "object_id": "Pointer1792169354742_USER_109",
+      "object_name": "D04",
+      "field": "category",
+      "value": "DIGITAL",
+      "allowed": [
+        "Deep tech",
+        "Digital",
+        "Green",
+        "Resilience"
+      ]
+    },
+    {
+      "code": "ENUM_VALUE",
+      "model": "elena_usecase_competencies",
+      "object_id": "Pointer1792169354742_USER_109",
+      "object_name": "D04",
+      "field": "heRelevance",
+      "value": "HIGH",
+      "allowed": [
+        "High",
+        "Low",
+        "Medium"
+      ]
+    },
+    {
+      "code": "ENUM_VALUE",
+      "model": "elena_usecase_competencies",
+      "object_id": "Pointer1792169354742_USER_109",
+      "object_name": "D04",
+      "field": "smeRelevance",
+      "value": "HIGH",
+      "allowed": [
+        "High",
+        "Low",
+        "Medium"
+      ]
+    },
+    {
+      "code": "ENUM_VALUE",
+      "model": "elena_usecase_competencies",
+      "object_id": "Pointer1792169354742_USER_109",
+      "object_name": "D04",
+      "field": "vetRelevance",
+      "value": "HIGH",
+      "allowed": [
+        "High",
+        "Low",
+        "Medium"
+      ]
+    },
+    {
+      "code": "UNTYPED_VOCABULARY_VALUE",
+      "model": "elena_usecase_competencies",
+      "object_id": "Pointer1792169354742_USER_109",
+      "object_name": "D04",
+      "field": "ksa",
+      "value": "SKILL",
+      "allowed": [
+        "Attitude",
+        "Knowledge",
+        "Skill"
+      ]
+    },
+    {
+      "code": "UNTYPED_VOCABULARY_VALUE",
+      "model": "elena_usecase_competencies",
+      "object_id": "Pointer1792169354742_USER_109",
+      "object_name": "D04",
+      "field": "proficiency",
+      "value": "FOUNDATION",
+      "allowed": [
+        "Advanced",
+        "Foundational",
+        "Intermediate"
+      ]
+    }
+  ]
+}

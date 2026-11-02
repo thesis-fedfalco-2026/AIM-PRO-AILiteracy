@@ -5,6 +5,15 @@ Local application for managing an ALM learning context with state and tracking i
 - [ALM metamodel 1.0.0](docs/resources/metamodello-agnostico-apprendimento.json)
 - [Domain specification](docs/resources/2026-10-27-specifica.md)
 
+Work on the AIM-PRO integration starts with the [SCN01 integration review and issue dependency path](docs/aimpro/scn01-conceptual-review.md).
+The [2 November 2026 jjodel project](docs/resources/aimpro-megamodel-2026-11-02.json)
+is preserved as exported. Run `python3 -m aimpro.audit` to inspect `SCN01` and
+`elena_usecase_competencies`; this inspection does not migrate the ALM runtime.
+The AIM-PRO metamodel is externally owned and remains unchanged. Run
+`.venv/bin/python -m aimpro.adapter` to export the resolved scenario closure for
+authoring review, preserving raw values, source identities and diagnostics.
+This envelope does not yet enter the Lead or authorize learning execution.
+
 ## Installation
 
 Python 3 is required, along with Docker Compose 2.20.3 or later only for real search.
