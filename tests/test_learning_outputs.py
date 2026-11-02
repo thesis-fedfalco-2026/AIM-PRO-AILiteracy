@@ -47,23 +47,23 @@ class OutputsTest(unittest.TestCase):
     def test_curator_support_material_is_not_a_change_proposal(self):
         profile = specialization("CURATOR", "curator")
         context = run_context(profile, intent="CURATE")
-        proposal = ProposedChange(targets=(context.snapshot.context.ref,), candidates=(), explanation="Candidato")
-        review = SemanticReview(verdict="ACCEPT", reason="Controllato")
+        proposal = ProposedChange(targets=(context.snapshot.context.ref,), candidates=(), explanation="Candidate")
+        review = SemanticReview(verdict="ACCEPT", reason="Checked")
 
         def task(expected_output, run=context):
             draft = LearningStepDraft(
-                step=PlanStep(id="curate", agent="curator", task="Prepara un sussidio"),
+                step=PlanStep(id="curate", agent="curator", task="Prepare a learning aid"),
                 specialization=profile.ref, intent="CURATE", expected_output=expected_output,
             )
             return authorize_plan(LearningPlanDraft(steps=(draft,)), run, registry("curator"))[0]
 
         support = task("SUPPORT_MATERIAL")
-        accepted = check_worker_output(support, WorkerOutput(kind="SUPPORT_MATERIAL", content="Riassunto"),
+        accepted = check_worker_output(support, WorkerOutput(kind="SUPPORT_MATERIAL", content="Summary"),
                                        context, review=review)
         self.assertEqual(accepted.type, "TaskResult")
         self.assertEqual(accepted.fields["status"], "SUCCEEDED")
-        self.assertEqual(accepted.fields["content"], "Riassunto")
-        rejected = check_worker_output(support, WorkerOutput(kind="SUPPORT_MATERIAL", content="Riassunto",
+        self.assertEqual(accepted.fields["content"], "Summary")
+        rejected = check_worker_output(support, WorkerOutput(kind="SUPPORT_MATERIAL", content="Summary",
                                                               proposals=(proposal,)), context, review=review)
         self.assertEqual(rejected.fields["status"], "FAILED")
         self.assertEqual(rejected.fields["findings"][0]["code"], "R16")
@@ -73,14 +73,14 @@ class OutputsTest(unittest.TestCase):
             **context.snapshot.context.fields, "mode": "PREPARATION", "status": "DRAFT"}})
         prep = replace(context, snapshot=replace(context.snapshot, context=prep_root))
         self.assertEqual(check_worker_output(task("CHANGE_PROPOSAL", prep),
-                                             WorkerOutput(kind="CHANGE_PROPOSAL", content="Proposta", proposals=(proposal,)),
+                                             WorkerOutput(kind="CHANGE_PROPOSAL", content="Proposal", proposals=(proposal,)),
                                              prep, review=review).fields["status"], "SUCCEEDED")
 
     def test_received_text_is_not_success_without_semantic_acceptance(self):
         context = run_context(specialization())
         task = authorize_plan(LearningPlanDraft(steps=(draft_step(),)), context, registry("teacher"))[0]
-        output = WorkerOutput(kind="EXPLANATION", content="Testo plausibile")
-        result = check_worker_output(task, output, context, review=SemanticReview(verdict="REJECT", reason="Non pertinente"))
+        output = WorkerOutput(kind="EXPLANATION", content="Plausible text")
+        result = check_worker_output(task, output, context, review=SemanticReview(verdict="REJECT", reason="Not relevant"))
         self.assertEqual(result.fields["status"], "FAILED")
         self.assertNotIn("content", result.fields)
 
@@ -98,14 +98,14 @@ class OutputsTest(unittest.TestCase):
                     value = LearningPlanDraft(steps=steps)
                 elif response_format is SemanticReview:
                     denied = reject and "BAD_OUTPUT" in prompt
-                    value = SemanticReview(verdict="REJECT" if denied else "ACCEPT", reason="Controllato")
+                    value = SemanticReview(verdict="REJECT" if denied else "ACCEPT", reason="Checked")
                 else:
-                    value = LearningResponse(kind="ANSWER", content="Risposta finale")
+                    value = LearningResponse(kind="ANSWER", content="Final response")
                 return SimpleNamespace(pydantic=value)
         def worker(config, task):
             self.worker_prompts.append(task)
-            payload = json.loads(task.split("\nDATI_TASK\n", 1)[1])
-            content = "BAD_OUTPUT" if payload["step_id"] == "one" else "Risultato indipendente"
+            payload = json.loads(task.split("\nTASK_DATA\n", 1)[1])
+            content = "BAD_OUTPUT" if payload["step_id"] == "one" else "Independent result"
             return WorkerOutput(kind="EXPLANATION", content=content)
         orchestrator = Orchestrator(lead_llm="llm", registry=reg,
             task_tool=TaskTool(registry=reg, worker=worker, logger=logging.getLogger("test")),
@@ -118,10 +118,10 @@ class OutputsTest(unittest.TestCase):
         orchestrator, context = self.build((draft_step(),))
         orchestrator.run(context.request, context=context)
         prompt = self.lead_prompts[0]
-        delegations = json.loads(prompt.split("DELEGHE_AUTORIZZATE\n", 1)[1].split("\nCONTRATTO", 1)[0])
+        delegations = json.loads(prompt.split("AUTHORIZED_DELEGATIONS\n", 1)[1].split("\nCONTRACT", 1)[0])
         self.assertEqual(delegations, [{"step.agent": "teacher", "specialization": specialization().ref.model_dump(),
                                        "role": "TEACHER"}])
-        self.assertIn("type deve essere AgentSpecialization", prompt)
+        self.assertIn("type must be AgentSpecialization", prompt)
 
     def test_failed_semantic_step_skips_dependent_but_runs_independent(self):
         orchestrator, context = self.build((draft_step(), draft_step("dependent", depends_on=("one",)), draft_step("independent")), reject=True)
@@ -148,4 +148,4 @@ class OutputsTest(unittest.TestCase):
     def test_all_failed_has_no_synthesis(self):
         orchestrator, context = self.build((draft_step(),), reject=True)
         self.assertEqual(orchestrator.run(context.request, context=context).kind, "FAILURE")
-        self.assertFalse(any("SINTESI_FINALE" in p for p in self.lead_prompts))
+        self.assertFalse(any("FINAL_SYNTHESIS" in p for p in self.lead_prompts))

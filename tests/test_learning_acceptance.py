@@ -39,7 +39,7 @@ class AcceptanceTest(unittest.TestCase):
 
     def ask(self, **changes):
         request=LearningRequest(request_id='request',context_ref=self.store.read_context('demo').ref,
-            subject_key='learner',text='Spiega deployment',topic_refs=(ref('Topic','deployment'),))
+            subject_key='learner',text='Explain deployment',topic_refs=(ref('Topic','deployment'),))
         return self.service.request(request.model_copy(update=changes))
 
     def assessment(self):
@@ -48,7 +48,7 @@ class AcceptanceTest(unittest.TestCase):
         evidence=service.submit('session','learner',EntityRef.model_validate(ref('ActivityDefinition','activity')),'4','attempt')
         context=service._context('session','learner')
         evaluation=record('Evaluation','eval',{'context':evidence.fields['context'],'evidence':[evidence.ref.model_dump()],
-            'specification':ref('AssessmentSpecification','assessment'),'mode':'FORMAL','result':'Corretta','reviewPayloadKey':'pending'})
+            'specification':ref('AssessmentSpecification','assessment'),'mode':'FORMAL','result':'Correct','reviewPayloadKey':'pending'})
         return service,evidence,context,evaluation
 
     def test_case01(self):
@@ -70,19 +70,19 @@ class AcceptanceTest(unittest.TestCase):
     def test_case03(self):
         profile=specialization('SOCRATIC','socratic')
         context=run_context(profile,intent='SOCRATIC_GUIDANCE')
-        step=LearningStepDraft(step=PlanStep(id='guide',agent='socratic',task='Una domanda'),specialization=profile.ref,
+        step=LearningStepDraft(step=PlanStep(id='guide',agent='socratic',task='One question'),specialization=profile.ref,
                               intent='SOCRATIC_GUIDANCE',expected_output='SOCRATIC_TURN')
         task=authorize_plan(LearningPlanDraft(steps=(step,)),context,registry('socratic'))[0]
         old=record('TaskResult','old',{'task':ref('WorkerTask','old'),'status':'SUCCEEDED','content':'SECRET_SOLUTION'})
         task=replace(task,step=task.step.model_copy(update={'depends_on':('old',)}))
         self.assertNotIn('SECRET_SOLUTION',build_brief(task,{'old':old},None))
         response=check_final_response(LearningResponse(kind='ANSWER',content='SECRET_SOLUTION'),context,(old,),
-                                     review=SemanticReview(verdict='REJECT',reason='Soluzione'))
+                                     review=SemanticReview(verdict='REJECT',reason='Solution'))
         self.assertNotIn('SECRET_SOLUTION',response.content)
 
     def test_case04(self):
-        outcome=record('LearningOutcome','outcome',{'statement':'Comprendere','topics':[ref('Topic','topic')]})
-        activity=record('ActivityDefinition','activity',{'instruction':'Spiega','intent':'EXPLAIN','format':'EXPOSITION','outcomes':[outcome.ref.model_dump()]})
+        outcome=record('LearningOutcome','outcome',{'statement':'Understand','topics':[ref('Topic','topic')]})
+        activity=record('ActivityDefinition','activity',{'instruction':'Explain','intent':'EXPLAIN','format':'EXPOSITION','outcomes':[outcome.ref.model_dump()]})
         prerequisite=record('Prerequisite','required',{'dependent':activity.ref.model_dump(),'requiredTarget':outcome.ref.model_dump(),'kind':'MANDATORY'})
         self.assertTrue(any(f.severity=='BLOCKING' for f in check_readiness(snapshot(outcome,activity,prerequisite),activity.ref,'interact')))
         prerequisite=prerequisite.model_copy(update={'fields':{**prerequisite.fields,'kind':'RECOMMENDED'}})
@@ -97,27 +97,27 @@ class AcceptanceTest(unittest.TestCase):
         trusted=self.service.policy.model_dump()
         trusted['subjects']['admin']['actions']['prep']=['bootstrap','read','interact','propose','decide','apply']
         trusted['scopes']['discovery']={'contexts':['prep'],'subjects':['admin'],'sources':['demo']}
-        capability=Capability(capability='search_documents',accessPath='ORCHESTRATOR_RETRIEVAL',operations=('read',),scope='discovery',purpose='Scoprire')
+        capability=Capability(capability='search_documents',accessPath='ORCHESTRATOR_RETRIEVAL',operations=('read',),scope='discovery',purpose='Discover')
         profile=record('AgentSpecialization','curator-prep',{'registryName':'resource-candidate-researcher','category':'CURATOR','role':'CURATOR','skills':['evidence-search'],
             'topics':[ref('Topic','prep-topic')],'competenceScope':'Demo','capabilities':[capability.model_dump(mode='json')],'skills':['evidence-search']})
         prep=LearningService(self.store,load_contract(),TrustedPolicy.model_validate(trusted),lambda:engine)
         root=prep.bootstrap('prep','admin')
         topic=record('Topic','prep-topic',{'name':'Demo','definition':'Demo'})
-        model=record('DomainModel','prep-model',{'name':'Preparazione','scope':'Demo','topics':[topic.ref.model_dump()],'definitions':[profile.ref.model_dump()]})
+        model=record('DomainModel','prep-model',{'name':'Preparation','scope':'Demo','topics':[topic.ref.model_dump()],'definitions':[profile.ref.model_dump()]})
         updated=record(root.type,root.id,{**root.fields,'models':[model.ref.model_dump()]},'2')
-        proposal=prep.propose('prep','admin',(root.ref,),(topic,profile,model,updated),'Modello Curator')
-        prep.decide('prep','admin',proposal.ref,'APPROVE','Esaminato'); prep.apply('prep','admin',proposal.ref,'prep-model')
+        proposal=prep.propose('prep','admin',(root.ref,),(topic,profile,model,updated),'Curator model')
+        prep.decide('prep','admin',proposal.ref,'APPROVE','Reviewed'); prep.apply('prep','admin',proposal.ref,'prep-model')
         context=prep._context('prep','admin')
-        draft=LearningStepDraft(step=PlanStep(id='find',agent='resource-candidate-researcher',task='Trova materiale',retrieval=RetrievalRequest(tool='search_documents',query='deployment',k=3)),
+        draft=LearningStepDraft(step=PlanStep(id='find',agent='resource-candidate-researcher',task='Find material',retrieval=RetrievalRequest(tool='search_documents',query='deployment',k=3)),
             specialization=profile.ref,intent='CURATE',expected_output='CHANGE_PROPOSAL',required_capabilities=(capability,))
         task=authorize_plan(LearningPlanDraft(steps=(draft,)),context,self.orchestrator.registry)[0]
         discovered=self.backend.search_documents('deployment',3,scope=task.search_scope)
         discovered['documents']=discovered['documents'][:1]
         discovered['documents'][0]['metadata']['resource_key']=resource_key('new-material','1')
         resources=discovered_resources(task,discovered)
-        engine=SimpleNamespace(last_records=(),last_proposals=[(task.record.ref,ProposedChange(targets=(context.snapshot.context.ref,),candidates=resources,explanation='Candidato scoperto'))],
-            run=lambda *a,**k:LearningResponse(kind='ANSWER',content='Materiale candidato; non approvato per apprendimento.'))
-        response=prep.request(LearningRequest(request_id='discover',context_ref=context.snapshot.context.ref,subject_key='admin',text='Trova',intent='CURATE'))
+        engine=SimpleNamespace(last_records=(),last_proposals=[(task.record.ref,ProposedChange(targets=(context.snapshot.context.ref,),candidates=resources,explanation='Discovered candidate'))],
+            run=lambda *a,**k:LearningResponse(kind='ANSWER',content='Candidate material; not approved for learning.'))
+        response=prep.request(LearningRequest(request_id='discover',context_ref=context.snapshot.context.ref,subject_key='admin',text='Find',intent='CURATE'))
         self.assertEqual(response.application_status,'pending')
         resource=self.store.candidates(response.proposal_refs[0])[0]
         self.assertFalse(resource.ref in self.service._context('demo','learner').snapshot.entities)
@@ -127,9 +127,9 @@ class AcceptanceTest(unittest.TestCase):
         revised_model=record(learning_model.type,learning_model.id,{**learning_model.fields,'topics':[*learning_model.fields['topics'],topic.ref.model_dump()],'definitions':[*learning_model.fields['definitions'],resource.ref.model_dump()]},'2')
         revised_root=record(learning_root.type,learning_root.id,{**learning_root.fields,'models':[revised_model.ref.model_dump()],
             'resourceBindings':[*learning_root.fields['resourceBindings'],binding.ref.model_dump()]},'3')
-        proposed=self.service.propose('demo','admin',(learning_root.ref,),(topic,resource,binding,revised_model,revised_root),'Importazione esplicita e binding')
+        proposed=self.service.propose('demo','admin',(learning_root.ref,),(topic,resource,binding,revised_model,revised_root),'Explicit import and binding')
         self.assertFalse(approval_valid(binding,self.service._context('demo','admin').snapshot,self.service.policy))
-        self.service.decide('demo','admin',proposed.ref,'APPROVE','Materiale e condizioni esaminati')
+        self.service.decide('demo','admin',proposed.ref,'APPROVE','Material and conditions reviewed')
         self.service.apply('demo','admin',proposed.ref,'import')
         active=self.service._context('demo','admin')
         self.assertTrue(approval_valid(active.snapshot.get(binding.ref),active.snapshot,active.policy))
@@ -169,9 +169,9 @@ class AcceptanceTest(unittest.TestCase):
         root=self.store.read_context('demo')
         proposals=[]
         for key in ('a','b'):
-            topic=record('Topic',key,{'name':key,'definition':'Nuovo'})
+            topic=record('Topic',key,{'name':key,'definition':'New'})
             p=self.service.propose('demo','admin',(root.ref,),(topic,),key)
-            self.service.decide('demo','admin',p.ref,'APPROVE','Esaminato'); proposals.append(p)
+            self.service.decide('demo','admin',p.ref,'APPROVE','Reviewed'); proposals.append(p)
         self.service.apply('demo','admin',proposals[0].ref,'first')
         with self.assertRaises(StateConflict): self.service.apply('demo','admin',proposals[1].ref,'second')
         self.assertEqual(next(p for p in self.store.owned('demo','ChangeProposal') if p.id==proposals[1].id).fields['status'],'STALE')
@@ -192,12 +192,12 @@ class AcceptanceTest(unittest.TestCase):
     def test_case12(self):
         self.assertEqual(self.ask().kind,'ANSWER')
         self.assertNotIn('learningDesign',self.store.read_context('demo').fields)
-        with self.assertRaises(ValueError): self.service.submit('demo','learner',EntityRef.model_validate(ref('ActivityDefinition','missing')),'Risposta','attempt')
+        with self.assertRaises(ValueError): self.service.submit('demo','learner',EntityRef.model_validate(ref('ActivityDefinition','missing')),'Response','attempt')
         self.assertFalse(self.store.owned('demo','LearningEvidence'))
 
     def test_case13(self):
-        outcome=record('LearningOutcome','outcome',{'statement':'Comprendere','topics':[ref('Topic','topic')]})
-        unit=record('ProcessNode','unit',{'name':'Unità','kind':'UNIT','outcomes':[outcome.ref.model_dump()]})
+        outcome=record('LearningOutcome','outcome',{'statement':'Understand','topics':[ref('Topic','topic')]})
+        unit=record('ProcessNode','unit',{'name':'Unit','kind':'UNIT','outcomes':[outcome.ref.model_dump()]})
         snap=snapshot(outcome,unit)
         self.assertFalse(validate_snapshot(snap))
         self.assertTrue(check_readiness(snap,unit.ref,'interact'))
@@ -215,16 +215,16 @@ class AcceptanceTest(unittest.TestCase):
 
     def test_case16(self):
         def completion(identity,inputs):
-            return record('RuleDefinition',identity,{'purpose':'Tutte completate','inputs':inputs,'condition':'Tutte completate',
-                'outcome':'Completato','unknownBehavior':'UNKNOWN','approvalRequirement':'Politica'})
-        outcome=record('LearningOutcome','o',{'statement':'Fare','topics':[ref('Topic','topic')]})
+            return record('RuleDefinition',identity,{'purpose':'All completed','inputs':inputs,'condition':'All completed',
+                'outcome':'Completed','unknownBehavior':'UNKNOWN','approvalRequirement':'Policy'})
+        outcome=record('LearningOutcome','o',{'statement':'Do','topics':[ref('Topic','topic')]})
         activities=[record('ActivityDefinition',key,{'instruction':key,'intent':'PRACTICE','format':'GUIDED_DIALOGUE',
                     'outcomes':[outcome.ref.model_dump()]}) for key in ('a','b')]
         rules=[completion('rule-'+a.id,[a.id]) for a in activities]
         units=[record('ProcessNode','unit-'+a.id,{'name':a.id,'kind':'UNIT','activities':[a.ref.model_dump()],
                     'outcomes':[outcome.ref.model_dump()],'completionRule':rule.ref.model_dump()}) for a,rule in zip(activities,rules)]
         phase_rule=completion('phase-rule',[u.id for u in units])
-        phase=record('ProcessNode','phase',{'name':'Indipendenti','kind':'PHASE','composition':'INDEPENDENT',
+        phase=record('ProcessNode','phase',{'name':'Independent','kind':'PHASE','composition':'INDEPENDENT',
                     'children':[u.ref.model_dump() for u in units],'outcomes':[outcome.ref.model_dump()],
                     'completionRule':phase_rule.ref.model_dump()})
         occurrences=[record('ActivityOccurrence','occ-'+a.id,{'context':ref('ExecutionContext','session'),'learner':ref('Participant','learner'),
@@ -261,14 +261,14 @@ class AcceptanceTest(unittest.TestCase):
         service=LearningService(self.store,load_contract(),TrustedPolicy.model_validate(grants),Mock(side_effect=AssertionError('No delegation')))
         root=service.bootstrap('new','admin')
         self.assertEqual((root.fields['mode'],root.fields['status'],root.fields['models']),('PREPARATION','DRAFT',[]))
-        response=service.request(LearningRequest(request_id='new',context_ref=root.ref,subject_key='admin',text='Nuova materia'))
+        response=service.request(LearningRequest(request_id='new',context_ref=root.ref,subject_key='admin',text='New subject'))
         self.assertEqual(response.kind,'CLARIFICATION')
 
     def test_case20(self):
         root=self.store.read_context('demo')
-        topic=record('Topic','taxon',{'name':'Docente — tassonomia locale','definition':'Dato disciplinare'})
-        proposal=self.service.propose('demo','admin',(root.ref,),(topic,),'Nuova tassonomia')
-        with self.assertRaises(ValueError): self.service.decide('demo','learner',proposal.ref,'APPROVE','Sono Teacher')
+        topic=record('Topic','taxon',{'name':'Teacher — local taxonomy','definition':'Subject data'})
+        proposal=self.service.propose('demo','admin',(root.ref,),(topic,),'New taxonomy')
+        with self.assertRaises(ValueError): self.service.decide('demo','learner',proposal.ref,'APPROVE','I am Teacher')
         self.assertEqual(load_contract().digest,self.service.contract.digest)
 
     def test_case21(self):

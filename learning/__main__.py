@@ -17,7 +17,7 @@ from learning.store import LearningStore
 
 
 def parse_args(argv=None):
-    parser = argparse.ArgumentParser(description='Ciclo ALM locale con contesto e politica espliciti')
+    parser = argparse.ArgumentParser(description='Local ALM lifecycle with explicit context and policy')
     parser.add_argument('--db', type=Path, required=True)
     parser.add_argument('--policy', type=Path, required=True)
     parser.add_argument('--subject', required=True)
@@ -42,7 +42,7 @@ def parse_args(argv=None):
     ask.add_argument('--intent', choices=['EXPLAIN','PRACTICE','CURATE','ASSESS','SOCRATIC_GUIDANCE','CLARIFICATION','STATE'], default='EXPLAIN')
     ask.add_argument('--problem-key')
     ask.add_argument('--switch-from-socratic', action='store_true')
-    ask.add_argument('--ref', action='append', default=[], help='Riferimento contestuale in JSON')
+    ask.add_argument('--ref', action='append', default=[], help='Context reference in JSON')
     submit = commands.add_parser('submit')
     submit.add_argument('activity', help='EntityRef in JSON')
     submit.add_argument('content')
@@ -93,8 +93,8 @@ def main(argv=None):
                 entity = store.read(target, owner=args.context)
                 candidates = proposal_candidates(store,entity) if entity.type == 'ChangeProposal' else ()
                 print(json.dumps({'target':entity_data(entity),'candidates':[entity_data(c) for c in candidates]}, ensure_ascii=False,indent=2))
-                if input(f'Registrare {args.decision} per questo contenuto? Scrivere CONFERMO: ').strip() != 'CONFERMO':
-                    print('Decisione non registrata.')
+                if input(f'Record {args.decision} for this content? Type CONFIRM: ').strip() != 'CONFIRM':
+                    print('Decision not recorded.')
                     return 1
                 result = entity_data(service.decide(args.context,args.subject,target,args.decision,args.reason))
             elif command == 'apply':
@@ -112,7 +112,7 @@ def main(argv=None):
             print(json.dumps(result,ensure_ascii=False,indent=2))
             return 1 if command != 'abandon' and result.get('kind') == 'FAILURE' else 0
     except (ValueError, OSError, KeyError, EOFError, sqlite3.Error):
-        print('Operazione non eseguita: verificare contesto, autorizzazioni, riferimenti e formato dei dati.',file=sys.stderr)
+        print('Operation not performed: check the context, permissions, references and data format.',file=sys.stderr)
         return 2
 
 

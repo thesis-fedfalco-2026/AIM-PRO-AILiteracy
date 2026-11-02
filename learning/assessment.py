@@ -59,7 +59,7 @@ def record_attempt(store: LearningStore, context: RunContext, activity: EntityRe
     change = make_entity("StateChange", f"change-{key}", {
         "context": root.ref.model_dump(), "baseVersion": root.version, "newVersion": updated.version,
         "cause": evidence.ref.model_dump(), "authorizationBasis": canonical(context.policy.policy_ref.model_dump()),
-        "change": "Registrato il tentativo osservato, senza inferire acquisizione o verifica.",
+        "change": "Recorded the observed attempt without inferring acquisition or verification.",
         "recordedAt": datetime.now(timezone.utc).isoformat()}, origin="OBSERVED_EVENT", responsible=context.request.subject_key)
     store.commit_change(change, (occurrence, evidence, updated), expected_version=root.version, operation_id=operation_id)
     return evidence
@@ -106,7 +106,7 @@ def validate_evaluation(evaluation: Entity, snapshot: Snapshot) -> tuple[Finding
         elif judgments:
             raise ValueError("Criterion judgments require a fixed rubric")
     except (ValueError, KeyError, TypeError):
-        return (Finding(code="R11", target=evaluation.id, reason="Valutazione priva di evidenze o criteri coerenti e ammissibili."),)
+        return (Finding(code="R11", target=evaluation.id, reason="The evaluation lacks consistent and admissible evidence or criteria."),)
     return ()
 
 

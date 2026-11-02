@@ -117,7 +117,7 @@ class TelemetryIntegrationTest(unittest.TestCase):
         self.assertEqual(result.kind, 'FAILURE')
         review, = [s for s in spans if s.name == 'semantic_review']
         self.assertIn('REJECT', review.attributes['langfuse.observation.output'])
-        self.assertIn('Controllato', review.attributes['langfuse.observation.output'])
+        self.assertIn('Checked', review.attributes['langfuse.observation.output'])
 
     def test_mcp_retrieval_is_nested_under_step(self):
         from tempfile import TemporaryDirectory

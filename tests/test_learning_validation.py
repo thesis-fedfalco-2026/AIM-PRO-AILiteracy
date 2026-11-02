@@ -29,15 +29,15 @@ class ValidationTest(unittest.TestCase):
         self.assertIn("R04", [f.code for f in validate_snapshot(snapshot(a, b))])
 
     def test_unbound_text_rule_is_unknown(self):
-        rule = record("RuleDefinition", "rule", {"purpose": "Acquisizione", "inputs": ["answer"],
-            "condition": "Una risposta corretta", "outcome": "Acquisito", "unknownBehavior": "UNKNOWN",
-            "approvalRequirement": "Politica vigente"})
+        rule = record("RuleDefinition", "rule", {"purpose": "Acquisition", "inputs": ["answer"],
+            "condition": "One correct answer", "outcome": "Acquired", "unknownBehavior": "UNKNOWN",
+            "approvalRequirement": "Current policy"})
         self.assertEqual(evaluate_rule(rule.ref, snapshot(rule), {"answer": "plausible"}, {}), "UNKNOWN")
         self.assertEqual(evaluate_rule(rule.ref, snapshot(rule), {}, {rule.ref: lambda _: "SATISFIED"}), "UNKNOWN")
 
     def test_unknown_mandatory_blocks_recommendation_warns(self):
-        outcome = record("LearningOutcome", "outcome", {"statement": "Comprendere", "topics": [ref("Topic", "topic")]})
-        activity = record("ActivityDefinition", "activity", {"instruction": "Spiega", "intent": "EXPLAIN",
+        outcome = record("LearningOutcome", "outcome", {"statement": "Understand", "topics": [ref("Topic", "topic")]})
+        activity = record("ActivityDefinition", "activity", {"instruction": "Explain", "intent": "EXPLAIN",
             "format": "EXPOSITION", "outcomes": [outcome.ref.model_dump()]})
         prerequisite = record("Prerequisite", "prereq", {"dependent": activity.ref.model_dump(),
             "requiredTarget": outcome.ref.model_dump(), "kind": "MANDATORY"})
@@ -47,7 +47,7 @@ class ValidationTest(unittest.TestCase):
         self.assertEqual([f.severity for f in check_readiness(snapshot(outcome, activity, recommendation), activity.ref, "interact")], ["WARNING"])
 
     def test_empty_unit_is_valid_draft_but_not_ready(self):
-        outcome = record("LearningOutcome", "outcome", {"statement": "Comprendere", "topics": [ref("Topic", "topic")]})
+        outcome = record("LearningOutcome", "outcome", {"statement": "Understand", "topics": [ref("Topic", "topic")]})
         unit = record("ProcessNode", "unit", {"name": "unit", "kind": "UNIT", "outcomes": [outcome.ref.model_dump()]})
         self.assertFalse(validate_snapshot(snapshot(outcome, unit)))
         self.assertTrue(check_readiness(snapshot(outcome, unit), unit.ref, "interact"))
@@ -58,7 +58,7 @@ class ValidationTest(unittest.TestCase):
         self.assertIn("R02", [f.code for f in validate_snapshot(snapshot(model))])
 
     def test_duplicate_rubric_keys_rejected(self):
-        level = {"key": "ok", "descriptor": "Descrizione"}
-        criterion = {"key": "same", "outcomes": [ref("LearningOutcome", "outcome")], "description": "Criterio", "levels": [level]}
-        rubric = record("Rubric", "rubric", {"name": "Rubrica", "criteria": [criterion, criterion]})
+        level = {"key": "ok", "descriptor": "Description"}
+        criterion = {"key": "same", "outcomes": [ref("LearningOutcome", "outcome")], "description": "Criterion", "levels": [level]}
+        rubric = record("Rubric", "rubric", {"name": "Rubric", "criteria": [criterion, criterion]})
         self.assertIn("R10", [f.code for f in validate_snapshot(snapshot(rubric))])

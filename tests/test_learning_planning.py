@@ -18,7 +18,7 @@ from tests.learning_fixtures import ref
 def run_context(*specializations, intent="EXPLAIN"):
     snap = snapshot(*specializations)
     request = LearningRequest(request_id="request", context_ref=snap.context.ref,
-        subject_key="learner", text="Una domanda", intent=intent, topic_refs=(ref("Topic", "topic"),))
+        subject_key="learner", text="One question", intent=intent, topic_refs=(ref("Topic", "topic"),))
     return RunContext(snap, policy(), load_contract(), request,
                       snap.get(ref("Participant", "learner")), tuple(specializations))
 
@@ -27,7 +27,7 @@ def draft_step(name="one", agent="teacher", role="TEACHER", depends_on=()):
     profile = specialization(role, agent)
     output = {"TEACHER": "EXPLANATION", "TRAINER": "GUIDED_PRACTICE", "EVALUATOR": "ASSESSMENT"}[role]
     intent = {"TEACHER": "EXPLAIN", "TRAINER": "PRACTICE", "EVALUATOR": "ASSESS"}[role]
-    return LearningStepDraft(step=PlanStep(id=name, agent=agent, task="Compito", depends_on=depends_on),
+    return LearningStepDraft(step=PlanStep(id=name, agent=agent, task="Task", depends_on=depends_on),
                             specialization=profile.ref, intent=intent, expected_output=output)
 
 
@@ -61,7 +61,7 @@ class LearningPlanningTest(unittest.TestCase):
 
                 def plan(name, output):
                     profile = next(item for item in profiles if item.fields["registryName"] == name)
-                    step = LearningStepDraft(step=PlanStep(id="one", agent=name, task="Compito"),
+                    step = LearningStepDraft(step=PlanStep(id="one", agent=name, task="Task"),
                                              specialization=profile.ref, intent=intent, expected_output=output)
                     return LearningPlanDraft(steps=(step,))
 
@@ -109,8 +109,8 @@ class LearningPlanningTest(unittest.TestCase):
     def test_requested_activity_cannot_be_omitted_to_bypass_prerequisite(self):
         from dataclasses import replace
         from tests.learning_fixtures import record
-        outcome=record('LearningOutcome','o',{'statement':'Comprendere','topics':[ref('Topic','topic')]})
-        activity=record('ActivityDefinition','a',{'instruction':'Spiega','intent':'EXPLAIN','format':'EXPOSITION','outcomes':[outcome.ref.model_dump()]})
+        outcome=record('LearningOutcome','o',{'statement':'Understand','topics':[ref('Topic','topic')]})
+        activity=record('ActivityDefinition','a',{'instruction':'Explain','intent':'EXPLAIN','format':'EXPOSITION','outcomes':[outcome.ref.model_dump()]})
         prerequisite=record('Prerequisite','p',{'dependent':activity.ref.model_dump(),'requiredTarget':outcome.ref.model_dump(),'kind':'MANDATORY'})
         context=run_context(specialization())
         context=replace(context,snapshot=snapshot(specialization(),outcome,activity,prerequisite),

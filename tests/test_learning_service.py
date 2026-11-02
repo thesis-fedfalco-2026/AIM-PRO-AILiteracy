@@ -39,13 +39,13 @@ class ServiceTest(unittest.TestCase):
 
     def test_full_cycle_reopens(self):
         root = self.service.bootstrap('session', 'admin')
-        topic = record('Topic', 'new-topic', {'name':'Demo', 'definition':'Sintetico'})
+        topic = record('Topic', 'new-topic', {'name':'Demo', 'definition':'Synthetic'})
         model = record('DomainModel', 'new-model', {'name':'Demo', 'scope':'Demo', 'topics':[topic.ref.model_dump()]})
         updated = record('ExecutionContext', root.id, {**root.fields, 'models':[model.ref.model_dump()],
                          'status':'ACTIVE', 'mode':'LEARNING'}, version='2')
-        proposal = self.service.propose('session', 'admin', (root.ref,), (topic,model,updated), 'Attiva modello')
+        proposal = self.service.propose('session', 'admin', (root.ref,), (topic,model,updated), 'Activate model')
         self.assertEqual(self.store.read_context('session').version, root.version)
-        self.service.decide('session','admin',proposal.ref,'APPROVE','Contenuto esaminato')
+        self.service.decide('session','admin',proposal.ref,'APPROVE','Content reviewed')
         self.assertEqual(self.store.read_context('session').version, root.version)
         change = self.service.apply('session','admin',proposal.ref,'apply')
         self.assertEqual(change.fields['newVersion'], '2')
@@ -68,7 +68,7 @@ class ServiceTest(unittest.TestCase):
     def test_no_specialization_returns_clarification_without_provider(self):
         self.store.seed(assessment_bundle(), owner='session')
         request = LearningRequest(request_id='req',context_ref=self.store.read_context('session').ref,
-                                  subject_key='learner',text='Spiega')
+                                  subject_key='learner',text='Explain')
         result = self.service.request(request)
         self.assertEqual(result.kind, 'CLARIFICATION')
         self.factory.assert_not_called()
@@ -81,21 +81,21 @@ class ServiceTest(unittest.TestCase):
         service=prepare_demo(self.store,lambda:engine)
         root=self.store.read_context('demo')
         result=service.request(LearningRequest(request_id='legacy',context_ref=root.ref,
-                                               subject_key='learner',text='Spiega'))
+                                               subject_key='learner',text='Explain'))
         self.assertEqual(result.kind,'CLARIFICATION')
         self.assertIn('registryName',result.content)
-        self.assertIn('migrazione',result.content)
+        self.assertIn('migration',result.content)
 
     def test_neutral_turn_does_not_cancel_socratic_mode(self):
         from smoke import prepare_demo
         from learning.outputs import LearningResponse
         engine=Mock(last_records=(),last_proposals=())
-        engine.run.return_value=LearningResponse(kind='ANSWER',content='Quale passaggio proveresti?')
+        engine.run.return_value=LearningResponse(kind='ANSWER',content='Which step would you try?')
         service=prepare_demo(self.store,lambda:engine)
         root=self.store.read_context('demo')
         for index,intent in enumerate(('SOCRATIC_GUIDANCE','STATE','EXPLAIN')):
             result=service.request(LearningRequest(request_id=str(index),context_ref=root.ref,subject_key='learner',
-                                   text='Stesso problema',problem_key='p',intent=intent))
+                                   text='Same problem',problem_key='p',intent=intent))
         self.assertEqual(result.kind,'CLARIFICATION')
         self.assertEqual(engine.run.call_count,2)
 
@@ -103,12 +103,12 @@ class ServiceTest(unittest.TestCase):
         from smoke import prepare_demo
         from learning.outputs import LearningResponse
         engine=Mock(last_records=(),last_proposals=())
-        engine.run.side_effect=[LearningResponse(kind='ANSWER',content='Quale passaggio?'),LearningResponse(kind='FAILURE',content='Provider indisponibile')]
+        engine.run.side_effect=[LearningResponse(kind='ANSWER',content='Which step?'),LearningResponse(kind='FAILURE',content='Provider unavailable')]
         service=prepare_demo(self.store,lambda:engine)
         root=self.store.read_context('demo')
-        service.request(LearningRequest(request_id='guide',context_ref=root.ref,subject_key='learner',text='Aiuto',problem_key='p',intent='SOCRATIC_GUIDANCE'))
-        service.request(LearningRequest(request_id='switch',context_ref=root.ref,subject_key='learner',text='Spiega',problem_key='p',switch_from_socratic=True))
-        result=service.request(LearningRequest(request_id='retry',context_ref=root.ref,subject_key='learner',text='Spiega',problem_key='p'))
+        service.request(LearningRequest(request_id='guide',context_ref=root.ref,subject_key='learner',text='Help',problem_key='p',intent='SOCRATIC_GUIDANCE'))
+        service.request(LearningRequest(request_id='switch',context_ref=root.ref,subject_key='learner',text='Explain',problem_key='p',switch_from_socratic=True))
+        result=service.request(LearningRequest(request_id='retry',context_ref=root.ref,subject_key='learner',text='Explain',problem_key='p'))
         self.assertEqual(result.kind,'CLARIFICATION')
         self.assertEqual(engine.run.call_count,2)
 
@@ -116,15 +116,15 @@ class ServiceTest(unittest.TestCase):
         from smoke import prepare_demo
         from learning.outputs import LearningResponse
         engine=Mock(last_records=(),last_proposals=())
-        engine.run.return_value=LearningResponse(kind='ANSWER',content='Risposta')
+        engine.run.return_value=LearningResponse(kind='ANSWER',content='Response')
         service=prepare_demo(self.store,lambda:engine)
         root=self.store.read_context('demo')
         service.request(LearningRequest(request_id='guide',context_ref=root.ref,subject_key='learner',
-                                        text='Aiuto sul problema A',problem_key='A',intent='SOCRATIC_GUIDANCE'))
+                                        text='Help with problem A',problem_key='A',intent='SOCRATIC_GUIDANCE'))
         unkeyed=service.request(LearningRequest(request_id='unkeyed',context_ref=root.ref,
-                                               subject_key='learner',text='Spiega un altro tema'))
+                                               subject_key='learner',text='Explain another topic'))
         distinct=service.request(LearningRequest(request_id='distinct',context_ref=root.ref,
-                                                subject_key='learner',text='Spiega un altro tema',problem_key='B'))
+                                                subject_key='learner',text='Explain another topic',problem_key='B'))
         self.assertEqual(unkeyed.kind,'CLARIFICATION')
         self.assertEqual(distinct.kind,'ANSWER')
         self.assertEqual(engine.run.call_count,2)

@@ -11,7 +11,7 @@ from learning.contracts import Entity, EntityRef
 
 
 SPEC_PATH = Path(__file__).resolve().parents[1] / "docs/resources/metamodello-agnostico-apprendimento.json"
-SPEC_DIGEST = "27b1622c8e4752014d65c67817a79369731e2e7e1261aca0fe04d085e2549636"
+SPEC_DIGEST = "e86b73ed0912f358947ca5f37cd1a4d816914af7187b75da2d341db42d34044d"
 
 
 @dataclass(frozen=True)

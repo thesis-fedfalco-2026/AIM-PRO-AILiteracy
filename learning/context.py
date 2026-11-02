@@ -102,7 +102,7 @@ def load_context(store: LearningStore, request: LearningRequest, policy: Trusted
         try:
             item = store.read(ref, owner=context.id)
         except ValueError:
-            findings.append(Finding(code="R02", target=ref.id, reason="Riferimento obbligatorio non disponibile."))
+            findings.append(Finding(code="R02", target=ref.id, reason="Required reference is unavailable."))
             continue
         if learner_only and "learner" in item.fields and EntityRef.model_validate(item.fields["learner"]) != participant.ref:
             continue
@@ -113,7 +113,7 @@ def load_context(store: LearningStore, request: LearningRequest, policy: Trusted
         selected += (request.occurrence_ref,)
     for ref in selected:
         if ref not in found:
-            findings.append(Finding(code="R15", target=ref.id, reason="Riferimento richiesto fuori dal contesto autorizzato."))
+            findings.append(Finding(code="R15", target=ref.id, reason="The requested reference is outside the authorized context."))
     from learning.rules import answer_key_match, all_true, all_completed
     handlers = {"answer_key_match": answer_key_match, "all_true": all_true, "all_completed": all_completed}
     bindings = {binding.rule: handlers[binding.handler] for binding in policy.rule_bindings

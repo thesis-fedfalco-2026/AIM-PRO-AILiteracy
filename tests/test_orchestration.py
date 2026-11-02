@@ -185,7 +185,7 @@ class OrchestrationExecutionTest(unittest.TestCase):
             return {'documents':[]}
         def worker(config,brief):
             import json
-            data=json.loads(brief.split('\nDATI_TASK\n')[1]); step=data['step_id']
+            data=json.loads(brief.split('\nTASK_DATA\n')[1]); step=data['step_id']
             owner.events.append(step)
             if failure == 'worker' and step == 'one': raise RuntimeError('private worker text')
             return WorkerOutput(kind='EXPLANATION',content='Evidence checked')
@@ -201,17 +201,17 @@ class OrchestrationExecutionTest(unittest.TestCase):
         orchestration,context=self.build()
         self.assertEqual(orchestration.run(context.request,context=context).kind,'ANSWER')
         self.assertEqual(self.events,['search','one','dependent','independent','synthesis'])
-        lead_data=json.loads(self.prompts[0].split('DATI\n',1)[1])
+        lead_data=json.loads(self.prompts[0].split('DATA\n',1)[1])
         self.assertEqual(lead_data['workers'],[{'name':'teacher','description':'[teacher] teacher'}])
-        self.assertIn('kind ANSWER',next(prompt for prompt in self.prompts if prompt.startswith('SINTESI_FINALE')))
+        self.assertIn('kind ANSWER',next(prompt for prompt in self.prompts if prompt.startswith('FINAL_SYNTHESIS')))
 
     def test_lead_prompt_requires_capability_for_retrieval(self):
         orchestration,context=self.build()
         orchestration.run(context.request,context=context)
-        instruction=self.prompts[0].split('\nCONTRATTO\n',1)[0]
+        instruction=self.prompts[0].split('\nCONTRACT\n',1)[0]
         for part in ('retrieval', 'required_capabilities', 'search_documents',
                      'ORCHESTRATOR_RETRIEVAL', 'read', 'scope', 'ActivityDefinition',
-                     'intent', 'activities vuoto', 'LearningOutcome', 'coverage vuoto'):
+                     'intent', 'leave activities empty', 'LearningOutcome', 'leave coverage empty'):
             with self.subTest(part=part):
                 self.assertIn(part,instruction)
 
@@ -273,7 +273,7 @@ class OrchestrationExecutionTest(unittest.TestCase):
                             LearningResponse(kind='ANSWER', content='Prepared design', citations=(citation,)))
                         return SimpleNamespace(pydantic=value)
                 def worker(config, brief):
-                    briefs.append(json.loads(brief.split('\nDATI_TASK\n', 1)[1]))
+                    briefs.append(json.loads(brief.split('\nTASK_DATA\n', 1)[1]))
                     return WorkerOutput(kind='CHANGE_PROPOSAL', content='Prepared design',
                         citations=(citation,), proposals=(proposal,))
                 reg = AgentRegistry((parse_agent_file(Path(__file__).resolve().parents[1]/'agents'/f'{name}.md'),))

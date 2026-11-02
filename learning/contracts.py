@@ -43,7 +43,7 @@ class Finding(Record):
     target: Text
     severity: Literal["BLOCKING", "WARNING", "INFORMATION"] = "BLOCKING"
     reason: Text
-    resolution: Text = "Correggere il dato o fornire la configurazione richiesta."
+    resolution: Text = "Correct the data or provide the required configuration."
 
 
 def entity_data(entity: Entity) -> dict:

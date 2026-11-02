@@ -16,12 +16,12 @@ from tests.test_learning_decisions import admin_bundle
 
 def assessment_bundle():
     base = list(admin_bundle())
-    rule = record("RuleDefinition", "achievement", {"purpose": "Risposta esatta", "inputs": ["answers", "answer_key"],
-        "condition": "Risposta identica alla chiave dopo rimozione degli spazi esterni", "outcome": "Acquisito se corretta",
-        "unknownBehavior": "UNKNOWN", "approvalRequirement": "Politica vigente"})
-    outcome = record("LearningOutcome", "outcome", {"statement": "Calcolare 2+2", "topics": [ref("Topic", "topic")],
+    rule = record("RuleDefinition", "achievement", {"purpose": "Exact answer", "inputs": ["answers", "answer_key"],
+        "condition": "Answer matches the key after trimming surrounding whitespace", "outcome": "Acquired if correct",
+        "unknownBehavior": "UNKNOWN", "approvalRequirement": "Current policy"})
+    outcome = record("LearningOutcome", "outcome", {"statement": "Calculate 2+2", "topics": [ref("Topic", "topic")],
         "achievementRule": rule.ref.model_dump(), "verificationRule": rule.ref.model_dump()})
-    activity = record("ActivityDefinition", "activity", {"instruction": "Quanto fa 2+2?", "intent": "ASSESS",
+    activity = record("ActivityDefinition", "activity", {"instruction": "What is 2+2?", "intent": "ASSESS",
         "format": "SHORT_STRUCTURED", "outcomes": [outcome.ref.model_dump()], "expectedEvidence": ["OBJECTIVE_RESPONSE"],
         "assessmentSpec": ref("AssessmentSpecification", "assessment")})
     specification = record("AssessmentSpecification", "assessment", {"outcomes": [outcome.ref.model_dump()],
@@ -41,14 +41,14 @@ class AssessmentTest(unittest.TestCase):
 
     def context(self, subject="learner"):
         request = LearningRequest(request_id="req", context_ref=self.store.read_context("session").ref,
-                                  subject_key=subject, text="Risposta", intent="ASSESS")
+                                  subject_key=subject, text="Response", intent="ASSESS")
         snap = load_context(self.store, request, policy(), load_contract())
         return RunContext(snap, policy(), load_contract(), request, snap.get(ref("Participant", subject)))
 
     def evaluation(self, evidence, mode="FORMATIVE"):
         return record("Evaluation", "evaluation", {"context": evidence.fields["context"],
             "evidence": [evidence.ref.model_dump()], "specification": ref("AssessmentSpecification", "assessment"),
-            "mode": mode, "result": "Risposta corretta", "reviewPayloadKey": "pending"})
+            "mode": mode, "result": "Correct answer", "reviewPayloadKey": "pending"})
 
     def test_attempt_is_observed_and_survives_reopen(self):
         evidence = record_attempt(self.store, self.context(), ref("ActivityDefinition", "activity"), "4", request_id="attempt")
@@ -153,9 +153,9 @@ class AssessmentTest(unittest.TestCase):
         snapshot = load_context(self.store,context.request,trusted,context.contract)
         context = replace(context,policy=trusted,snapshot=snapshot)
         evaluation = self.evaluation(evidence,'FORMAL')
-        proposal = create_proposal(context,(context.snapshot.context.ref,),(evaluation,),'Conferma prestazione')
+        proposal = create_proposal(context,(context.snapshot.context.ref,),(evaluation,),'Confirm performance')
         save_proposal(self.store,context,proposal,(evaluation,))
-        record_decision(self.store,context,proposal.ref,'APPROVE','Evidenza esaminata')
+        record_decision(self.store,context,proposal.ref,'APPROVE','Evidence reviewed')
         apply_proposal(self.store,context,proposal.ref,operation_id='assessment')
         root = self.store.read_context('session')
         state = self.store.read(EntityRef.model_validate(root.fields['learningStates'][0]),owner='session')

@@ -65,7 +65,7 @@ class CLITest(unittest.TestCase):
                     error = StringIO()
                     with redirect_stderr(error):
                         self.assertEqual(main([*args, 'propose', str(path/'bundle.json')]), 2)
-                    self.assertIn('Operazione non eseguita', error.getvalue())
+                    self.assertIn('Operation not performed', error.getvalue())
                     self.assertNotIn('Traceback', error.getvalue())
 
     def test_invalid_database_is_rejected_without_traceback(self):
@@ -80,7 +80,7 @@ class CLITest(unittest.TestCase):
                         status = main(['--db', str(database), '--policy', str(path/'policy.json'),
                                        '--context', 'session', '--subject', 'admin', 'bootstrap'])
                     self.assertEqual(status, 2)
-                    self.assertIn('Operazione non eseguita', error.getvalue())
+                    self.assertIn('Operation not performed', error.getvalue())
                     self.assertNotIn('Traceback', error.getvalue())
             self.assertEqual((path/'broken.sqlite').read_text(), 'PRIVATE_DATABASE_CONTENT')
 

@@ -14,7 +14,7 @@ SPEC = Path(__file__).resolve().parents[1] / "docs/resources/metamodello-agnosti
 def topic():
     return {"type": "Topic", "id": "Topic-A", "version": "1", "provenance": {
         "origin": "CONFIGURATION", "sources": [], "responsible": "admin"},
-        "fields": {"name": "Argomento", "definition": "Definizione"}}
+        "fields": {"name": "Topic", "definition": "Definition"}}
 
 
 class ContractTest(unittest.TestCase):

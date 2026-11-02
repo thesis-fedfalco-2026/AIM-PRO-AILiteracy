@@ -9,8 +9,8 @@
       "responsible": "fixture"
     },
     "fields": {
-      "name": "Concetti di base",
-      "definition": "Dominio sintetico"
+      "name": "Basic concepts",
+      "definition": "Synthetic domain"
     }
   },
   {
@@ -24,7 +24,7 @@
     },
     "fields": {
       "name": "Demo",
-      "scope": "Introduzione",
+      "scope": "Introduction",
       "topics": [
         {
           "type": "Topic",
@@ -48,10 +48,10 @@
         "demo"
       ],
       "approvalConditions": [
-        "Responsabile autorizzato"
+        "Authorized responsible person"
       ],
       "permissions": [
-        "Configurazione amministrativa locale"
+        "Local administrative configuration"
       ]
     }
   },

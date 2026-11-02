@@ -1,13 +1,13 @@
-# Prototipo ALM con agenti CrewAI
+# ALM prototype with CrewAI agents
 
-Applicazione locale per gestire un contesto di apprendimento ALM con stato e tracciamento in SQLite. Un agente Lead pianifica i compiti, agenti specializzati producono risposte e il codice verifica autorizzazioni, fonti e risultati. La generazione predefinita usa OpenRouter; la ricerca usa `mock` per prove sintetiche oppure Qdrant e TEI per documenti reali.
+Local application for managing an ALM learning context with state and tracking in SQLite. A Lead agent plans tasks, specialized agents produce responses, and code checks permissions, sources and results. Generation uses OpenRouter by default; search uses `mock` for synthetic tests or Qdrant and TEI for real documents.
 
-- [Metamodello ALM 1.0.0](docs/resources/metamodello-agnostico-apprendimento.json)
-- [Specifica del dominio](docs/resources/2026-10-27-specifica.md)
+- [ALM metamodel 1.0.0](docs/resources/metamodello-agnostico-apprendimento.json)
+- [Domain specification](docs/resources/2026-10-27-specifica.md)
 
-## Installazione
+## Installation
 
-Servono Python 3 e, solo per la ricerca reale, Docker Compose 2.20.3 o successivo.
+Python 3 is required, along with Docker Compose 2.20.3 or later only for real search.
 
 ```bash
 python3 -m venv .venv
@@ -15,98 +15,94 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
-## Configurazione
+## Configuration
 
-Crea `.env` nella radice del progetto. Per la prova con documenti sintetici imposta `OPENROUTER_API_KEY` e `SEARCH_BACKEND=mock`. Questa modalità non richiede Docker. La chiave non va inserita nel repository.
+Create `.env` in the project root. For testing with synthetic documents, set `OPENROUTER_API_KEY` and `SEARCH_BACKEND=mock`. This mode does not require Docker. Do not add the key to the repository.
 
-Il Lead e gli agenti specializzati selezionano il profilo nei rispettivi file `control/lead.md` e `agents/*.md`. `model.properties` definisce fornitore, modello e nome della variabile credenziale; `runtime.properties` definisce il Lead, i parametri di generazione e i limiti. Il modello OpenRouter incluso termina in `:free` e non passa automaticamente a un modello a pagamento. Per usarne uno serve `allow_paid = true` nel suo profilo.
+The Lead and specialized agents select their profiles in `control/lead.md` and `agents/*.md`, respectively. `model.properties` defines the provider, model and credential variable name; `runtime.properties` defines the Lead, generation parameters and limits. The included OpenRouter model ends in `:free` and does not automatically switch to a paid model. Using a paid model requires `allow_paid = true` in its profile.
 
-Per cercare documenti reali imposta `SEARCH_BACKEND=qdrant` e configura le variabili seguenti in `.env`:
+To search real documents, set `SEARCH_BACKEND=qdrant` and configure the following variables in `.env`:
 
-| Variabile | Uso |
+| Variable | Purpose |
 | --- | --- |
-| `EMBEDDING_MODEL_ID` | Modello caricato da TEI, per esempio `google/embeddinggemma-300m` |
-| `QDRANT_URL`, `QDRANT_COLLECTION` | Endpoint e collezione Qdrant |
-| `EMBEDDING_URL`, `EMBEDDING_MODEL` | Endpoint e nome del modello per le richieste embedding |
-| `EMBEDDING_DIMENSIONS`, `EMBEDDING_API_KEY` | Dimensione del vettore e credenziale inviata all'endpoint embedding |
-| `QDRANT_API_KEY` | Facoltativa, solo se Qdrant la richiede |
+| `EMBEDDING_MODEL_ID` | Model loaded by TEI, such as `google/embeddinggemma-300m` |
+| `QDRANT_URL`, `QDRANT_COLLECTION` | Qdrant endpoint and collection |
+| `EMBEDDING_URL`, `EMBEDDING_MODEL` | Endpoint and model name for embedding requests |
+| `EMBEDDING_DIMENSIONS`, `EMBEDDING_API_KEY` | Vector dimension and credential sent to the embedding endpoint |
+| `QDRANT_API_KEY` | Optional, only if required by Qdrant |
 
-Dopo aver accettato la licenza del modello di embedding, popola una volta la cache condivisa prima dell'avvio offline di TEI
+After accepting the embedding model license, populate the shared cache once before starting TEI offline.
 
+`HF_TOKEN` is needed only for the initial download and is not passed to running services. Start services with `docker compose up -d`; TEI listens on `127.0.0.1:9000` and Qdrant on `127.0.0.1:6333` (HTTP) and `6334` (gRPC).
 
-`HF_TOKEN` serve solo al caricamento iniziale e non viene passato ai servizi in esecuzione. Avvia i servizi con `docker compose up -d`; TEI ascolta su `127.0.0.1:9000` e Qdrant su `127.0.0.1:6333` (HTTP) e `6334` (gRPC).
+This project **does not create or populate** the Qdrant collection. Document ingestion is external: EmbeddingGemma requires 768-dimensional vectors and data with `text`, `metadata.source` and `metadata.source_scope` for PREPARATION, or `metadata.resource_key` for LEARNING. PREPARATION search requires an authorized source scope; LEARNING requires bound, approved resources with exact versions.
 
-Questo progetto **non crea né popola** la collezione Qdrant. Il caricamento dei documenti è esterno: con EmbeddingGemma servono vettori di 768 dimensioni e dati con `text`, `metadata.source` e `metadata.source_scope` per PREPARATION oppure `metadata.resource_key` per LEARNING. In PREPARATION la ricerca richiede un ambito di fonti autorizzato; in LEARNING richiede risorse collegate e approvate, con versioni esatte.
+## Local ALM workflow
 
-## Flusso locale ALM
+Orchestration uses a new CrewAI Flow for every request: `@start` prepares and authorizes the plan, `@router` selects steps in dependency order, and `@listen` executes them and starts final synthesis. Each executable step is a CrewAI `Task` (`DelegatedTask`) with `output_pydantic=WorkerOutput` and a guardrail applying semantic review and the checks in `learning/`. The adapter preserves delegation through `TaskTool`, without automatic retries after rejection. Steps depending on failed results are skipped; independent steps continue.
 
-L’orchestrazione usa un Flow CrewAI nuovo per ogni richiesta: `@start` prepara e autorizza il piano, `@router` seleziona gli step in ordine di dipendenza e `@listen` li esegue e avvia la sintesi finale. Ogni step eseguibile è un `Task` CrewAI (`DelegatedTask`) con `output_pydantic=WorkerOutput` e un guardrail che applica la revisione semantica e i controlli di `learning/`. L’adattatore mantiene la delega tramite `TaskTool`, senza tentativi automatici dopo un rifiuto. Gli step dipendenti da risultati falliti sono saltati; quelli indipendenti proseguono.
+The Flow keeps only an execution cursor in CrewAI state; automatic memory and Flow persistence are disabled. Permissions, snapshots, results and changes remain under the control of `learning/` and the existing SQLite service.
 
-Il Flow conserva solo un cursore di esecuzione nello stato CrewAI; memoria automatica e persistenza del Flow sono disabilitate. Autorizzazioni, snapshot, risultati e modifiche restano sotto il controllo di `learning/` e del servizio SQLite esistente.
+Operational `python -m learning` commands require `--db`, `--policy`, `--subject` and `--context` before the subcommand. Use `--help` to see `bootstrap`, `propose`, `decide`, `apply`, `abandon`, `ask`, `submit` and `show`.
 
-I comandi operativi di `python -m learning` richiedono `--db`, `--policy`, `--subject` e `--context` prima del sottocomando. Usa `--help` per vedere `bootstrap`, `propose`, `decide`, `apply`, `abandon`, `ask`, `submit` e `show`.
+The CLI is intended for a trusted local operator: `--subject` selects a person; it **does not authenticate** a remote person. Protect the policy file and database at the host level. A generated response neither approves proposals nor automatically assigns learner progress.
 
-La CLI è destinata a un operatore locale fidato: `--subject` seleziona un soggetto, **non autentica** una persona da remoto. Proteggi il file policy e il database a livello host. Una risposta generata non approva proposte e non assegna automaticamente progressi al discente.
+`bootstrap` rejects an existing context: use a new database to repeat the example. If `ask` is interrupted after reserving `demo-ask-1`, an authorized administrator may run `alm abandon demo-ask-1`; the next attempt requires a new ID. `submit` records an observed response, but an evaluation must be proposed, approved and applied separately.
 
+## Data and verification
 
-`bootstrap` rifiuta un contesto già presente: usa un nuovo database per ripetere l'esempio. Se `ask` viene interrotto dopo aver riservato `demo-ask-1`, un amministratore autorizzato può eseguire `alm abandon demo-ask-1`; il tentativo successivo richiede un ID nuovo. `submit` registra una risposta osservata, ma una valutazione deve essere proposta, approvata e applicata separatamente.
+The SQLite path is always the one supplied with `--db`; there is no default database. Opening a schema v1 database creates a private `.v1.bak` copy (or `.v1.N.bak` if one already exists) and migrates it to v2: stop other writers before opening it. The previous application version cannot read v2; restoring the v1 backup after new writes discards those writes.
 
-## Dati e verifica
+Legacy specialization names are not migrated automatically: `teacher` → `lesson-explainer`, `trainer` → `guided-practice-coach`, `socratic` → `reasoning-questioner`. For `curator`, choose `lesson-support-summarizer` in LEARNING or `resource-candidate-researcher` in PREPARATION; for `evaluator`, choose `learner-response-evaluator` in LEARNING or `assessment-designer` in PREPARATION. Update specializations through an authorized proposal, review and application, preserving historical versions.
 
-Il percorso SQLite è sempre quello passato in `--db`; non esiste un database predefinito. L'apertura di un DB schema v1 crea una copia privata `.v1.bak` (o `.v1.N.bak` se esiste già) e lo migra a v2: ferma gli altri processi che scrivono prima dell'apertura. La versione precedente dell'applicazione non legge v2; ripristinare il backup v1 dopo nuove scritture elimina quelle scritture.
-
-I vecchi nomi delle specializzazioni non sono migrati automaticamente: `teacher` → `lesson-explainer`, `trainer` → `guided-practice-coach`, `socratic` → `reasoning-questioner`. Per `curator` scegli `lesson-support-summarizer` in LEARNING o `resource-candidate-researcher` in PREPARATION; per `evaluator` scegli `learner-response-evaluator` in LEARNING o `assessment-designer` in PREPARATION. Aggiorna le specializzazioni con proposta, revisione e applicazione autorizzate, conservando le versioni storiche.
-
-`docker compose down` conserva i volumi. **`docker compose down -v` elimina anche i dati Qdrant e le cache dei modelli**: non usarlo senza aver salvato i dati necessari.
+`docker compose down` preserves volumes. **`docker compose down -v` also deletes Qdrant data and model caches**: do not use it without saving the required data.
 
 ```bash
 .venv/bin/python -m unittest discover -q
 .venv/bin/python smoke.py --runs 1
 ```
 
-I test automatici usano dati sintetici. La prova `smoke.py` chiama davvero il modello OpenRouter gratuito e usa il protocollo MCP, ma seleziona la ricerca `mock`: non verifica la collezione Qdrant, TEI o vLLM locale.
+Automated tests use synthetic data. `smoke.py` actually calls the free OpenRouter model and uses the MCP protocol, but selects `mock` search: it does not verify the Qdrant collection, TEI or local vLLM.
 
-## Tracciamento Langfuse (facoltativo)
+## Langfuse tracing (optional)
 
-La telemetria è disattivata per impostazione predefinita. Con `LANGFUSE_ENABLED` assente o `false` il modulo non importa Langfuse/OpenInference e non invia dati. Le dipendenze sono incluse in `requirements.txt` per eseguire anche i test di integrazione con esportatore in memoria.
+Telemetry is disabled by default. When `LANGFUSE_ENABLED` is absent or `false`, the module neither imports Langfuse/OpenInference nor sends data. Dependencies are included in `requirements.txt` so integration tests with an in-memory exporter can also run.
 
-Per avviare solo l'osservabilità, senza Qdrant, TEI o vLLM:
+To start observability alone, without Qdrant, TEI or vLLM:
 
 ```bash
 docker compose -f compose.local.yml --profile observability up -d
 ```
 
-La configurazione principale include lo stesso profilo: `docker compose --profile observability up -d` avvia anche Qdrant e TEI e richiede la loro configurazione. Lo stack Langfuse comprende web, worker, Postgres, ClickHouse, Redis e MinIO, con volumi dedicati. Solo web (`127.0.0.1:3000`) e MinIO (`127.0.0.1:9090`, per media) espongono porte host; non occupa le porte di TEI/Qdrant. Le immagini Langfuse seguono la versione maggiore 4 della configurazione upstream: fissare digest validati per installazioni persistenti.
+The main configuration includes the same profile: `docker compose --profile observability up -d` also starts Qdrant and TEI and requires their configuration. The Langfuse stack includes web, worker, Postgres, ClickHouse, Redis and MinIO, with dedicated volumes. Only web (`127.0.0.1:3000`) and MinIO (`127.0.0.1:9090`, for media) expose host ports; it does not occupy TEI/Qdrant ports. Langfuse images follow major version 4 of the upstream configuration: pin validated digests for persistent installations.
 
-### Prima configurazione e prova completa
+### Initial setup and complete test
 
-1. Installare le dipendenze con `.venv/bin/python -m pip install -r requirements.txt` e avviare lo stack con il comando precedente.
-2. Aprire <http://127.0.0.1:3000>. Non esistono credenziali predefinite: scegliere **Sign up**, creare account, organizzazione e progetto.
-3. Nel progetto aprire **Settings → API Keys** e creare una coppia Public Key (`pk-lf-...`) e Secret Key (`sk-lf-...`). Sono diverse dalla password di accesso.
-4. Creare una chiave nelle [impostazioni API di OpenRouter](https://openrouter.ai/settings/keys).
-5. Eseguire `openssl rand -hex 32`: copiare il risultato in `LANGFUSE_HASH_SALT`. Questo valore viene generato localmente, non fornito da Langfuse.
-6. Creare o aggiornare `.env` nella radice del repository con i valori reali al posto dei segnaposto:
-
+1. Install dependencies with `.venv/bin/python -m pip install -r requirements.txt` and start the stack with the preceding command.
+2. Open <http://127.0.0.1:3000>. There are no default credentials: choose **Sign up** and create an account, organization and project.
+3. In the project, open **Settings → API Keys** and create a Public Key (`pk-lf-...`) and Secret Key (`sk-lf-...`) pair. These differ from the login password.
+4. Create a key in [OpenRouter API settings](https://openrouter.ai/settings/keys).
+5. Run `openssl rand -hex 32`: copy the result into `LANGFUSE_HASH_SALT`. This value is generated locally, not provided by Langfuse.
+6. Create or update `.env` in the repository root with actual values replacing the placeholders:
 
 ```dotenv
-OPENROUTER_API_KEY=la-chiave-openrouter
+OPENROUTER_API_KEY=your-openrouter-key
 SEARCH_BACKEND=mock
 LANGFUSE_ENABLED=true
 LANGFUSE_PUBLIC_KEY=pk-lf-...
 LANGFUSE_SECRET_KEY=sk-lf-...
 LANGFUSE_BASE_URL=http://127.0.0.1:3000
-LANGFUSE_HASH_SALT=il-risultato-di-openssl
+LANGFUSE_HASH_SALT=your-openssl-result
 LANGFUSE_SYNTHETIC_DATA_ONLY=true
 ```
 
-Il blocco precedente è per la prova con fixture sintetiche. Tenere `.env` locale: non committare chiavi o password. Per un’installazione persistente, usare valori casuali privati anche per `LF_NEXTAUTH_SECRET`, `LF_SALT`, `LF_ENCRYPTION_KEY` (64 cifre esadecimali), `LF_POSTGRES_PASSWORD`, `LF_CLICKHOUSE_PASSWORD`, `LF_REDIS_PASSWORD` e `LF_MINIO_PASSWORD` (almeno 8 caratteri). I valori predefiniti Compose servono esclusivamente alle prove locali con dati sintetici. Conservare il salt stabile per correlare lo stesso soggetto; cambiarlo cambia gli identificatori pseudonimi.
+The preceding block is for testing with synthetic fixtures. Keep `.env` local: do not commit keys or passwords. For a persistent installation, also use private random values for `LF_NEXTAUTH_SECRET`, `LF_SALT`, `LF_ENCRYPTION_KEY` (64 hexadecimal digits), `LF_POSTGRES_PASSWORD`, `LF_CLICKHOUSE_PASSWORD`, `LF_REDIS_PASSWORD` and `LF_MINIO_PASSWORD` (at least 8 characters). Compose defaults are exclusively for local tests with synthetic data. Keep the salt stable to correlate the same person; changing it changes pseudonymous identifiers.
 
-Ogni `Orchestrator.run` produce una radice `learning.request`, raggruppata per ExecutionContext, con richiesta e risposta. Sotto la radice: generazioni Lead, autorizzazione del piano, step, ricerca MCP lato client, chiamate worker, revisioni semantiche e controlli deterministici. Gli span OpenInference CrewAI e OpenAI si annidano nelle osservazioni correnti. L'instrumentor OpenAI acquisisce prompt, completamenti, modello e token anche per OpenRouter nativo in streaming; le chiamate di conversione strutturata e i tentativi aggiuntivi restano visibili come chiamate distinte. La durata degli span misura la latenza. I costi monetari dipendono dal catalogo prezzi/configurazione del modello in Langfuse, non vengono stimati dal prototipo.
+Each `Orchestrator.run` produces a `learning.request` root, grouped by ExecutionContext, with request and response. Beneath the root are Lead generations, plan authorization, steps, client-side MCP search, worker calls, semantic reviews and deterministic checks. OpenInference CrewAI and OpenAI spans nest inside current observations. The OpenAI instrumentor captures prompts, completions, model and tokens, including native streaming OpenRouter calls; structured conversion calls and additional attempts remain visible as separate calls. Span duration measures latency. Monetary costs depend on the model pricing catalog/configuration in Langfuse; the prototype does not estimate them.
 
-Gli esiti semantici sono score categorici `ACCEPT` / `REJECT` / `UNCERTAIN`; i controlli e gli step registrano anche `SUCCEEDED` / `FAILED` / `SKIPPED`. La traccia include ID richiesta, versione e fingerprint del metamodello, profili per agente, ruoli, modalità e commit Git. I programmi `python -m learning`, `main.py` e `smoke.py` svuotano la coda prima di uscire, anche in caso di errore.
+Semantic outcomes are categorical scores `ACCEPT` / `REJECT` / `UNCERTAIN`; checks and steps also record `SUCCEEDED` / `FAILED` / `SKIPPED`. The trace includes request ID, metamodel version and fingerprint, per-agent profiles, roles, modes and Git commit. The `python -m learning`, `main.py` and `smoke.py` programs flush the queue before exiting, including on error.
 
-7. Verificare la configurazione, eseguire i test e la prova con il modello gratuito. Lo smoke usa documenti sintetici tramite MCP e non richiede Qdrant o TEI:
-
+7. Check the configuration, run tests and test the free model. Smoke uses synthetic documents through MCP and requires neither Qdrant nor TEI:
 
 ```bash
 docker compose -f compose.local.yml --profile observability config --quiet
@@ -115,23 +111,22 @@ LANGFUSE_ENABLED=false .venv/bin/python -m unittest discover -q
 .venv/bin/python smoke.py --runs 1
 ```
 
-8. Attendere `PASS 1/1`: la prova reale può richiedere alcuni minuti. Tornare nel progetto Langfuse, aprire **Tracing** e aggiornare l’elenco. Aprire l’ultima `learning.request`: deve contenere `lead.call`, `authorize_plan`, uno step con `document_search` e `worker.call`, le revisioni `semantic_review`, la sintesi e `check_final_response`. Le chiamate OpenAI/OpenRouter mostrano modello, token e durata; gli esiti sono visibili come score.
+8. Wait for `PASS 1/1`: the live test may take a few minutes. Return to the Langfuse project, open **Tracing** and refresh the list. Open the latest `learning.request`: it must contain `lead.call`, `authorize_plan`, a step with `document_search` and `worker.call`, `semantic_review` reviews, synthesis and `check_final_response`. OpenAI/OpenRouter calls show model, tokens and duration; outcomes are visible as scores.
 
-### Diagnosi di una prova fallita
+### Diagnosing a failed test
 
-- Se la traccia non compare, verificare `LANGFUSE_ENABLED=true`, endpoint locale e coppia di chiavi dello stesso progetto. Il processo invia le osservazioni prima di terminare.
-- `Plan rejected (ValueError)` significa che i controlli hanno bloccato il piano prima di eseguire i task: aprire `authorize_plan` nella traccia e leggere `status_message` e il piano in input. `step.agent` è il nome del worker (`lesson-explainer`); `specialization` è il riferimento esatto con `type: AgentSpecialization`, `id: teacher-demo`, `version: 1` nella fixture smoke. Non sono intercambiabili.
-- Se un worker viene rifiutato, leggere il verdetto e il motivo in `semantic_review` (stage `WORKER`) e i codici in `check_worker_output`. Un rifiuto semantico produce un esito di fallimento anche se il modello ha restituito del testo.
-- Il link a `app.crewai.com` appartiene al collector nativo CrewAI, separato da Langfuse. Il prototipo lo disattiva; usare la propria istanza locale per consultare le tracce.
-- Il test usa un modello gratuito e non passa a un modello a pagamento in caso di errori o indisponibilità. Una prova riuscita verifica l’integrazione su fixture sintetiche, non garantisce l’esito di ogni futura generazione.
+- If no trace appears, check `LANGFUSE_ENABLED=true`, the local endpoint and a key pair from the same project. The process sends observations before exiting.
+- `Plan rejected (ValueError)` means checks blocked the plan before task execution: open `authorize_plan` in the trace and read `status_message` and the input plan. `step.agent` is the worker name (`lesson-explainer`); `specialization` is the exact reference with `type: AgentSpecialization`, `id: teacher-demo`, `version: 1` in the smoke fixture. They are not interchangeable.
+- If a worker is rejected, read the verdict and reason in `semantic_review` (stage `WORKER`) and codes in `check_worker_output`. Semantic rejection produces a failure outcome even if the model returned text.
+- The `app.crewai.com` link belongs to CrewAI's native collector, separate from Langfuse. The prototype disables it; use your local instance to inspect traces.
+- The test uses a free model and does not switch to a paid model on errors or unavailability. A successful test verifies integration on synthetic fixtures; it does not guarantee every future generation's outcome.
 
-### Dati e conservazione
+### Data and retention
 
+Do not use Langfuse Cloud with real data. To also view LEARNING fixture content in smoke, set `LANGFUSE_SYNTHETIC_DATA_ONLY=true`: this declaration disables LEARNING content redaction while retaining pseudonymization. Endpoints under `*.langfuse.com` require explicit `LANGFUSE_SYNTHETIC_DATA_ONLY=true`, to be set only for synthetic fixtures. For real data, use the project's instance. `subject_key` becomes an HMAC SHA-256 with a private salt; masking also covers identities embedded in prompts. In LEARNING mode, all input/output content is conservatively redacted, including automatically captured messages, to prevent learner instructions and evidence from resurfacing through prompts or synthesis. Structure, outcomes, check codes and token metrics remain available. PREPARATION retains content for debugging: do not include unnecessary personal data.
 
-Non usare Langfuse Cloud con dati reali. Per vedere anche i contenuti delle fixture LEARNING nello smoke, impostare `LANGFUSE_SYNTHETIC_DATA_ONLY=true`: questa dichiarazione disabilita l’oscuramento dei contenuti LEARNING, conservando la pseudonimizzazione. Gli endpoint `*.langfuse.com` richiedono l'esplicito `LANGFUSE_SYNTHETIC_DATA_ONLY=true`, da impostare solo per fixture sintetiche. Per dati reali usare l'istanza del progetto. `subject_key` diventa un HMAC SHA-256 con salt privato; il mascheramento copre anche identità incorporate nei prompt. In modalità LEARNING viene oscurato conservativamente tutto il contenuto di input/output, inclusi i messaggi catturati automaticamente, per evitare che consegne ed evidenze del discente ricompaiano attraverso prompt o sintesi. Restano disponibili struttura, esiti, codici dei controlli e metriche dei token. PREPARATION conserva i contenuti per il debug: non inserirvi dati personali non necessari.
+The intended retention window is 30 days. Native automatic deletion requires Langfuse Self Hosted Enterprise: configure the license and `Project Settings → Data Retention = 30`. Headless provisioning supports `LANGFUSE_INIT_ORG_ID/NAME`, `LANGFUSE_INIT_PROJECT_ID/NAME`, `LANGFUSE_INIT_USER_EMAIL/PASSWORD` and project keys: `LANGFUSE_INIT_PROJECT_RETENTION` receives `LANGFUSE_RETENTION_DAYS` (default 30). It does not modify existing projects. Without a license, native retention does not activate: provide an administrative deletion procedure and verify it before collecting real data. `down` preserves data; volume deletion is irreversible and must be planned separately.
 
-La finestra prevista di conservazione è 30 giorni. La cancellazione automatica nativa richiede Langfuse Self Hosted Enterprise: configurare la licenza e `Project Settings → Data Retention = 30`. Per il provisioning headless sono disponibili `LANGFUSE_INIT_ORG_ID/NAME`, `LANGFUSE_INIT_PROJECT_ID/NAME`, `LANGFUSE_INIT_USER_EMAIL/PASSWORD` e le chiavi del progetto: `LANGFUSE_INIT_PROJECT_RETENTION` riceve `LANGFUSE_RETENTION_DAYS` (default 30). Non modifica progetti già esistenti. Senza licenza, la retention nativa non si attiva: prevedere una procedura amministrativa di cancellazione e verificarla prima di raccogliere dati reali. `down` conserva i dati; la cancellazione dei volumi è irreversibile e va pianificata separatamente.
+References: [CrewAI integration](https://langfuse.com/integrations/frameworks/crewai), [span masking](https://langfuse.com/docs/observability/features/masking), [Compose installation](https://langfuse.com/self-hosting/deployment/docker-compose), [retention and licensing requirements](https://langfuse.com/docs/administration/data-retention).
 
-Riferimenti: [integrazione CrewAI](https://langfuse.com/integrations/frameworks/crewai), [mascheramento degli span](https://langfuse.com/docs/observability/features/masking), [installazione Compose](https://langfuse.com/self-hosting/deployment/docker-compose), [retention e requisiti di licenza](https://langfuse.com/docs/administration/data-retention).
-
-Il prototipo disattiva il collector cloud nativo di CrewAI e conserva il consenso negativo nella propria `.cache/crewai`, senza cambiare le preferenze globali dell’utente. Le tracce applicative restano dirette al solo endpoint Langfuse configurato. Nel piano, `step.agent` deve essere il `registryName` del worker (es. `lesson-explainer`); `specialization` è invece il riferimento esatto `AgentSpecialization` (es. `teacher-demo`). Il prompt presenta esplicitamente le coppie autorizzate; il controllo continua a rifiutare riferimenti errati.
+The prototype disables CrewAI's native cloud collector and stores negative consent in its own `.cache/crewai`, without changing the user's global preferences. Application traces remain directed only to the configured Langfuse endpoint. In the plan, `step.agent` must be the worker's `registryName` (e.g. `lesson-explainer`); `specialization` is the exact `AgentSpecialization` reference (e.g. `teacher-demo`). The prompt explicitly presents authorized pairs; validation continues to reject incorrect references.

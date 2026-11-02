@@ -1,253 +1,255 @@
 # ALM Conformance Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. L'esecuzione nativa è raccomandata: i task condividono contratti e stato, quindi vanno integrati in sequenza.
+English translation dated 2026-11-02. The metamodel prose and language metadata were translated without changing its structure, identifiers, vocabularies or normative requirements. The pinned SHA-256 was updated for the translated artifact; historical status statements below describe the implementation at their stated dates.
 
-**Goal:** Portare il progetto al flusso ALM completo, dalla richiesta contestualizzata alla risposta controllata e all'eventuale aggiornamento autorizzato dello stato, mantenendo immutabile il metamodello.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. Native execution is recommended: tasks share contracts and state, so they must be integrated sequentially.
 
-**Architecture:** Un package `learning` rappresenta i dati ALM, risolve riferimenti versionati, applica politiche e conserva modelli, proposte ed eventi in SQLite. L'Orchestrator esistente mantiene la pianificazione del Lead, la validazione del piano, il retrieval MCP, TaskTool e la sintesi; riceve uno snapshot validato e controlla ogni risultato prima del riuso. Soltanto il controllo applicativo scrive lo stato autorevole.
+**Goal:** Bring the project to the complete ALM workflow, from contextualized request to checked response and any authorized state update, keeping the metamodel immutable.
 
-**Tech Stack:** Python, Pydantic, CrewAI, MCP, Qdrant e unittest già presenti; `sqlite3`, `json`, `hashlib` e `argparse` dalla libreria standard. Nessuna nuova dipendenza prevista.
+**Architecture:** A `learning` package represents ALM data, resolves versioned references, applies policies and stores models, proposals and events in SQLite. The existing Orchestrator retains Lead planning, plan validation, MCP retrieval, TaskTool and synthesis; it receives a validated snapshot and checks every result before reuse. Only application control writes authoritative state.
 
-**Spec:** `docs/resources/metamodello-agnostico-apprendimento.json`, formato `agnostic-learning-metamodel`, `formatVersion = "1.0"`, `metamodel.id = "ALM"`, `metamodel.version = "1.0.0"`.
+**Tech Stack:** Existing Python, Pydantic, CrewAI, MCP, Qdrant and unittest; `sqlite3`, `json`, `hashlib` and `argparse` from the standard library. No new dependencies planned.
 
-**Stato al 2026-10-28:** Implementazione integrata sul checkout `dev`, senza push su `origin`. Suite completa: **183 test passati in 11,561 s**, inclusi CASE01–CASE22 e un ciclo servizio → orchestratore → MCP stdio reale con provider simulato. Digest della specifica invariato. La verifica live OpenRouter è stata tentata ed è fallita in pianificazione con `NotFoundError`: nessun fallback. Verifiche avverse con LLM reale e Qdrant reale non completate; non si dichiara validazione pedagogica live.
+**Spec:** `docs/resources/metamodello-agnostico-apprendimento.json`, format `agnostic-learning-metamodel`, `formatVersion = "1.0"`, `metamodel.id = "ALM"`, `metamodel.version = "1.0.0"`.
 
-**Evidenze:** `tests/test_learning_acceptance.py`, `tests/test_learning_assessment.py`, `tests/test_learning_decisions.py`, `tests/test_learning_service.py`, `tests/test_learning_cli.py`; test esistenti di backend/MCP e sistema migrati. La revisione indipendente ha prodotto correzioni con regressioni per attività omesse dal piano e continuità Socratic attraverso turni neutri/falliti. I test di protocollo non sostituiscono una prova del modello reale.
+**Status as of 2026-10-28:** Implementation integrated in the `dev` checkout, without pushing to `origin`. Full suite: **183 tests passed in 11.561 s**, including CASE01–CASE22 and a service → orchestrator → real MCP stdio cycle with a simulated provider. Specification digest unchanged. Live OpenRouter verification was attempted and failed during planning with `NotFoundError`: no fallback. Adversarial checks with a real LLM and real Qdrant were not completed; no live pedagogical validation is claimed.
 
-**Scelte di esecuzione:** checkout locale richiesto dall’utente; eccezioni Git limitate a piano/spec; filtro specializzazioni nel planner con registry invariato; Task 9 anticipato per autorizzare gli scope dei Task 7–8; completamento di CASE16 nel Task 10. I checkpoint finali condividono un commit d’integrazione perché output, decisioni, valutazione e servizio dipendono dagli stessi contratti. Si conserva il diario locale per consentire la ripresa del lavoro senza ricostruirlo.
+**Evidence:** `tests/test_learning_acceptance.py`, `tests/test_learning_assessment.py`, `tests/test_learning_decisions.py`, `tests/test_learning_service.py`, `tests/test_learning_cli.py`; existing backend/MCP and system tests migrated. Independent review produced fixes with regression tests for activities omitted from the plan and Socratic continuity across neutral/failed turns. Protocol tests do not replace a real-model test.
+
+**Execution choices:** Local checkout requested by the user; Git exceptions limited to plan/spec; specialization filtering in the planner with the registry unchanged; Task 9 moved earlier to authorize scopes for Tasks 7–8; CASE16 completed in Task 10. Final checkpoints share an integration commit because outputs, decisions, evaluation and service depend on the same contracts. The local journal is retained to allow work to resume without reconstruction.
 
 ## Global Constraints
 
-- «Il metamodello è fisso.» Il runtime non ne modifica byte, tipi, categorie o invarianti; modelli e stato sono istanze separate.
-- «Il Lead è il componente deliberativo: pianifica e sintetizza; non dispone di tool runtime e non invoca TaskTool o MCP.»
-- «TaskTool è invocato programmaticamente dall’Orchestrator dopo la validazione; non è un tool del Lead né un worker.»
-- «Ogni step crea un nuovo Worker configurato.» Il DAG resta sequenziale, con ordinamento topologico stabile.
-- Categorie chiuse: `TEACHER_TRAINER`, `CURATOR`, `EVALUATOR`, `SOCRATIC`. Ruoli: `TEACHER`, `TRAINER`, `CURATOR`, `EVALUATOR`, `SOCRATIC`.
-- `PREPARATION` e `LEARNING` hanno perimetri distinti. Un candidato non concede accessi né costituisce un binding approvato.
-- `EntityRef` risolve tipo, id e versione esatta. Le versioni storiche restano indirizzabili; nessun riferimento implicito a `latest`.
-- «UNKNOWN non vale SATISFIED.» Il completamento di un task non prova completamento dell'attività, acquisizione o verifica.
-- «SUCCEEDED nel flusso finale richiede anche il controllo semantico per step; il solo completamento della chiamata non basta.» Il controllo precede le dipendenze.
-- Una spiegazione, un quiz o un feedback ordinario già autorizzati non richiedono approvazione umana a ogni turno. `VERIFIED` richiede sempre la conferma prevista da R13.
-- Approvazione e applicazione sono eventi distinti. Si applica esclusivamente il contenuto effettivamente esaminato, su una base ancora compatibile.
-- Il limite tecnico di retrieval rimane `1 <= k <= 20`; i limiti locali di caratteri e quelli del piano restano configurati, non diventano regole pedagogiche universali.
-- Documenti, output dei worker e istruzioni presenti nelle risorse sono dati non fidati. Il solo artefatto ALM fissato dall'applicazione definisce il contratto.
-- Le istruzioni del workspace e i permessi del filesystem prevalgono sui checkpoint di commit. Nessun reset, eliminazione di dati o modifica dei file preesistenti per ripulire la baseline.
+- “The metamodel is fixed.” The runtime changes none of its bytes, types, categories or invariants; models and state are separate instances.
+- “The Lead is the deliberative component: it plans and synthesizes; it has no runtime tools and does not invoke TaskTool or MCP.”
+- “TaskTool is invoked programmatically by the Orchestrator after validation; it is neither a Lead tool nor a worker.”
+- “Each step creates a new configured Worker.” The DAG remains sequential, with stable topological ordering.
+- Closed categories: `TEACHER_TRAINER`, `CURATOR`, `EVALUATOR`, `SOCRATIC`. Roles: `TEACHER`, `TRAINER`, `CURATOR`, `EVALUATOR`, `SOCRATIC`.
+- `PREPARATION` and `LEARNING` have distinct scopes. A candidate neither grants access nor constitutes an approved binding.
+- `EntityRef` resolves type, id and exact version. Historical versions remain addressable; no implicit reference to `latest`.
+- “UNKNOWN does not count as SATISFIED.” Task completion does not prove activity completion, acquisition or verification.
+- “SUCCEEDED in the final workflow also requires per-step semantic review; completion of the call alone is insufficient.” The check precedes dependencies.
+- An already authorized explanation, quiz or ordinary feedback does not require human approval every turn. `VERIFIED` always requires the confirmation specified by R13.
+- Approval and application are distinct events. Only content actually reviewed is applied, against a still-compatible base.
+- The technical retrieval limit remains `1 <= k <= 20`; local character and plan limits remain configured values, not universal pedagogical rules.
+- Documents, worker outputs and instructions within resources are untrusted data. Only the ALM artifact pinned by the application defines the contract.
+- Workspace instructions and filesystem permissions take precedence over commit checkpoints. No resets, data deletion or modification of preexisting files to clean the baseline.
 
 ## Review Focus
 
-1. Una fonte molto pertinente appartiene a un altro contesto, oppure ha stesso id e versione diversa: non deve raggiungere Lead o worker. Test nei Task 3 e 6.
-2. Un operatore approva una proposta mentre cambia la base, oppure ripete l'applicazione dopo un errore: niente aggiornamenti parziali, duplicazioni o approvazioni trasferite. Test nei Task 2 e 9.
-3. Un output Teacher contiene la soluzione di un problema Socratic, anche dentro una citazione: non deve entrare nel briefing del destinatario o nella risposta finale. Test nel Task 8.
-4. Rubriche e regole sono testo plausibile ma prive di interpretazione operativa autorizzata: esito non determinabile, mai soglie o competenze inventate. Test nei Task 4 e 10.
-5. Il budget di contesto termina prima dei vincoli, oppure il provider fallisce dopo l'invio del tentativo: nessuna perdita dei vincoli o dell'evidenza già registrata. Test nei Task 8, 10 e 11.
+1. A highly relevant source belongs to another context, or has the same id and a different version: it must not reach the Lead or worker. Tests in Tasks 3 and 6.
+2. An operator approves a proposal while the base changes, or repeats application after an error: no partial updates, duplicates or transferred approvals. Tests in Tasks 2 and 9.
+3. A Teacher output contains the solution to a Socratic problem, including inside a citation: it must not enter the recipient's briefing or final response. Tests in Task 8.
+4. Rubrics and rules are plausible text but lack authorized operational interpretation: undetermined outcome, never invented thresholds or competencies. Tests in Tasks 4 and 10.
+5. The context budget runs out before constraints, or the provider fails after attempt submission: no loss of constraints or already recorded evidence. Tests in Tasks 8, 10 and 11.
 
-## Baseline, precedenti e approccio
+## Baseline, history and approach
 
-Baseline osservata: commit `8b22b42`, working tree tracciato pulito al momento della pianificazione. Il runtime contiene `Orchestrator.answer(question)`, `ExecutionPlan`, `validate_and_order_plan`, `AgentRegistry`, `TaskTool`, `CrewAIWorker`, `LLMFactory` e ricerca MCP. Non esistono ancora package `learning`, stato persistente ALM, controllo delle risorse per contesto o decisioni umane applicative. I test sono stati letti, non eseguiti in questa formalizzazione.
+Observed baseline: commit `8b22b42`, tracked working tree clean at planning time. The runtime contains `Orchestrator.answer(question)`, `ExecutionPlan`, `validate_and_order_plan`, `AgentRegistry`, `TaskTool`, `CrewAIWorker`, `LLMFactory` and MCP search. No `learning` package, persistent ALM state, context-based resource control or application-level human decisions exist yet. Tests were read, not executed during this formalization.
 
-Il design e il piano del 30 settembre 2026 descrivono un ciclo precedente basato su export jjodel. Questo piano propone di sostituirli come guida all'implementazione ALM, conservandoli come storia. Riutilizza SQLite, CLI locale e separazione fra proposte e applicazione; non importa classi jjodel, `Offering` o i precedenti campi di feedback. In caso di conflitto prevalgono richiesta corrente e specifica ALM. Non attribuire al nuovo piano l'approvazione riportata nel vecchio design.
+The design and plan of September 30, 2026 describe a previous cycle based on jjodel exports. This plan proposes replacing them as the ALM implementation guide, preserving them as history. It reuses SQLite, the local CLI and separation between proposals and application; it does not import jjodel classes, `Offering` or previous feedback fields. In conflicts, the current request and ALM specification take precedence. Do not attribute approval reported in the old design to the new plan.
 
-Approcci considerati:
+Approaches considered:
 
-- Adeguamento unico dell'intero runtime: copertura ampia prima della prima dimostrazione, ma diagnosi e revisione difficili.
-- Adeguamento incrementale del runtime esistente: aggiunge prima controlli e contratti, poi ciclo completo e verifiche didattiche. È l'approccio raccomandato e formalizzato qui.
+- One-time adaptation of the entire runtime: broad coverage before the first demonstration, but difficult diagnosis and review.
+- Incremental adaptation of the existing runtime: adds checks and contracts first, then the complete cycle and teaching checks. This is the approach recommended and formalized here.
 
-L'inserimento del JSON nei soli prompt non soddisfa autorizzazioni, riferimenti o persistenza, quindi non costituisce un'alternativa conforme.
+Putting the JSON only in prompts does not satisfy authorization, reference or persistence requirements, so it is not a conforming alternative.
 
-La prima interfaccia resta una CLI locale per un operatore fidato. L'identità selezionata viene confrontata con configurazione amministrativa e partecipanti del contesto; un parametro `--subject` non è autenticazione remota. Non si aggiungono ora un server web, autenticazione multiutente, un interprete di regole libero, un nuovo database vettoriale o worker concorrenti.
+The first interface remains a local CLI for a trusted operator. The selected identity is checked against administrative configuration and context participants; a `--subject` parameter is not remote authentication. No web server, multiuser authentication, unrestricted rule interpreter, new vector database or concurrent workers are added now.
 
-## Rappresentazione e interfacce condivise
+## Representation and shared interfaces
 
-Queste sono scelte di serializzazione e implementazione. Non cambiano il JSON normativo.
+These are serialization and implementation choices. They do not change the normative JSON.
 
-- `learning/contracts.py`: Pydantic per i valori ALM e per `Entity(type: str, id: str, version: str, provenance: Provenance, fields: dict[str, JsonValue])`. `fields` contiene esattamente i campi specifici dell'entityType; i campi comuni restano nell'envelope. `JsonValue` è un valore JSON finito. Ogni riferimento a entità, anche quando il descriptor indica direttamente `Topic` o `Resource`, è un `EntityRef(type, id, version)`.
-- Un validatore limitato al formato ALM verifica tutte le 29 entità e gli 8 valueTypes usando i descriptor del contratto fissato. Non interpreta `meaning`, `requirement`, `condition` o testo libero come codice. Le regole semantiche R01–R21 sono controlli Python espliciti, distribuiti nei task sottostanti.
-- `Identifier`, `Version` e `Text` usano stringhe non vuote. Non riutilizzare automaticamente la regex minuscola degli agenti per tutte le entità ALM: `registryName` deve invece rispettare il contratto del registry. `Timestamp` richiede data/ora con fuso; `Boolean` esclude numeri; `Number` esclude booleani e valori non finiti. Queste convenzioni di serializzazione vanno documentate.
-- `Contract` contiene descriptor, versione e digest; `Snapshot` contiene contesto, `base_version` autorevole, entità autorizzate indicizzate per riferimento e finding. `RunContext` aggiunge soggetto verificato, proiezione per il Lead, specializzazioni ammesse e risoluzione dei permessi. Non è creato da output LLM.
-- `LearningRequest` contiene `request_id`, `context_ref`, `subject_key`, `text` e riferimenti opzionali a topic, attività e occorrenza. Il modo didattico e l'eventuale problema attivo sono risolti dal contesto e dall'interazione; il Lead può proporli, non ampliare permessi.
-- `LearningResponse` contiene `kind`, `content`, `citations`, `coverage`, `findings`, `proposal_refs`, `state_change_refs`, `application_status`. I kind sono quelli di `ResponseKind`; `application_status` distingue `none`, `pending`, `approved`, `applied`, `not_applied` come rappresentazione di presentazione, non nuova enumerazione ALM.
-- `LearningPlanDraft` contiene `steps: tuple[LearningStepDraft, ...]`; ciascuno contiene `step: PlanStep`, `specialization: EntityRef`, `intent`, `activities`, `required_capabilities`, `expected_output` e `coverage`. I riferimenti al problema Socratic sono assegnati e verificati dal controllo sulla richiesta, non liberamente riscritti dal piano. La proiezione tecnica produce l'attuale `ExecutionPlan`.
-- `AuthorizedTask` contiene il `WorkerTask` persistibile, `PlanStep`, profilo risolto, perimetro di ricerca, contesto pertinente, output atteso e vincoli. `WorkerOutput` contiene tipo, contenuto, citazioni, copertura, lacune e candidati di proposta; id, provenienza autorevole, status e permessi sono assegnati dal controllo applicativo.
-- `LearningStore` è un context manager SQLite. Salva revisioni immutabili, testa autorevole per contesto, appartenenza dei record, candidati e registrazioni di richiesta. Non espone metodi di scrittura come tool LLM. `StateConflict` indica una base incompatibile; gli errori pubblici non contengono dati personali o credenziali.
-- `TrustedPolicy` è configurazione locale amministrativa associata a una versione esatta di `PolicySet`. Definisce soggetti, azioni, scope e adattatori disponibili mediante campi strutturati, senza trasformare automaticamente il testo di `PolicySet` in permessi. Una modifica richiede l'autorità prevista. Non viene caricata da materiali recuperati.
+- `learning/contracts.py`: Pydantic for ALM values and `Entity(type: str, id: str, version: str, provenance: Provenance, fields: dict[str, JsonValue])`. `fields` contains exactly the entityType-specific fields; common fields remain in the envelope. `JsonValue` is a finite JSON value. Every entity reference, even when the descriptor directly specifies `Topic` or `Resource`, is an `EntityRef(type, id, version)`.
+- A validator restricted to the ALM format checks all 29 entities and 8 valueTypes using the pinned contract descriptors. It does not interpret `meaning`, `requirement`, `condition` or free text as code. Semantic rules R01–R21 are explicit Python checks distributed across the tasks below.
+- `Identifier`, `Version` and `Text` use nonempty strings. Do not automatically reuse the lowercase agent regex for all ALM entities: `registryName` must instead follow the registry contract. `Timestamp` requires a timezone-aware date/time; `Boolean` excludes numbers; `Number` excludes booleans and nonfinite values. Document these serialization conventions.
+- `Contract` contains descriptors, version and digest; `Snapshot` contains context, authoritative `base_version`, authorized entities indexed by reference and findings. `RunContext` adds the verified person, Lead projection, allowed specializations and permission resolution. It is not created from LLM output.
+- `LearningRequest` contains `request_id`, `context_ref`, `subject_key`, `text` and optional topic, activity and occurrence references. Teaching mode and any active problem are resolved from context and interaction; the Lead may propose them, not expand permissions.
+- `LearningResponse` contains `kind`, `content`, `citations`, `coverage`, `findings`, `proposal_refs`, `state_change_refs`, `application_status`. Kinds are those of `ResponseKind`; `application_status` distinguishes `none`, `pending`, `approved`, `applied`, `not_applied` as a presentation representation, not a new ALM enumeration.
+- `LearningPlanDraft` contains `steps: tuple[LearningStepDraft, ...]`; each contains `step: PlanStep`, `specialization: EntityRef`, `intent`, `activities`, `required_capabilities`, `expected_output` and `coverage`. Socratic problem references are assigned and checked by request control, not freely rewritten by the plan. Technical projection produces the current `ExecutionPlan`.
+- `AuthorizedTask` contains the persistable `WorkerTask`, `PlanStep`, resolved profile, search scope, relevant context, expected output and constraints. `WorkerOutput` contains type, content, citations, coverage, gaps and proposal candidates; id, authoritative provenance, status and permissions are assigned by application control.
+- `LearningStore` is a SQLite context manager. It saves immutable revisions, the authoritative head per context, record ownership, candidates and request records. It does not expose write methods as LLM tools. `StateConflict` indicates an incompatible base; public errors contain no personal data or credentials.
+- `TrustedPolicy` is local administrative configuration associated with an exact `PolicySet` version. It defines people, actions, scopes and available adapters through structured fields, without automatically turning `PolicySet` text into permissions. Changes require the specified authority. It is not loaded from retrieved materials.
 
-## File e responsabilità
+## Files and responsibilities
 
-| File | Responsabilità |
+| File | Responsibility |
 | --- | --- |
-| `learning/__init__.py`, `contracts.py` | Package senza effetti all'importazione; valori, envelope e DTO applicativi |
-| `learning/metamodel.py` | Caricamento ALM fissato, controllo strutturale e proiezioni della specifica |
-| `learning/store.py` | SQLite, revisioni, candidati, transazioni e idempotenza |
-| `learning/policies.py`, `context.py` | Autorità locale, scope, chiusura autorizzata e snapshot della richiesta |
-| `learning/validation.py`, `rules.py` | Invarianti di dominio, prontezza e regole operative esplicite |
-| `learning/planning.py` | Piano semantico, compatibilità con registry e autorizzazione dei task |
-| `learning/outputs.py` | Briefing per destinatario, controlli per step e della risposta finale |
-| `learning/decisions.py` | Proposte, contenuto esaminato, decisioni e applicazione |
-| `learning/assessment.py` | Occorrenze, evidenze, valutazioni e stato didattico |
-| `learning/service.py`, `learning/__main__.py` | Casi d'uso, CLI e gestione delle risposte senza AI |
-| `agents/teacher.md`, `trainer.md`, `curator.md`, `evaluator.md`, `socratic.md` | Profili eseguibili dei cinque ruoli |
-| `agent_system/orchestrator.py`, `registry.py`, `runtime.py`, `task_tool.py`, `main.py` | Integrazione con controllo semantico e passaggio di output strutturati |
-| `document_search/contracts.py`, `backend.py`, `server.py`, `agent_system/mcp_runtime.py` | Perimetro esplicito di ricerca, applicato prima del limite dei risultati |
-| `tests/learning_fixtures.py`, `tests/fixtures/alm/*.json` | Dati sintetici e helper condivisi senza accesso alla rete |
-| `tests/test_learning_*.py`, test esistenti, `smoke.py`, `README.md` | Prove dei requisiti, regressioni, dimostrazione e istruzioni |
+| `learning/__init__.py`, `contracts.py` | Package without import side effects; values, envelopes and application DTOs |
+| `learning/metamodel.py` | Pinned ALM loading, structural checks and specification projections |
+| `learning/store.py` | SQLite, revisions, candidates, transactions and idempotency |
+| `learning/policies.py`, `context.py` | Local authority, scopes, authorized closure and request snapshot |
+| `learning/validation.py`, `rules.py` | Domain invariants, readiness and explicit operational rules |
+| `learning/planning.py` | Semantic plan, registry compatibility and task authorization |
+| `learning/outputs.py` | Recipient-specific briefing, per-step and final-response checks |
+| `learning/decisions.py` | Proposals, reviewed content, decisions and application |
+| `learning/assessment.py` | Occurrences, evidence, evaluations and learning state |
+| `learning/service.py`, `learning/__main__.py` | Use cases, CLI and response handling without AI |
+| `agents/teacher.md`, `trainer.md`, `curator.md`, `evaluator.md`, `socratic.md` | Executable profiles for the five roles |
+| `agent_system/orchestrator.py`, `registry.py`, `runtime.py`, `task_tool.py`, `main.py` | Integration with semantic review and structured output transfer |
+| `document_search/contracts.py`, `backend.py`, `server.py`, `agent_system/mcp_runtime.py` | Explicit search scope, applied before limiting results |
+| `tests/learning_fixtures.py`, `tests/fixtures/alm/*.json` | Synthetic data and shared helpers without network access |
+| `tests/test_learning_*.py`, existing tests, `smoke.py`, `README.md` | Requirement tests, regressions, demonstration and instructions |
 
-`agent_system/plan.py` conserva i tipi tecnici e l'ordinamento esistenti. `agent_system/config.py` conserva `AgentConfig`: categoria e ambito appartengono ad `AgentSpecialization`. Non introdurre un secondo registry o un secondo motore di esecuzione. Il package `learning` usa il runtime, mentre il runtime riceve controlli/DTO senza importare CLI o store; evitare import circolari.
+`agent_system/plan.py` retains existing technical types and ordering. `agent_system/config.py` retains `AgentConfig`: category and scope belong to `AgentSpecialization`. Do not introduce a second registry or execution engine. The `learning` package uses the runtime, while the runtime receives controls/DTOs without importing the CLI or store; avoid circular imports.
 
-## Incrementi e criterio di completamento
+## Increments and completion criteria
 
-1. **Fondamenta controllate, Task 1–5:** contratto, record, versioni, autorizzazioni, prontezza e profili verificabili senza LLM.
-2. **Esecuzione didattica controllata, Task 6–8:** spiegazione Teacher e failure path su contesti approvati nelle fixture. Non è ancora un prodotto completo né una modalità di importazione che approva dati arbitrari.
-3. **Ciclo persistente completo, Task 9–11:** bootstrap, proposte, decisioni, tentativi, feedback e riapertura da CLI.
-4. **Conformità verificata, Task 12:** tutti i CASE01–CASE22, regressioni e prova LLM separata. Nessun rilascio dichiarato conforme sulla sola dimostrazione Teacher.
+1. **Controlled foundations, Tasks 1–5:** contract, records, versions, permissions, readiness and profiles verifiable without an LLM.
+2. **Controlled teaching execution, Tasks 6–8:** Teacher explanation and failure paths on fixture-approved contexts. Not yet a complete product or an import mode approving arbitrary data.
+3. **Complete persistent cycle, Tasks 9–11:** bootstrap, proposals, decisions, attempts, feedback and reopening from the CLI.
+4. **Verified conformance, Task 12:** all CASE01–CASE22, regressions and a separate LLM test. No release declared conforming based solely on the Teacher demonstration.
 
-Ogni task segue rosso, modifica minima, verde e revisione del diff. Fare un checkpoint di commit mirato solo se consentito; non includere automaticamente file estranei. Non eseguire la suite completa dopo ogni micro-modifica: usare i test del task e la suite ai confini degli incrementi.
+Each task follows red, minimal change, green and diff review. Make a targeted commit checkpoint only if permitted; do not automatically include unrelated files. Do not run the full suite after every microchange: use task tests and the suite at increment boundaries.
 
-Ordine di esecuzione proposto: Task 1–12 in sequenza. Le dipendenze principali sono 1 per tutti i contratti, 2–3 per ogni accesso allo stato, 4–5 per l'autorizzazione del piano, 6–8 per l'esecuzione, 9 per gli aggiornamenti di 10–11. I test delle fondamenta possono usare contesti approvati sintetici; l'attivazione di dati dell'utente passa dal Task 9. Nessun incremento intermedio abilita la CLI finale prima del Task 11.
+Proposed execution order: Tasks 1–12 sequentially. Main dependencies are 1 for all contracts, 2–3 for every state access, 4–5 for plan authorization, 6–8 for execution, and 9 for updates in 10–11. Foundation tests may use synthetic approved contexts; activating user data goes through Task 9. No intermediate increment enables the final CLI before Task 11.
 
-## Task 1: fissare il contratto e validare la rappresentazione ALM
+## Task 1: pin the contract and validate the ALM representation
 
-**Files:** creare `learning/__init__.py`, `learning/contracts.py`, `learning/metamodel.py`, `tests/test_learning_contracts.py`, `tests/learning_fixtures.py`, `tests/fixtures/alm/minimal.json`; aggiornare `README.md`. Includere nel versionamento il piano e il JSON normativo con eccezioni mirate in `.gitignore`, senza rendere pubblica tutta la directory di risorse.
+**Files:** Create `learning/__init__.py`, `learning/contracts.py`, `learning/metamodel.py`, `tests/test_learning_contracts.py`, `tests/learning_fixtures.py`, `tests/fixtures/alm/minimal.json`; update `README.md`. Version the plan and normative JSON with targeted `.gitignore` exceptions, without exposing the entire resource directory.
 
-**Interfaces:** `load_contract(path: Path) -> Contract`; `validate_entity(value: dict, contract: Contract) -> Entity`; `lead_contract(contract: Contract, roles: frozenset[str]) -> str`. L'helper `load_bundle(name: str = "minimal") -> tuple[Entity, ...]` legge e valida le fixture, senza attivare oggetti in produzione.
+**Interfaces:** `load_contract(path: Path) -> Contract`; `validate_entity(value: dict, contract: Contract) -> Entity`; `lead_contract(contract: Contract, roles: frozenset[str]) -> str`. The `load_bundle(name: str = "minimal") -> tuple[Entity, ...]` helper reads and validates fixtures without activating production objects.
 
-- [x] Rilevare la baseline con `.venv/bin/python -m unittest discover -v`. Registrare eventuali errori preesistenti senza considerarli regressioni del piano; un timeout non è un pass. Controllare `git status --short` prima delle modifiche.
-- [x] Scrivere test per digest, versione supportata, campi sconosciuti, cardinalità, enum, riferimento tipizzato e assenza di coercizioni. Verificare almeno queste asserzioni in `ContractTest`:
+- [x] Capture the baseline with `.venv/bin/python -m unittest discover -v`. Record any preexisting errors without treating them as plan regressions; a timeout is not a pass. Check `git status --short` before changes.
+- [x] Write tests for digest, supported version, unknown fields, cardinalities, enums, typed references and absence of coercion. Verify at least these assertions in `ContractTest`:
 
 ```python
 self.assertEqual(contract.version, "1.0.0")
 self.assertEqual(len(contract.entity_types), 29)
 self.assertEqual(len(contract.value_types), 8)
 with self.assertRaises(ValueError):
-    validate_entity(binding_with_valid_1, contract)  # valid deve essere Boolean
+    validate_entity(binding_with_valid_1, contract)  # valid must be Boolean
 self.assertEqual(spec_path.read_bytes(), original_bytes)
 ```
 
-- [x] Eseguire `.venv/bin/python -m unittest tests.test_learning_contracts -v`; il rosso deve riguardare i nuovi contratti.
-- [x] Implementare solo il formato dichiarativo ALM. Fissare SHA-256 `27b1622c8e4752014d65c67817a79369731e2e7e1261aca0fe04d085e2549636` nel loader per questo artefatto; digest/versione diversa produce errore di configurazione, non adattamento silenzioso. JSON Schema o jjodel non sono input supportati. Per collezioni assenti `0..*` usare lista vuota; campo opzionale assente resta assente. Rifiutare `null` dove non espressamente rappresentato dal formato applicativo.
-- [x] Costruire `lead_contract` dalle sezioni `readingGuide.leadCore`, con le regole pertinenti e i vincoli globali sempre presenti. I worker ricevono il contratto del proprio ruolo e task. La selezione delle sezioni è codice deterministico; niente riassunto generato dal Lead che possa eliminare divieti.
-- [x] Rieseguire i test; verificare che specifica e piano siano visibili a Git dopo l'eccezione mirata. Checkpoint `feat: validate immutable ALM contract`.
+- [x] Run `.venv/bin/python -m unittest tests.test_learning_contracts -v`; failures must concern the new contracts.
+- [x] Implement only the declarative ALM format. Pin SHA-256 `e86b73ed0912f358947ca5f37cd1a4d816914af7187b75da2d341db42d34044d` in the loader for this artifact; a different digest/version produces a configuration error, not silent adaptation. JSON Schema and jjodel are unsupported inputs. For absent `0..*` collections, use an empty list; an absent optional field remains absent. Reject `null` where not explicitly represented by the application format.
+- [x] Build `lead_contract` from the `readingGuide.leadCore` sections, always including relevant rules and global constraints. Workers receive their role and task contract. Section selection is deterministic code; no Lead-generated summary that might remove prohibitions.
+- [x] Rerun tests; verify that specification and plan are visible to Git after the targeted exception. Checkpoint `feat: validate immutable ALM contract`.
 
-## Task 2: conservare versioni, candidati e stato atomico
+## Task 2: preserve versions, candidates and atomic state
 
-**Files:** creare `learning/store.py`, `tests/test_learning_store.py`; estendere `contracts.py` e fixture.
+**Files:** Create `learning/store.py`, `tests/test_learning_store.py`; extend `contracts.py` and fixtures.
 
-**Interfaces:** `LearningStore(path: Path)`; `read(ref: EntityRef, *, owner: str | None, proposal: EntityRef | None = None) -> Entity`; `read_context(context_id: str) -> Entity`; `append_candidates(proposal: EntityRef, entities: tuple[Entity, ...]) -> None`; `record_event(request_id: str, event: Entity) -> Entity`; `commit_change(change: Entity, entities: tuple[Entity, ...], *, expected_version: str, operation_id: str) -> Entity`. Le ultime operazioni sono primitive interne, invocate solo dopo autorizzazione nei Task 9–11.
+**Interfaces:** `LearningStore(path: Path)`; `read(ref: EntityRef, *, owner: str | None, proposal: EntityRef | None = None) -> Entity`; `read_context(context_id: str) -> Entity`; `append_candidates(proposal: EntityRef, entities: tuple[Entity, ...]) -> None`; `record_event(request_id: str, event: Entity) -> Entity`; `commit_change(change: Entity, entities: tuple[Entity, ...], *, expected_version: str, operation_id: str) -> Entity`. The final operations are internal primitives, invoked only after authorization in Tasks 9–11.
 
-- [x] Scrivere `test_reopen_preserves_exact_versions`, `test_candidate_cannot_resolve_as_active`, `test_two_writers_one_base`, `test_retry_does_not_apply_twice`, `test_failure_rolls_back_all_rows`. Asserire che la seconda scrittura su una base superata solleva `StateConflict`, che una ripetizione identica restituisce l'esito registrato e che lo stesso `operation_id` con contenuto diverso viene respinto.
-- [x] Eseguire `.venv/bin/python -m unittest tests.test_learning_store -v` e verificare il rosso.
-- [x] Usare tabelle per revisioni di entità, head del contesto, appartenenza a contesto/proposta e richieste/eventi. Un id identifica un tipo stabile; versioni multiple sono ammesse, la stessa identità/versione con payload differente no. Namespace candidato e attivo restano distinti; le definizioni condivise sono referenziate, non copiate fra sessioni.
-- [x] Applicare confronto della base e scritture correlate nella stessa transazione SQLite; includere `StateChange` e aggiornamento della head. Gli eventi di audit e i cambi amministrativi di proposta non avanzano la revisione autorevole. Non mantenere transazioni aperte durante chiamate LLM o MCP. Una ripetizione di richiesta in corso non avvia una seconda esecuzione; se l'esito della consegna è ignoto, dichiararlo senza inventare successo.
-- [x] Rieseguire i test, inclusa riapertura del DB e lettura di evidenze riferite a versioni storiche. Checkpoint `feat: persist versioned learning state`.
+- [x] Write `test_reopen_preserves_exact_versions`, `test_candidate_cannot_resolve_as_active`, `test_two_writers_one_base`, `test_retry_does_not_apply_twice`, `test_failure_rolls_back_all_rows`. Assert that a second write against an outdated base raises `StateConflict`, an identical repetition returns the recorded outcome, and the same `operation_id` with different content is rejected.
+- [x] Run `.venv/bin/python -m unittest tests.test_learning_store -v` and verify failures.
+- [x] Use tables for entity revisions, context head, context/proposal membership and requests/events. An id identifies a stable type; multiple versions are allowed, the same identity/version with a different payload is not. Candidate and active namespaces remain distinct; shared definitions are referenced, not copied between sessions.
+- [x] Apply base comparison and related writes in the same SQLite transaction; include `StateChange` and head update. Audit events and administrative proposal changes do not advance the authoritative revision. Do not keep transactions open during LLM or MCP calls. Repeating an in-progress request does not start a second execution; if delivery outcome is unknown, state this without inventing success.
+- [x] Rerun tests, including DB reopening and reading evidence referencing historical versions. Checkpoint `feat: persist versioned learning state`.
 
-## Task 3: autorità fidata e caricamento del contesto
+## Task 3: trusted authority and context loading
 
-**Files:** creare `learning/policies.py`, `learning/context.py`, `tests/test_learning_context.py`, `tests/fixtures/alm/trusted-policy.json`; estendere `contracts.py` e `store.py` solo per letture necessarie.
+**Files:** Create `learning/policies.py`, `learning/context.py`, `tests/test_learning_context.py`, `tests/fixtures/alm/trusted-policy.json`; extend `contracts.py` and `store.py` only for necessary reads.
 
 **Interfaces:** `load_trusted_policy(path: Path, policy_ref: EntityRef) -> TrustedPolicy`; `authorize(policy: TrustedPolicy, subject_key: str, action: str, context_ref: EntityRef) -> None`; `load_context(store: LearningStore, request: LearningRequest, policy: TrustedPolicy, contract: Contract) -> Snapshot`.
 
-- [x] Scrivere `test_missing_identity_stops_before_ai`, `test_role_without_grant_is_denied`, `test_historical_reference_uses_exact_version`, `test_cross_context_evidence_is_denied`, `test_unrelated_missing_model_does_not_block_request`. Asserire zero chiamate LLM/MCP quando manca identità o autorità; nessuna evidenza dell'altro apprendente nello snapshot.
-- [x] Eseguire `.venv/bin/python -m unittest tests.test_learning_context -v` e verificare il rosso.
-- [x] Fissare in configurazione amministrativa azioni `read`, `interact`, `submit`, `propose`, `decide`, `apply`, `bootstrap` e relativi scope. Un ruolo umano non concede da solo tutte queste azioni. Il caricamento segue la chiusura dei riferimenti necessari, con visited set per i cicli associativi; separare consultabilità dei metadati, contenuti riservati e materiale mostrabile. Le definizioni di dominio possono essere condivise; i record di sessione sono isolati per proprietario.
-- [x] Validare contesto e politica prima di selezionare i contenuti. `DRAFT/PREPARATION` può avere `models=[]`; `ACTIVE/LEARNING` no. Se manca il modello iniziale, restituire i finding per il bootstrap, senza inventare storia. Un riferimento obbligatorio irrisolto blocca la porzione che ne dipende; un contesto di base non autorizzato blocca la richiesta intera.
-- [x] Rieseguire i test e verificare che nessun dato riservato finisca nei log di errore. Checkpoint `feat: load authorized learning snapshots`.
+- [x] Write `test_missing_identity_stops_before_ai`, `test_role_without_grant_is_denied`, `test_historical_reference_uses_exact_version`, `test_cross_context_evidence_is_denied`, `test_unrelated_missing_model_does_not_block_request`. Assert zero LLM/MCP calls when identity or authority is missing; no evidence from another learner in the snapshot.
+- [x] Run `.venv/bin/python -m unittest tests.test_learning_context -v` and verify failures.
+- [x] Pin actions `read`, `interact`, `submit`, `propose`, `decide`, `apply`, `bootstrap` and their scopes in administrative configuration. A human role alone does not grant all these actions. Loading follows the necessary reference closure, with a visited set for associative cycles; separate metadata visibility, confidential content and displayable material. Domain definitions may be shared; session records are isolated by owner.
+- [x] Validate context and policy before selecting content. `DRAFT/PREPARATION` may have `models=[]`; `ACTIVE/LEARNING` may not. If the initial model is missing, return bootstrap findings without inventing history. An unresolved mandatory reference blocks the portion depending on it; an unauthorized base context blocks the entire request.
+- [x] Rerun tests and verify that no confidential data reaches error logs. Checkpoint `feat: load authorized learning snapshots`.
 
-## Task 4: invarianti, prerequisiti e prontezza
+## Task 4: invariants, prerequisites and readiness
 
-**Files:** creare `learning/validation.py`, `learning/rules.py`, `tests/test_learning_validation.py`; estendere fixture per percorsi, rubriche e prerequisiti.
+**Files:** Create `learning/validation.py`, `learning/rules.py`, `tests/test_learning_validation.py`; extend fixtures for paths, rubrics and prerequisites.
 
-**Interfaces:** `validate_snapshot(snapshot: Snapshot) -> tuple[Finding, ...]`; `check_readiness(snapshot: Snapshot, target: EntityRef, action: str) -> tuple[Finding, ...]`; `evaluate_rule(rule_ref: EntityRef, snapshot: Snapshot, inputs: dict[str, JsonValue], bindings: RuleBindings) -> Literal["SATISFIED", "NOT_SATISFIED", "UNKNOWN"]`. `RuleBindings` associa versioni esatte a funzioni Python note, definite in configurazione fidata.
+**Interfaces:** `validate_snapshot(snapshot: Snapshot) -> tuple[Finding, ...]`; `check_readiness(snapshot: Snapshot, target: EntityRef, action: str) -> tuple[Finding, ...]`; `evaluate_rule(rule_ref: EntityRef, snapshot: Snapshot, inputs: dict[str, JsonValue], bindings: RuleBindings) -> Literal["SATISFIED", "NOT_SATISFIED", "UNKNOWN"]`. `RuleBindings` associates exact versions with known Python functions defined in trusted configuration.
 
-- [x] Scrivere test CASE04, CASE13, CASE16 e CASE21: `UNKNOWN` blocca un prerequisito `MANDATORY`; una raccomandazione produce finding senza blocco; riferimenti associativi ciclici sono ammessi; gerarchie cicliche no. Aggiungere `test_unbound_text_rule_is_unknown` e `test_completed_worker_does_not_complete_activity`.
-- [x] Eseguire `.venv/bin/python -m unittest tests.test_learning_validation -v` e verificare il rosso.
-- [x] Applicare R02–R07: definitions soltanto `domain_configuration`; root PHASE; PHASE senza attività dirette e UNIT senza figli; un solo genitore nel percorso; ordine e regole di completamento espliciti; copertura degli outcome; cicli di obblighi che impediscono l'avvio respinti. Le bozze strutturalmente valide possono essere non pronte. `CO_REQUISITE` richiede una regola congiunta esplicita.
-- [x] Applicare R10 a criteri, livelli, chiavi e riferimenti; non inventare pesi, soglie o aggregazioni. Non usare `eval`, import dinamici da dati o LLM per trasformare testo in predicati autorevoli. Implementare soltanto gli adattatori necessari alle fixture e documentarne input e versioni; una regola non supportata resta `UNKNOWN` e impedisce solo l'azione che richiede un esito determinato.
-- [x] Rieseguire i test e quelli dei Task 1–3. Checkpoint `feat: enforce learning readiness and invariants`.
+- [x] Write tests for CASE04, CASE13, CASE16 and CASE21: `UNKNOWN` blocks a `MANDATORY` prerequisite; a recommendation produces findings without blocking; cyclic associative references are allowed, cyclic hierarchies are not. Add `test_unbound_text_rule_is_unknown` and `test_completed_worker_does_not_complete_activity`.
+- [x] Run `.venv/bin/python -m unittest tests.test_learning_validation -v` and verify failures.
+- [x] Apply R02–R07: definitions only from `domain_configuration`; PHASE root; PHASE without direct activities and UNIT without children; one parent per path node; explicit ordering and completion rules; outcome coverage; reject obligation cycles preventing startup. Structurally valid drafts may be unready. `CO_REQUISITE` requires an explicit joint rule.
+- [x] Apply R10 to criteria, levels, keys and references; do not invent weights, thresholds or aggregation. Do not use `eval`, dynamic imports from data or LLMs to turn text into authoritative predicates. Implement only adapters needed for fixtures and document their inputs and versions; an unsupported rule remains `UNKNOWN` and prevents only the action requiring a determined outcome.
+- [x] Rerun tests and those for Tasks 1–3. Checkpoint `feat: enforce learning readiness and invariants`.
 
-## Task 5: specializzazioni e profili minimi
+## Task 5: specializations and minimal profiles
 
-**Files:** creare i cinque file `agents/{teacher,trainer,curator,evaluator,socratic}.md`; modificare `agent_system/registry.py`; creare `learning/planning.py`, `tests/test_learning_profiles.py`; aggiornare fixture e `tests/test_system.py`.
+**Files:** Create the five files `agents/{teacher,trainer,curator,evaluator,socratic}.md`; modify `agent_system/registry.py`; create `learning/planning.py`, `tests/test_learning_profiles.py`; update fixtures and `tests/test_system.py`.
 
-**Interfaces:** `eligible_specializations(snapshot: Snapshot, registry: AgentRegistry, policy: TrustedPolicy) -> tuple[Entity, ...]`; riepiloghi del Lead con `registryName`, categoria, ruolo, topic e limiti autorizzati, senza prompt interni o segreti.
+**Interfaces:** `eligible_specializations(snapshot: Snapshot, registry: AgentRegistry, policy: TrustedPolicy) -> tuple[Entity, ...]`; Lead summaries with `registryName`, category, role, topic and authorized limits, without internal prompts or secrets.
 
-- [x] Scrivere CASE06, CASE14 e CASE20. Asserire: Teacher e Trainer hanno categoria `TEACHER_TRAINER`; manca una quinta categoria; un nome assente dal registry viene respinto; `TEACHER` non concede il ruolo umano `CONTENT_RESPONSIBLE`; un tool eccedente impedisce la delega.
-- [x] Eseguire `.venv/bin/python -m unittest tests.test_learning_profiles -v` e verificare il rosso.
-- [x] Mantenere metadati eseguibili in `AgentConfig` e ambito pedagogico in `AgentSpecialization`, collegati da `registryName`. I cinque profili usano il provider già configurato. Nessun tool diretto di scrittura; `search_documents` resta sola capacità di retrieval mediato, nei profili cui serve. Le skills non concedono permessi.
-- [x] I vecchi agenti `u–z` non sono automaticamente specializzazioni ALM e non compaiono nel catalogo didattico. Mantenerli durante la transizione per i test tecnici; la CLI finale usa solo profili conformi. Non rinominare un reviewer generico in Evaluator senza modificarne responsabilità e controlli. Nessun filtraggio dinamico dei tool necessario al primo incremento: usare profili già minimi e rifiutare quelli eccedenti.
-- [x] Rieseguire i test dei profili e del registry; controllare creazione di un worker nuovo per step. Checkpoint `feat: register ALM worker specializations`.
+- [x] Write CASE06, CASE14 and CASE20. Assert: Teacher and Trainer have category `TEACHER_TRAINER`; there is no fifth category; a name absent from the registry is rejected; `TEACHER` does not grant the human role `CONTENT_RESPONSIBLE`; an excess tool prevents delegation.
+- [x] Run `.venv/bin/python -m unittest tests.test_learning_profiles -v` and verify failures.
+- [x] Keep executable metadata in `AgentConfig` and pedagogical scope in `AgentSpecialization`, linked by `registryName`. The five profiles use the already configured provider. No direct write tools; `search_documents` remains only a mediated retrieval capability in profiles needing it. Skills grant no permissions.
+- [x] Legacy agents `u–z` are not automatically ALM specializations and do not appear in the teaching catalog. Retain them during transition for technical tests; the final CLI uses only conforming profiles. Do not rename a generic reviewer to Evaluator without changing its responsibilities and checks. No dynamic tool filtering is needed for the first increment: use already minimal profiles and reject excessive ones.
+- [x] Rerun profile and registry tests; check creation of a new worker per step. Checkpoint `feat: register ALM worker specializations`.
 
-## Task 6: retrieval vincolato a risorse e versioni
+## Task 6: retrieval constrained by resources and versions
 
-**Files:** creare `document_search/contracts.py`; modificare `document_search/backend.py`, `server.py`, `agent_system/mcp_runtime.py`; aggiornare `tests/test_document_search.py`, `test_mcp_client.py`, `test_mcp_stdio.py`; creare `tests/test_learning_retrieval.py`.
+**Files:** Create `document_search/contracts.py`; modify `document_search/backend.py`, `server.py`, `agent_system/mcp_runtime.py`; update `tests/test_document_search.py`, `test_mcp_client.py`, `test_mcp_stdio.py`; create `tests/test_learning_retrieval.py`.
 
-**Interfaces:** `SearchScope(mode, resource_keys: tuple[str, ...], source_scope_keys: tuple[str, ...])`; `DocumentSearchClient.search(query: str, k: int, *, scope: SearchScope) -> dict`; stessa estensione obbligatoria a `SearchBackend.search_documents` e al tool MCP. La serializzazione `resource_key` identifica una coppia esatta risorsa/versione senza concatenazioni ambigue.
+**Interfaces:** `SearchScope(mode, resource_keys: tuple[str, ...], source_scope_keys: tuple[str, ...])`; `DocumentSearchClient.search(query: str, k: int, *, scope: SearchScope) -> dict`; the same mandatory extension to `SearchBackend.search_documents` and the MCP tool. The `resource_key` serialization identifies an exact resource/version pair without ambiguous concatenation.
 
-- [x] Scrivere `test_filter_precedes_k`, `test_empty_scope_never_searches_globally`, `test_version_pairs_are_not_cross_combined`, `test_missing_mapping_is_rejected`, `test_learning_cannot_discover_external_candidates`. Verificare che, con `k=1`, una fonte ammessa poco pertinente sia selezionabile anche se fonti escluse hanno score maggiore.
-- [x] Eseguire `.venv/bin/python -m unittest tests.test_learning_retrieval tests.test_document_search tests.test_mcp_client tests.test_mcp_stdio -v`; verificare il rosso sul nuovo perimetro.
-- [x] In LEARNING costruire lo scope dall'intersezione di binding validi approvati, destinatario, attività, politica e necessità del task. In PREPARATION usare soltanto source scope amministrativi autorizzati. Non prendere allowlist dal Lead. Un contesto didattico non apre automaticamente un contesto di preparazione né vi copia dati del discente.
-- [x] Applicare il filtro sia nel mock sia nella query Qdrant prima di `limit=k`. Aggiornare la whitelist degli argomenti MCP e tutti i client. Lo scope vuoto restituisce assenza di evidenze, mai ricerca globale. Aggiungere ai metadati un'associazione verificabile fra chunk, risorsa/versione e source scope; verificare di nuovo i risultati nel controllo applicativo. Il payload indicizzato deve corrispondere a una versione immutabile del contenuto; un locator esterno modificato non conserva automaticamente l'approvazione.
-- [x] Preservare identificatori e mapping nei limiti di risposta: l'attuale riduzione dei metadata alla sola `source` non basta. Chunk privi di provenienza o mapping non diventano fonti approvate. Lo score misura pertinenza. L'endpoint resta MCP stdio locale; non presentare uno scope dichiarato dal chiamante come autenticazione di un futuro servizio remoto.
-- [x] Rieseguire i test con il vero sottoprocesso MCP mock. Documentare la migrazione dei metadati della collezione esterna senza popolarla automaticamente; finché mancano, i documenti non sono utilizzabili in LEARNING. Checkpoint `feat: enforce scoped versioned retrieval`.
+- [x] Write `test_filter_precedes_k`, `test_empty_scope_never_searches_globally`, `test_version_pairs_are_not_cross_combined`, `test_missing_mapping_is_rejected`, `test_learning_cannot_discover_external_candidates`. Verify that with `k=1`, an allowed source of low relevance remains selectable even if excluded sources have higher scores.
+- [x] Run `.venv/bin/python -m unittest tests.test_learning_retrieval tests.test_document_search tests.test_mcp_client tests.test_mcp_stdio -v`; verify failures on the new scope.
+- [x] In LEARNING, build scope from the intersection of valid approved bindings, audience, activities, policy and task needs. In PREPARATION, use only authorized administrative source scopes. Do not take allowlists from the Lead. A teaching context does not automatically open a preparation context or copy learner data into it.
+- [x] Apply filtering both in the mock and Qdrant query before `limit=k`. Update the MCP argument whitelist and all clients. Empty scope returns no evidence, never global search. Add a verifiable association between chunk, resource/version and source scope to metadata; recheck results in application control. The indexed payload must correspond to an immutable content version; a changed external locator does not automatically retain approval.
+- [x] Preserve identifiers and mappings within response limits: the current metadata reduction to `source` alone is insufficient. Chunks lacking provenance or mapping do not become approved sources. Score measures relevance. The endpoint remains local MCP stdio; do not present caller-declared scope as authentication for a future remote service.
+- [x] Rerun tests with the actual mock MCP subprocess. Document metadata migration for the external collection without populating it automatically; documents remain unusable in LEARNING while metadata is missing. Checkpoint `feat: enforce scoped versioned retrieval`.
 
-## Task 7: pianificazione semantica sopra il piano tecnico
+## Task 7: semantic planning over the technical plan
 
-**Files:** estendere `learning/planning.py`, `contracts.py`; modificare `agent_system/orchestrator.py`, `main.py`; creare `tests/test_learning_planning.py`; aggiornare i test di orchestrazione coinvolti.
+**Files:** Extend `learning/planning.py`, `contracts.py`; modify `agent_system/orchestrator.py`, `main.py`; create `tests/test_learning_planning.py`; update affected orchestration tests.
 
-**Interfaces:** `authorize_plan(draft: LearningPlanDraft, context: RunContext, registry: AgentRegistry) -> tuple[AuthorizedTask, ...]`; `Orchestrator.run(request: LearningRequest, *, context: RunContext) -> LearningResponse`. `answer(question: str, *, context: RunContext) -> str` diventa il wrapper testuale: il parametro obbligatorio evita una via didattica priva di contesto. Aggiornare chiamanti, test e smoke nei task successivi prima dell'integrazione finale.
+**Interfaces:** `authorize_plan(draft: LearningPlanDraft, context: RunContext, registry: AgentRegistry) -> tuple[AuthorizedTask, ...]`; `Orchestrator.run(request: LearningRequest, *, context: RunContext) -> LearningResponse`. `answer(question: str, *, context: RunContext) -> str` becomes the text wrapper: the mandatory parameter prevents a teaching path without context. Update callers, tests and smoke in subsequent tasks before final integration.
 
-- [x] Scrivere CASE02 e CASE08; aggiungere `test_empty_plan_cannot_bypass_teacher`, `test_prompt_cannot_expand_capabilities`, `test_draft_refs_cannot_authorize_execution`. Un ciclo, agente sconosciuto o retrieval illecito producono zero chiamate a search e TaskTool.
-- [x] Eseguire `.venv/bin/python -m unittest tests.test_learning_planning -v` e verificare il rosso.
-- [x] Fare produrre al Lead `LearningPlanDraft`, risolvere riferimenti con lo snapshot, verificare ruolo/intento/output/topic e capacità, poi proiettare in `ExecutionPlan` e chiamare `validate_and_order_plan`. Non estrarre autorizzazioni dal testo `task`. Materializzare `TaskPlan` e `WorkerTask` con identità e provenienza applicative. Il piano completo deve essere valido prima della prima esecuzione.
-- [x] Distinguere richieste didattiche miste in task distinti; mantenere confini del problema Socratic assegnati dal controllo. Un piano vuoto è ammesso per chiarimento, limiti, stato o sintesi di risultati esistenti, non per una nuova lezione del Lead. Le lacune locali preliminari delimitano la parte pianificabile, senza autorizzare task non pronti.
-- [x] Integrare nel loop esistente chiamate ai controlli semantici mediante funzioni tipizzate; non creare un secondo loop di orchestrazione. Il Lead continua a non avere tool. La risoluzione delle credenziali LLM avviene solo dopo i controlli che possono terminare senza AI.
-- [x] Rieseguire i test del piano tecnico e semantico; mantenere ordine stabile, esecuzione sequenziale e propagazione degli skip. Checkpoint `feat: authorize semantic learning plans`.
+- [x] Write CASE02 and CASE08; add `test_empty_plan_cannot_bypass_teacher`, `test_prompt_cannot_expand_capabilities`, `test_draft_refs_cannot_authorize_execution`. A cycle, unknown agent or illegal retrieval produces zero search and TaskTool calls.
+- [x] Run `.venv/bin/python -m unittest tests.test_learning_planning -v` and verify failures.
+- [x] Have the Lead produce `LearningPlanDraft`, resolve references against the snapshot, check role/intent/output/topic and capabilities, then project into `ExecutionPlan` and call `validate_and_order_plan`. Do not extract permissions from `task` text. Materialize `TaskPlan` and `WorkerTask` with application-assigned identities and provenance. The complete plan must be valid before the first execution.
+- [x] Split mixed teaching requests into separate tasks; preserve Socratic problem boundaries assigned by control. An empty plan is allowed for clarification, limitations, status or synthesis of existing results, not a new Lead lesson. Preliminary local gaps delimit the plannable portion without authorizing unready tasks.
+- [x] Integrate semantic check calls into the existing loop through typed functions; do not create a second orchestration loop. The Lead continues to have no tools. LLM credential resolution occurs only after checks that may terminate without AI.
+- [x] Rerun technical and semantic plan tests; preserve stable ordering, sequential execution and skip propagation. Checkpoint `feat: authorize semantic learning plans`.
 
-## Task 8: output controllati prima delle dipendenze e della consegna
+## Task 8: checked outputs before dependencies and delivery
 
-**Files:** creare `learning/outputs.py`, `tests/test_learning_outputs.py`; modificare `agent_system/orchestrator.py`, `runtime.py`, `task_tool.py`; aggiornare test e doppi del worker.
+**Files:** Create `learning/outputs.py`, `tests/test_learning_outputs.py`; modify `agent_system/orchestrator.py`, `runtime.py`, `task_tool.py`; update tests and worker doubles.
 
-**Interfaces:** `build_brief(task: AuthorizedTask, previous: dict[str, Entity], evidence: dict) -> str`; `check_worker_output(task: AuthorizedTask, output: WorkerOutput, context: RunContext) -> Entity` restituisce un `TaskResult`; `check_final_response(response: LearningResponse, context: RunContext, results: tuple[Entity, ...]) -> LearningResponse`. Il worker diventa `CrewAIWorker.run(config: AgentConfig, task: str) -> WorkerOutput`; `TaskTool._run(agent_name: str, task: str) -> WorkerOutput` inoltra quel valore senza convertirlo in stringa. Il callable configurato in TaskTool usa la stessa firma del worker. Nessun diritto deriva dal formato strutturato.
+**Interfaces:** `build_brief(task: AuthorizedTask, previous: dict[str, Entity], evidence: dict) -> str`; `check_worker_output(task: AuthorizedTask, output: WorkerOutput, context: RunContext) -> Entity` returns a `TaskResult`; `check_final_response(response: LearningResponse, context: RunContext, results: tuple[Entity, ...]) -> LearningResponse`. The worker becomes `CrewAIWorker.run(config: AgentConfig, task: str) -> WorkerOutput`; `TaskTool._run(agent_name: str, task: str) -> WorkerOutput` forwards that value without converting it to a string. The callable configured in TaskTool uses the same worker signature. No rights derive from structured format.
 
-- [x] Scrivere CASE03, CASE09, CASE17 e CASE22. Test essenziale: un output respinto produce `FAILED`, il suo dipendente `SKIPPED` e un indipendente resta eseguibile. Asserire che il testo respinto non compaia né nel briefing dipendente né nella sintesi. Aggiungere `test_required_contract_is_never_truncated` e `test_synthesis_cannot_add_uncited_claim_or_solution`.
-- [x] Eseguire `.venv/bin/python -m unittest tests.test_learning_outputs -v` e verificare il rosso.
-- [x] Usare output strutturati per worker e sintesi, validati con Pydantic. Controllare tipo atteso, riferimenti, fonti realmente recuperate e ammesse, copertura, lacune e proposte. Il worker non può assegnarsi `SUCCEEDED` o dichiarare una scrittura. Soltanto il controllo materializza `TaskResult` e la provenienza.
-- [x] Separare controlli deterministici e revisione semantica. Per pertinenza, sostegno effettivo delle citazioni e soluzione Socratic usare una revisione strutturata tramite il modello già configurato, senza tool e senza aggiungere una categoria di worker. Il verdetto è un segnale del controllo, non fonte di autorizzazioni: errore, dubbio esplicito o rifiuto escludono il contenuto. Testare il gate con revisione simulata e successivamente con casi avversi reali. Non dichiarare che un revisore LLM fornisca una garanzia matematica sul linguaggio naturale.
-- [x] Prima di ogni trasferimento selezionare solo dati ammissibili per il destinatario. Soluzioni e answer key restano fuori dal briefing Socratic e dalla vista del discente; le citazioni mostrate non possono aggirare questo vincolo. Sullo stesso problema il cambio a Teacher richiede una scelta esplicita compatibile con la politica e un nuovo task. Il turno termina quando occorre una risposta reale del discente.
-- [x] Controllare nuovamente la risposta finale dopo la sintesi. Se non è ammissibile, restituire un messaggio applicativo di limite/fallimento senza il contenuto respinto; niente retry aperti. I contratti obbligatori, i vincoli e l'identità delle fonti non vengono troncati: ridurre contenuto opzionale oppure dichiarare contesto insufficiente. Una copertura incompleta produce `PARTIAL_RESULT`; nessun successo produce `FAILURE`.
-- [x] Rieseguire test di output, orchestrazione e sistema. Checkpoint `feat: gate worker outputs and final responses`.
+- [x] Write CASE03, CASE09, CASE17 and CASE22. Essential test: rejected output produces `FAILED`, its dependent `SKIPPED`, and an independent task remains executable. Assert that rejected text appears neither in the dependent briefing nor in synthesis. Add `test_required_contract_is_never_truncated` and `test_synthesis_cannot_add_uncited_claim_or_solution`.
+- [x] Run `.venv/bin/python -m unittest tests.test_learning_outputs -v` and verify failures.
+- [x] Use structured outputs for workers and synthesis, validated with Pydantic. Check expected type, references, sources actually retrieved and allowed, coverage, gaps and proposals. The worker cannot assign itself `SUCCEEDED` or claim a write. Only control materializes `TaskResult` and provenance.
+- [x] Separate deterministic checks from semantic review. For relevance, actual citation support and Socratic solutions, use structured review through the already configured model, without tools or an additional worker category. The verdict is a control signal, not an authorization source: errors, explicit uncertainty or rejection exclude content. Test the gate with simulated review and later with real adversarial cases. Do not claim an LLM reviewer provides a mathematical guarantee about natural language.
+- [x] Before every transfer, select only data admissible for the recipient. Solutions and answer keys stay outside Socratic briefings and the learner's view; displayed citations cannot bypass this constraint. For the same problem, switching to Teacher requires an explicit policy-compatible choice and a new task. The turn ends when an actual learner response is required.
+- [x] Recheck the final response after synthesis. If inadmissible, return an application-level limitation/failure message without rejected content; no open retries. Mandatory contracts, constraints and source identities are not truncated: reduce optional content or declare insufficient context. Incomplete coverage produces `PARTIAL_RESULT`; no success produces `FAILURE`.
+- [x] Rerun output, orchestration and system tests. Checkpoint `feat: gate worker outputs and final responses`.
 
-## Task 9: proposte, decisioni e applicazione dello stato
+## Task 9: proposals, decisions and state application
 
-**Files:** creare `learning/decisions.py`, `tests/test_learning_decisions.py`; estendere `store.py`, `contracts.py` e fixture.
+**Files:** Create `learning/decisions.py`, `tests/test_learning_decisions.py`; extend `store.py`, `contracts.py` and fixtures.
 
-**Interfaces:** `review_payload_key(target: Entity, candidates: tuple[Entity, ...]) -> str`; `create_proposal(context: RunContext, target_refs: tuple[EntityRef, ...], candidates: tuple[Entity, ...], explanation: str) -> Entity`; `record_decision(store: LearningStore, context: RunContext, target: EntityRef, decision: Literal["APPROVE", "REJECT", "REQUEST_REVISION"], reason: str) -> Entity`; `apply_proposal(store: LearningStore, context: RunContext, proposal: EntityRef, *, operation_id: str) -> Entity` restituisce `StateChange` oppure segnala mancata applicazione.
+**Interfaces:** `review_payload_key(target: Entity, candidates: tuple[Entity, ...]) -> str`; `create_proposal(context: RunContext, target_refs: tuple[EntityRef, ...], candidates: tuple[Entity, ...], explanation: str) -> Entity`; `record_decision(store: LearningStore, context: RunContext, target: EntityRef, decision: Literal["APPROVE", "REJECT", "REQUEST_REVISION"], reason: str) -> Entity`; `apply_proposal(store: LearningStore, context: RunContext, proposal: EntityRef, *, operation_id: str) -> Entity` returns `StateChange` or reports nonapplication.
 
-- [x] Scrivere CASE05, CASE10 e CASE18, più `test_added_candidate_is_not_covered`, `test_decision_cannot_grant_own_authority`, `test_revoked_permission_blocks_apply`, `test_reject_and_revision_do_not_apply`. Asserire che `APPROVED` e `APPLIED` siano distinguibili e che una base incompatibile produca `STALE` senza mutazioni autorevoli.
-- [x] Eseguire `.venv/bin/python -m unittest tests.test_learning_decisions -v` e verificare il rosso.
-- [x] Validare prima l'intero insieme candidato e i suoi riferimenti interni; i candidati non entrano nel catalogo attivo. Derivare la modifica da target e definizioni candidate strutturate. `proposedChange` è descrizione: non eseguire testo, SQL o patch generati dall'AI.
-- [x] Calcolare in applicazione l'identità del contenuto mediante JSON canonico e SHA-256. Definire esplicitamente la proiezione per ChangeProposal, ResourceBinding ed Evaluation: includere contenuto, effetti, scope, evidenze, versioni di base e chiusura dei candidati esaminati; escludere soltanto il digest stesso e metadati amministrativi controllati, come status e collegamenti alla decisione. Cambiare `valid`, scope, effetti o evidenze è sostanziale. Una nuova versione amministrativa con payload identico conserva la decisione originale e la sua versione esaminata.
-- [x] Il controllo calcola `coveredPayloadKeys` dalla vista effettivamente presentata al decisore; nessun campo fornito dall'agente può ampliare l'insieme. `REQUEST_REVISION` richiede una nuova revisione da esaminare, senza inventare uno stato `ProposalStatus` ulteriore. Controllare nuovamente autorità e revoche, chiavi e base al momento dell'applicazione.
-- [x] Applicare in una transazione le revisioni e `StateChange`; conservare la storia di binding e valutazioni. Un evento di audit o una modifica amministrativa della proposta non invalida da solo la base autorevole. Una modifica sostanziale sì. Una decisione di binding o valutazione può essere diretta oppure coperta esplicitamente dalla proposta.
-- [x] Rieseguire test di decisioni e store, compresi retry e crash simulato. Checkpoint `feat: apply reviewed learning proposals atomically`.
+- [x] Write CASE05, CASE10 and CASE18, plus `test_added_candidate_is_not_covered`, `test_decision_cannot_grant_own_authority`, `test_revoked_permission_blocks_apply`, `test_reject_and_revision_do_not_apply`. Assert that `APPROVED` and `APPLIED` are distinguishable and an incompatible base produces `STALE` without authoritative mutations.
+- [x] Run `.venv/bin/python -m unittest tests.test_learning_decisions -v` and verify failures.
+- [x] First validate the entire candidate set and its internal references; candidates do not enter the active catalog. Derive the change from targets and structured candidate definitions. `proposedChange` is a description: do not execute AI-generated text, SQL or patches.
+- [x] Compute content identity in the application using canonical JSON and SHA-256. Explicitly define projection for ChangeProposal, ResourceBinding and Evaluation: include content, effects, scopes, evidence, base versions and the reviewed candidate closure; exclude only the digest itself and controlled administrative metadata such as status and decision links. Changing `valid`, scope, effects or evidence is substantive. A new administrative version with an identical payload preserves the original decision and its reviewed version.
+- [x] Control computes `coveredPayloadKeys` from the view actually presented to the decision-maker; no agent-supplied field may expand the set. `REQUEST_REVISION` requires a new revision to review, without inventing another `ProposalStatus` state. Recheck authority and revocations, keys and base at application time.
+- [x] Apply revisions and `StateChange` in one transaction; preserve binding and evaluation history. An audit event or administrative proposal change alone does not invalidate the authoritative base. A substantive change does. A binding or evaluation decision may be direct or explicitly covered by the proposal.
+- [x] Rerun decision and store tests, including retries and simulated crashes. Checkpoint `feat: apply reviewed learning proposals atomically`.
 
-## Task 10: evidenze reali, valutazioni e avanzamento
+## Task 10: real evidence, evaluations and progress
 
-**Files:** creare `learning/assessment.py`, `tests/test_learning_assessment.py`; estendere `rules.py`, `validation.py`, `store.py` e fixture.
+**Files:** Create `learning/assessment.py`, `tests/test_learning_assessment.py`; extend `rules.py`, `validation.py`, `store.py` and fixtures.
 
-**Interfaces:** `record_attempt(store: LearningStore, context: RunContext, activity: EntityRef, content: str, *, request_id: str) -> Entity` restituisce LearningEvidence e persiste la relativa ActivityOccurrence; `validate_evaluation(evaluation: Entity, snapshot: Snapshot) -> tuple[Finding, ...]`; `derive_learning_state(context: RunContext, evaluation: Entity, bindings: RuleBindings) -> Entity`; `derive_activity_status(occurrence: Entity, snapshot: Snapshot, bindings: RuleBindings) -> str`.
+**Interfaces:** `record_attempt(store: LearningStore, context: RunContext, activity: EntityRef, content: str, *, request_id: str) -> Entity` returns LearningEvidence and persists its ActivityOccurrence; `validate_evaluation(evaluation: Entity, snapshot: Snapshot) -> tuple[Finding, ...]`; `derive_learning_state(context: RunContext, evaluation: Entity, bindings: RuleBindings) -> Entity`; `derive_activity_status(occurrence: Entity, snapshot: Snapshot, bindings: RuleBindings) -> str`.
 
-- [x] Scrivere CASE07, CASE11, CASE12, CASE15 e CASE16. Asserire: quiz senza risposta non produce Evaluation; assenza di evidenza non assegna livello minimo; ACQUIRED non implica VERIFIED; una conferma umana senza criteri/evidenze validi non basta; due contesti con lo stesso modello restano indipendenti. Aggiungere `test_attempt_survives_provider_failure` e `test_new_rubric_does_not_reinterpret_history`.
-- [x] Eseguire `.venv/bin/python -m unittest tests.test_learning_assessment -v` e verificare il rosso.
-- [x] Salvare il tentativo prima di avviare la valutazione AI, quando la politica autorizza la registrazione. Ogni evidenza riferisce soggetto, contesto, attività, tentativo/occorrenza e versioni coincidenti. Non attribuire origine osservata al contenuto generato da un worker. Una nuova risposta crea un tentativo distinguibile, senza sovrascrivere il precedente.
-- [x] Applicare criteri e livelli della rubrica fissata, tipo di evidenza ammesso, copertura e regole approvate. Una regola assente o non supportata produce feedback descrittivo o proposta, senza esito determinato inventato. Le regole qualitative possono essere valutate dal responsabile autorizzato con motivazione registrata; non diventano automaticamente predicati eseguibili.
-- [x] Distinguere `TaskStatus`, `ActivityStatus`, `ProgressStatus` e `VerificationStatus`. ACQUIRED richiede achievementRule soddisfatta e autorizzazione vigente. VERIFIED richiede inoltre verificationRule, valutazione formale, evidenze ammissibili e decisione umana valida. La chiusura di PHASE/UNIT dipende dalle occorrenze e dalla completionRule; SKIPPED non equivale a completamento salvo regola approvata esplicita.
-- [x] Una spiegazione isolata può essere erogata senza un corso artificiale. Per trasformare una prestazione in evidenza valutativa servono prima attività, outcome e riferimenti previsti; se assenti, proporne la definizione. Registrazioni ordinarie autorizzate usano una base di politica, senza decisioni umane fittizie.
-- [x] Rieseguire test di valutazione, invarianti e decisioni. Checkpoint `feat: track evidence assessment and learning progress`.
+- [x] Write CASE07, CASE11, CASE12, CASE15 and CASE16. Assert: a quiz without a response produces no Evaluation; absence of evidence does not assign the lowest level; ACQUIRED does not imply VERIFIED; human confirmation without valid criteria/evidence is insufficient; two contexts with the same model remain independent. Add `test_attempt_survives_provider_failure` and `test_new_rubric_does_not_reinterpret_history`.
+- [x] Run `.venv/bin/python -m unittest tests.test_learning_assessment -v` and verify failures.
+- [x] Save the attempt before starting AI evaluation when policy authorizes recording. Every item of evidence references matching person, context, activity, attempt/occurrence and versions. Do not attribute observed origin to worker-generated content. A new response creates a distinguishable attempt without overwriting the previous one.
+- [x] Apply criteria and levels from the pinned rubric, permitted evidence type, coverage and approved rules. A missing or unsupported rule produces descriptive feedback or a proposal, without an invented determined outcome. Qualitative rules may be evaluated by the authorized responsible person with a recorded rationale; they do not automatically become executable predicates.
+- [x] Distinguish `TaskStatus`, `ActivityStatus`, `ProgressStatus` and `VerificationStatus`. ACQUIRED requires a satisfied achievementRule and current authorization. VERIFIED additionally requires verificationRule, formal evaluation, admissible evidence and a valid human decision. PHASE/UNIT closure depends on occurrences and completionRule; SKIPPED does not equal completion unless an explicit approved rule says so.
+- [x] An isolated explanation may be delivered without an artificial course. Turning a performance into assessment evidence first requires the specified activity, outcome and references; propose their definition if absent. Authorized ordinary recording uses a policy basis, without fictitious human decisions.
+- [x] Rerun assessment, invariant and decision tests. Checkpoint `feat: track evidence assessment and learning progress`.
 
-## Task 11: ciclo completo da CLI e bootstrap
+## Task 11: complete CLI cycle and bootstrap
 
-**Files:** creare `learning/service.py`, `learning/__main__.py`, `tests/test_learning_service.py`, `tests/test_learning_cli.py`; aggiornare `main.py`, `README.md`, `tests/test_system.py`, `smoke.py`, `tests/test_smoke.py`.
+**Files:** Create `learning/service.py`, `learning/__main__.py`, `tests/test_learning_service.py`, `tests/test_learning_cli.py`; update `main.py`, `README.md`, `tests/test_system.py`, `smoke.py`, `tests/test_smoke.py`.
 
-**Interfaces:** `LearningService(store, contract, policy, orchestrator_factory)` espone le firme seguenti; ogni metodo risolve il contesto e richiama i controlli dei Task 9–10, senza duplicarli. La factory dell'Orchestrator è lazy.
+**Interfaces:** `LearningService(store, contract, policy, orchestrator_factory)` exposes the following signatures; each method resolves context and invokes the checks from Tasks 9–10 without duplicating them. The Orchestrator factory is lazy.
 
 - `request(request: LearningRequest) -> LearningResponse`.
 - `bootstrap(context_id: str, subject_key: str) -> Entity`.
@@ -257,49 +259,49 @@ self.assertEqual(spec_path.read_bytes(), original_bytes)
 - `submit(context_id: str, subject_key: str, activity: EntityRef, content: str, request_id: str) -> Entity`.
 - `show(context_id: str, subject_key: str) -> dict[str, JsonValue]`.
 
-- [x] Scrivere `test_bootstrap_without_model`, `test_missing_policy_stops_without_delegation`, `test_full_cycle_reopens`, `test_ordinary_feedback_needs_no_extra_decision`, `test_failed_apply_is_not_reported_applied`, `test_cli_error_does_not_expose_private_text`. Coprire CASE01 e CASE19 e il percorso di rifiuto/revisione di una proposta.
-- [x] Eseguire `.venv/bin/python -m unittest tests.test_learning_service tests.test_learning_cli -v` e verificare il rosso.
-- [x] Implementare il ciclo U/C/V obbligatorio; V può restituire CLARIFICATION/FAILURE senza provider. P/R/A/S avvengono nell'Orchestrator. O restituisce l'esito controllato; H sospende soltanto l'applicazione che richiede decisione; D registra eventi autorizzati e applicazioni effettive. Il turno successivo ricarica lo stato e avvia un nuovo ciclo, senza simulare risposte del discente o replanning illimitato.
-- [x] Esporre `python -m learning` con comandi `bootstrap`, `propose`, `decide`, `apply`, `ask`, `submit`, `show` e selezione di DB, policy, soggetto e contesto. Le opzioni comuni hanno un solo parser condiviso. `propose` accetta un bundle candidato locale già validabile; `decide` mostra target/versione, contenuto sostanziale e conseguenze prima di registrare la scelta umana. L'importazione non approva implicitamente il candidato.
-- [x] Consentire bootstrap DRAFT/PREPARATION con identità e PolicySet fidati e modello vuoto. Il primo modello può essere proposto manualmente: se manca una specializzazione autorizzata non si inventa un Curator né si crea un accesso ad hoc. Dopo decisione e applicazione si fissano le versioni; il passaggio ACTIVE/LEARNING richiede prontezza. Una nuova risorsa esterna si scopre soltanto nel contesto PREPARATION distinto e viene legata a LEARNING con la decisione prevista.
-- [x] Rendere `main.py` l'accesso breve a `ask` con contesto esplicito o configurato: la vecchia domanda senza contesto termina con richiesta di configurazione, non con bypass generico. Migrare tutti i chiamanti `.answer(...)`, i doppi di search/worker e lo smoke alle nuove firme. Non servono un secondo endpoint generico o un flag che disattivi i controlli. Riutilizzare `build_orchestrator` e `LLMFactory`; le operazioni manuali e `--help` funzionano senza chiave LLM.
-- [x] Documentare il ciclo riproducibile con fixture sintetiche, la CLI come strumento locale fidato, la distinzione fra feedback formativo e decisione formale e la procedura di revisione dei modelli. Nessuna migrazione distruttiva del DB: versionare lo schema, creare backup prima di future migrazioni, rifiutare versioni sconosciute.
-- [x] Rieseguire test di servizio, CLI, sistema e smoke simulato; poi la suite completa. Checkpoint `feat: expose the complete ALM learning cycle`.
+- [x] Write `test_bootstrap_without_model`, `test_missing_policy_stops_without_delegation`, `test_full_cycle_reopens`, `test_ordinary_feedback_needs_no_extra_decision`, `test_failed_apply_is_not_reported_applied`, `test_cli_error_does_not_expose_private_text`. Cover CASE01 and CASE19 and the proposal rejection/revision path.
+- [x] Run `.venv/bin/python -m unittest tests.test_learning_service tests.test_learning_cli -v` and verify failures.
+- [x] Implement the mandatory U/C/V cycle; V may return CLARIFICATION/FAILURE without a provider. P/R/A/S occur in the Orchestrator. O returns the checked outcome; H suspends only application requiring a decision; D records authorized events and actual applications. The next turn reloads state and starts a new cycle without simulating learner responses or unlimited replanning.
+- [x] Expose `python -m learning` with commands `bootstrap`, `propose`, `decide`, `apply`, `ask`, `submit`, `show` and selection of DB, policy, person and context. Common options have one shared parser. `propose` accepts a local candidate bundle that can already be validated; `decide` shows target/version, substantive content and consequences before recording the human choice. Import does not implicitly approve the candidate.
+- [x] Allow DRAFT/PREPARATION bootstrap with trusted identities and PolicySet and an empty model. The first model may be proposed manually: if an authorized specialization is missing, do not invent a Curator or create ad hoc access. After decision and application, pin versions; ACTIVE/LEARNING transition requires readiness. A new external resource is discovered only in the separate PREPARATION context and bound to LEARNING with the required decision.
+- [x] Make `main.py` the shortcut to `ask` with explicit or configured context: the old context-free question ends with a configuration request, not a generic bypass. Migrate all `.answer(...)` callers, search/worker doubles and smoke to the new signatures. No second generic endpoint or flag disabling checks is needed. Reuse `build_orchestrator` and `LLMFactory`; manual operations and `--help` work without an LLM key.
+- [x] Document the reproducible cycle with synthetic fixtures, the CLI as a trusted local tool, the distinction between formative feedback and formal decision, and the model review procedure. No destructive DB migration: version the schema, create backups before future migrations and reject unknown versions.
+- [x] Rerun service, CLI, system and simulated smoke tests; then the full suite. Checkpoint `feat: expose the complete ALM learning cycle`.
 
-## Task 12: matrice di conformità e verifica finale
+## Task 12: conformance matrix and final verification
 
-**Files:** creare `tests/test_learning_acceptance.py`, `tests/fixtures/alm/acceptance.json`; aggiornare `smoke.py`, `tests/test_smoke.py`, `README.md` e la matrice seguente con risultati effettivi.
+**Files:** Create `tests/test_learning_acceptance.py`, `tests/fixtures/alm/acceptance.json`; update `smoke.py`, `tests/test_smoke.py`, `README.md` and the following matrix with actual results.
 
-**Interfaces:** i test usano le API pubbliche di LearningService con SQLite temporaneo e provider simulato; i casi che riguardano MCP attraversano anche il server stdio mock reale. `smoke.py` usa un contesto sintetico approvato tramite il normale ciclo e non inserisce dati reali o credenziali nelle fixture.
+**Interfaces:** Tests use public LearningService APIs with temporary SQLite and a simulated provider; MCP cases also traverse the real mock stdio server. `smoke.py` uses a synthetic context approved through the normal cycle and puts no real data or credentials in fixtures.
 
-- [x] Scrivere un test `test_case01` fino a `test_case22`, ciascuno riferito al testo originale dello scenario. Le assertion devono osservare chiamate, dati effettivamente trasferiti, contenuti consegnati e stato persistito; non limitarsi a verificare un messaggio del Lead.
-- [x] Eseguire `.venv/bin/python -m unittest tests.test_learning_acceptance -v` e verificare ogni lacuna prima di correggerla nel componente responsabile. Non aggiungere un ramo speciale per il nome del caso.
-- [x] Eseguire `.venv/bin/python -m unittest discover -v`. Verificare anche digest invariato della specifica, import senza effetti collaterali, chiusura di SQLite/MCP e assenza di dati personali nei log.
-- [x] Eseguire `.venv/bin/python smoke.py --runs 1` solo nell'ambiente configurato per il provider già previsto. Asserire piano autorizzato, retrieval ammesso, TaskResult controllato, fonte corretta e assenza di aggiornamenti pedagogici ingiustificati. Quota o timeout sono fallimenti osservati, non successi sostituiti con risposte prefissate. Non richiedere tre run salvo rischio concreto.
-- [ ] Provare con LLM reale un turno Socratic con soluzione presente fra dati non mostrabili, un tentativo di prompt injection e una citazione pertinente ma non probante. Registrare violazioni e limiti della revisione semantica; non equiparare i test simulati a garanzia pedagogica. La verifica Qdrant reale richiede una collezione con mapping versionati e viene dichiarata separatamente se non disponibile.
-- [ ] Chiudere il piano solo quando tutti i test deterministici richiesti passano, il ciclo si riapre dal DB e i limiti dei controlli semantici sono documentati. Se manca una prova live, specificare esattamente quale: non chiamare quella parte verificata. Checkpoint `test: verify ALM acceptance scenarios`.
+- [x] Write tests `test_case01` through `test_case22`, each referencing the original scenario text. Assertions must observe calls, data actually transferred, delivered content and persisted state; do not merely check a Lead message.
+- [x] Run `.venv/bin/python -m unittest tests.test_learning_acceptance -v` and verify each gap before fixing it in the responsible component. Do not add a special branch for the case name.
+- [x] Run `.venv/bin/python -m unittest discover -v`. Also verify the unchanged specification digest, side-effect-free imports, SQLite/MCP cleanup and absence of personal data in logs.
+- [x] Run `.venv/bin/python smoke.py --runs 1` only in the environment configured for the already intended provider. Assert an authorized plan, allowed retrieval, checked TaskResult, correct source and absence of unjustified pedagogical updates. Quota errors or timeouts are observed failures, not successes replaced with canned responses. Do not require three runs without a concrete risk.
+- [ ] Test a Socratic turn with a real LLM and a solution in nondisplayable data, a prompt injection attempt and a relevant but nonsupporting citation. Record violations and semantic-review limitations; do not equate simulated tests with a pedagogical guarantee. Real Qdrant verification requires a collection with versioned mappings and is reported separately if unavailable.
+- [ ] Close the plan only when all required deterministic tests pass, the cycle reopens from the DB and semantic-check limitations are documented. If a live test is missing, specify exactly which one: do not call that portion verified. Checkpoint `test: verify ALM acceptance scenarios`.
 
-## Copertura normativa
+## Normative coverage
 
-| Regole | Task responsabili | Evidenza richiesta |
+| Rules | Responsible tasks | Required evidence |
 | --- | --- | --- |
-| R01 | 1, 3, 9, 11 | Digest, separazione livelli, bootstrap e attivazione |
-| R02 | 1, 2, 3, 4 | Identità, cardinalità, versioni esatte e chiusura autorizzata |
-| R03 | 1, 5 | Dati disciplinari variabili, ruoli umani separati |
-| R04, R05 | 4 | Gerarchie, cicli, prerequisiti e UNKNOWN |
-| R06, R07 | 4, 7, 10 | Percorsi, copertura, prontezza e completamento |
-| R08 | 3, 6, 9, 11 | Scope, binding, candidati e contesti distinti |
-| R09 | 6, 8 | Provenienza, derivazioni e sostegno delle citazioni |
-| R10, R11, R12 | 4, 10 | Rubriche, tentativi reali, regole ed esiti determinabili |
-| R13 | 9, 10 | Acquisizione distinta da verifica e decisione autorizzata |
-| R14, R15 | 3, 5, 6, 7 | Minimo privilegio, trasferimento dati senza autorità |
-| R16 | 5, 7, 8 | Ruolo/intento/output e continuità Socratic |
-| R17 | 7 | Piano valido prima dell'esecuzione e ordine stabile |
-| R18 | 8 | Gate per step, skip, fallimento totale e parzialità |
-| R19, R20 | 2, 9, 10 | Payload esaminato, transazione, storia e conflitti |
-| R21 | 8, 11 | Risposta controllata, fonti e stato effettivamente applicato |
+| R01 | 1, 3, 9, 11 | Digest, layer separation, bootstrap and activation |
+| R02 | 1, 2, 3, 4 | Identity, cardinalities, exact versions and authorized closure |
+| R03 | 1, 5 | Variable subject data, separate human roles |
+| R04, R05 | 4 | Hierarchies, cycles, prerequisites and UNKNOWN |
+| R06, R07 | 4, 7, 10 | Paths, coverage, readiness and completion |
+| R08 | 3, 6, 9, 11 | Scopes, bindings, candidates and separate contexts |
+| R09 | 6, 8 | Provenance, derivations and citation support |
+| R10, R11, R12 | 4, 10 | Rubrics, actual attempts, rules and determinable outcomes |
+| R13 | 9, 10 | Acquisition distinct from verification and authorized decision |
+| R14, R15 | 3, 5, 6, 7 | Least privilege, data transfer without authority |
+| R16 | 5, 7, 8 | Role/intent/output and Socratic continuity |
+| R17 | 7 | Valid plan before execution and stable order |
+| R18 | 8 | Per-step gate, skips, total failure and partial outcomes |
+| R19, R20 | 2, 9, 10 | Reviewed payload, transactions, history and conflicts |
+| R21 | 8, 11 | Checked response, sources and actually applied state |
 
-| Scenari | Task che li costruiscono | Verifica finale |
+| Scenarios | Tasks building them | Final verification |
 | --- | --- | --- |
 | CASE01 | 6, 8, 11 | `test_case01` |
 | CASE02 | 7, 10 | `test_case02` |
@@ -324,16 +326,16 @@ self.assertEqual(spec_path.read_bytes(), original_bytes)
 | CASE21 | 4 | `test_case21` |
 | CASE22 | 6, 8 | `test_case22` |
 
-Tutti i descriptor delle 29 entità sono coperti strutturalmente dal Task 1. La loro semantica è distribuita: configurazione e percorsi nei Task 3–5; ExecutionContext/Participant/ResourceBinding nei Task 2, 3, 6 e 9; TaskPlan/WorkerTask/TaskResult nei Task 7–8; ChangeProposal/HumanDecision/StateChange nel Task 9; ActivityOccurrence/LearningEvidence/Evaluation/LearningState nel Task 10. Le famiglie di Strategy restano dati orientativi, non un nuovo enum o una sequenza obbligatoria.
+All descriptors for the 29 entities are structurally covered by Task 1. Their semantics are distributed: configuration and paths in Tasks 3–5; ExecutionContext/Participant/ResourceBinding in Tasks 2, 3, 6 and 9; TaskPlan/WorkerTask/TaskResult in Tasks 7–8; ChangeProposal/HumanDecision/StateChange in Task 9; ActivityOccurrence/LearningEvidence/Evaluation/LearningState in Task 10. Strategy families remain indicative data, not a new enum or mandatory sequence.
 
-## Confini della consegna e rischi residui
+## Delivery boundaries and residual risks
 
-Il piano copre il flusso completo e tutte le regole; non promette l'esecuzione automatica di qualsiasi regola scritta in linguaggio naturale. Un dato o una regola non determinabili producono un limite esplicito. La revisione semantica può sbagliare: occorrono casi reali e controllo dei contenuti, soprattutto per Socratic e citazioni. Le decisioni umane richieste dalla specifica restano obbligatorie indipendentemente dal verdetto LLM.
+The plan covers the complete workflow and all rules; it does not promise automatic execution of every rule written in natural language. Undetermined data or rules produce an explicit limitation. Semantic review can be wrong: real cases and content checks are needed, especially for Socratic mode and citations. Human decisions required by the specification remain mandatory regardless of the LLM verdict.
 
-I nuovi requisiti rendono intenzionalmente incompatibili domanda senza contesto, MCP privo di scope e uso didattico dei vecchi agenti generici. Il piano aggiorna i chiamanti noti (`main.py`, `smoke.py`, test e factory); eventuali consumatori esterni non censiti richiedono adeguamento prima del rilascio. Le collezioni Qdrant non vengono riscritte da questo intervento.
+The new requirements intentionally make context-free questions, unscoped MCP and educational use of legacy generic agents incompatible. The plan updates known callers (`main.py`, `smoke.py`, tests and factories); any unlisted external consumers require adaptation before release. This work does not rewrite Qdrant collections.
 
-Il piano di implementazione resta locale e fuori dal branch; questa specifica e il metamodello sono versionati in `docs/resources/`. Non modificare il metamodello per aggirare una funzione mancante: completare il controllo oppure dichiarare l'azione non disponibile.
+The implementation plan remains local and outside the branch; this specification and the metamodel are versioned in `docs/resources/`. Do not modify the metamodel to bypass a missing function: complete the check or declare the action unavailable.
 
-## Revisione del piano
+## Plan review
 
-Revisione interna effettuata rispetto a regole, workflow, outputContract, compatibilityMap e scenari del JSON: sono assegnati tutti i 21 requisiti normativi e i 22 scenari; i controlli precedono il riuso degli output, le decisioni precedono le applicazioni richieste e le firme condivise sono indicate sopra. Questa verifica riguarda la copertura del piano, non l'esecuzione dei test o la conformità del software attuale. L'esecuzione proposta è nativa, con revisione del risultato prima dell'integrazione.
+Internal review performed against the JSON rules, workflow, outputContract, compatibilityMap and scenarios: all 21 normative requirements and 22 scenarios are assigned; checks precede output reuse, decisions precede applications requiring them, and shared signatures are listed above. This review concerns plan coverage, not test execution or current software conformance. Proposed execution is native, with result review before integration.

@@ -14,7 +14,7 @@ def specialization(role="TEACHER", name="teacher", capabilities=()):
     category = "TEACHER_TRAINER" if role in {"TEACHER", "TRAINER"} else role
     return record("AgentSpecialization", name + "-specialization", {
         "registryName": name, "category": category, "role": role, "topics": [ref("Topic", "topic")],
-        "competenceScope": "Introduzione", "capabilities": list(capabilities)})
+        "competenceScope": "Introduction", "capabilities": list(capabilities)})
 
 
 def registry(*names, tools=()):

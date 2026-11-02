@@ -39,7 +39,7 @@ def prepare_demo(store, factory):
     service.bootstrap("demo", "admin")
     proposal = service.propose("demo", "admin", tuple(EntityRef.model_validate(ref) for ref in bundle["targets"]),
         tuple(validate_entity(item, contract) for item in bundle["candidates"]), bundle["explanation"])
-    service.decide("demo", "admin", proposal.ref, "APPROVE", "Fixture sintetica esaminata per smoke")
+    service.decide("demo", "admin", proposal.ref, "APPROVE", "Synthetic fixture reviewed for smoke testing")
     service.apply("demo", "admin", proposal.ref, "demo-activation")
     return service
 

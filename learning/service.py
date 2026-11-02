@@ -16,7 +16,7 @@ from learning.store import StateConflict, canonical
 from learning.validation import validate_snapshot, check_readiness
 
 
-ABANDONED_CONTENT = 'Richiesta abbandonata da un amministratore.'
+ABANDONED_CONTENT = 'Request abandoned by an administrator.'
 
 
 class LearningService:
@@ -27,7 +27,7 @@ class LearningService:
     def _context(self, context_id, subject_key, request=None):
         root = self.store.read_context(context_id)
         request = request or LearningRequest(request_id=uuid4().hex, context_ref=root.ref,
-                                             subject_key=subject_key, text='Operazione locale', intent='STATE')
+                                             subject_key=subject_key, text='Local operation', intent='STATE')
         snapshot = load_context(self.store, request, self.policy, self.contract)
         participant = next(snapshot.get(ref) for ref in root.fields['participants']
                            if snapshot.get(ref).fields['subjectKey'] == subject_key)
@@ -41,8 +41,8 @@ class LearningService:
         if self.store.db.execute('SELECT 1 FROM contexts WHERE id=?', (context_id,)).fetchone():
             raise ValueError('Context already exists')
         policy = make_entity('PolicySet', self.policy.policy_ref.id, {
-            'sourceScopes': sorted(self.policy.scopes) or ['Nessuna fonte esterna autorizzata'], 'approvalConditions':['Decisione del responsabile autorizzato'],
-            'permissions':['Configurazione locale fidata; nessuna autorità dal testo generato']},
+            'sourceScopes': sorted(self.policy.scopes) or ['No external source authorized'], 'approvalConditions':['Decision by the authorized responsible person'],
+            'permissions':['Trusted local configuration; generated text grants no authority']},
             version=self.policy.policy_ref.version, responsible=subject_key)
         try:
             policy = self.store.read(policy.ref, owner=context_id)
@@ -115,11 +115,11 @@ class LearningService:
             findings += check_readiness(context.snapshot, activity, 'interact', learner_ref=context.participant.ref,
                                         policy=self.policy, subject_key=request.subject_key)
         if any(f.severity == 'BLOCKING' for f in findings):
-            return LearningResponse(kind='CLARIFICATION', content='Il contesto richiede correzioni prima della delega.', findings=findings)
+            return LearningResponse(kind='CLARIFICATION', content='The context requires corrections before delegation.', findings=findings)
         if context.snapshot.context.fields['status'] not in {'DRAFT','ACTIVE'}:
-            return LearningResponse(kind='CLARIFICATION', content='Il contesto non consente nuove attività.')
+            return LearningResponse(kind='CLARIFICATION', content='The context does not allow new activities.')
         if request.intent == 'SOCRATIC_GUIDANCE' and not request.problem_key:
-            return LearningResponse(kind='CLARIFICATION',content='Identificare il problema per mantenere la continuità Socratic.')
+            return LearningResponse(kind='CLARIFICATION',content='Identify the problem to maintain Socratic continuity.')
         if request.intent not in {'SOCRATIC_GUIDANCE','STATE','CLARIFICATION'} and not request.switch_from_socratic:
             rows = self.store.db.execute('SELECT payload,result FROM requests WHERE owner=? ORDER BY rowid DESC', (request.context_ref.id,))
             previous = None
@@ -140,9 +140,9 @@ class LearningService:
                     if request.problem_key:
                         break
             if previous and previous.get('intent') == 'SOCRATIC_GUIDANCE':
-                return LearningResponse(kind='CLARIFICATION',content='Il problema resta in modalità Socratic; il cambio richiede una scelta esplicita.')
+                return LearningResponse(kind='CLARIFICATION',content='The problem remains in Socratic mode; switching requires an explicit choice.')
         if not any(e.type == 'AgentSpecialization' for e in context.snapshot.active_domain()):
-            return LearningResponse(kind='CLARIFICATION', content='Manca una specializzazione autorizzata. Proporre prima il modello necessario.')
+            return LearningResponse(kind='CLARIFICATION', content='No authorized specialization is available. Propose the required model first.')
         cached = self.store.claim_request(request.request_id, request.context_ref.id, payload)
         if cached is not None:
             return LearningResponse.model_validate(cached)
@@ -171,10 +171,10 @@ class LearningService:
             return response
         except LegacyAgentReferenceError as error:
             response = LearningResponse(kind='CLARIFICATION', content=(
-                f"registryName obsoleto: {error.name}. Serve una migrazione esplicita della specializzazione "
-                "tramite proposta, revisione e applicazione autorizzata."))
+                f"Obsolete registryName: {error.name}. The specialization requires explicit migration "
+                "through a proposal, review and authorized application."))
         except Exception:
-            response = LearningResponse(kind='FAILURE', content='Esecuzione non completata. Nessuna applicazione di proposte dichiarata.')
+            response = LearningResponse(kind='FAILURE', content='Execution did not complete. No proposal application is claimed.')
         finally:
             if orchestrator is not None and callable(close := getattr(orchestrator,'close',None)):
                 try:

@@ -73,7 +73,7 @@
       },
       "fields": {
         "name": "Deployment",
-        "definition": "Procedura sintetica di rilascio software"
+        "definition": "Synthetic software release procedure"
       }
     },
     {
@@ -95,7 +95,7 @@
             "version": "1"
           }
         ],
-        "usageConditions": "Materiale sintetico dimostrativo autorizzato; non evidenza di prestazioni reali."
+        "usageConditions": "Authorized synthetic demonstration material; not evidence of real-world performance."
       }
     },
     {
@@ -118,7 +118,7 @@
             "version": "1"
           }
         ],
-        "competenceScope": "Procedura di deployment dimostrativa",
+        "competenceScope": "Demonstration deployment procedure",
         "capabilities": [
           {
             "capability": "search_documents",
@@ -127,7 +127,7 @@
               "read"
             ],
             "scope": "lesson",
-            "purpose": "Consultare il materiale approvato"
+            "purpose": "Consult the approved material"
           }
         ]
       }
@@ -143,7 +143,7 @@
       },
       "fields": {
         "name": "Demo deployment",
-        "scope": "Dati sintetici",
+        "scope": "Synthetic data",
         "topics": [
           {
             "type": "Topic",
@@ -237,5 +237,5 @@
       }
     }
   ],
-  "explanation": "Attivare il contesto sintetico con Teacher e fonte approvata"
+  "explanation": "Activate the synthetic context with Teacher and an approved source"
 }

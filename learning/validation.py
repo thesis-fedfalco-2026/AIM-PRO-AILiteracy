@@ -36,23 +36,23 @@ def validate_snapshot(snapshot: Snapshot) -> tuple[Finding, ...]:
     for kind, relation, code in (("Topic", "parentTopics", "R04"), ("ProcessNode", "children", "R06")):
         graph = {entity.ref: _refs(entity.fields[relation]) for entity in snapshot.of_type(kind)}
         if _cyclic(graph):
-            findings.append(Finding(code=code, target=kind, reason="La gerarchia contiene un ciclo."))
+            findings.append(Finding(code=code, target=kind, reason="The hierarchy contains a cycle."))
     obligations = {}
     for prerequisite in snapshot.of_type("Prerequisite"):
         if prerequisite.fields["kind"] == "MANDATORY":
             dependent = EntityRef.model_validate(prerequisite.fields["dependent"])
             obligations.setdefault(dependent, set()).add(EntityRef.model_validate(prerequisite.fields["requiredTarget"]))
     if _cyclic(obligations):
-        findings.append(Finding(code="R05", target="Prerequisite", reason="Ciclo di prerequisiti obbligatori."))
+        findings.append(Finding(code="R05", target="Prerequisite", reason="Cycle of mandatory prerequisites."))
     for entity in snapshot.entities.values():
         f = entity.fields
         if entity.type == "DomainModel" and any(
             contract.entity_types[ref["type"]]["instanceLayer"] != "domain_configuration" for ref in f["definitions"]
         ):
-            findings.append(Finding(code="R02", target=entity.id, reason="Il modello contiene riferimenti a stato operativo."))
+            findings.append(Finding(code="R02", target=entity.id, reason="The model contains references to operational state."))
         if entity.type == "ProcessNode" and ((f["kind"] == "PHASE" and f["activities"]) or
                                               (f["kind"] == "UNIT" and (f["children"] or f.get("composition")))):
-            findings.append(Finding(code="R06", target=entity.id, reason="Struttura PHASE/UNIT incompatibile."))
+            findings.append(Finding(code="R06", target=entity.id, reason="Incompatible PHASE/UNIT structure."))
         if entity.type == "LearningDesign":
             try:
                 root = snapshot.get(f["root"])
@@ -71,7 +71,7 @@ def validate_snapshot(snapshot: Snapshot) -> tuple[Finding, ...]:
                 if any(count > 1 for count in parents.values()):
                     raise ValueError()
             except ValueError:
-                findings.append(Finding(code="R06", target=entity.id, reason="Radice o genitori del percorso non validi."))
+                findings.append(Finding(code="R06", target=entity.id, reason="Invalid learning path root or parents."))
         if entity.type == "Rubric":
             keys = [item["key"] for item in f["criteria"]]
             duplicate = len(keys) != len(set(keys))
@@ -79,7 +79,7 @@ def validate_snapshot(snapshot: Snapshot) -> tuple[Finding, ...]:
                 levels = [item["key"] for item in criterion["levels"]]
                 duplicate |= len(levels) != len(set(levels))
             if duplicate:
-                findings.append(Finding(code="R10", target=entity.id, reason="Chiavi duplicate nella rubrica."))
+                findings.append(Finding(code="R10", target=entity.id, reason="Duplicate keys in the rubric."))
         if entity.type == "AssessmentSpecification":
             covered = set()
             for activity in f["activities"]:
@@ -88,7 +88,7 @@ def validate_snapshot(snapshot: Snapshot) -> tuple[Finding, ...]:
                 except ValueError:
                     pass
             if not _refs(f["outcomes"]) <= covered:
-                findings.append(Finding(code="R07", target=entity.id, reason="Verifica priva della copertura dichiarata."))
+                findings.append(Finding(code="R07", target=entity.id, reason="The assessment lacks its declared coverage."))
     return tuple(findings)
 
 
@@ -104,7 +104,7 @@ def check_readiness(snapshot: Snapshot, target: EntityRef, action: str, *, learn
         try:
             item = snapshot.get(ref)
         except ValueError:
-            findings.append(Finding(code="R02", target=ref.id, reason="Oggetto necessario non disponibile."))
+            findings.append(Finding(code="R02", target=ref.id, reason="Required object is unavailable."))
             return set()
         f = item.fields
         for prerequisite in snapshot.active_domain():
@@ -126,23 +126,23 @@ def check_readiness(snapshot: Snapshot, target: EntityRef, action: str, *, learn
             if status != "SATISFIED":
                 severity = "WARNING" if p["kind"] in {"RECOMMENDED", "RECOMMENDED_SEQUENCE"} else "BLOCKING"
                 findings.append(Finding(code="R05", target=item.id, severity=severity,
-                                        reason="Prerequisito non soddisfatto o non determinabile."))
+                                        reason="Prerequisite not satisfied or undetermined."))
         if item.type == "LearningDesign":
             coverage = check(f["root"])
             if not _refs(f["outcomes"]) <= coverage:
-                findings.append(Finding(code="R07", target=item.id, reason="Percorso senza copertura completa degli obiettivi."))
+                findings.append(Finding(code="R07", target=item.id, reason="The learning path does not fully cover its outcomes."))
             return coverage
         if item.type == "ProcessNode":
             children = f["children"] if f["kind"] == "PHASE" else f["activities"]
             if not children or (f["kind"] == "PHASE" and not f.get("composition")):
-                findings.append(Finding(code="R06", target=item.id, reason="Nodo in bozza, non pronto."))
+                findings.append(Finding(code="R06", target=item.id, reason="Draft node, not ready."))
             if action == "advance" and not f.get("completionRule"):
-                findings.append(Finding(code="R06", target=item.id, reason="Manca la regola di completamento."))
+                findings.append(Finding(code="R06", target=item.id, reason="The completion rule is missing."))
             coverage = set()
             for child in children:
                 coverage |= check(child)
             if not _refs(f["outcomes"]) <= coverage:
-                findings.append(Finding(code="R07", target=item.id, reason="Obiettivi del nodo non coperti."))
+                findings.append(Finding(code="R07", target=item.id, reason="Node outcomes are not covered."))
             return coverage
         if item.type == "ActivityDefinition":
             from learning.decisions import approval_valid
@@ -151,7 +151,7 @@ def check_readiness(snapshot: Snapshot, target: EntityRef, action: str, *, learn
                 try:
                     required = snapshot.get(requirement)
                 except ValueError:
-                    findings.append(Finding(code="R08", target=item.id, reason="Requisito di risorsa irrisolto."))
+                    findings.append(Finding(code="R08", target=item.id, reason="Unresolved resource requirement."))
                     continue
                 if required.fields["mandatory"] and not any(
                     binding.fields.get("requirement") == requirement and binding.fields["valid"]
@@ -160,7 +160,7 @@ def check_readiness(snapshot: Snapshot, target: EntityRef, action: str, *, learn
                     and scope_allows(policy, binding.fields["usageScope"], snapshot.context.id, subject_key, (item.id,))
                     for binding in snapshot.of_type("ResourceBinding")
                 ):
-                    findings.append(Finding(code="R08", target=item.id, reason="Risorsa obbligatoria non approvata o assente."))
+                    findings.append(Finding(code="R08", target=item.id, reason="Required resource is unapproved or missing."))
             return _refs(f["outcomes"])
         return set()
 

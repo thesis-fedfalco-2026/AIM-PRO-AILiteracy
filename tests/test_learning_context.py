@@ -22,7 +22,7 @@ class ContextTest(unittest.TestCase):
         self.store = LearningStore(Path(self.temp.name) / "state.sqlite"); self.addCleanup(self.store.close)
         self.store.seed(load_bundle(), owner="session")
         self.request = LearningRequest(request_id="request", context_ref=ref("ExecutionContext", "session"),
-                                       subject_key="learner", text="Spiega il topic")
+                                       subject_key="learner", text="Explain the topic")
 
     def load(self, request=None):
         return load_context(self.store, request or self.request, policy(), load_contract())
@@ -36,9 +36,9 @@ class ContextTest(unittest.TestCase):
             authorize(policy(), "learner", "decide", self.request.context_ref)
 
     def test_historical_reference_uses_exact_version(self):
-        self.store.seed((record("Topic", "topic", {"name": "Nuovo", "definition": "Versione nuova"}, "2"),))
+        self.store.seed((record("Topic", "topic", {"name": "New", "definition": "New version"}, "2"),))
         snapshot = self.load()
-        self.assertEqual(snapshot.get(ref("Topic", "topic")).fields["name"], "Concetti di base")
+        self.assertEqual(snapshot.get(ref("Topic", "topic")).fields["name"], "Basic concepts")
         self.assertNotIn("2", [e.version for e in snapshot.entities.values() if e.type == "Topic"])
 
     def test_cross_context_evidence_is_denied(self):
