@@ -1,0 +1,132 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1783071715532_USER_192",
+      "Scenario",
+      "Module"
+    ]
+  },
+  "properties": {
+    "duration": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "APhase"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Duration"
+    },
+    "learners": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "APhase"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "iSQD_Profile"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Learners",
+      "type": "array"
+    },
+    "learningActivities": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "Module"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1784885200968_USER_211",
+          "Activities",
+          "Activity"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Learningactivities",
+      "type": "array"
+    },
+    "learningGoal": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "Module"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "CompetencyGoal"
+        ]
+      },
+      "minLength": 1,
+      "title": "Learninggoal",
+      "type": "string"
+    },
+    "teacher": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "APhase"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "iSQD_Profile"
+        ]
+      },
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Teacher"
+    }
+  },
+  "required": [
+    "learners",
+    "learningGoal",
+    "learningActivities"
+  ],
+  "title": "Aimpro_8b0c96eb8af5bc3542e2",
+  "type": "object"
+}

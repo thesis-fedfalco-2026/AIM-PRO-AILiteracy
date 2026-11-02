@@ -1,0 +1,41 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1781791213267_USER_197",
+      "iSQD",
+      "ReflectivePractice"
+    ]
+  },
+  "properties": {
+    "activities": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "ReflectivePractice"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "AReflectivePractice"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Activities",
+      "type": "array"
+    }
+  },
+  "required": [
+    "activities"
+  ],
+  "title": "Aimpro_a7a10ef790046e8c64b7",
+  "type": "object"
+}

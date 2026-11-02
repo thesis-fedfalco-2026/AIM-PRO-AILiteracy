@@ -12,7 +12,17 @@ is preserved as exported. Run `python3 -m aimpro.audit` to inspect `SCN01` and
 The AIM-PRO metamodel is externally owned and remains unchanged. Run
 `.venv/bin/python -m aimpro.adapter` to export the resolved scenario closure for
 authoring review, preserving raw values, source identities and diagnostics.
-This envelope does not yet enter the Lead or authorize learning execution.
+This envelope is for authoring review and does not authorize learning execution.
+Generated Pydantic domain classes preserve the external declarations, including
+free-text fields. Run `.venv/bin/python -m aimpro.generate --check` to verify the
+checked-in concrete schemas and fingerprint, or `.venv/bin/python -m aimpro.validation`
+to inspect the scenario against those contracts. Validation reports source gaps
+and records scalar/list transport conversions while retaining the original data.
+Run `.venv/bin/python -m aimpro.lead` to prepare the Lead input without calling
+a model. Add `--run` to request a structured review from the configured Lead.
+This path builds only the Lead, preserves deterministic findings in its result,
+and does not invoke workers, retrieval, approvals or SQLite writes. It uses the
+Lead profile and credentials from the existing configuration and `.env`.
 
 ## Installation
 

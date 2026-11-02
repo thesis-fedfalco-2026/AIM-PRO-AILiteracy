@@ -1,0 +1,17 @@
+name: AIM-PRO contracts
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  generated-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install pydantic==2.12.5
+      - run: python -m aimpro.generate --check
+      - run: python -m unittest tests.test_aimpro_audit tests.test_aimpro_adapter tests.test_aimpro_contracts tests.test_aimpro_lead -v

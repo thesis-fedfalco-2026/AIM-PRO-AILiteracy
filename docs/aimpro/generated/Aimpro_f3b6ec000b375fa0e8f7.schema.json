@@ -1,0 +1,35 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1784885200968_USER_211",
+      "Activities",
+      "ChoiceOption"
+    ]
+  },
+  "properties": {
+    "name": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1784885200968_USER_211",
+          "Activities",
+          "ChoiceOption"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Name"
+    }
+  },
+  "title": "Aimpro_f3b6ec000b375fa0e8f7",
+  "type": "object"
+}

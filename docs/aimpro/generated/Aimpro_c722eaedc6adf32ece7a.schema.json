@@ -1,0 +1,137 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1784793168869_USER_192",
+      "Users",
+      "iSQD_Profile"
+    ]
+  },
+  "properties": {
+    "aiAttitude": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1784793168869_USER_192",
+          "Users",
+          "iSQD_Profile"
+        ],
+        "enum": [
+          "Pointer1784793168869_USER_192",
+          "Users",
+          "Attitude"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "enum": [
+            "Skeptical",
+            "Cautious",
+            "Neutral",
+            "Embracing",
+            "Enthusiast"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Aiattitude"
+    },
+    "aiConfidence": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1784793168869_USER_192",
+          "Users",
+          "iSQD_Profile"
+        ],
+        "enum": [
+          "Pointer1784793168869_USER_192",
+          "Users",
+          "Confidence"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "enum": [
+            "LOW",
+            "MEDIUM",
+            "HIGH"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Aiconfidence"
+    },
+    "aiKnowledge": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1784793168869_USER_192",
+          "Users",
+          "iSQD_Profile"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Aiknowledge"
+    },
+    "context": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1784793168869_USER_192",
+          "Users",
+          "iSQD_Profile"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Context"
+    },
+    "role": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1784793168869_USER_192",
+          "Users",
+          "iSQD_Profile"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Role"
+    }
+  },
+  "title": "Aimpro_c722eaedc6adf32ece7a",
+  "type": "object"
+}

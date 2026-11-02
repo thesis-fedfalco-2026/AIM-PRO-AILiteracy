@@ -84,17 +84,24 @@ the AIM-PRO metamodel to satisfy the runtime.
   resources/evidence/rubric information from its owners; do not populate the
   supplied project silently or claim the scenario is complete.
 - **#3**: D04 resolves across this project and its snapshot matches ownership.
-  The adapter rejects ambiguous or unresolved reachable references. Full project
-  conformance and export/import round-trip remain outside this initial check.
+  The adapter rejects ambiguous or unresolved reachable references. Generated
+  validation additionally checks reference target inheritance and whether a
+  link is exported in the containment section declared by the metamodel. Full
+  project conformance and export/import round-trip remain outside this check.
 - **#4**: external ownership. Track vocabulary/type incompatibilities here as
   diagnostics. No metamodel edits, instance migrations or re-export are planned
   in this repository.
-- **#5**: when implemented, generate qualified types and schemas from the source
-  exactly as declared, including EString. Additional runtime constraints belong
-  in separate local contracts. Fingerprint the input; do not execute source text.
-- **#6**: the read-only adapter now produces a resolved authoring input with
-  source ids, ownership and diagnostics. Passing it into the Lead through the
-  generated types remains pending; it is not an ALM `LearningRequest`.
+- **#5**: implemented generation of 82 runtime Pydantic classes and 67 JSON
+  Schemas for concrete classes, from canonical source definitions. Types remain
+  qualified, inheritance is preserved, and EString remains string. Generated
+  artifacts and the metamodel fingerprint are checked by the dedicated CI job.
+  Unsupported declarations fail explicitly rather than being guessed.
+- **#6**: implemented a dedicated authoring-review path to the configured Lead,
+  using the resolved source closure, generated validation projections and domain
+  schemas. Exact fingerprints and cited source ids are checked on the structured
+  response. Deterministic findings remain in the result even if omitted from the
+  model's prose. This is not an ALM `LearningRequest` or executable worker plan;
+  authoring generation/delegation and execution integration remain downstream.
 - **#7**: map execution state through local, reviewed contracts before changing
   the current runtime. No automatic approval or learner-state migration.
 - **#8/#11**: grounded syllabus generation still needs curated resources and the
@@ -106,7 +113,10 @@ the AIM-PRO metamodel to satisfy the runtime.
 python3 -m aimpro.audit
 .venv/bin/python -m aimpro.adapter
 .venv/bin/python -m aimpro.adapter --root-id Pointer1792169048382_USER_72
-.venv/bin/python -m unittest tests.test_aimpro_audit tests.test_aimpro_adapter -v
+.venv/bin/python -m aimpro.generate --check
+.venv/bin/python -m aimpro.validation
+.venv/bin/python -m aimpro.lead
+.venv/bin/python -m unittest tests.test_aimpro_audit tests.test_aimpro_adapter tests.test_aimpro_contracts tests.test_aimpro_lead tests.test_aimpro_runtime -v
 ```
 
 The adapter writes JSON to stdout and never writes to the source or database.
@@ -116,9 +126,93 @@ findings remain available in the output for authoring review, without blocking
 inspection or asserting full conformance. Only findings on reachable objects
 enter that envelope; the full selected-model audit remains available separately.
 
+## Generated contracts and validation
+
+`aimpro.contracts.Contracts` constructs classes with Pydantic `create_model`,
+without evaluating external names or text as code. Its `classes` registry is
+keyed by `(metamodel_id, package, class_name)`. Python class/field identifiers use
+hashes; field aliases preserve the exact external spelling. The generated
+[manifest](generated/manifest.json) maps qualified identities to schema names.
+There is one schema per concrete class, including flattened inherited fields.
+Abstract classes are available as Python bases and cannot be validated as graph
+instances. References use object ids with qualified target metadata; the graph
+validator checks assignability separately.
+
+The supported primitives are EString, EInt, EDouble, EBoolean and EDate (ISO
+datetime representation in JSON). Primitive validation is strict and non-finite
+numbers are rejected. Enum labels, required/optional fields and multiplicities
+come from the source. Schemas reject unknown fields. Free-text policy/rubric
+fields are not strengthened by the generator.
+
+`python -m aimpro.generate` regenerates artifacts; `--check` checks content and
+the artifact file set without writing. CI installs the pinned Pydantic version,
+checks the artifacts and runs the integration tests. The manifest contains both
+the source file SHA-256 and a fingerprint of canonical metamodel ids/packages.
+Generation uses canonical definitions, not embedded schema copies in models.
+
+`python -m aimpro.validation` emits the original adapter envelope together with
+validation findings, successful object projections, and transport conversions.
+Only in the validation projection, a scalar for a multivalued attribute becomes
+a singleton list; the operation is recorded by source id and field. Commas and
+enum values are never rewritten. Missing fields are never fabricated to satisfy
+required constraints; optional defaults belong only to the typed projection.
+
+For SCN01, generated validation reports five errors: missing target resources,
+and D04 category plus three relevance values outside declared enums. The two
+related EString vocabulary differences remain audit diagnostics, not generated
+validation failures. Two scalar/list conversions are recorded (`risks` and
+`sourceFrameworks`). The source remains non-conforming and is suitable for
+review, not execution. `--require-conformance` exits with code 1 in this case;
+the default inspection command exits normally with findings in its JSON output.
+
+Passing generated validation is a structural check, not authorization, approval,
+proof of resource provenance or pedagogical completeness. Execution state still
+requires the work recorded under #7.
+
+## Lead authoring review
+
+`python -m aimpro.lead` prepares a typed `LeadInput` without network access. It
+contains the original adapter envelope, generated-contract findings, validated
+projections, recorded conversions and complete schemas for the seven reachable
+types. It excludes unrelated competencies and the disconnected persona from the
+data supplied for review. The excluded persona's id remains in source diagnostics.
+
+`python -m aimpro.lead --run` builds only the configured Lead using the existing
+model profile, generation settings, credentials and paid-model policy. This is a
+real model call when used; the command loads `.env` from the repository root.
+No worker registry, MCP search process, database or execution context is needed.
+The source is never passed to the ALM execution path or written back to jjodel.
+
+The Lead receives a fixed authoring-review instruction followed by a JSON DATA
+section. Exported text and schemas remain untrusted data. The structured output
+is an `AuthoringReview` with summary, observations and recommendations; every
+observation/recommendation must cite existing ids from this scenario closure.
+The host rejects wrong fingerprints, unknown source ids and wrong output models.
+Recommendations have local review categories, not new AIM-PRO entities. Their
+semantics still require human review: source-id existence does not prove that
+the model's explanation is supported by the referenced object.
+
+The host wraps the result together with source and contract diagnostics and the
+deterministic conformance flag. The model cannot clear those findings, grant
+approval or execute recommendations. No retry, delegation, retrieval or state
+update occurs in this path.
+
+The full prompt is never truncated. The local profile retains the configured
+`max_context_chars` limit: the current payload exceeds the included 8,000-character
+local budget, so a local call will fail before generation until the operator
+configures an adequate budget. Other profiles retain the existing application
+behavior without that local character limit. CLI errors omit provider/source
+details; Python callers receive the exception for diagnosis.
+
+Tests cover the end-to-end path with a deterministic replacement Lead, including
+the `--run` entry point and runtime configuration. A real-model review of this
+export has not been run as part of these automated checks.
+
 The audit checks the two selected models against canonical definitions, nested
 ownership, reference existence, snapshots, field names, multiplicities, EString
-values and enum literals. It is not a complete jjodel validator: reference target
-assignability, all primitive types, containment rules, duplicate metamodel/package
-names, schema-copy equivalence and pedagogical completeness remain unverified.
-The adapter does not invoke an LLM, search for resources or approve proposals.
+values and enum literals. It is not a complete jjodel validator. The generated
+validator adds strict primitive and reference-type checks for the selected
+scenario closure; global containment ownership/cycle rules, export/import
+round-trip, schema-copy equivalence and pedagogical completeness remain unverified.
+The adapter and generated validator do not invoke an LLM, search for resources
+or approve proposals. Only the explicit Lead `--run` path invokes the model.

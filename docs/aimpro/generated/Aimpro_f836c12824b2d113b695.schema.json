@@ -1,0 +1,111 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1781791213267_USER_197",
+      "iSQD",
+      "LearningTarget"
+    ]
+  },
+  "properties": {
+    "competency": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "LearningTarget"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "Competency"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Competency",
+      "type": "array"
+    },
+    "contextDetails": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "LearningTarget"
+        ],
+        "kind": "attributes"
+      },
+      "title": "Contextdetails",
+      "type": "string"
+    },
+    "description": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "LearningTarget"
+        ],
+        "kind": "attributes"
+      },
+      "title": "Description",
+      "type": "string"
+    },
+    "resources": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "LearningTarget"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1784886057063_USER_240",
+          "Resources",
+          "Resource"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Resources",
+      "type": "array"
+    },
+    "strategy": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "LearningTarget"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "Strategy"
+        ]
+      },
+      "minLength": 1,
+      "title": "Strategy",
+      "type": "string"
+    }
+  },
+  "required": [
+    "description",
+    "contextDetails",
+    "competency",
+    "resources",
+    "strategy"
+  ],
+  "title": "Aimpro_f836c12824b2d113b695",
+  "type": "object"
+}

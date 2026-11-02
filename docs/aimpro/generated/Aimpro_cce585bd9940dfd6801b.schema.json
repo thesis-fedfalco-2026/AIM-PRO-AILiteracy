@@ -1,0 +1,42 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1784792907017_USER_186",
+      "Educators",
+      "Trainer"
+    ]
+  },
+  "properties": {
+    "ownedDT": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1784792907017_USER_186",
+          "Educators",
+          "Trainer"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1784792907017_USER_186",
+          "Educators",
+          "EducatorDT"
+        ]
+      },
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Owneddt"
+    }
+  },
+  "title": "Aimpro_cce585bd9940dfd6801b",
+  "type": "object"
+}

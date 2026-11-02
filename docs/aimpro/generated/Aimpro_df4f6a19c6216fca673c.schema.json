@@ -1,0 +1,187 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1780849660386_USER_186",
+      "Certification Design",
+      "Prerequisite"
+    ]
+  },
+  "properties": {
+    "ID": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "NamedElement"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Id"
+    },
+    "description": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "NamedElement"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Description"
+    },
+    "reviewCycle": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "VersionableElement"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reviewcycle"
+    },
+    "status": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "VersionableElement"
+        ],
+        "enum": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "Status"
+        ],
+        "kind": "attributes"
+      },
+      "enum": [
+        "Draft",
+        "Approved",
+        "Active",
+        "Retired",
+        "Superseeded"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "target": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "Prerequisite"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "CompetencyCluster"
+        ]
+      },
+      "minLength": 1,
+      "title": "Target",
+      "type": "string"
+    },
+    "title": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "NamedElement"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Title"
+    },
+    "type": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "Prerequisite"
+        ],
+        "enum": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "PrerequisiteType"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "enum": [
+            "Mandatory",
+            "Recommended",
+            "Co-requisite",
+            "Recommended Sequence"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Type"
+    },
+    "version": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "VersionableElement"
+        ],
+        "kind": "attributes"
+      },
+      "title": "Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "status",
+    "version",
+    "target"
+  ],
+  "title": "Aimpro_df4f6a19c6216fca673c",
+  "type": "object"
+}

@@ -1,0 +1,86 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1781791213267_USER_197",
+      "iSQD",
+      "LearningTask"
+    ]
+  },
+  "properties": {
+    "constraints": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "LearningTask"
+        ],
+        "kind": "attributes"
+      },
+      "items": {
+        "type": "string"
+      },
+      "minItems": 0,
+      "title": "Constraints",
+      "type": "array"
+    },
+    "description": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "LearningTask"
+        ],
+        "kind": "attributes"
+      },
+      "title": "Description",
+      "type": "string"
+    },
+    "learningTargets": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "LearningTask"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "LearningTarget"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Learningtargets",
+      "type": "array"
+    },
+    "risks": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "LearningTask"
+        ],
+        "kind": "attributes"
+      },
+      "items": {
+        "type": "string"
+      },
+      "minItems": 0,
+      "title": "Risks",
+      "type": "array"
+    }
+  },
+  "required": [
+    "description",
+    "learningTargets"
+  ],
+  "title": "Aimpro_8156348b8a6ac70696bc",
+  "type": "object"
+}

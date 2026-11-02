@@ -1,0 +1,95 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1783071715532_USER_192",
+      "Scenario",
+      "iSQD_Profile"
+    ]
+  },
+  "properties": {
+    "aiAttitude": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "iSQD_Profile"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Aiattitude"
+    },
+    "aiConfidence": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "iSQD_Profile"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Aiconfidence"
+    },
+    "aiKnowledge": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "iSQD_Profile"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Aiknowledge"
+    },
+    "role": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "iSQD_Profile"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Role"
+    }
+  },
+  "title": "Aimpro_be3a87e82cbb29d071ac",
+  "type": "object"
+}

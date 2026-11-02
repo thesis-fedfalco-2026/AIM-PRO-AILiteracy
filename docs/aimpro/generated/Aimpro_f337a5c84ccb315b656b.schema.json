@@ -1,0 +1,54 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1783071715532_USER_192",
+      "Scenario",
+      "PhaseGroup"
+    ]
+  },
+  "properties": {
+    "isParallel": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "PhaseGroup"
+        ],
+        "kind": "attributes"
+      },
+      "title": "Isparallel",
+      "type": "boolean"
+    },
+    "ownedPhases": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "PhaseGroup"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "APhase"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Ownedphases",
+      "type": "array"
+    }
+  },
+  "required": [
+    "isParallel",
+    "ownedPhases"
+  ],
+  "title": "Aimpro_f337a5c84ccb315b656b",
+  "type": "object"
+}

@@ -1,0 +1,189 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1791888876673_USER_33",
+      "sustainability",
+      "DeviceContext"
+    ]
+  },
+  "properties": {
+    "cpuClass": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "DeviceContext"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Cpuclass"
+    },
+    "deviceContextId": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "DeviceContext"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Devicecontextid"
+    },
+    "deviceType": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "DeviceContext"
+        ],
+        "enum": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "EDeviceType"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "enum": [
+            "LAPTOP",
+            "DESKTOP",
+            "SERVER",
+            "CLOUD_VM",
+            "MOBILE",
+            "EDGE",
+            "CONTAINER_HOST"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Devicetype"
+    },
+    "gpuClass": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "DeviceContext"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Gpuclass"
+    },
+    "locationRegion": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "DeviceContext"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Locationregion"
+    },
+    "ramGb": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "DeviceContext"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Ramgb"
+    },
+    "supportsGPUEnergy": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "DeviceContext"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Supportsgpuenergy"
+    },
+    "supportsRAPL": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "DeviceContext"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Supportsrapl"
+    }
+  },
+  "title": "Aimpro_73ddf58700ca82b58066",
+  "type": "object"
+}
