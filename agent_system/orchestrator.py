@@ -3,13 +3,16 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import replace
 import logging
-from typing import Any
+from typing import Any, ClassVar
 
 from crewai import Agent
+from crewai.flow.flow import Flow, start, listen, router
+from pydantic import BaseModel
 
 from agent_system.config import OrchestratorSettings, AgentConfig, ConfigurationError
 from agent_system.registry import AgentRegistry
 from agent_system.task_tool import TaskTool
+from agent_system.flow_task import DelegatedTask
 from learning.contracts import Entity, make_entity
 from learning.context import LearningRequest, RunContext
 from learning.metamodel import lead_contract
@@ -91,6 +94,12 @@ class Orchestrator:
             return response
 
     def _run(self, request: LearningRequest, *, context: RunContext) -> LearningResponse:
+        # A fresh Flow per request: no Flow persistence or authoritative domain state.
+        flow = OrchestrationFlow(self, request, context)
+        flow.kickoff()
+        return flow.response
+
+    def _prepare(self, request: LearningRequest, context: RunContext):
         self.last_records, self.last_proposals = (), []
         if not request.text.strip():
             raise ValueError("Question must not be blank")
@@ -137,63 +146,73 @@ class Orchestrator:
         if not tasks:
             self.last_records = tuple(records)
             return LearningResponse(kind="CLARIFICATION", content="Specificare l'attività o il chiarimento necessario nel contesto selezionato.")
-        outcomes = {}
-        checked_sources = []
-        for task in tasks:
-            with telemetry.observation("step." + task.step.id, "agent", input={
-                    "step": task.step, "specialization": task.specialization}, metadata={
-                    "step_id": task.step.id, "role": task.specialization.fields["role"],
-                    "specialization": task.specialization.id}) as span:
+        return tasks, records
+
+    def _execute_step(self, task, context, outcomes, checked_sources):
+        with telemetry.observation("step." + task.step.id, "agent", input={
+                "step": task.step, "specialization": task.specialization}, metadata={
+                "step_id": task.step.id, "role": task.specialization.fields["role"],
+                "specialization": task.specialization.id}) as span:
+            try:
+                step = task.step
+                if any(outcomes[key].fields["status"] != "SUCCEEDED" for key in step.depends_on):
+                    outcomes[step.id] = task_result(task, "SKIPPED", code="dependency_failed")
+                    return
                 try:
-                    step = task.step
-                    if any(outcomes[key].fields["status"] != "SUCCEEDED" for key in step.depends_on):
-                        outcomes[step.id] = task_result(task, "SKIPPED", code="dependency_failed")
-                        continue
-                    try:
-                        evidence = self.search(step.retrieval.query, step.retrieval.k, scope=task.search_scope) if step.retrieval else None
-                        if evidence is not None and any(not task.search_scope.matches(doc["metadata"]) for doc in evidence["documents"]):
-                            raise ValueError("Retrieved source is outside scope")
-                        task = replace(task, evidence=evidence)
-                        if evidence and context.snapshot.context.fields["mode"] == "PREPARATION":
-                            task = replace(task, resources=discovered_resources(task, evidence))
-                        if task.specialization.fields["role"] == "SOCRATIC" and evidence:
-                            review = self._review(context, {"stage": "INPUT_SOCRATIC", "documents": evidence})
-                            if review.verdict != "ACCEPT":
-                                raise ValueError("Socratic input may reveal a solution")
-                    except Exception as error:
-                        self.logger.error("Retrieval for %s failed (%s)", step.id, type(error).__name__)
-                        span.update(level="ERROR", status_message=str(error))
-                        outcomes[step.id] = task_result(task, "FAILED", code="retrieval_failed")
-                        continue
-                    try:
-                        brief = build_brief(task, outcomes, evidence)
-                        if self.settings.max_context_chars is not None and len(brief) > self.settings.max_context_chars:
-                            raise ValueError("Required task context exceeds budget")
-                        if task.specialization.fields["role"] == "SOCRATIC":
-                            if self._review(context, {"stage": "INPUT_SOCRATIC", "task": brief}).verdict != "ACCEPT":
-                                raise ValueError("Socratic briefing may reveal a solution")
-                        output = self.task_tool.run(agent_name=step.agent, task=brief)
-                        if type(output) is not WorkerOutput:
-                            raise ValueError("Worker did not return the structured contract")
-                        review = self._review(context, {"stage": "WORKER", "task": brief, "output": output.model_dump(mode="json")})
-                        outcomes[step.id] = check_worker_output(task, output, context, review=review)
-                        if outcomes[step.id].fields["status"] == "SUCCEEDED":
-                            checked_sources.append(evidence)
-                            self.last_proposals.extend((task.record.ref, proposal) for proposal in output.proposals)
-                            if (task.resources and context.snapshot.context.fields["mode"] == "PREPARATION"
-                                    and task.specialization.fields["role"] == "CURATOR" and task.expected_output == "CHANGE_PROPOSAL"):
-                                self.last_proposals.append((task.record.ref, ProposedChange(
-                                    targets=(context.snapshot.context.ref,), candidates=task.resources,
-                                    explanation="Materiali candidati scoperti nel perimetro autorizzato; uso didattico e binding richiedono revisione.")))
-                    except Exception as error:
-                        self.logger.error("Worker %s failed (%s)", step.id, type(error).__name__)
-                        span.update(level="ERROR", status_message=str(error))
-                        outcomes[step.id] = task_result(task, "FAILED", code="worker_failed")
-                finally:
-                    result = outcomes.get(task.step.id)
-                    if result is not None:
-                        span.update(output=result.fields)
-                        span.score("task_status", result.fields["status"])
+                    evidence = self.search(step.retrieval.query, step.retrieval.k, scope=task.search_scope) if step.retrieval else None
+                    if evidence is not None and any(not task.search_scope.matches(doc["metadata"]) for doc in evidence["documents"]):
+                        raise ValueError("Retrieved source is outside scope")
+                    task = replace(task, evidence=evidence)
+                    if evidence and context.snapshot.context.fields["mode"] == "PREPARATION":
+                        task = replace(task, resources=discovered_resources(task, evidence))
+                    if task.specialization.fields["role"] == "SOCRATIC" and evidence:
+                        review = self._review(context, {"stage": "INPUT_SOCRATIC", "documents": evidence})
+                        if review.verdict != "ACCEPT":
+                            raise ValueError("Socratic input may reveal a solution")
+                except Exception as error:
+                    self.logger.error("Retrieval for %s failed (%s)", step.id, type(error).__name__)
+                    span.update(level="ERROR", status_message=str(error))
+                    outcomes[step.id] = task_result(task, "FAILED", code="retrieval_failed")
+                    return
+                try:
+                    brief = build_brief(task, outcomes, evidence)
+                    if self.settings.max_context_chars is not None and len(brief) > self.settings.max_context_chars:
+                        raise ValueError("Required task context exceeds budget")
+                    if task.specialization.fields["role"] == "SOCRATIC":
+                        if self._review(context, {"stage": "INPUT_SOCRATIC", "task": brief}).verdict != "ACCEPT":
+                            raise ValueError("Socratic briefing may reveal a solution")
+                    def guardrail(output):
+                        if type(output.pydantic) is not WorkerOutput:
+                            return False, "Worker did not return the structured contract"
+                        review = self._review(context, {"stage": "WORKER", "task": brief,
+                            "output": output.pydantic.model_dump(mode="json")})
+                        outcomes[step.id] = check_worker_output(task, output.pydantic, context, review=review)
+                        return outcomes[step.id].fields["status"] == "SUCCEEDED", output
+
+                    crew_task = DelegatedTask(name=step.id, description=brief,
+                        expected_output=task.expected_output, output_pydantic=WorkerOutput,
+                        guardrail=guardrail, guardrail_max_retries=0,
+                        delegate=lambda: self.task_tool.run(agent_name=step.agent, task=brief))
+                    output = crew_task.execute_sync().pydantic
+                    if outcomes[step.id].fields["status"] == "SUCCEEDED":
+                        checked_sources.append(evidence)
+                        self.last_proposals.extend((task.record.ref, proposal) for proposal in output.proposals)
+                        if (task.resources and context.snapshot.context.fields["mode"] == "PREPARATION"
+                                and task.specialization.fields["role"] == "CURATOR" and task.expected_output == "CHANGE_PROPOSAL"):
+                            self.last_proposals.append((task.record.ref, ProposedChange(
+                                targets=(context.snapshot.context.ref,), candidates=task.resources,
+                                explanation="Materiali candidati scoperti nel perimetro autorizzato; uso didattico e binding richiedono revisione.")))
+                except Exception as error:
+                    self.logger.error("Worker %s failed (%s)", step.id, type(error).__name__)
+                    span.update(level="ERROR", status_message=str(error))
+                    outcomes.setdefault(step.id, task_result(task, "FAILED", code="worker_failed"))
+            finally:
+                result = outcomes.get(task.step.id)
+                if result is not None:
+                    span.update(output=result.fields)
+                    span.score("task_status", result.fields["status"])
+
+    def _synthesize(self, request, context, records, outcomes, checked_sources):
         records.extend(outcomes.values())
         self.last_records = tuple(records)
         if not any(result.fields["status"] == "SUCCEEDED" for result in outcomes.values()):
@@ -213,3 +232,56 @@ class Orchestrator:
         review = self._review(context, {"stage": "FINAL", "basis": synthesis, "sources": checked_sources,
                                        "response": response.model_dump(mode="json")})
         return check_final_response(response, context, tuple(outcomes.values()), review=review)
+
+
+class OrchestrationFlowState(BaseModel):
+    """Ephemeral scheduling state only; learning/ owns all domain decisions."""
+
+    cursor: int = 0
+
+
+class OrchestrationFlow(Flow[OrchestrationFlowState]):
+    """Authorize once, dispatch ordered tasks, then validate the synthesis."""
+
+    # CrewAI 1.15.18 auto-creates persistent Memory unless this hook is set.
+    _skip_auto_memory: ClassVar[bool] = True
+
+    def __init__(self, orchestrator, request, context):
+        super().__init__(tracing=False, suppress_flow_events=True)
+        self.orchestrator = orchestrator
+        self.request, self.context = request, context
+        self.tasks, self.records = (), []
+        self.outcomes, self.checked_sources = {}, []
+        self.response = None
+
+    @start()
+    def prepare(self):
+        prepared = self.orchestrator._prepare(self.request, self.context)
+        if isinstance(prepared, LearningResponse):
+            self.response = prepared
+        else:
+            self.tasks, self.records = prepared
+
+    @router(prepare)
+    def route_prepared(self):
+        return "finished" if self.response is not None else "dispatch"
+
+    @listen("dispatch")
+    def execute_step(self):
+        self.orchestrator._execute_step(self.tasks[self.state.cursor], self.context,
+            self.outcomes, self.checked_sources)
+        self.state.cursor += 1
+
+    @router(execute_step)
+    def route_step(self):
+        return "dispatch" if self.state.cursor < len(self.tasks) else "ready_for_synthesis"
+
+    @listen("ready_for_synthesis")
+    def synthesize(self):
+        self.response = self.orchestrator._synthesize(self.request, self.context,
+            self.records, self.outcomes, self.checked_sources)
+        return self.response
+
+    @listen("finished")
+    def finish(self):
+        return self.response

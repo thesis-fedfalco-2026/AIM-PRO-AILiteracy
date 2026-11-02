@@ -40,6 +40,10 @@ Questo progetto **non crea né popola** la collezione Qdrant. Il caricamento dei
 
 ## Flusso locale ALM
 
+L’orchestrazione usa un Flow CrewAI nuovo per ogni richiesta: `@start` prepara e autorizza il piano, `@router` seleziona gli step in ordine di dipendenza e `@listen` li esegue e avvia la sintesi finale. Ogni step eseguibile è un `Task` CrewAI (`DelegatedTask`) con `output_pydantic=WorkerOutput` e un guardrail che applica la revisione semantica e i controlli di `learning/`. L’adattatore mantiene la delega tramite `TaskTool`, senza tentativi automatici dopo un rifiuto. Gli step dipendenti da risultati falliti sono saltati; quelli indipendenti proseguono.
+
+Il Flow conserva solo un cursore di esecuzione nello stato CrewAI; memoria automatica e persistenza del Flow sono disabilitate. Autorizzazioni, snapshot, risultati e modifiche restano sotto il controllo di `learning/` e del servizio SQLite esistente.
+
 I comandi operativi di `python -m learning` richiedono `--db`, `--policy`, `--subject` e `--context` prima del sottocomando. Usa `--help` per vedere `bootstrap`, `propose`, `decide`, `apply`, `abandon`, `ask`, `submit` e `show`.
 
 La CLI è destinata a un operatore locale fidato: `--subject` seleziona un soggetto, **non autentica** una persona da remoto. Proteggi il file policy e il database a livello host. Una risposta generata non approva proposte e non assegna automaticamente progressi al discente.
