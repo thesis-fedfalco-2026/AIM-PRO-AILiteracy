@@ -2,9 +2,9 @@
 
 Scripted mode simulates every model call and accepts every semantic review, so it
 measures what the deterministic checks stop when the reviewer is bypassed. Live
-mode keeps the configured Lead (planning, semantic review, synthesis) and injects
-only the adversarial worker output and documents; it transmits case data to the
-configured provider and needs explicit authorization.
+mode keeps the configured Lead for planning and semantic review, and injects the
+adversarial worker output, documents and, for synthesis attacks, the synthesis;
+it transmits case data to the configured provider and needs explicit authorization.
 """
 from __future__ import annotations
 
@@ -22,7 +22,9 @@ from agent_system.orchestrator import Orchestrator
 from agent_system.plan import PlanStep, RetrievalRequest
 from agent_system.registry import AgentRegistry
 from agent_system.runtime import load_skill_catalog
+from agent_system.telemetry import configure_vendor_privacy
 from document_search.backend import build_backend
+from evaluation.cases import echo
 from learning.context import LearningRequest
 from learning.contracts import EntityRef
 from learning.metamodel import load_contract, validate_entity
@@ -33,6 +35,8 @@ from learning.service import LearningService
 from learning.store import LearningStore
 
 BASE_DIR = Path(__file__).resolve().parents[1]
+# As main.py does: no CrewAI telemetry or tracing, and no first-run consent panel on stdout.
+configure_vendor_privacy(BASE_DIR)
 CONTEXT = "demo"
 LOGGER = logging.getLogger("evaluation")
 TOPIC = EntityRef(type="Topic", id="deployment", version="1")
@@ -124,12 +128,35 @@ def scripted_orchestrator(case, search, events_log) -> Orchestrator:
         lead_skills=[], events_log=events_log)
 
 
+class SynthesisOverride:
+    """Keep the live Lead for planning and reviews; substitute the case's adversarial synthesis."""
+
+    def __init__(self, lead, case):
+        self.lead, self.case, self.worker_output = lead, case, None
+
+    def kickoff(self, prompt, response_format=None):
+        if response_format is LearningResponse:
+            return SimpleNamespace(pydantic=self.case.synthesis(self.worker_output))
+        return self.lead.kickoff(prompt, response_format=response_format)
+
+
 def live_orchestrator(case, events_log, environ) -> Orchestrator:
     from main import build_orchestrator
 
     orchestrator = build_orchestrator(environ={**environ, "SEARCH_BACKEND": "mock"})
     orchestrator.search = injecting(orchestrator.search, case)
-    orchestrator.dispatcher.worker = lambda config, task: case.worker()
+    # Without the override a synthesis attack would never happen: the live Lead writes its own.
+    lead = SynthesisOverride(orchestrator.lead, case) if case.synthesis is not echo else None
+
+    def worker(config, task):
+        output = case.worker()
+        if lead is not None:
+            lead.worker_output = output
+        return output
+
+    if lead is not None:
+        orchestrator.lead = lead
+    orchestrator.dispatcher.worker = worker
     orchestrator.events_log = events_log
     return orchestrator
 
