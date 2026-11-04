@@ -1,4 +1,5 @@
 import json
+import hashlib
 import os
 from pathlib import Path
 from types import SimpleNamespace
@@ -6,7 +7,7 @@ import unittest
 
 from agent_system.mcp_runtime import DocumentSearchClient, build_document_search_params
 from document_search.backend import ConfigurationError, build_backend
-from document_search.contracts import SearchScope, resource_key
+from document_search.contracts import PreparationDocumentRef, SearchScope, resource_key
 from learning.outputs import discovered_resources
 
 
@@ -75,3 +76,17 @@ class WP3IntegrationTest(unittest.TestCase):
                 conn.execute("SELECT * FROM public.auth_user")
             with self.assertRaises(psycopg.errors.ReadOnlySqlTransaction):
                 conn.execute("CREATE TABLE public.wp3_write_probe (id int)")
+
+    def test_real_exact_preparation_fetch_through_mcp(self):
+        backend = build_backend({**self.environ,'SEARCH_UNLIMITED_TEXT':'1'})
+        self.addCleanup(backend.close)
+        document = backend.search_documents('prompt',1,scope=self.scope)['documents'][0]
+        identity,version = json.loads(document['metadata']['resource_key'])
+        selection = PreparationDocumentRef(resource_id=identity,resource_version=version,
+            document_id=document['id'],content_sha256=hashlib.sha256(document['text'].encode()).hexdigest())
+        client = DocumentSearchClient(build_document_search_params(Path.cwd(),self.environ,unlimited_text=True))
+        result = client.fetch_preparation_documents([selection],scope=self.scope)
+        self.assertFalse(result['truncated'])
+        self.assertEqual(result['documents'][0]['text'],document['text'])
+        with self.assertRaises(ValueError):
+            client.fetch_preparation_documents([selection],scope=SearchScope(mode='LEARNING',resource_keys=(resource_key(identity,version),)))

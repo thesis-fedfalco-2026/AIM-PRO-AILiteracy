@@ -1,0 +1,123 @@
+{
+  "recorded_at_utc": "2026-11-04T10:46:25.624961+00:00",
+  "owner_instruction": "accetta",
+  "preceding_owner_instruction": "no accetta",
+  "reviewed_target": {
+    "type": "ChangeProposal",
+    "id": "proposal-5d49b19e39ac40b1bab8f063667f426d",
+    "version": "1"
+  },
+  "review_payload_key": "270be47f84de65d1473684baee9a99b4ab2a0b52482104f0e2a30610e2aca855",
+  "decision": {
+    "type": "HumanDecision",
+    "id": "decision-65c412b2d1f74c7f8b9a08fcb24853fc",
+    "version": "1",
+    "provenance": {
+      "origin": "HUMAN_DECISION",
+      "sources": [],
+      "responsible": "syllabus-author",
+      "rationale": null
+    },
+    "fields": {
+      "context": {
+        "type": "ExecutionContext",
+        "id": "scn01-selected-syllabus-2",
+        "version": "b18e5e4cf85e4f0ba6989421920fd304"
+      },
+      "decider": {
+        "type": "Participant",
+        "id": "scn01-selected-syllabus-2:participant:syllabus-author",
+        "version": "1"
+      },
+      "target": {
+        "type": "ChangeProposal",
+        "id": "proposal-5d49b19e39ac40b1bab8f063667f426d",
+        "version": "1"
+      },
+      "decision": "APPROVE",
+      "reason": "Recorded by the assistant on behalf of the repository owner after the fifth-run result and OWNER_REVIEW.md were presented. The owner declined the recommendation to request further revision and explicitly instructed \"no accetta\", followed by \"accetta\". This APPROVE decision covers the exact unchanged proposal and its 26 candidates, reviewed payload key 270be47f84de65d1473684baee9a99b4ab2a0b52482104f0e2a30610e2aca855. The documented local findings remain unresolved and preserved: transcript line 21 hints at enacted/mentioned classifications; the card EXAMPLE illustration uses [sample text]; the lower individual-contribution descriptor omits missing reasoning; partial-scope fictional declarations need clearer negative wording; and source attribution should distinguish underlying concepts from the operator taxonomy. Approval does not assert that these findings are fixed or that rubric descriptors are validated instruments. No learner scores, passing policy, acquisition, completion, delivery permission or runtime evaluation is inferred. This operation records approval only; the assessment is not applied and no new model transmission is authorized.",
+      "decidedAt": "2026-11-04T10:46:25.549259+00:00",
+      "reviewedPayloadKey": "270be47f84de65d1473684baee9a99b4ab2a0b52482104f0e2a30610e2aca855",
+      "coveredPayloadKeys": [
+        "270be47f84de65d1473684baee9a99b4ab2a0b52482104f0e2a30610e2aca855"
+      ]
+    }
+  },
+  "approved_proposal": {
+    "type": "ChangeProposal",
+    "id": "proposal-5d49b19e39ac40b1bab8f063667f426d",
+    "version": "94e0ba225ee040cc9443d674743acd1a"
+  },
+  "proposal_status": "APPROVED",
+  "documented_findings_preserved": [
+    {
+      "severity": "REVISION_REQUIRED",
+      "scope": "unit-2 annotation transcript, line 21",
+      "finding": "Line 21 states that instruction, primary content, cue and template were used and that examples were only discussed. This supplies part of the enacted/mentioned classification sought by the task, despite the new requirement to omit solved classifications from learner-visible content."
+    },
+    {
+      "severity": "REVISION_REQUIRED",
+      "scope": "prompt_move_card, MOVE 3 EXAMPLE recognition illustration",
+      "finding": "The recognition example contains [sample text] rather than an actual sample reminder, yet says the inclusion of the sample enacts EXAMPLE. Supply actual fictional sample text so the illustration enacts the defined move, or explicitly present it as an abstract pattern rather than a completed enacted example."
+    },
+    {
+      "severity": "REVISION_REQUIRED",
+      "scope": "unit-2 individual contribution criterion c2",
+      "finding": "The positive level requires reasoning for contributed annotations. The negative level lists missing named statement, missing specific lines and missing agreement/disagreement account, but not missing reasoning. A statement with lines and an agreement account but no reasoning matches neither level; align the lower descriptor with the missing required evidence."
+    },
+    {
+      "severity": "LIMITATION",
+      "scope": "unit-3 fictional declaration negative descriptor",
+      "finding": "The lower descriptor says no explicit fictional declaration and at least one unlabelled detail. Make incomplete-scope declarations explicit as well, so a declaration covering only one detail cannot be interpreted as sufficient. Only visible scope can be assessed, not authenticity."
+    },
+    {
+      "severity": "SOURCE_SUPPORT_LIMITATION",
+      "scope": "unit-2 item supported_claim",
+      "finding": "The citation describes the corpus as providing the five-move taxonomy, while the gaps correctly call the taxonomy an operator illustration. The retained source supplies construction concepts and primary-content techniques; clarify that the assessment classification scheme is derived by the operator, not a validated source-prescribed taxonomy."
+    }
+  ],
+  "verification": {
+    "production_decision_service_used": true,
+    "reviewed_payload_key_valid": true,
+    "candidates_unchanged": true,
+    "applied_context_unchanged": true,
+    "applied_project_unchanged": true,
+    "previous_owner_revision_unchanged": true,
+    "human_decisions": 4,
+    "state_changes": 2,
+    "new_human_decisions": 1,
+    "new_applications": 0,
+    "assessment_selected_in_applied_project": false,
+    "sqlite_integrity": "ok",
+    "tables": {
+      "entities": {
+        "before": 111,
+        "after": 113,
+        "all_previous_rows_retained": true,
+        "new_rows": 2
+      },
+      "contexts": {
+        "before": 1,
+        "after": 1,
+        "all_previous_rows_retained": true,
+        "new_rows": 0
+      },
+      "operations": {
+        "before": 2,
+        "after": 2,
+        "all_previous_rows_retained": true,
+        "new_rows": 0
+      },
+      "requests": {
+        "before": 8,
+        "after": 8,
+        "all_previous_rows_retained": true,
+        "new_rows": 0
+      }
+    },
+    "network_or_model_calls": 0,
+    "fresh_retrieval": 0
+  },
+  "assessment_application_performed": false,
+  "new_model_transmission_authorized": false
+}

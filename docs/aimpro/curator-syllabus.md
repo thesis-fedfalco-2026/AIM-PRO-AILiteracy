@@ -7,6 +7,11 @@ The result is a pending ALM proposal, with no teacher decision inferred from a
 model's ACCEPT. The existing combined `generate-aimpro` teaching-draft route is
 still available independently.
 
+For multiple queries and an exact excerpt shortlist, use the new
+[model-free source preparation](selected-sources.md). It records real discovery
+responses and content-pinned selected excerpts before any model authorization;
+`--prepared-sources` then replaces `--query` for generation from that snapshot.
+
 ## Generate in an isolated preparation context
 
 Use a new local directory, a trusted policy and a PREPARATION/DRAFT context.
@@ -57,7 +62,7 @@ export SCN01_SYLLABUS_DIR=/path/to/new-run
   --query '"prompt engineering"' --k 1
 ```
 
-Both source scope and query are mandatory. Missing permission fails before source
+For this single-query route, both source scope and query are mandatory. Missing permission fails before source
 reading, MCP or model construction. Empty, truncated, out-of-scope or incomplete
 retrieval does not fall back to ungrounded generation. Source diagnostics remain
 visible; supplying corpus evidence does not repair the external scenario.
@@ -136,7 +141,9 @@ each revision still require separate human review/application.
 
 This approved outline is the integration entry point for the dedicated Evaluator
 work in #9 and Teacher/Trainer authoring from an approved syllabus in #10. Those
-generators remain separate work; the learner-side demo does not implement them.
+generators are now [implemented locally](../architecture/authoring-generators.md)
+and tested with synthetic responses. Their live generation/review evidence is
+still pending; the learner-side demo does not establish that evidence.
 Future revisions of the outline or payload require their own reviewed proposal.
 
 ## Verification

@@ -7,7 +7,9 @@ Teacher/Trainer commands and expected state changes using a fixed illustrative w
 The [versioned authoring architecture](docs/architecture/authoring-lifecycle.md)
 defines independently reviewed artifacts, frozen releases and separate delivery
 contexts. Its executable acceptance test uses simulated agents and the existing
-ALM lifecycle; production #9/#10 generators and release commands remain pending.
+ALM lifecycle. The dedicated Evaluator now has a real source-backed, human-approved
+SCN01 result; Teacher/Trainer live validation and production release/import remain
+separate work.
 
 Local application for managing an ALM learning context with state and tracking in SQLite. A Lead agent plans tasks, specialized agents produce responses, and code checks permissions, sources and results. Generation uses OpenRouter by default; search uses the WP3 PostgreSQL corpus through MCP, with mock data for synthetic tests and optional Qdrant/TEI retrieval.
 
@@ -58,11 +60,23 @@ the Lead reviews it, and a human approves/applies the exact pending payload.
 See [the Curator workflow](docs/aimpro/curator-syllabus.md); outline approval
 keeps PREPARATION/DRAFT and does not activate learning.
 
+Use `prepare-aimpro-syllabus-sources` for multi-query discovery and exact
+content-pinned excerpt selection without models. Review its packet before
+authorizing `generate-aimpro-syllabus --prepared-sources <request-id>`; see
+[selected-source preparation](docs/aimpro/selected-sources.md).
+
 Production authoring projects select an approved/applied Curator syllabus and
 exact artifact versions through reviewed immutable revisions. Use
 `init-authoring-project`, `revise-authoring-project`, `show-authoring-project`
 and `show-project-syllabus`; see the [project CLI guide](docs/architecture/authoring-projects.md).
-Dedicated #9/#10 generators and production release/import commands remain pending.
+Dedicated Evaluator, Teacher and Trainer authoring now use this project boundary:
+`generate-project-assessments`, `generate-project-teacher` and
+`generate-project-trainer`. See [the generator guide](docs/architecture/authoring-generators.md)
+for exact input bundles, review and replay. The [SCN01 Evaluator report](docs/aimpro/scn01-evaluator-example.md)
+records real source-backed generation, separate Lead review, owner approval and
+isolated production application. Teacher/Trainer scaffolding is covered with
+synthetic responses; #10 still requires its own authorized real workflow.
+Production release/import commands and learner runtime evaluation remain separate.
 
 ## Installation
 

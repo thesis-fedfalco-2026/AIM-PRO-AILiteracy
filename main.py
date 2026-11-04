@@ -46,9 +46,10 @@ def build_aimpro_authoring(
     base_dir: Path = BASE_DIR, *, model_catalog=None, environ=None,
     client_factory=None, agent_factory=Agent,
 ):
-    """Build a registry-bound Curator and a separate review-only Lead."""
+    """Build typed preparation specialists and a separate review-only Lead."""
     from agent_system.authoring import AuthoringDispatcher
     from aimpro.syllabus import CURATOR, SyllabusDraft
+    from aimpro.generators import CONTRACTS
     if environ is None:
         load_dotenv(base_dir / '.env')
     runtime_environ = os.environ if environ is None else environ
@@ -60,9 +61,10 @@ def build_aimpro_authoring(
         profiles=catalog.profiles, tools={SEARCH_TOOL_NAME: object()}, skills=skills,
         settings=catalog.settings, categories=load_category_catalog(base_dir / 'categories'),
         excluded_names={catalog.lead.name})
-    llms = LLMFactory(catalog, environ=runtime_environ, client_factory=client_factory)
+    llms = LLMFactory(catalog, environ=runtime_environ, client_factory=client_factory,
+        anthropic_json_outputs=True)
     dispatcher = AuthoringDispatcher(registry=registry, llm_factory=llms, skills=skills,
-        contracts={CURATOR: ('curator', SyllabusDraft)},
+        contracts={CURATOR: ('curator', SyllabusDraft), **CONTRACTS},
         context_budget=catalog.orchestrator.max_context_chars, agent_factory=agent_factory)
     lead, budget = build_aimpro_lead(base_dir, model_catalog=catalog, environ=runtime_environ,
         client_factory=client_factory, agent_factory=agent_factory)
@@ -85,7 +87,8 @@ def build_aimpro_lead(
     config = catalog.lead
     if config.tools or config.skills or config.category is not None:
         raise ConfigurationError("AIM-PRO review Lead requires no tools, skills or worker category")
-    factory = LLMFactory(catalog, environ=runtime_environ, client_factory=client_factory)
+    factory = LLMFactory(catalog, environ=runtime_environ, client_factory=client_factory,
+        anthropic_json_outputs=True)
     lead = agent_factory(
         role=config.name,
         goal="Review the supplied AIM-PRO scenario and integration gaps without executing changes.",

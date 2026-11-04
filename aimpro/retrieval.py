@@ -1,19 +1,46 @@
 """Preserve versioned corpus evidence for authoring, without granting approval."""
 
 import json
-from typing import Any
+from typing import Annotated, Any
 
-from pydantic import Field
+from pydantic import Field, StrictInt, StringConstraints, field_validator
 
 from aimpro.lead_types import Record, Text
-from document_search.contracts import resource_key
+from aimpro.syllabus_coverage import CoverageRequirement
+from document_search.contracts import PreparationDocumentRef, resource_key
+
+
+class SourceQuery(Record):
+    query: Text
+    k: StrictInt = Field(default=20, ge=1, le=20)
+
+
+class SelectedExcerpt(PreparationDocumentRef):
+    purpose: Text
+    limitations: tuple[Text, ...] = Field(min_length=1)
+
+
+class SourceSelectionSummary(Record):
+    trace_sha256: Text
+    queries: tuple[SourceQuery, ...]
+    documents: tuple[SelectedExcerpt, ...]
+    # Omit absent extensions to preserve hashes of historical source packets.
+    coverage_requirements: tuple[CoverageRequirement, ...] = Field(default=(), exclude_if=lambda value: not value)
 
 
 class CorpusDocument(Record):
     id: Text
-    text: Text
+    # Exact fetched bytes determine the selection hash. Do not strip whitespace.
+    text: Annotated[str, StringConstraints(strict=True, min_length=1)]
     metadata: dict[str, Any]
     score: float = Field(allow_inf_nan=False)
+
+    @field_validator('text')
+    @classmethod
+    def meaningful_excerpt(cls, value):
+        if not value.strip():
+            raise ValueError('Excerpt text must not be blank')
+        return value
 
 
 class CorpusResource(Record):
@@ -35,6 +62,7 @@ class CorpusEvidence(Record):
     source_scope: Text
     k: int = Field(ge=1, le=20)
     resources: tuple[CorpusResource, ...]
+    selection: SourceSelectionSummary | None = None
 
 
 def evidence_from_response(query, source_scope, k, response):

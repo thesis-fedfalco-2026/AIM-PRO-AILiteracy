@@ -168,6 +168,10 @@ class LearningService:
         from aimpro.syllabus_service import generate_syllabus
         return generate_syllabus(self, context_id, subject_key, project, **kwargs)
 
+    def prepare_aimpro_syllabus_sources(self, context_id, subject_key, project, plan, **kwargs):
+        from aimpro.source_service import prepare_sources
+        return prepare_sources(self, context_id, subject_key, project, plan, **kwargs)
+
     def approved_aimpro_syllabus(self, context_id, subject_key, design):
         from aimpro.syllabus_state import resolve
         with self.store.db:
@@ -193,6 +197,18 @@ class LearningService:
     def approved_project_syllabus(self, context_id, subject_key, project):
         from learning.projects import approved_project_syllabus
         return approved_project_syllabus(self, context_id, subject_key, project)
+
+    def generate_project_assessments(self, context_id, subject_key, command, **kwargs):
+        from learning.generation import generate_project
+        return generate_project(self, context_id, subject_key, 'ASSESSMENT', command, **kwargs)
+
+    def generate_project_teacher(self, context_id, subject_key, command, **kwargs):
+        from learning.generation import generate_project
+        return generate_project(self, context_id, subject_key, 'TEACHER_CONTENT', command, **kwargs)
+
+    def generate_project_trainer(self, context_id, subject_key, command, **kwargs):
+        from learning.generation import generate_project
+        return generate_project(self, context_id, subject_key, 'TRAINER_CONTENT', command, **kwargs)
 
     def prepare_aimpro_execution(self, context_id, subject_key, *, learner, scope_name=None):
         from aimpro.execution_setup import prepare_execution

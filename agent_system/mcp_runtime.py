@@ -10,7 +10,7 @@ from mcp.client.stdio import StdioServerParameters, stdio_client
 
 from agent_system.config import ConfigurationError
 from document_search.backend import SearchResponse
-from document_search.contracts import SearchScope
+from document_search.contracts import SearchScope, preparation_selection
 from agent_system import telemetry
 
 
@@ -74,15 +74,20 @@ class DocumentSearchClient:
 
     @telemetry.traced("document_search", "retriever", inputs=lambda self, query, k, *, scope: {"query": query, "k": k, "scope": scope})
     def search(self, query: str, k: int, *, scope: SearchScope) -> dict[str, Any]:
+        return self._call(SEARCH_TOOL_NAME, {"query": query, "k": k, "scope": scope.model_dump(mode="json")})
+
+    def fetch_preparation_documents(self, selections, *, scope):
+        refs, scope = preparation_selection(selections, scope)
+        return self._call('fetch_preparation_documents', {
+            'selections': [r.model_dump(mode='json') for r in refs], 'scope': scope.model_dump(mode='json')})
+
+    def _call(self, tool, arguments):
         async def call() -> dict[str, Any]:
             with TemporaryFile(mode="w+") as errlog:
                 async with stdio_client(self.params, errlog=errlog) as (read, write):
                     async with ClientSession(read, write) as session:
                         await session.initialize()
-                        result = await session.call_tool(
-                            SEARCH_TOOL_NAME,
-                            {"query": query, "k": k, "scope": scope.model_dump(mode="json")},
-                        )
+                        result = await session.call_tool(tool, arguments)
             if result.isError or result.structuredContent is None:
                 raise DocumentSearchError("Document search failed")
             return SearchResponse.model_validate(

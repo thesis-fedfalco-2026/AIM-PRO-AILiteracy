@@ -1,0 +1,398 @@
+# Exact fifth-run Evaluator draft for human review
+
+This renders the original evaluator-phase.json output without editing task, rubric, stimulus or citation strings. These are proposed descriptors, not validated instruments. No human decision or assessment application is implied. See owner-review.md for the decision boundary.
+
+## unit-1-adviser-peer-demonstration
+
+Item `unit-1-item-1`; intent `ASSESS`; format `CASE_ANALYSIS`; evidence `CASE_RESULT`.
+
+Outcomes: `aimpro-syllabus-926d751475204cd29c0e3a9f6033ef5f:outcome:Pointer1792169221668_USER_96@1`.
+
+### Instruction
+
+```text
+This is a newly authored assessment illustration, not a record of an actual workshop event or observed model output. Read the three prompt variants (weak_prompt, improved_prompt, worse_prompt) and the peer failure illustration (peer_failure) provided with this task. All customer, invoice and business details in these stimuli are entirely fictional.
+
+Part A – Comparing weak and improved prompts: Using the text of weak_prompt and improved_prompt, identify at least two concrete differences in how the prompts are constructed. For each difference, explain what specific wording or element was added or changed and why that change would affect the usefulness of the output. Refer to the actual text of each variant in your answer.
+
+Part B – Identifying the single detrimental change: Compare improved_prompt and worse_prompt. Identify the one change made between them, quote the relevant text from improved_prompt that is absent in worse_prompt, and explain what effect removing that element could have on the output.
+
+Part C – Diagnosing the peer failure: Read peer_failure. Describe what you observe in the fictional prompt and its unsatisfactory result. Explain what specific element or omission in the prompt you think contributed to the problem, using the text of the stimulus to support your reasoning.
+
+Submit a written response addressing all three parts. Quote or paraphrase the stimulus text to ground each point.
+```
+
+### Evidence requirement
+
+```text
+Submit a written response with three clearly labelled parts (A, B, C). Part A must reference specific wording from both weak_prompt and improved_prompt. Part B must quote the text present in improved_prompt and absent in worse_prompt and explain the effect of its removal. Part C must describe the fictional peer prompt and result and identify a specific textual feature that contributed to the unsatisfactory outcome. All business, customer and invoice details used in your response must remain fictional; do not introduce real customer names, real invoice numbers or real payment links.
+```
+
+### Criterion c1-prompt-comparison
+
+The response identifies and explains concrete textual differences between the weak and improved prompt variants, grounding each point in the actual stimulus text.
+
+Outcomes: `aimpro-syllabus-926d751475204cd29c0e3a9f6033ef5f:outcome:Pointer1792169221668_USER_96@1`.
+
+- **c1-present**: The response names at least two specific wording differences between weak_prompt and improved_prompt, quotes or closely paraphrases the relevant text from each variant, and explains how each difference affects the likely output.
+
+- **c1-absent**: The response does not identify two distinct textual differences, or the differences named are not grounded in quoted or paraphrased stimulus text, or no explanation of effect on output is provided.
+
+### Criterion c2-detrimental-change
+
+The response correctly identifies and quotes the single change between improved_prompt and worse_prompt and explains its effect on the output.
+
+Outcomes: `aimpro-syllabus-926d751475204cd29c0e3a9f6033ef5f:outcome:Pointer1792169221668_USER_96@1`.
+
+- **c2-present**: The response quotes the exact text present in improved_prompt and absent in worse_prompt and gives a plausible explanation of what effect removing that element could have on the generated output.
+
+- **c2-absent**: The response does not quote the missing text, or identifies a change not present between the two variants, or provides no explanation of the effect of the removal on the output.
+
+### Criterion c3-peer-failure-diagnosis
+
+The response describes the fictional peer prompt and result and identifies a specific textual feature contributing to the unsatisfactory outcome.
+
+Outcomes: `aimpro-syllabus-926d751475204cd29c0e3a9f6033ef5f:outcome:Pointer1792169221668_USER_96@1`.
+
+- **c3-present**: The response describes what is observable in the fictional peer prompt and result, and identifies a specific element or omission in the prompt text that plausibly contributed to the unsatisfactory outcome shown.
+
+- **c3-absent**: The response does not describe the peer prompt or result from the stimulus, or identifies no specific textual feature, or the diagnosis is not connected to any observable detail in peer_failure.
+
+### Item citations
+
+- `wp3:32c2119d5504@31057b5b35cfcfa5f31ee406f855477a`; documents: `wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3`, `wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:4`.
+  Supported claim: Prompt construction as instruction plus primary content, and worked weak-to-improved prompt examples, support a case-analysis task comparing weak and improved variants and identifying a detrimental change.
+
+### Stimulus weak_prompt (PROMPT_VARIANT) — Assessment illustration – Weak payment-reminder prompt (fictional)
+
+```text
+This is a newly authored fictional assessment illustration, not a source quotation or observed model output.
+
+Fictional business context: Greenleaf Office Supplies (fictional), a small stationery wholesaler.
+Fictional customer: Hartwell Catering Ltd (fictional).
+Fictional invoice: Invoice #4021 (fictional), amount £340.00 (fictional), due date 14 March (fictional).
+
+PROMPT TEXT
+Write an email to our customer about their invoice.
+END PROMPT TEXT
+```
+
+- `wp3:32c2119d5504@31057b5b35cfcfa5f31ee406f855477a`; documents: `wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3`.
+  Supported claim: The corpus illustrates basic prompts as minimal text inputs without context or instruction detail, supporting a weak-prompt variant that omits specifics.
+
+### Stimulus improved_prompt (PROMPT_VARIANT) — Assessment illustration – Improved payment-reminder prompt (fictional)
+
+```text
+This is a newly authored fictional assessment illustration, not a source quotation or observed model output.
+
+Fictional business context: Greenleaf Office Supplies (fictional), a small stationery wholesaler.
+Fictional customer: Hartwell Catering Ltd (fictional).
+Fictional invoice: Invoice #4021 (fictional), amount £340.00 (fictional), due date 14 March (fictional).
+
+PROMPT TEXT
+You are a polite and professional accounts assistant for Greenleaf Office Supplies, a small stationery wholesaler. Write a payment-reminder email to Hartwell Catering Ltd about Invoice #4021 for £340.00, which was due on 14 March. The tone should be friendly but firm. Ask the customer to arrange payment within five business days and include the invoice number and amount in the email body. Keep the email under 150 words.
+END PROMPT TEXT
+```
+
+- `wp3:32c2119d5504@31057b5b35cfcfa5f31ee406f855477a`; documents: `wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3`, `wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:7`.
+  Supported claim: The corpus recommends being specific and clear, giving details about desired context, outcome, length, format and style; the improved prompt adds role context, specific invoice details, tone instruction, a five-business-day payment deadline and a length constraint, illustrating these best practices.
+
+### Stimulus worse_prompt (PROMPT_VARIANT) — Assessment illustration – Worse prompt variant (fictional)
+
+```text
+This is a newly authored fictional assessment illustration, not a source quotation or observed model output.
+
+Fictional business context: Greenleaf Office Supplies (fictional), a small stationery wholesaler.
+Fictional customer: Hartwell Catering Ltd (fictional).
+Fictional invoice: Invoice #4021 (fictional), amount £340.00 (fictional), due date 14 March (fictional).
+
+PROMPT TEXT
+You are a polite and professional accounts assistant for Greenleaf Office Supplies, a small stationery wholesaler. Write a payment-reminder email to Hartwell Catering Ltd about Invoice #4021 for £340.00, which was due on 14 March. The tone should be friendly but firm. Ask the customer to arrange payment within five business days and include the invoice number and amount in the email body.
+END PROMPT TEXT
+```
+
+- `wp3:32c2119d5504@31057b5b35cfcfa5f31ee406f855477a`; documents: `wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3`, `wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:7`.
+  Supported claim: The corpus recommends specifying desired length and format; the worse variant omits the length constraint present in the improved prompt, illustrating the effect of removing a specific output-shaping instruction.
+
+### Stimulus peer_failure (PEER_FAILURE) — Assessment illustration – Fictional peer prompt and unsatisfactory result
+
+```text
+This is a newly authored fictional assessment illustration. It is not an actual workshop event, a real model output or an observed learner submission. No causal diagnosis is supplied; you are asked to identify what you observe.
+
+Fictional business: Sunrise Bakery Supplies (fictional).
+Fictional customer: Moorfield Events Ltd (fictional).
+Fictional invoice: Invoice #B-077 (fictional), amount £215.00 (fictional).
+
+Fictional peer prompt used:
+"Send a reminder about the unpaid bill."
+
+Fictional unsatisfactory result received:
+The AI tool produced a very short, generic message that did not mention the customer's name, the invoice number, the amount owed or any payment deadline. The fictional business owner felt the output could not be sent to any customer without being completely rewritten, making the AI tool seem unhelpful for this task.
+
+Your task: Describe what you observe in the fictional prompt and the unsatisfactory result above. Identify a specific element or omission in the prompt text that you think contributed to the problem, using the text of this stimulus to support your reasoning.
+```
+
+- `wp3:32c2119d5504@31057b5b35cfcfa5f31ee406f855477a`; documents: `wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3`, `wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:4`.
+  Supported claim: The corpus illustrates that basic prompts without context or instruction detail produce generic outputs, supporting a peer-failure illustration where an underspecified prompt yields an unusable result.
+
+## unit-2-prompt-move-annotation
+
+Item `unit-2-item-1`; intent `ASSESS`; format `SHORT_STRUCTURED`; evidence `CRITERIA_BASED_PRODUCT`.
+
+Outcomes: `aimpro-syllabus-926d751475204cd29c0e3a9f6033ef5f:outcome:Pointer1792169221668_USER_96@1`.
+
+### Instruction
+
+```text
+This task is completed in pairs. You and your partner will produce one shared annotated artifact together.
+
+Step 1 – Read the Prompt-Move Card (stimulus: prompt_move_card). It defines five prompt moves: INSTRUCTION, PRIMARY CONTENT, EXAMPLE, CUE and TEMPLATE. Read the definitions and recognition examples carefully before annotating.
+
+Step 2 – Read the numbered transcript (stimulus: annotation_transcript). The transcript is a fictional assessment illustration.
+
+Step 3 – Together, annotate the transcript. For each line or group of lines where you identify a prompt move being enacted in the text (not merely mentioned or discussed), write the line number(s), the move label, and a brief quotation of the text evidence from that line that shows the move is enacted rather than only talked about. If a move is mentioned or discussed but not enacted, label it MENTIONED and quote the text showing it is being discussed rather than performed. If a move does not appear at all, state ABSENT.
+
+Step 4 – Individual contribution statements. Each partner must write a separate named statement within the shared artifact identifying: (a) which line annotations they personally contributed, (b) a brief explanation of their reasoning for each of those annotations, and (c) either a description of any disagreement that arose and how the pair resolved it, or, if no disagreement occurred, a statement that no disagreement arose and an explanation of how the pair checked their agreement using the transcript and card.
+
+Submit one shared document containing: the completed annotation table, Partner A's named contribution statement, and Partner B's named contribution statement.
+```
+
+### Evidence requirement
+
+```text
+Submit one shared annotated document. It must contain: (1) a completed annotation table with line numbers, move labels (from the five moves on the card), text evidence quoted from the transcript, and enacted/mentioned/absent distinctions for each move; (2) Partner A's named statement identifying their own annotated lines, their reasoning, and their account of agreement or disagreement; (3) Partner B's named statement identifying their own annotated lines, their reasoning, and their account of agreement or disagreement. The no-disagreement route is valid: if no disagreement occurred, each partner states this and explains how the pair verified their agreement using the transcript and card. All business and customer details remain fictional.
+```
+
+### Criterion c1-annotation-grounding
+
+The shared annotation table identifies enacted moves with quoted text evidence from the transcript, and distinguishes enacted moves from mentioned or absent ones.
+
+Outcomes: `aimpro-syllabus-926d751475204cd29c0e3a9f6033ef5f:outcome:Pointer1792169221668_USER_96@1`.
+
+- **c1-present**: The annotation table quotes specific transcript text for each enacted move label, and uses MENTIONED or ABSENT where a move is discussed or not present, with the distinction applied consistently across the table.
+
+- **c1-absent**: The annotation table lacks quoted transcript text for one or more move labels, or does not distinguish enacted moves from mentioned or absent ones, leaving the grounding of labels unverifiable from the submitted artifact.
+
+### Criterion c2-individual-contribution
+
+Each partner's named statement identifies their own annotated lines and explains their individual reasoning, and addresses agreement or disagreement using the no-disagreement route if applicable.
+
+Outcomes: `aimpro-syllabus-926d751475204cd29c0e3a9f6033ef5f:outcome:Pointer1792169221668_USER_96@1`.
+
+- **c2-present**: Both partners provide a named statement identifying their own specific line contributions, giving reasoning for those annotations, and either describing a disagreement and its resolution or stating no disagreement occurred and explaining how agreement was verified with the transcript and card.
+
+- **c2-absent**: One or both partners do not provide a named statement, or a statement does not identify specific line contributions, or no account of agreement checking or disagreement resolution is included, making individual engagement unverifiable from the artifact.
+
+### Item citations
+
+- `wp3:32c2119d5504@31057b5b35cfcfa5f31ee406f855477a`; documents: `wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3`, `wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:4`.
+  Supported claim: The corpus decomposes prompts into instruction, primary content, examples, cues and templates, providing the five-move taxonomy used in the annotation card and transcript task.
+
+### Stimulus prompt_move_card (PROMPT_MOVE_CARD) — Prompt-Move Card – Five moves for building a prompt (assessment illustration)
+
+```text
+PROMPT-MOVE CARD
+This card is a newly authored assessment illustration. The five moves below are drawn from prompt-construction concepts in the source material. The recognition examples are fictional illustrations of each move; they are not transcript annotations or assessment answers.
+
+─────────────────────────────────────
+MOVE 1 – INSTRUCTION
+Definition: A direct statement telling the AI what action to perform. It specifies the task.
+How to recognise it in text: Look for an imperative or directive sentence that names the action the AI should carry out (e.g. write, summarise, translate, list).
+Fictional recognition example: "Write a payment-reminder email to the customer." — This sentence enacts an INSTRUCTION because it directly tells the AI what to do.
+─────────────────────────────────────
+MOVE 2 – PRIMARY CONTENT
+Definition: The specific information the AI should act on — the subject matter or data that the instruction applies to.
+How to recognise it in text: Look for details supplied to the AI that it needs to complete the task (e.g. a customer name, invoice number, amount, date, or a passage to be summarised).
+Fictional recognition example: "The customer is Hartwell Catering Ltd. The invoice number is #4021 and the amount is £340." — These details enact PRIMARY CONTENT because they supply the specific data the AI needs.
+─────────────────────────────────────
+MOVE 3 – EXAMPLE
+Definition: One or more sample inputs and outputs (or sample outputs alone) provided to show the AI the desired pattern. Supplying examples is called one-shot (one example) or few-shot (more than one example) prompting. Supplying no examples is called zero-shot prompting.
+How to recognise it in text: Look for a sample or model answer included in the prompt to demonstrate the expected format or style. A discussion of examples without actually providing one does not enact this move.
+Fictional recognition example: "Here is a sample reminder email for a different customer: [sample text]. Now write one for Hartwell Catering Ltd." — The inclusion of the sample text enacts EXAMPLE. Saying 'you could include an example' without providing one does not enact this move.
+─────────────────────────────────────
+MOVE 4 – CUE
+Definition: A leading word, phrase or partial sentence placed at the end of the prompt to nudge the AI toward a desired response format or opening.
+How to recognise it in text: Look for an incomplete sentence or opening phrase that the AI is expected to continue (e.g. "Dear [Customer name]," placed at the end of the prompt as a starting point).
+Fictional recognition example: "Dear Moorfield Events," placed as the final line of a prompt — This enacts a CUE because it gives the AI a starting point to continue from.
+─────────────────────────────────────
+MOVE 5 – TEMPLATE
+Definition: A reusable prompt structure containing placeholders (variables) that can be replaced with specific data for different uses.
+How to recognise it in text: Look for bracketed or labelled slots intended to be filled in (e.g. [CUSTOMER NAME], [INVOICE NUMBER], [AMOUNT DUE]).
+Fictional recognition example: "Write a reminder email to [CUSTOMER NAME] about invoice [INVOICE NUMBER] for [AMOUNT]. Payment is due within five business days." — The bracketed slots enact a TEMPLATE because they are placeholders for variable data.
+─────────────────────────────────────
+Remember: A move is enacted when the prompt actually performs it. A move is MENTIONED when the speaker talks about using it without performing it in the prompt text. A move is ABSENT if it does not appear at all.
+```
+
+- `wp3:32c2119d5504@31057b5b35cfcfa5f31ee406f855477a`; documents: `wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3`, `wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:4`, `wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:7`.
+  Supported claim: The corpus defines prompt construction as instruction plus primary content, and describes examples (zero-shot, one-shot, few-shot), cues and templates as distinct prompt moves, supporting the five-move card definitions and the enacted-versus-mentioned distinction.
+
+### Stimulus annotation_transcript (TRANSCRIPT) — Assessment illustration – Fictional annotation transcript (numbered)
+
+```text
+ANNOTATION TRANSCRIPT
+This is a newly authored fictional assessment illustration. All business names, customer names, invoice details and amounts are fictional. This transcript does not record an actual workshop session or real model outputs. Line 18 instructs substitution of fictional details for each fictional customer scenario; do not insert real customer details or real payment links.
+
+─────────────────────────────────────
+1.  Adviser: Right, let's look at how we actually build a prompt. I'm going to start with the simplest possible version.
+2.  Adviser: Here's my first attempt: "Write an email to our customer about their invoice."
+3.  Adviser: That's it. Nothing else. What do you think the AI will do with that?
+4.  Participant: It won't know which customer or which invoice.
+5.  Adviser: Exactly. So the first thing I need to add is the specific information — the customer name, the invoice number, the amount, the due date. That's what we call primary content: the data the AI needs to act on.
+6.  Adviser: Watch what happens when I add it. New prompt: "Write a payment-reminder email to Hartwell Catering Ltd about Invoice #4021 for £340.00, due 14 March."
+7.  Participant: That's much clearer already.
+8.  Adviser: Good. Now I'm also going to give it an instruction that's more specific. Instead of just 'write an email', I'll say: "Write a polite but firm payment-reminder email."
+9.  Adviser: So now the prompt has an instruction and primary content working together.
+10. Adviser: You could also add an example — a sample email — to show the AI the style you want. That's called one-shot prompting if you give it one example, or few-shot if you give it more than one. If you give no examples at all, that's zero-shot.
+11. Participant: Do we have to include an example every time?
+12. Adviser: No, not at all. It depends on how specific you need the style to be. Sometimes the instruction and primary content are enough.
+13. Adviser: Another option is a cue — you put a few words at the end of the prompt to get the AI started. For instance, you might end your prompt with "Dear Hartwell Catering," and the AI will continue from there.
+14. Adviser: Let me show you a cue in action. Here's the prompt ending: "Dear Hartwell Catering,"
+15. Participant: So the AI just carries on from that opening?
+16. Adviser: Yes, exactly. It takes the cue and continues in that style.
+17. Adviser: Now, if you want something you can reuse for different customers, you use a template. A template has placeholders — slots you fill in each time. Like this: "Write a reminder email to [CUSTOMER NAME] about invoice [INVOICE NUMBER] for [AMOUNT DUE]. Payment is due within five business days."
+18. Adviser: When you use this template for your own fictional customer scenarios in this workshop, substitute fictional details for each placeholder — for example, replace [CUSTOMER NAME] with a made-up business name, [INVOICE NUMBER] with a fictional number, and [AMOUNT DUE] with a fictional amount. Do not insert real customer details or real payment links.
+19. Participant: So the brackets are the bits we change each time?
+20. Adviser: That's right. The rest of the sentence stays the same; only the placeholders change.
+21. Adviser: So to summarise: we've used an instruction, primary content, a cue and a template in this session. We talked about examples but didn't include one in the prompts we built today.
+22. Participant: Could we have added an example to make it even better?
+23. Adviser: Yes, we could have. Adding a sample email would have made it a one-shot prompt. But for a first attempt, keeping it simpler is often fine.
+─────────────────────────────────────
+Annotation task: For each of the five moves on the Prompt-Move Card, identify the line(s) where the move is enacted in the text, quote the relevant text, and label it ENACTED, MENTIONED or ABSENT as appropriate. Record your annotations in a table with columns: Move | Line(s) | Label | Quoted text evidence.
+```
+
+- `wp3:32c2119d5504@31057b5b35cfcfa5f31ee406f855477a`; documents: `wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3`, `wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:4`.
+  Supported claim: The corpus describes instruction, primary content, examples (zero-shot, one-shot, few-shot), cues and templates as distinct prompt construction moves, supporting a numbered transcript that enacts and discusses these moves for learner annotation.
+
+## unit-3-first-prompt-construction
+
+Item `unit-3-item-1`; intent `ASSESS`; format `CRITERIA_BASED_PRODUCT`; evidence `CRITERIA_BASED_PRODUCT`.
+
+Outcomes: `aimpro-syllabus-926d751475204cd29c0e3a9f6033ef5f:outcome:Pointer1792169221668_USER_96@1`.
+
+### Instruction
+
+```text
+Write your own first prompt for a routine business message relevant to your chosen business context. Use fictional customer details only throughout.
+
+Your prompt must include:
+1. A visible task instruction — a sentence telling the AI what to write.
+2. Relevant primary content — the specific fictional details the AI needs (for example: a fictional customer name, a fictional reference number, a fictional amount or date, and any other details needed for the message).
+
+You do not need to run the prompt through any AI tool or provide a generated response. Submit the prompt text itself.
+
+Fictional data requirement: All customer names, business names, invoice numbers, amounts, dates and any other identifying details in your prompt must be fictional. You must include either (a) one explicit statement at the start or end of your prompt declaring that all business and customer details in it are fictional, or (b) a visible fictional label attached to every individual detail (for example: "Fictional customer: Moorfield Events Ltd"). Appearance alone does not confirm that details are fictional; the declaration or labelling is required.
+
+If you do not yet have a business context in mind, invent one now and label it as fictional (for example: "Fictional business: Sunrise Bakery Supplies — a small wholesale bakery ingredient supplier"). You may use any routine business message type (payment reminder, appointment confirmation, order update, etc.).
+
+Submit your prompt text with the fictional data declaration or labels included.
+```
+
+### Evidence requirement
+
+```text
+Submit the text of your authored prompt. The prompt must contain a visible task instruction and relevant primary content using fictional details only. It must include either a single explicit declaration that all details are fictional, or a visible fictional label on every individual detail. Do not submit a generated AI response; submit the prompt itself. No API access, notebook setup or actual model execution is required. The assessor will evaluate the submitted prompt text against the criteria below. Note: whether details appear real or fictional cannot be determined from appearance alone; only the presence and scope of the required declaration or labelling is assessed.
+```
+
+### Criterion c1-prompt-structure
+
+The submitted prompt contains a visible task instruction and relevant primary content with fictional details.
+
+Outcomes: `aimpro-syllabus-926d751475204cd29c0e3a9f6033ef5f:outcome:Pointer1792169221668_USER_96@1`.
+
+- **c1-present**: The prompt contains an identifiable instruction sentence directing the AI to perform a specific task, and includes primary content supplying fictional details relevant to that task such as a customer name, reference number or message context.
+
+- **c1-absent**: The prompt does not contain an identifiable instruction sentence, or contains an instruction but no primary content details, leaving the AI without the specific information needed to complete the task.
+
+### Criterion c2-fictional-data-declaration
+
+The prompt includes the required visible declaration or labelling confirming all details are fictional, using one of the two permitted routes.
+
+Outcomes: `aimpro-syllabus-926d751475204cd29c0e3a9f6033ef5f:outcome:Pointer1792169221668_USER_96@1`.
+
+- **c2-present**: The prompt contains either one explicit statement declaring all business and customer details are fictional, or a visible fictional label attached to every individual detail included, covering the full scope of details present in the prompt.
+
+- **c2-absent**: The prompt contains no explicit fictional declaration and at least one detail lacks a visible fictional label, meaning the required confirmation that all details are fictional is not present or does not cover all details in the prompt.
+
+### Item citations
+
+- `wp3:32c2119d5504@31057b5b35cfcfa5f31ee406f855477a`; documents: `wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3`, `wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:4`, `wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:6`.
+  Supported claim: The corpus describes prompt construction as instruction plus primary content, and templates with placeholders for reusable prompts, supporting a first-prompt construction task requiring a visible instruction and relevant primary content with fictional details.
+
+## unit-4-prompt-choice-explanation
+
+Item `unit-4-item-1`; intent `ASSESS`; format `SHORT_STRUCTURED`; evidence `REFLECTIVE_RECORD`.
+
+Outcomes: `aimpro-syllabus-926d751475204cd29c0e3a9f6033ef5f:outcome:Pointer1792169221668_USER_96@1`.
+
+### Instruction
+
+```text
+This task asks you to explain two choices you made in the prompt you constructed in the previous unit (Construct a first business prompt).
+
+Step 1 – Include your prompt: Copy the full text of the prompt you submitted for the construction task into your response here, so the assessor can read it alongside your explanations.
+
+Step 2 – Identify two choices: Select two distinct decisions you made when writing that prompt. A choice might be a word or phrase you selected, a detail you included or left out, the order in which you arranged information, or the level of specificity you used.
+
+Step 3 – Explain each choice: For each of the two choices, write a short explanation covering:
+(a) What the choice is — quote or identify the specific text in your prompt where the choice appears.
+(b) Why you made it — what you were trying to achieve or avoid with that choice.
+
+You do not need to run the prompt or provide a generated response. Submit your prompt text and your two explanations.
+```
+
+### Evidence requirement
+
+```text
+Submit: (1) the full text of the prompt from the construction task, copied into this response; (2) two named explanations, each identifying a specific choice in that prompt text by quoting or pointing to the relevant wording, and each stating the reason for that choice. The assessor will read the prompt text and the two explanations together. Do not submit a generated AI response; submit your own prompt text and your own reasoning. Any within-package reference to the construction task is descriptive; the host allocates exact identifiers separately.
+```
+
+### Criterion c1-choice-identification
+
+The response includes the prompt text and identifies two distinct choices within it by reference to specific wording.
+
+Outcomes: `aimpro-syllabus-926d751475204cd29c0e3a9f6033ef5f:outcome:Pointer1792169221668_USER_96@1`.
+
+- **c1-present**: The response includes the prompt text and names two distinct choices, each located in the prompt by quoting or pointing to specific wording, so the choices are verifiable from the submitted text.
+
+- **c1-absent**: The response does not include the prompt text, or names fewer than two choices, or the choices named cannot be located in the submitted prompt text because no specific wording is quoted or identified.
+
+### Criterion c2-choice-reasoning
+
+Each identified choice is accompanied by an explanation of why it was made, stating what the learner intended to achieve or avoid.
+
+Outcomes: `aimpro-syllabus-926d751475204cd29c0e3a9f6033ef5f:outcome:Pointer1792169221668_USER_96@1`.
+
+- **c2-present**: Both identified choices are accompanied by an explanation stating a specific intention or purpose behind the choice, going beyond restating what the choice is to say why it was made.
+
+- **c2-absent**: One or both choices lack an explanation of purpose, or the explanation only restates what the choice is without stating any intention or reason behind making it.
+
+### Item citations
+
+- `wp3:32c2119d5504@31057b5b35cfcfa5f31ee406f855477a`; documents: `wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:6`, `wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:7`.
+  Supported claim: The corpus frames prompt engineering as a trial-and-error process requiring iteration, validation and domain-specific customisation, supporting a task in which learners explain and justify their own prompt choices.
+
+## Original draft gaps
+
+- No formal assessment, rubric or passing threshold is specified in the source; this draft proposes unvalidated ASSESS items and descriptors for human review only. No score, acquisition rule or completion claim is made.
+
+- No workshop duration beyond the source constraint 'One evening workshop' is invented; no timing is added to units.
+
+- Corpus resources wp3:12ce471a0269 (grades 6–12 critical AI literacy) and wp3:4868ba8731b3 (AI in educational measurement) are not used as unit citations because they do not validate transfer to adult SME business learners and do not supply a SCN01 rubric or thresholds.
+
+- Notebook/API setup and illustrative lengths from corpus excerpts are not SCN01 requirements and are not imported into any item.
+
+- Source competency values are preserved without normalization: category DIGITAL, heRelevance HIGH, smeRelevance HIGH, vetRelevance HIGH are flagged as ENUM_VALUE mismatches; ksa SKILL and proficiency FOUNDATION are flagged as UNTYPED_VOCABULARY_VALUE mismatches. These are not repaired.
+
+- The GENERATED_CONTRACT missing-resources cardinality finding on LearningTarget_0 (Pointer1792169221668_USER_96) is left unrepaired.
+
+- The five-move taxonomy (INSTRUCTION, PRIMARY CONTENT, EXAMPLE, CUE, TEMPLATE), the two-level rubric shape, the fictional prompt variants and the fictional transcript are newly authored operator illustrations for this assessment proposal; they are not validated source instruments or source-prescribed assessment standards.
+
+- The 150-word constraint in improved_prompt is a fictional prompt-output illustration chosen by the operator; it is not a learner response limit, a syllabus requirement or a passing threshold.
+
+- Whether customer or business details in a learner's submitted prompt are genuinely fictional cannot be determined from appearance alone; only the presence and scope of the required visible declaration or labelling is assessable. This limitation is retained explicitly.
+
+- Any within-package links to other units are descriptive references; the host allocates exact ALM identifiers separately. No future teaching assets are referenced as available.
+
+- The format/evidence choices (CASE_ANALYSIS/CASE_RESULT, SHORT_STRUCTURED/CRITERIA_BASED_PRODUCT, CRITERIA_BASED_PRODUCT/CRITERIA_BASED_PRODUCT, SHORT_STRUCTURED/REFLECTIVE_RECORD) are operator authoring requirements, not source-validated assessment standards.
+
+- Absence of disagreement in the paired annotation task does not imply absence of engagement; both the disagreement-resolution route and the no-disagreement verification route are recognised in the criteria and evidence requirement.

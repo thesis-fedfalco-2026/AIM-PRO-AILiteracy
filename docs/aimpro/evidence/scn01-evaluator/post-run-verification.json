@@ -1,0 +1,85 @@
+{
+  "verified_at_utc": "2026-11-04T10:30:30.698807+00:00",
+  "model_or_network_calls_during_verification": 0,
+  "kind": "PROPOSAL",
+  "counts": {
+    "units": 4,
+    "items": 4,
+    "criteria": 9,
+    "levels": 18,
+    "stimuli": 6
+  },
+  "state": {
+    "human_decisions": 3,
+    "state_changes": 2,
+    "new_human_decisions": 0,
+    "new_applications": 0,
+    "applied_context": {
+      "type": "ExecutionContext",
+      "id": "scn01-selected-syllabus-2",
+      "version": "b18e5e4cf85e4f0ba6989421920fd304"
+    },
+    "applied_project": {
+      "type": "Resource",
+      "id": "authoring-project:072a25dbf8a5773756a614ff6af5f82fa6894e9c0017999c75ab7ec50944dbac",
+      "version": "b18e5e4cf85e4f0ba6989421920fd304"
+    },
+    "previous_owner_revision_unchanged": true,
+    "proposal": {
+      "type": "ChangeProposal",
+      "id": "proposal-5d49b19e39ac40b1bab8f063667f426d",
+      "version": "1"
+    },
+    "proposal_status": "AWAITING_DECISION",
+    "review_payload_key": "270be47f84de65d1473684baee9a99b4ab2a0b52482104f0e2a30610e2aca855",
+    "candidate_counts": {
+      "ProcessNode": 5,
+      "LearningDesign": 1,
+      "Resource": 2,
+      "AssessmentSpecification": 4,
+      "ActivityDefinition": 4,
+      "ResourceRequirement": 4,
+      "Rubric": 4,
+      "DomainModel": 1,
+      "ExecutionContext": 1
+    }
+  },
+  "tables": {
+    "entities": {
+      "before": 84,
+      "after": 111,
+      "all_previous_rows_retained": true,
+      "new_rows": 27
+    },
+    "contexts": {
+      "before": 1,
+      "after": 1,
+      "all_previous_rows_retained": true,
+      "new_rows": 0
+    },
+    "operations": {
+      "before": 2,
+      "after": 2,
+      "all_previous_rows_retained": true,
+      "new_rows": 0
+    },
+    "requests": {
+      "before": 7,
+      "after": 8,
+      "all_previous_rows_retained": true,
+      "new_rows": 1
+    }
+  },
+  "histories_unchanged": {
+    ".cache/aimpro-examples/curator/scn01-selected-sources-2": true,
+    ".cache/aimpro-examples/evaluator/scn01-assessments-4-native-json": true
+  },
+  "packet_and_code_hashes_match": true,
+  "source_and_input_identical_to_authorized_packet": true,
+  "deterministic_checks_passed": true,
+  "narrow_revision_checks_passed": true,
+  "replay_exact_without_models": true,
+  "database_bytes_unchanged_during_verification": true,
+  "sqlite_integrity": "ok",
+  "fresh_retrieval": 0
+}

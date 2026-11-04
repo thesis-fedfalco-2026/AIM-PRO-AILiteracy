@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import hashlib
 from typing import Any
 
 from document_search.backend import (
     ConfigurationError, Document, SearchError, SearchResponse,
     _bounded_documents, _validate_k, _validate_query,
 )
-from document_search.contracts import SearchScope
+from document_search.contracts import SearchScope, preparation_selection, resource_key
 
 
 class PostgresBackend:
@@ -51,6 +52,35 @@ class PostgresBackend:
 
     def close(self) -> None:
         pass
+
+    def fetch_preparation_documents(self, selections, *, scope):
+        refs, scope = preparation_selection(selections, scope)
+        try:
+            import psycopg
+            from psycopg.rows import dict_row
+            with psycopg.connect(self._dsn, connect_timeout=5, row_factory=dict_row,
+                    options='-c default_transaction_read_only=on -c statement_timeout=10000') as conn:
+                rows = conn.execute(
+                    "SELECT id, text, metadata, 0.0 AS score FROM wp3_search.documents "
+                    "WHERE metadata->>'source_scope' = ANY(%s) AND id = ANY(%s)",
+                    (list(scope.keys), [r.document_id for r in refs])).fetchall()
+            by_id = {row['id']: Document.model_validate(row) for row in rows}
+            if set(by_id) != {r.document_id for r in refs}:
+                raise SearchError('Exact source selection unavailable')
+            documents = []
+            for ref in refs:
+                doc = by_id[ref.document_id]
+                if (not scope.matches(doc.metadata) or doc.metadata['source'] != ref.resource_id or
+                        doc.metadata.get('resource_key') != resource_key(ref.resource_id, ref.resource_version) or
+                        hashlib.sha256(doc.text.encode()).hexdigest() != ref.content_sha256):
+                    raise SearchError('Exact source selection changed')
+                documents.append(doc)
+            if self._unlimited_text:
+                return SearchResponse(documents=documents).model_dump()
+            bounded, truncated = _bounded_documents(documents)
+            return SearchResponse(documents=bounded, truncated=truncated).model_dump()
+        except Exception:
+            raise SearchError('Exact source selection failed') from None
 
 
 def build_postgres_backend(environ: Mapping[str, str]) -> PostgresBackend:
