@@ -139,10 +139,11 @@ class CaseResult:
     case_id: str
     category: str
     defence: str
-    outcome: str  # BLOCKED or LEAKED; ANSWERED or REJECTED for controls; NOT_EXECUTED
+    outcome: str  # BLOCKED or LEAKED; ANSWERED or REJECTED for controls; NOT_EXECUTED; ERROR
     expected: str | None
     response_kind: str
     run_id: str | None
+    error: str | None = None
 
 
 class _Tee:
