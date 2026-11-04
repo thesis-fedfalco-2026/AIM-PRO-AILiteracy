@@ -137,6 +137,7 @@ def build_orchestrator(
         catalog,
         environ=runtime_environ,
         client_factory=client_factory,
+        anthropic_json_outputs=True,
     )
     llms.validate_settings(lead.profile, lead.settings)
     for summary in registry.summaries():

@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 import warnings
 
 from agent_system.config import ConfigurationError, ModelCatalog, LLMSettings, ResolvedAgentConfig
+from agent_system.deadline import RequestDeadline
 from learning.outputs import WorkerOutput
 from agent_system import telemetry
 
@@ -95,14 +96,18 @@ class LLMFactory:
                 client_factory = AnthropicJSONCompletion
         return client_factory(
             provider=profile.provider,
-            model=profile.model,
+            # An explicit provider makes CrewAI send the model name verbatim. OpenRouter
+            # names keep their vendor prefix (openai/..., anthropic/...) as part of the id.
+            model=profile.model if openrouter else profile.model.removeprefix(profile.provider + "/"),
             api_key=self.environ[profile.api_key_env],
             base_url=profile.base_url,
             temperature=settings.temperature,
-            top_p=settings.top_p,
+            # Recent Claude models reject temperature together with top_p.
+            top_p=None if profile.provider == "anthropic" else settings.top_p,
             max_tokens=settings.max_tokens,
             **({"stream": True} if profile.stream else {}),
             timeout=settings.timeout,
+            interceptor=RequestDeadline(settings.timeout),
             **({"extra_body": {"provider": {"max_price": {"prompt": 0, "completion": 0}}}}
                if openrouter and (profile.model.endswith(":free") or profile.model == "openrouter/free") else {}),
         )

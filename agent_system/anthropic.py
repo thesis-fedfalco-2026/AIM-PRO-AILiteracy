@@ -31,6 +31,18 @@ def usage_cost_usd(record, rates):
     return float(sum(Decimal(str(rates[key])) * count for key, count in quantities.items()) / Decimal(1000000))
 
 
+def typed_schema(schema):
+    """Anthropic rejects untyped and recursive definitions such as pydantic's JsonValue.
+
+    transform_schema closes free-form maps (dict[str, JsonValue]) to {}, so a
+    proposal's Entity.fields cannot carry values through this path; only roles
+    whose proposals stay empty are fully served.
+    """
+    scalar = {'anyOf': [{'type': t} for t in ('string', 'number', 'boolean', 'null')]}
+    defs = {name: scalar if definition == {} else definition for name, definition in schema.get('$defs', {}).items()}
+    return schema | {'$defs': defs} if defs else schema
+
+
 class AnthropicJSONCompletion(AnthropicCompletion):
     """Retain CrewAI dispatch/hooks, replacing its legacy tool-envelope JSON path."""
 
@@ -66,7 +78,7 @@ class AnthropicJSONCompletion(AnthropicCompletion):
         result.pop('tool_choice', None)
         # Extra body supports the current API field without upgrading the installed SDK.
         result['extra_body'] = {'output_config': {'format': {
-            'type': 'json_schema', 'schema': transform_schema(response_model.model_json_schema())}}}
+            'type': 'json_schema', 'schema': transform_schema(typed_schema(response_model.model_json_schema()))}}}
         return result
 
     def _start_record(self):

@@ -22,6 +22,7 @@ if "XDG_DATA_HOME" not in os.environ:
 
 import main
 
+from agent_system.deadline import RequestDeadline
 from agent_system.config import (
     AgentConfig,
     ResolvedAgentConfig,
@@ -458,8 +459,27 @@ class RuntimeTest(unittest.TestCase):
                 "top_p": 0.9,
                 "max_tokens": 512,
                 "timeout": 120.0,
+                "interceptor": RequestDeadline(120.0),
             }],
         )
+
+    def test_llm_factory_adapts_anthropic_model_and_sampling(self):
+        catalog = self.catalog()
+        catalog.profiles["claude"] = ModelProfile(provider="anthropic", model="anthropic/claude-sonnet-4-6",
+                                                  api_key_env="ANTHROPIC_API_KEY", allow_paid=True)
+        factory = LLMFactory(catalog, environ={"ANTHROPIC_API_KEY": "secret", "VLLM_API_KEY": "secret"},
+                             client_factory=lambda **values: values)
+        self.assertIsNone(factory("claude")["top_p"])
+        self.assertEqual(factory("claude")["model"], "claude-sonnet-4-6")
+        self.assertEqual(factory("local")["top_p"], 0.9)
+
+    def test_llm_factory_keeps_openrouter_vendor_prefix(self):
+        catalog = self.catalog()
+        catalog.profiles["router"] = ModelProfile(provider="openai", model="openai/gpt-oss-20b:free",
+                                                  base_url="https://openrouter.ai/api/v1", api_key_env="OPENROUTER_API_KEY")
+        factory = LLMFactory(catalog, environ={"OPENROUTER_API_KEY": "secret"},
+                             client_factory=lambda **values: values)
+        self.assertEqual(factory("router")["model"], "openai/gpt-oss-20b:free")
 
     def test_llm_factory_rejects_missing_profile_key(self):
         factory = LLMFactory(self.catalog(), environ={}, client_factory=lambda **values: values)
