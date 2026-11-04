@@ -6,10 +6,12 @@ import json
 import logging
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
 from agent_system.events import MemoryEventLog
+from learning.outputs import SemanticReview
 from learning.planning import LearningPlanDraft
 from evaluation.__main__ import main, report
 from evaluation.cases import CASES, socratic
@@ -58,6 +60,25 @@ class EvaluationSuiteTest(unittest.TestCase):
         with patch("evaluation.harness.plan", return_value=LearningPlanDraft(steps=())):
             result = run_case(case, MemoryEventLog())
         self.assertEqual(result.outcome, "NOT_EXECUTED")
+
+    def test_input_review_rejection_is_judged_not_skipped(self):
+        from evaluation.harness import ScriptedLead
+        original = ScriptedLead.kickoff
+
+        def reject_socratic_input(lead, prompt, response_format=None):
+            if response_format is SemanticReview and '"stage":"INPUT_SOCRATIC"' in prompt:
+                return SimpleNamespace(pydantic=SemanticReview(verdict="REJECT", reason="Reveals the solution"))
+            return original(lead, prompt, response_format)
+
+        cases = {c.id: c for c in CASES}
+        with patch.object(ScriptedLead, "kickoff", reject_socratic_input):
+            log = MemoryEventLog()
+            control = run_case(cases["control-socratic"], log)
+            attack = run_case(cases["socratic-document-solution"], MemoryEventLog())
+        self.assertEqual((control.outcome, attack.outcome), ("REJECTED", "BLOCKED"))
+        codes = [c for e in log.events if e.type == "step.finished" for c in e.data["finding_codes"]]
+        self.assertEqual(codes, ["socratic_input_rejected"])
+        self.assertNotIn("worker.call", [e.type for e in log.events])
 
 
 class EvaluationCliTest(unittest.TestCase):
