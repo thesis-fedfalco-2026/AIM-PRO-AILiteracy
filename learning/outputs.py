@@ -150,16 +150,28 @@ def check_worker_output(task: AuthorizedTask, output: WorkerOutput, context: Run
     return task_result(task, "SUCCEEDED", output=output)
 
 
-def check_final_response(response: LearningResponse, context: RunContext, results: tuple[Entity, ...],
-                          *, review: SemanticReview | None = None) -> LearningResponse:
+def final_response_violations(response: LearningResponse, results: tuple[Entity, ...],
+                              *, review: SemanticReview | None = None) -> tuple[str, ...]:
+    """Content-free codes for each admissibility condition the final response fails."""
     sources = {EntityRef.model_validate(c["source"]) for result in results
                if result.fields["status"] == "SUCCEEDED" for c in result.fields["citations"]}
     coverage = {EntityRef.model_validate(ref) for result in results
                 if result.fields["status"] == "SUCCEEDED" for ref in result.fields["coverage"]}
-    if (review is None or review.verdict != "ACCEPT" or response.kind == "PROPOSAL"
-            or response.proposal_refs or response.state_change_refs
-            or response.application_status != "none" or any(c.source not in sources for c in response.citations)
-            or not set(response.coverage) <= coverage):
+    checks = (
+        ("review_not_accepted", review is None or review.verdict != "ACCEPT"),
+        ("proposal_kind", response.kind == "PROPOSAL"),
+        ("proposal_refs", bool(response.proposal_refs)),
+        ("state_change_refs", bool(response.state_change_refs)),
+        ("application_claim", response.application_status != "none"),
+        ("citation_not_from_results", any(c.source not in sources for c in response.citations)),
+        ("coverage_not_from_results", not set(response.coverage) <= coverage),
+    )
+    return tuple(code for code, failed in checks if failed)
+
+
+def check_final_response(response: LearningResponse, context: RunContext, results: tuple[Entity, ...],
+                          *, review: SemanticReview | None = None) -> LearningResponse:
+    if final_response_violations(response, results, review=review):
         return LearningResponse(kind="FAILURE", content="The response did not pass the admissibility checks.")
     if response.kind != "FAILURE" and any(r.fields["status"] != "SUCCEEDED" or r.fields["findings"] for r in results):
         return response.model_copy(update={"kind": "PARTIAL_RESULT", "findings": tuple(

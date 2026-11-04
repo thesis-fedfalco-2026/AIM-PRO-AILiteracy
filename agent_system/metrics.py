@@ -56,7 +56,7 @@ def run_metrics(events: list[Event]) -> list[dict]:
                 if data["status"] == "FAILED" and REJECTION_CODES & set(codes):
                     run["rejected_steps"] += 1
             elif event.type == "final.checked":
-                run["final"] = {k: data.get(k) for k in ("verdict", "proposed_kind", "response_kind")}
+                run["final"] = {k: data.get(k) for k in ("verdict", "proposed_kind", "response_kind", "violations")}
         run["model_calls"] = sum(run["lead_calls"].values()) + run["worker_calls"]
         run["lead_calls"] = dict(run["lead_calls"])
         run["reviews"] = {stage: dict(verdicts) for stage, verdicts in run["reviews"].items()}
@@ -105,6 +105,7 @@ def summarize(events: list[Event]) -> dict:
         reviews={stage: dict(verdicts, reject_rate=_rate(verdicts["REJECT"], sum(verdicts.values())))
                  for stage, verdicts in reviews.items()},
         finding_codes=dict(sum((Counter(r["finding_codes"]) for r in runs), Counter())),
+        final_violations=dict(Counter(code for r in runs if r["final"] for code in r["final"]["violations"] or ())),
     )
 
 
