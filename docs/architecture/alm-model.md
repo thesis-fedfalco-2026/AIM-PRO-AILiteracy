@@ -15,6 +15,8 @@ views, not additional classes, database tables or jjodel exports.
 The overview is also available as a [standalone SVG](alm-model.svg), with
 [editable Graphviz source](alm-model.dot). The five UML views below show selected
 declared relationships; the JSON remains the complete field/constraint reference.
+An [Ecore rendering](alm.ecore) of the same contract, with rules R01–R21 as
+annotations, is provided for EMF-based tools; it is a view, not a second normative source.
 
 ## Identity and diagram notation
 

@@ -5,8 +5,9 @@ Release/import operations remain reference-only. The repository owner requested
 this design and a complete cycle using simulated agents before implementing the
 dedicated generators in #9 and #10. Those generators are now implemented locally
 and tested with synthetic model responses; their live generation/review evidence
-remains pending for Teacher/Trainer. See [the generator guide](authoring-generators.md)
-and the [approved SCN01 Evaluator evidence](../aimpro/scn01-evaluator-example.md).
+remains pending for Teacher/Trainer. See [the generator guide](authoring-generators.md),
+the [approved SCN01 Evaluator evidence](../aimpro/scn01-evaluator-example.md) and the
+[six-topic decision register](agentic-network-decisions.md).
 
 For the existing entity model, its cardinalities and the distinction between
 configuration and execution state, see [the ALM conceptual model](alm-model.md).

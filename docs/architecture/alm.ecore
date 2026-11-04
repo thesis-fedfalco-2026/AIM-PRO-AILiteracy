@@ -1,0 +1,1652 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="alm" nsURI="http://alm/1.0.0" nsPrefix="alm">
+  <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+    <details key="documentation" value="Agnostic metamodel for the multi-agent learning system (ALM 1.0.0, 2026-10-27). Provide the Lead with a stable view of outcomes, knowledge, activities, resources, roles, evidence and decisions for planning and synthesizing learning tasks in any subject."/>
+  </eAnnotations>
+  <eAnnotations source="http://alm/annotation">
+    <details key="metamodelId" value="ALM"/>
+    <details key="metamodelVersion" value="1.0.0"/>
+    <details key="source" value="docs/resources/metamodello-agnostico-apprendimento.json"/>
+    <details key="referenceSemantics" value="Every entity reference is conceptually represented by EntityRef, with type, id and exact version. Cyclic reference structures are allowed unless prohibited by a specific rule."/>
+  </eAnnotations>
+  <eAnnotations source="http://alm/annotation/rules">
+    <details key="R01" value="immutability and layers: The metamodel is fixed. Subject models and state may vary within policy limits; no proposal may change types, categories or invariants during execution. A DRAFT/PREPARATION context may precede the first model, provided identity and policy come from trusted configuration. A LEARNING/ACTIVE context cannot have empty models."/>
+    <details key="R02" value="identity and references: Every entity has an id, version and provenance. Every reference resolves an object of the expected type and exact version; session references remain within the authorized context. DomainModel.definitions may reference only domain_configuration definitions. Loading follows the relevant reference closure, including historical versions needed for evidence and decisions."/>
+    <details key="R03" value="agnosticism and roles: Topics, classifications, scales, contexts and strategies are model data. Human roles, worker roles and control components remain distinct."/>
+    <details key="R04" value="topic hierarchy: The parentTopics relationship has no cycles. Associative relationships may be cyclic and do not imply prerequisites."/>
+    <details key="R05" value="prerequisites: A MANDATORY prerequisite must be SATISFIED according to a defined rule before the dependent activity. UNKNOWN does not count as SATISFIED. RECOMMENDED and RECOMMENDED_SEQUENCE produce findings; CO_REQUISITE requires a joint satisfaction policy. Obligation cycles that prevent starting are invalid."/>
+    <details key="R06" value="path composition: LearningDesign.root is a PHASE. A ready PHASE contains at least one child and no direct activities; a ready UNIT contains at least one activity and no children. The hierarchy is acyclic, with one parent per node in the path. Composition and completion conditions are explicit before automatic advancement. Node closure uses the relevant ActivityOccurrence states and its rule; COMPLETED does not prove acquisition and SKIPPED does not count as completion unless an explicit authorized rule says so. A finished WorkerTask instance does not automatically complete the learner's activity."/>
+    <details key="R07" value="coverage and readiness: A ready path covers its outcomes through unit activities. Each assessment covers the outcomes it declares it evaluates. A task covers its goal or declares the missing portion."/>
+    <details key="R08" value="resource use: In LEARNING, a resource used must have a valid, approved binding consistent with the context, audience and task. PREPARATION allows candidates within the authorized scope. A mandatory requirement must be satisfied before the activity. Discovering resources outside scope is possible only in a separate authorized PREPARATION context, not as an implicit exception to the LEARNING filter."/>
+    <details key="R09" value="sources and provenance: Distinguish source, usage conditions, derived material, citation and claim. Generated resources declare their origin and sources actually used. A search score does not confer reliability or approval."/>
+    <details key="R10" value="rubric: Criterion keys are unique within the rubric and level keys within the criterion. Every CriterionJudgment references existing keys in the applied version and relevant evidence. Weights and aggregation are required only when specified by the rule."/>
+    <details key="R11" value="evidence: Actual evidence references the person, context, activity, occurrence/attempt, outcomes and versions. Its type must be allowed by the assessment specification. Agent-produced text and technical task success are not themselves proof of learning. The evidence's person, context and activity references must agree with the indicated ActivityOccurrence. Its historical version identifies the attempt even if the occurrence state evolves."/>
+    <details key="R12" value="outcome rules: Acquisition or a determined judgment requires defined rules and sufficient inputs. An ambiguous or free-form source description does not automatically become an executable predicate. Missing evidence or criteria produces UNKNOWN/undetermined."/>
+    <details key="R13" value="verified state and responsibility: VERIFIED requires ACQUIRED according to criteria, admissible evidence, a satisfied verificationRule, formal evaluation and confirmation by an authorized human. ACQUIRED may be recorded with an approved rule and existing authorization without equating to verification."/>
+    <details key="R14" value="least privilege: Required task capabilities ⊆ capabilities authorized by profile and context. Capabilities actually exposed to the worker ⊆ required capabilities. Tools, APIs, KBs and data follow the same scope constraint."/>
+    <details key="R15" value="access and isolation: Authorization for mediated retrieval does not automatically expose a tool to the worker. No worker inherits rights from the Lead, previous tasks or retrieved sources; reads are limited to necessary context."/>
+    <details key="R16" value="role and output: Each specialization has one category and one role from the closed taxonomy. Task intent, output and topic are consistent with that profile. The Socratic constraint permits neither direct nor indirectly revealed solutions, including in synthesis."/>
+    <details key="R17" value="plan: Steps have unique IDs, existing agents and dependencies within the same plan, without self-dependencies or cycles. Application control verifies limits and permissions and applies stable sequential topological ordering."/>
+    <details key="R18" value="outcomes and coverage: An unsuccessful dependency prevents the dependent step. A nonempty plan with no successes ends in error. Synthesis uses only usable outputs and explicitly declares partial coverage. SUCCEEDED in the final workflow also requires per-step semantic review; completion of the call alone is insufficient. The check occurs before output may become input to a dependent task."/>
+    <details key="R19" value="proposals and decisions: A conforming proposal remains a proposal until the required decision. Only an authorized responsible person may approve it; approval and application are distinct events. A revision request entails a new version to review. The decision references the version actually reviewed and its reviewedPayloadKey. A new revision adding only status or a decision link retains approval if substantive content is unchanged. Application control verifies content identity without trusting a key declared by the agent. A ChangeProposal decision may also approve bindings or evaluations included in the candidate: their reviewPayloadKey must appear in coveredPayloadKeys and be part of the content actually reviewed. An object added or modified after review does not inherit proposal approval."/>
+    <details key="R20" value="state consistency: Apply a change only if authorization, base versions, references and constraints remain valid. Record the cause, author/controller, decision or policy, previous revision and next revision. Do not reinterpret historical evidence with a new rubric. Audit events alone or administrative proposal updates do not change the revision of the authoritative state on which it is based. Substantive changes to that context instead require a base check. The history of an approved evaluation or binding remains reconstructable after later administrative revisions."/>
+    <details key="R21" value="final response: The response distinguishes grounded content, explicit inference, gaps and proposals. It reports sources actually used when content is source-based; preserves the educational role and does not claim unapplied updates."/>
+  </eAnnotations>
+  <eClassifiers xsi:type="ecore:EDataType" name="Identifier" instanceClassName="java.lang.String">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="ALM primitive type Identifier."/>
+    </eAnnotations>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EDataType" name="Version" instanceClassName="java.lang.String">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="ALM primitive type Version."/>
+    </eAnnotations>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EDataType" name="Text" instanceClassName="java.lang.String">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="ALM primitive type Text."/>
+    </eAnnotations>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EDataType" name="Locator" instanceClassName="java.lang.String">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="ALM primitive type Locator."/>
+    </eAnnotations>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EDataType" name="Timestamp" instanceClassName="java.lang.String">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="ALM primitive type Timestamp. ISO-8601 timestamp text."/>
+    </eAnnotations>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EDataType" name="Number" instanceClassName="java.math.BigDecimal">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="ALM primitive type Number."/>
+    </eAnnotations>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="WorkerCategory">
+    <eLiterals name="TEACHER_TRAINER"/>
+    <eLiterals name="CURATOR" value="1"/>
+    <eLiterals name="EVALUATOR" value="2"/>
+    <eLiterals name="SOCRATIC" value="3"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="WorkerRole">
+    <eLiterals name="TEACHER"/>
+    <eLiterals name="TRAINER" value="1"/>
+    <eLiterals name="CURATOR" value="2"/>
+    <eLiterals name="EVALUATOR" value="3"/>
+    <eLiterals name="SOCRATIC" value="4"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="Intent">
+    <eLiterals name="EXPLAIN"/>
+    <eLiterals name="PRACTICE" value="1"/>
+    <eLiterals name="CURATE" value="2"/>
+    <eLiterals name="ASSESS" value="3"/>
+    <eLiterals name="SOCRATIC_GUIDANCE" value="4"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="ValueOrigin">
+    <eLiterals name="CONFIGURATION"/>
+    <eLiterals name="GENERATED_PROPOSAL" value="1"/>
+    <eLiterals name="INITIAL_CONTEXT" value="2"/>
+    <eLiterals name="HUMAN_DECISION" value="3"/>
+    <eLiterals name="OBSERVED_EVENT" value="4"/>
+    <eLiterals name="UNRESOLVED_GAP" value="5"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="PrerequisiteKind">
+    <eLiterals name="MANDATORY"/>
+    <eLiterals name="RECOMMENDED" value="1"/>
+    <eLiterals name="CO_REQUISITE" value="2"/>
+    <eLiterals name="RECOMMENDED_SEQUENCE" value="3"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="TruthStatus">
+    <eLiterals name="SATISFIED"/>
+    <eLiterals name="NOT_SATISFIED" value="1"/>
+    <eLiterals name="UNKNOWN" value="2"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="ProcessKind">
+    <eLiterals name="PHASE"/>
+    <eLiterals name="UNIT" value="1"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="Composition">
+    <eLiterals name="SEQUENTIAL"/>
+    <eLiterals name="INDEPENDENT" value="1"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="InteractionFormat">
+    <eLiterals name="EXPOSITION"/>
+    <eLiterals name="GUIDED_DIALOGUE" value="1"/>
+    <eLiterals name="CHOICE" value="2"/>
+    <eLiterals name="BINARY_DECISION" value="3"/>
+    <eLiterals name="MATCHING" value="4"/>
+    <eLiterals name="SHORT_STRUCTURED" value="5"/>
+    <eLiterals name="CASE_ANALYSIS" value="6"/>
+    <eLiterals name="CRITERIA_BASED_PRODUCT" value="7"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="EvidenceKind">
+    <eLiterals name="OBJECTIVE_RESPONSE"/>
+    <eLiterals name="CASE_RESULT" value="1"/>
+    <eLiterals name="CRITERIA_BASED_PRODUCT" value="2"/>
+    <eLiterals name="TOOL_TRACE" value="3"/>
+    <eLiterals name="REFLECTIVE_RECORD" value="4"/>
+    <eLiterals name="PEER_REVIEW" value="5"/>
+    <eLiterals name="INTEGRITY_CHECK" value="6"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="HumanRole">
+    <eLiterals name="LEARNER"/>
+    <eLiterals name="CONTENT_RESPONSIBLE" value="1"/>
+    <eLiterals name="ASSESSOR" value="2"/>
+    <eLiterals name="OBSERVER" value="3"/>
+    <eLiterals name="ADMINISTRATOR" value="4"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="ContextMode">
+    <eLiterals name="PREPARATION"/>
+    <eLiterals name="LEARNING" value="1"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="ContextStatus">
+    <eLiterals name="DRAFT"/>
+    <eLiterals name="ACTIVE" value="1"/>
+    <eLiterals name="PAUSED" value="2"/>
+    <eLiterals name="CLOSED" value="3"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="AccessPath">
+    <eLiterals name="ORCHESTRATOR_RETRIEVAL"/>
+    <eLiterals name="WORKER_TOOL" value="1"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="ProposalStatus">
+    <eLiterals name="DRAFT"/>
+    <eLiterals name="VALIDATED" value="1"/>
+    <eLiterals name="AWAITING_DECISION" value="2"/>
+    <eLiterals name="APPROVED" value="3"/>
+    <eLiterals name="REJECTED" value="4"/>
+    <eLiterals name="APPLIED" value="5"/>
+    <eLiterals name="STALE" value="6"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="DecisionKind">
+    <eLiterals name="APPROVE"/>
+    <eLiterals name="REJECT" value="1"/>
+    <eLiterals name="REQUEST_REVISION" value="2"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="ProgressStatus">
+    <eLiterals name="NOT_OBSERVED"/>
+    <eLiterals name="IN_PROGRESS" value="1"/>
+    <eLiterals name="ACQUIRED" value="2"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="VerificationStatus">
+    <eLiterals name="UNVERIFIED"/>
+    <eLiterals name="PENDING_CONFIRMATION" value="1"/>
+    <eLiterals name="VERIFIED" value="2"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="EvaluationMode">
+    <eLiterals name="FORMATIVE"/>
+    <eLiterals name="FORMAL" value="1"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="TaskStatus">
+    <eLiterals name="PENDING"/>
+    <eLiterals name="SUCCEEDED" value="1"/>
+    <eLiterals name="FAILED" value="2"/>
+    <eLiterals name="SKIPPED" value="3"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="OutputKind">
+    <eLiterals name="EXPLANATION"/>
+    <eLiterals name="GUIDED_PRACTICE" value="1"/>
+    <eLiterals name="SUPPORT_MATERIAL" value="2"/>
+    <eLiterals name="ASSESSMENT" value="3"/>
+    <eLiterals name="SOCRATIC_TURN" value="4"/>
+    <eLiterals name="CHANGE_PROPOSAL" value="5"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="FindingSeverity">
+    <eLiterals name="BLOCKING"/>
+    <eLiterals name="WARNING" value="1"/>
+    <eLiterals name="INFORMATION" value="2"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="ResponseKind">
+    <eLiterals name="ANSWER"/>
+    <eLiterals name="PROPOSAL" value="1"/>
+    <eLiterals name="CLARIFICATION" value="2"/>
+    <eLiterals name="PARTIAL_RESULT" value="3"/>
+    <eLiterals name="FAILURE" value="4"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="ActivityStatus">
+    <eLiterals name="NOT_STARTED"/>
+    <eLiterals name="IN_PROGRESS" value="1"/>
+    <eLiterals name="COMPLETED" value="2"/>
+    <eLiterals name="SKIPPED" value="3"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Entity" abstract="true">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Common identity of every ALM entity: stable id, exact version and provenance. References use EntityRef semantics (type, id, exact version)."/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="id" lowerBound="1" eType="#//Identifier">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Stable identity, unique within the loaded catalog."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="version" lowerBound="1" eType="#//Version">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Definition version or record revision; a change produces a distinguishable version identity."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="provenance" lowerBound="1" eType="#//Provenance" containment="true">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Origin of the definition or record and responsibility for introducing it."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="DomainModel" eSuperTypes="#//Entity">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Versioned semantic container for a subject; does not add classes to the metamodel."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="domain_configuration"/>
+      <details key="ruleRefs" value="R01 R02 R03"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Domain name."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="scope" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Boundaries of the subject and level covered."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="topics" lowerBound="1" upperBound="-1" eType="#//Topic">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Available topics."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="outcomes" upperBound="-1" eType="#//LearningOutcome">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Defined observable outcomes."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="classifications" upperBound="-1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Domain-specific classifications and levels with explicit meanings."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="definitions" upperBound="-1" eType="#//EntityRef" containment="true">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Relevant versioned definitions: OutcomeGroup, Prerequisite, Strategy, LearningDesign, ProcessNode, ActivityDefinition, ResourceRequirement, Resource, AssessmentSpecification, Rubric, RuleDefinition, PolicySet and AgentSpecialization. They constitute the model catalog; shared references do not duplicate objects."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Topic" eSuperTypes="#//Entity">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Identifiable topic, distinct from a learning outcome."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="domain_configuration"/>
+      <details key="ruleRefs" value="R02 R04"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Topic name."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="definition" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Meaning and boundaries."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="parentTopics" upperBound="-1" eType="#//Topic">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Acyclic hierarchy between topics."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="relatedTopics" upperBound="-1" eType="#//Topic">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Associative relationships, not implicit prerequisites."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="LearningOutcome" eSuperTypes="#//Entity">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Expected, describable and observable outcome, reusable across activities."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="domain_configuration"/>
+      <details key="ruleRefs" value="R02 R12 R13"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="statement" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="What the person must know, do or demonstrate."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="topics" lowerBound="1" upperBound="-1" eType="#//Topic">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Related topics."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="kind" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Category defined by the model, such as knowledge, skill or disposition."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="targetLevel" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Domain-defined level, not a universal scale."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="achievementRule" eType="#//RuleDefinition">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Criterion for declaring acquisition."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="verificationRule" eType="#//RuleDefinition">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Criterion and decision for declaring formal verification."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="OutcomeGroup" eSuperTypes="#//Entity">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Aggregate of outcomes with mandatory and optional goals."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="domain_configuration"/>
+      <details key="ruleRefs" value="R02 R05"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Human-readable identity of the aggregate."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="requiredOutcomes" lowerBound="1" upperBound="-1" eType="#//LearningOutcome">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Required outcomes."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="optionalOutcomes" upperBound="-1" eType="#//LearningOutcome">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Additional outcomes that do not replace required ones."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Prerequisite" eSuperTypes="#//Entity">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Explicit pedagogical relationship; not a dependency between workers."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="domain_configuration"/>
+      <details key="ruleRefs" value="R02 R05"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="dependent" lowerBound="1" eType="#//EntityRef" containment="true">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="ActivityDefinition, ProcessNode, LearningOutcome or OutcomeGroup to which it applies."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="requiredTarget" lowerBound="1" eType="#//EntityRef" containment="true">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Required LearningOutcome or OutcomeGroup."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="kind" lowerBound="1" eType="#//PrerequisiteKind">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Strength of the constraint."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="satisfactionRule" eType="#//RuleDefinition">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="How to determine SATISFIED, NOT_SATISFIED or UNKNOWN in context."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Strategy" eSuperTypes="#//Entity">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Selectable pedagogical method; neither an agent role nor a mandatory phase."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="domain_configuration"/>
+      <details key="ruleRefs" value="R03 R06"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Strategy name."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="family" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Methodological family described by the model."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="rationale" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Why it suits the outcome and audience."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="constraints" upperBound="-1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Conditions of use, limitations and adaptation guidance."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="LearningDesign" eSuperTypes="#//Entity">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Reusable path comprising phases and units; optional for isolated interactions."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="domain_configuration"/>
+      <details key="ruleRefs" value="R02 R06 R07"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Path name."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="outcomes" lowerBound="1" upperBound="-1" eType="#//LearningOutcome">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Overall outcomes."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="root" lowerBound="1" eType="#//ProcessNode">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Root phase of the path."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="strategies" upperBound="-1" eType="#//Strategy">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="General guidance."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="assessmentSpecs" upperBound="-1" eType="#//AssessmentSpecification">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Assessments associated with the path."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ProcessNode" eSuperTypes="#//Entity">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Unifies composite phases and operational units while preserving recursive composition."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="domain_configuration"/>
+      <details key="ruleRefs" value="R02 R06 R07"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Phase or unit name."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="kind" lowerBound="1" eType="#//ProcessKind">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="PHASE contains nodes; UNIT contains activities."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="outcomes" lowerBound="1" upperBound="-1" eType="#//LearningOutcome">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Local goal."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="children" upperBound="-1" eType="#//ProcessNode">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Direct children of PHASE only, in explicit order when sequential."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="composition" eType="#//Composition">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="SEQUENTIAL or INDEPENDENT for PHASE only."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="activities" upperBound="-1" eType="#//ActivityDefinition">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Activities of UNIT only; references to reusable definitions."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="strategies" upperBound="-1" eType="#//Strategy">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Strategies relevant to the unit."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="completionRule" eType="#//RuleDefinition">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Completion condition for the phase or unit."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="estimatedDuration" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Estimated duration, distinct from an actual schedule."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ActivityDefinition" eSuperTypes="#//Entity">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Reusable learning action. Actual use and attempts are recorded in state."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="domain_configuration"/>
+      <details key="ruleRefs" value="R02 R07 R08 R11"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="instruction" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Instructions or operational goal."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="intent" lowerBound="1" eType="#//Intent">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Primary educational purpose."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="format" lowerBound="1" eType="#//InteractionFormat">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Form of interaction, independent of subject."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="outcomes" lowerBound="1" upperBound="-1" eType="#//LearningOutcome">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Outcomes addressed."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="resourceRequirements" upperBound="-1" eType="#//ResourceRequirement">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Required resources; an independent conversation may need none."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="expectedEvidence" upperBound="-1" eType="#//EvidenceKind">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Expected evidence if the activity observes a performance."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="assessmentSpec" eType="#//AssessmentSpecification">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Applicable assessment specification."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="strategies" upperBound="-1" eType="#//Strategy">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Teaching methods adopted."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ResourceRequirement" eSuperTypes="#//Entity">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Need for material; not yet a selected resource."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="domain_configuration"/>
+      <details key="ruleRefs" value="R07 R08"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="purpose" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Which educational gap to address."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="outcomes" lowerBound="1" upperBound="-1" eType="#//LearningOutcome">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Outcomes to support."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="constraints" lowerBound="1" upperBound="-1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Relevance, level, language, format and other genuinely necessary requirements."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="mandatory" lowerBound="1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Whether its absence blocks the affected activity."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Resource" eSuperTypes="#//Entity">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Source or learning material with provenance, derivations and usage conditions."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="domain_configuration"/>
+      <details key="ruleRefs" value="R02 R08 R09"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="title" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Material name."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="contentOrLocator" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Content or a resolvable reference to the material."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="topics" lowerBound="1" upperBound="-1" eType="#//Topic">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Declared relevance."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="outcomes" upperBound="-1" eType="#//LearningOutcome">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Supported outcomes."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="language" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Language, when relevant to selection."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="usageConditions" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Known access and usage conditions; unknown does not mean authorized use."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="derivedFrom" upperBound="-1" eType="#//Resource">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Parent sources or materials, including generated syntheses."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="AssessmentSpecification" eSuperTypes="#//Entity">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Reusable blueprint or local assessment with criteria, evidence and coverage."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="domain_configuration"/>
+      <details key="ruleRefs" value="R07 R10 R11 R12"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="outcomes" lowerBound="1" upperBound="-1" eType="#//LearningOutcome">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Outcomes to assess."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="activities" lowerBound="1" upperBound="-1" eType="#//ActivityDefinition">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Assessment items or activities reused by reference."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="allowedEvidence" lowerBound="1" upperBound="-1" eType="#//EvidenceKind">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Admissible evidence types."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="rubric" eType="#//Rubric">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Analytic rubric when required by the assessment type."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="decisionRule" eType="#//RuleDefinition">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Judgment rule, thresholds and aggregation; required for an automatic outcome."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="administrationConstraints" upperBound="-1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Explicit constraints on timing, attempts, assistance and integrity."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="answerKey" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Correctness criteria or confidential solutions, separate from material shown to the learner."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Rubric" eSuperTypes="#//Entity">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Versioned rubric with described criteria and levels."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="domain_configuration"/>
+      <details key="ruleRefs" value="R10 R12"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Rubric name."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="criteria" lowerBound="1" upperBound="-1" eType="#//RubricCriterion" containment="true">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Criteria with unique keys."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="aggregationRule" eType="#//RuleDefinition">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="How to combine judgments; optional for purely analytic feedback."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="RuleDefinition" eSuperTypes="#//Entity">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Declarative criterion for satisfaction, completion or decision; no embedded code."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="domain_configuration"/>
+      <details key="ruleRefs" value="R05 R06 R12 R13"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="purpose" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="What the rule decides."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="inputs" lowerBound="1" upperBound="-1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Required evidence or values and their meanings."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="condition" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Unambiguous condition; may be qualitative or quantitative."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="outcome" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Effect when the condition is satisfied and when it is not."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="unknownBehavior" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Treatment of missing or undetermined inputs."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="approvalRequirement" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Required human decision or existing authorization for this outcome type."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="PolicySet" eSuperTypes="#//Entity">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Versioned context policies within this metamodel's fixed limits."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="domain_configuration"/>
+      <details key="ruleRefs" value="R08 R14 R15 R20"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="sourceScopes" lowerBound="1" upperBound="-1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Scopes of sources available for consultation in preparation and learning."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="approvalConditions" lowerBound="1" upperBound="-1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Which changes require which responsible human."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="permissions" lowerBound="1" upperBound="-1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Allowed actions by human role and scope."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="operatingLimits" upperBound="-1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Applicable task, context, search, attempt and duration limits; system-defined values, not invented by the Lead."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="AgentSpecialization" eSuperTypes="#//Entity">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Worker admissibility description, without implementation or system prompt."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="domain_configuration"/>
+      <details key="ruleRefs" value="R14 R15 R16"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="registryName" lowerBound="1" eType="#//Identifier">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Name resolvable in the system registry."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="category" lowerBound="1" eType="#//WorkerCategory">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="One of the four categories."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="role" lowerBound="1" eType="#//WorkerRole">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Exactly one role consistent with the category."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="topics" lowerBound="1" upperBound="-1" eType="#//Topic">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Scope for which the profile is suitable."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="competenceScope" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Declared level and teaching capabilities."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="skills" upperBound="-1" eType="#//Identifier">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Authorized procedural competencies, not implicit permissions."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="capabilities" upperBound="-1" eType="#//CapabilityGrant" containment="true">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Only capabilities granted to the profile."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="constraints" upperBound="-1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Additional specialization limits."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ExecutionContext" eSuperTypes="#//Entity">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Single independent session or delivery, including for one learner."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="execution_state"/>
+      <details key="ruleRefs" value="R01 R02 R08 R13 R20"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="metamodelVersion" lowerBound="1" eType="#//Version">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Version of this contract pinned at startup."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="models" upperBound="-1" eType="#//DomainModel">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Relevant models and versions loaded. An empty model catalog is allowed only in a DRAFT preparation context; LEARNING/ACTIVE requires at least one valid relevant model."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="learningDesign" eType="#//LearningDesign">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Path followed, if any; not mandatory for an isolated request."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="mode" lowerBound="1" eType="#//ContextMode">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="PREPARATION or LEARNING."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="status" lowerBound="1" eType="#//ContextStatus">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Session lifecycle."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="participants" lowerBound="1" upperBound="-1" eType="#//Participant">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="People and roles in the context."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="policies" lowerBound="1" eType="#//PolicySet">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Applicable policies."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="resourceBindings" upperBound="-1" eType="#//ResourceBinding">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Materials selected for the context."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="learningStates" upperBound="-1" eType="#//LearningState">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Learner states by outcome."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="schedule" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Actually defined dates and constraints; duration alone does not fill their absence."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="activityOccurrences" upperBound="-1" eType="#//ActivityOccurrence">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Activity occurrences in the session; node completion is derived from relevant occurrences and the node's rule."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Participant" eSuperTypes="#//Entity">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Human person with contextual roles, distinct from any agent."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="execution_state"/>
+      <details key="ruleRefs" value="R03 R13 R14"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="subjectKey" lowerBound="1" eType="#//Identifier">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Person's identity, potentially pseudonymous."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="roles" lowerBound="1" upperBound="-1" eType="#//HumanRole">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Human roles allowed in the context."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="learningNeeds" upperBound="-1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Relevant goals, declared level, preferences and constraints."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="authorizations" upperBound="-1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Actions and scopes assigned by policy; role alone does not prove permission."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ResourceBinding" eSuperTypes="#//Entity">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Approved selection of material for use in the context."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="execution_state"/>
+      <details key="ruleRefs" value="R08 R09 R20"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="context" lowerBound="1" eType="#//ExecutionContext">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Context to which the binding applies."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="resource" lowerBound="1" eType="#//Resource">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Selected resource and version."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="requirement" eType="#//ResourceRequirement">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Satisfied requirement, if the binding originates from an activity."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="usageScope" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Allowed audiences, activities and uses."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="approvalDecision" eType="#//HumanDecision">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Decision by the responsible person; required before approved use."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="valid" lowerBound="1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Current validity with respect to version, revocations and permissions."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="reviewPayloadKey" lowerBound="1" eType="#//Identifier">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Immutable identity of the substantive content to approve, verified by application control. Changes if content, effects, determining evidence or base versions change; does not change solely for administrative status, decision links or application recording."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="LearningState" eSuperTypes="#//Entity">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="State by person and outcome; separates progress from verification."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="execution_state"/>
+      <details key="ruleRefs" value="R11 R12 R13 R20"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="context" lowerBound="1" eType="#//ExecutionContext">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Owning execution."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="learner" lowerBound="1" eType="#//Participant">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Apprendente."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="outcome" lowerBound="1" eType="#//LearningOutcome">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Applicable outcome and version."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="progress" lowerBound="1" eType="#//ProgressStatus">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="NOT_OBSERVED, IN_PROGRESS or ACQUIRED according to rule."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="verification" lowerBound="1" eType="#//VerificationStatus">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="UNVERIFIED, PENDING_CONFIRMATION or VERIFIED."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="basis" upperBound="-1" eType="#//Evaluation">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Evaluations and related evidence supporting the state."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="LearningEvidence" eSuperTypes="#//Entity">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Learner observation or production, not merely text generated by an agent."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="execution_state"/>
+      <details key="ruleRefs" value="R02 R11 R20"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="context" lowerBound="1" eType="#//ExecutionContext">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Owning execution."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="learner" lowerBound="1" eType="#//Participant">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Person to whom it refers."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="activity" lowerBound="1" eType="#//ActivityDefinition">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Activity definition and version."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="occurrence" lowerBound="1" eType="#//ActivityOccurrence">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Specific identified and versioned occurrence and attempt. Person, activity and context must match those of the evidence."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="outcomes" lowerBound="1" upperBound="-1" eType="#//LearningOutcome">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Observed outcomes."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="kind" lowerBound="1" eType="#//EvidenceKind">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Type actually collected."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="contentOrLocator" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Response, product or observable trace."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="observedAt" lowerBound="1" eType="#//Timestamp">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Time of observation."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Evaluation" eSuperTypes="#//Entity">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Judgment of received evidence, with criteria and responsibility."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="execution_state"/>
+      <details key="ruleRefs" value="R10 R11 R12 R13"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="context" lowerBound="1" eType="#//ExecutionContext">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Evaluation context."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="evidence" lowerBound="1" upperBound="-1" eType="#//LearningEvidence">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Evidence evaluated."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="specification" lowerBound="1" eType="#//AssessmentSpecification">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Applied rules and rubric, with version."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="mode" lowerBound="1" eType="#//EvaluationMode">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Formative feedback or formal evaluation."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="criterionJudgments" upperBound="-1" eType="#//CriterionJudgment" containment="true">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Required if the specification provides a rubric."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="result" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Reasoned or undetermined outcome; no invented threshold."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="assistedBy" eType="#//AgentSpecialization">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="AI specialization that contributed; absence means no assistance recorded."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="humanDecision" eType="#//HumanDecision">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Confirmation required for a formal evaluation or by policy."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="reviewPayloadKey" lowerBound="1" eType="#//Identifier">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Immutable identity of the substantive content to approve, verified by application control. Changes if content, effects, determining evidence or base versions change; does not change solely for administrative status, decision links or application recording."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ChangeProposal" eSuperTypes="#//Entity">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Candidate change to models, approved resources or authoritative state."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="execution_state"/>
+      <details key="ruleRefs" value="R01 R19 R20"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="context" lowerBound="1" eType="#//ExecutionContext">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Proposal scope."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="targets" lowerBound="1" upperBound="-1" eType="#//EntityRef" containment="true">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Affected objects/versions; for creations, container versions or application base versions."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="proposedChange" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Proposed difference and expected result; not an executable command."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="justification" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Reason, evidence and consequences."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="findings" upperBound="-1" eType="#//Finding" containment="true">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Check results and gaps."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="status" lowerBound="1" eType="#//ProposalStatus">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Proposal lifecycle status."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="decision" eType="#//HumanDecision">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Decision received."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="baseContextVersion" lowerBound="1" eType="#//Version">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Revision against which the change is proposed."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="reviewPayloadKey" lowerBound="1" eType="#//Identifier">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Immutable identity of the substantive content to approve, verified by application control. Changes if content, effects, determining evidence or base versions change; does not change solely for administrative status, decision links or application recording."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="candidateDefinitions" upperBound="-1" eType="#//EntityRef" containment="true">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Candidate objects for creation or revision, kept in a proposal set separate from active definitions. Their references resolve within the candidate or authorized models, never through premature application."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="HumanDecision" eSuperTypes="#//Entity">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Decision attributable to an authorized person, concerning an exact object and version."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="execution_state"/>
+      <details key="ruleRefs" value="R13 R19 R20"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="context" lowerBound="1" eType="#//ExecutionContext">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Decision scope."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="decider" lowerBound="1" eType="#//Participant">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Authorized responsible human."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="target" lowerBound="1" eType="#//EntityRef" containment="true">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Proposal, evaluation or binding to which the decision refers."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="decision" lowerBound="1" eType="#//DecisionKind">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Approve, reject or request revision."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="reason" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Reason and conditions."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="decidedAt" lowerBound="1" eType="#//Timestamp">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Time of decision."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="reviewedPayloadKey" lowerBound="1" eType="#//Identifier">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Identity of the content reviewed in the version indicated by target. Must match the reviewPayloadKey of the applied content."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="coveredPayloadKeys" lowerBound="1" upperBound="-1" eType="#//Identifier">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Substantive content explicitly covered by the decision: includes reviewedPayloadKey and any candidate bindings or evaluations reviewed within a proposal. The set is verified by application control, not expanded by agents."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="TaskPlan" eSuperTypes="#//Entity">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Conceptual Lead task plan, projectable onto the already documented typed plan."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="execution_state"/>
+      <details key="ruleRefs" value="R07 R16 R17 R18"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="context" lowerBound="1" eType="#//ExecutionContext">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Context and revision at planning time."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="request" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Request interpreted with its goal and constraints."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="tasks" upperBound="-1" eType="#//WorkerTask">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Tasks in proposal order; dependencies determine valid order."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="expectedCoverage" upperBound="-1" eType="#//LearningOutcome">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Outcomes to address if the request requires subject-specific activities."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="findings" upperBound="-1" eType="#//Finding" containment="true">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Gaps and conditions delimiting the plan."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="WorkerTask" eSuperTypes="#//Entity">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Unit of delegation to one specialization, distinct from the learner's activity."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="execution_state"/>
+      <details key="ruleRefs" value="R14 R15 R16 R17 R18"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="stepKey" lowerBound="1" eType="#//Identifier">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="ID unique within the plan, corresponding to PlanStep.id."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="specialization" lowerBound="1" eType="#//AgentSpecialization">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Authorized profile to use."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="intent" lowerBound="1" eType="#//Intent">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Primary purpose."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="brief" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Instructions with topic, level, goal, scope, constraints and expected format."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="activities" upperBound="-1" eType="#//ActivityDefinition">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Activities to prepare, deliver or assess."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="dependsOn" upperBound="-1" eType="#//WorkerTask">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Tasks in the same plan whose output is required."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="requiredCapabilities" upperBound="-1" eType="#//CapabilityGrant" containment="true">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Only capabilities necessary for the task."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="retrievalNeed" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Information need; becomes an authorized RetrievalRequest in the runtime plan."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="expectedOutput" lowerBound="1" eType="#//OutputKind">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Expected semantic contract."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="TaskResult" eSuperTypes="#//Entity">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Delegation result, including errors or skips."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="execution_state"/>
+      <details key="ruleRefs" value="R09 R16 R18 R21"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="task" lowerBound="1" eType="#//WorkerTask">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Task to which it responds."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="status" lowerBound="1" eType="#//TaskStatus">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Application control outcome: SUCCEEDED only after output admissibility, not merely the worker's technical return."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="content" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Worker output, if available."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="citations" upperBound="-1" eType="#//Citation" containment="true">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Sources supporting the content."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="proposals" upperBound="-1" eType="#//ChangeProposal">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Suggested changes, not yet applied."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="findings" upperBound="-1" eType="#//Finding" containment="true">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Limitations, sanitized errors and nonconformities."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="coverage" upperBound="-1" eType="#//LearningOutcome">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Outcomes actually addressed; not automatically acquired."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="StateChange" eSuperTypes="#//Entity">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Change recorded by the authorized component; links cause, control and new state."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="execution_state"/>
+      <details key="ruleRefs" value="R13 R19 R20"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="context" lowerBound="1" eType="#//ExecutionContext">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Modified execution."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="baseVersion" lowerBound="1" eType="#//Version">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Expected revision before application."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="newVersion" lowerBound="1" eType="#//Version">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Resulting revision."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="cause" lowerBound="1" eType="#//EntityRef" containment="true">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Evidence, evaluation, proposal or result justifying the update."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="authorizationBasis" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Existing policy or identifiable HumanDecision; never permission granted by a worker to itself."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="change" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="What changed and why."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="recordedAt" lowerBound="1" eType="#//Timestamp">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Time of recording."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ActivityOccurrence" eSuperTypes="#//Entity">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Actual use of an activity by a person, with its own progress and attempt."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="execution_state"/>
+      <details key="ruleRefs" value="R02 R06 R11 R20"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="context" lowerBound="1" eType="#//ExecutionContext">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Owning context and initial snapshot."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="learner" lowerBound="1" eType="#//Participant">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Learner involved."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="activity" lowerBound="1" eType="#//ActivityDefinition">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Definition and version used."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="processNode" eType="#//ProcessNode">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Originating unit when the activity belongs to a path."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="attemptKey" lowerBound="1" eType="#//Identifier">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Distinguishable attempt; reuse does not overwrite previous occurrences."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="status" lowerBound="1" eType="#//ActivityStatus">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Learner activity progress, distinct from TaskStatus."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="completionRule" eType="#//RuleDefinition">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Applicable criterion if completion must be inferred automatically."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="evidence" upperBound="-1" eType="#//LearningEvidence">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Linked evidence, including in later occurrence versions."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="EntityRef">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Must resolve to exactly one object of the declared type within the authorized reference closure."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="value_type"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="type" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Name of an entity type defined here."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="id" lowerBound="1" eType="#//Identifier">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Object identifier."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="version" lowerBound="1" eType="#//Version">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Pinned version, not latest."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Provenance">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Generated origin does not mean confirmed; provenance grants no usage rights."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="value_type"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="origin" lowerBound="1" eType="#//ValueOrigin">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Origin of the value or artifact."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="sources" upperBound="-1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="References to identifiable sources, evidence or records; not invented citations."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="responsible" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Person or component responsible for production or acquisition."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="rationale" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Reason for a choice, inference or gap."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="CapabilityGrant">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Describes a permission; it does not implement the tool. Credentials and secrets are not part of the semantic contract."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="value_type"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="capability" lowerBound="1" eType="#//Identifier">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Logical identity of the authorized tool, API or KB access."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="accessPath" lowerBound="1" eType="#//AccessPath">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Mediated retrieval or worker runtime tool."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="operations" lowerBound="1" upperBound="-1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Allowed operations; authoritative changes remain with application control."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="scope" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Resources, topics, context and authorization limits."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="purpose" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Necessity relative to the task."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="RubricCriterion">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Levels belong to the criterion; the meaning of weights and aggregation must be specified, not assumed."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="value_type"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="key" lowerBound="1" eType="#//Identifier">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Identity local to the rubric version."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="outcomes" lowerBound="1" upperBound="-1" eType="#//LearningOutcome">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Outcomes observed by the criterion."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="description" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="What is judged."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="levels" lowerBound="1" upperBound="-1" eType="#//RubricLevel" containment="true">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Distinct, described levels."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="weight" eType="#//Number">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Weight only if required by the aggregation rule."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="RubricLevel">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="The metamodel imposes no universal numerical scale or threshold."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="value_type"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="key" lowerBound="1" eType="#//Identifier">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Identity local to the criterion."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="descriptor" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Observable condition distinguishing the level."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="score" eType="#//Number">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Value only if defined by the rubric."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="CriterionJudgment">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="Do not assign the lowest level to represent missing evidence."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="value_type"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="criterionKey" lowerBound="1" eType="#//Identifier">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Criterion from the rubric pinned for the evaluation."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="levelKey" eType="#//Identifier">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Assigned level; absent if undetermined."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="evidenceRefs" lowerBound="1" upperBound="-1" eType="#//LearningEvidence">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Specific evidence supporting the judgment."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="reason" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Reason for the judgment or its indeterminacy."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Finding">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="A local problem does not automatically invalidate valid independent tasks."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="value_type"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="code" lowerBound="1" eType="#//Identifier">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Rule or problem class."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="target" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Affected object or task."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="severity" lowerBound="1" eType="#//FindingSeverity">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Effect on the requested task."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="reason" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Missing data, incorrect reference or violated constraint."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="resolution" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Required clarification, source, decision or correction."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Citation">
+    <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+      <details key="documentation" value="A retrieval score measures relevance, not truth; a citation alone does not prove the conclusion."/>
+    </eAnnotations>
+    <eAnnotations source="http://alm/annotation">
+      <details key="layer" value="value_type"/>
+    </eAnnotations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="source" lowerBound="1" eType="#//Resource">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Source actually used and accessible within scope."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="locator" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Section, page, passage or another verifiable location."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="supportedClaim" lowerBound="1" eType="#//Text">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="documentation" value="Claim or part of the output supported by the source."/>
+      </eAnnotations>
+    </eStructuralFeatures>
+  </eClassifiers>
+</ecore:EPackage>

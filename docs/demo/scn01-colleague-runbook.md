@@ -308,6 +308,12 @@ in [the integration workflow](../aimpro/scn01-conceptual-review.md). That path h
 separate model variability and review steps. The fuller observations, including
 failed requests and limitations, are in [the real WP3 example report](../aimpro/scn01-wp3-example.md).
 
+For dedicated assessment and Teacher/Trainer **authoring from an approved project**,
+use [the generator guide](../architecture/authoring-generators.md). The Evaluator
+has [approved SCN01 evidence](../aimpro/scn01-evaluator-example.md); Teacher/Trainer
+authoring has synthetic tests but no authorized live run yet. The fixed learner
+demo and the real pending Curator trial remain unchanged.
+
 The demo does not establish a production learner pilot, adversarial robustness,
 formal assessment validity or complete automatic path progression. AIM-PRO remains
 an externally owned, unchanged input; these are local ALM execution contracts.
