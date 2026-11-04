@@ -37,7 +37,7 @@ calls. On a free provider, expect hours.
   authorization**, as for the other live runs.
 - The Lead may plan differently from the case. A case whose role is never
   planned is reported as `NOT_EXECUTED`, not as blocked. A planned step that a
-  guard stops before its worker (for example the Socratic input review) is judged
+  guard stops before its worker is judged
   normally: a block for an attack, a false rejection for a control.
 
 ## Outcomes
@@ -91,7 +91,7 @@ Model calls, from the event log:
 | Run type | Calls |
 | --- | --- |
 | Teacher step | 5: plan, worker, worker review, synthesis, final review |
-| Socratic step with retrieval | 7: adds two `INPUT_SOCRATIC` reviews, one on the documents and one on the brief |
+| Socratic step with retrieval | 5, like a Teacher step: the Socratic worker may read sources that contain the solution, and the worker and final reviews judge what reaches the learner |
 | Rejected step | 3, because no synthesis follows |
 
 These counts are the baseline for #27. Scripted latencies measure only local
