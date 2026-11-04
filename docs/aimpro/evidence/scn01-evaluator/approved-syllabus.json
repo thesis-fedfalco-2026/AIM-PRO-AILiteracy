@@ -1,0 +1,148 @@
+{
+  "kind": "SYLLABUS_DRAFT",
+  "source_sha256": "2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c",
+  "metamodel_fingerprint": "b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003",
+  "title": "Watching the prompts: writing a first business prompt",
+  "units": [
+    {
+      "key": "unit-1-adviser-peer-demonstration",
+      "title": "Adviser demonstration with peer example",
+      "source_target_id": "Pointer1792169221668_USER_96",
+      "source_competency_ids": [
+        "Pointer1792169354742_USER_109"
+      ],
+      "source_practice_ids": [
+        "Pointer1792169384659_USER_127"
+      ],
+      "purpose": "Demonstration phase: the adviser models construction of a fictional payment-reminder prompt live, thinking aloud and showing weak and improved versions side by side including one change that made it worse; a peer owner shows her own prompts and failures within the same phase. Choices are made visible before learners act.",
+      "planned_intents": [
+        "EXPLAIN"
+      ],
+      "corpus_citations": [
+        {
+          "resource_id": "wp3:32c2119d5504",
+          "resource_version": "31057b5b35cfcfa5f31ee406f855477a",
+          "document_ids": [
+            "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3",
+            "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:4",
+            "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:7"
+          ],
+          "supported_claim": "The corpus presents prompt construction as instruction plus primary content, worked basic/complex/instruction prompt examples, and best practices including being specific, clear, descriptive and using examples, which supports modelling weak versus improved prompt variants side by side."
+        }
+      ],
+      "coverage": [
+        {
+          "requirement_key": "adviser-demonstration",
+          "planned_action": "The adviser builds a payment-reminder prompt live, thinking aloud and showing weak and improved versions side by side, including one change that made it worse."
+        },
+        {
+          "requirement_key": "peer-example",
+          "planned_action": "A peer owner shows her own prompts, failures included, within the demonstration phase."
+        }
+      ]
+    },
+    {
+      "key": "unit-2-prompt-move-annotation",
+      "title": "Prompt-move annotation in pairs",
+      "source_target_id": "Pointer1792169221668_USER_96",
+      "source_competency_ids": [
+        "Pointer1792169354742_USER_109"
+      ],
+      "source_practice_ids": [
+        "Pointer1792169384659_USER_127"
+      ],
+      "purpose": "Guided practice: participants identify prompt moves on a card and annotate a transcript in pairs, converting the demonstrated choices into concrete, identifiable moves before constructing their own prompt.",
+      "planned_intents": [
+        "PRACTICE"
+      ],
+      "corpus_citations": [
+        {
+          "resource_id": "wp3:32c2119d5504",
+          "resource_version": "31057b5b35cfcfa5f31ee406f855477a",
+          "document_ids": [
+            "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3",
+            "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:4"
+          ],
+          "supported_claim": "The corpus decomposes prompts into instruction, primary content, examples, cues and templates, giving learners concrete prompt moves to identify and annotate in a transcript."
+        }
+      ],
+      "coverage": [
+        {
+          "requirement_key": "learner-annotation",
+          "planned_action": "Participants identify prompt moves on a card and annotate a transcript in pairs."
+        }
+      ]
+    },
+    {
+      "key": "unit-3-first-prompt-construction",
+      "title": "Construct a first business prompt",
+      "source_target_id": "Pointer1792169221668_USER_96",
+      "source_competency_ids": [
+        "Pointer1792169354742_USER_109"
+      ],
+      "source_practice_ids": [
+        "Pointer1792169384659_USER_127"
+      ],
+      "purpose": "Guided practice: participants construct their own first prompt for a routine business message using fictional customer details only, applying the moves seen in the demonstration and annotation.",
+      "planned_intents": [
+        "PRACTICE"
+      ],
+      "corpus_citations": [
+        {
+          "resource_id": "wp3:32c2119d5504",
+          "resource_version": "31057b5b35cfcfa5f31ee406f855477a",
+          "document_ids": [
+            "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:4",
+            "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:6"
+          ],
+          "supported_claim": "The corpus describes templates with placeholders and reusable prompt libraries, supporting learners drafting a first business prompt from a repeatable structure."
+        }
+      ],
+      "coverage": [
+        {
+          "requirement_key": "learner-construction",
+          "planned_action": "Participants construct their own first prompt for a routine business message, using fictional customer details only."
+        }
+      ]
+    },
+    {
+      "key": "unit-4-prompt-choice-explanation",
+      "title": "Explain two prompt choices",
+      "source_target_id": "Pointer1792169221668_USER_96",
+      "source_competency_ids": [
+        "Pointer1792169354742_USER_109"
+      ],
+      "source_practice_ids": [
+        "Pointer1792169384659_USER_127"
+      ],
+      "purpose": "Guided practice: participants explain two choices in the prompt they constructed, making their own decisions visible rather than only watching the adviser.",
+      "planned_intents": [
+        "PRACTICE"
+      ],
+      "corpus_citations": [
+        {
+          "resource_id": "wp3:32c2119d5504",
+          "resource_version": "31057b5b35cfcfa5f31ee406f855477a",
+          "document_ids": [
+            "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:6",
+            "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:7"
+          ],
+          "supported_claim": "The corpus frames prompt engineering as trial-and-error with iteration and validation and domain-specific customization, supporting learners explaining and justifying their own prompt choices."
+        }
+      ],
+      "coverage": [
+        {
+          "requirement_key": "learner-explanation",
+          "planned_action": "Participants explain two choices in the prompt they constructed, rather than only watching the adviser."
+        }
+      ]
+    }
+  ],
+  "gaps": [
+    "No formal assessment, rubric, or passing threshold is specified in the source; this is retained as a gap. No ASSESS unit, score, or acquisition rule is proposed.",
+    "No workshop duration beyond the source constraint 'One evening workshop' is invented; no timing is added to units.",
+    "Corpus resources wp3:12ce471a0269 (grades 6–12 critical AI literacy) and wp3:4868ba8731b3 (AI in educational measurement) are not used as unit citations because they do not validate transfer to adult SME business learners and do not supply a SCN01 rubric or thresholds.",
+    "Notebook/API setup and illustrative lengths from corpus excerpts are not SCN01 requirements and are not imported.",
+    "Source competency values are preserved without normalization: category DIGITAL, heRelevance HIGH, smeRelevance HIGH, vetRelevance HIGH, ksa SKILL, proficiency FOUNDATION are flagged in the source diagnostics as enum/untyped-vocabulary mismatches against the allowed vocabularies and are not changed."
+  ]
+}

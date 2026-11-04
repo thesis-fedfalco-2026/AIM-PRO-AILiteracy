@@ -1,0 +1,146 @@
+{
+  "recorded_at_utc": "2026-11-04T10:51:39.744464+00:00",
+  "owner_instruction": "applica la proposta approvata",
+  "operation_id": "scn01-evaluator-assessments-05-apply-approved",
+  "existing_operation_reused": true,
+  "approved_proposal": {
+    "type": "ChangeProposal",
+    "id": "proposal-5d49b19e39ac40b1bab8f063667f426d",
+    "version": "94e0ba225ee040cc9443d674743acd1a"
+  },
+  "applied_proposal": {
+    "type": "ChangeProposal",
+    "id": "proposal-5d49b19e39ac40b1bab8f063667f426d",
+    "version": "ae25472595774944975fad3a0b3b43b8"
+  },
+  "proposal_status": "APPLIED",
+  "review_payload_key": "270be47f84de65d1473684baee9a99b4ab2a0b52482104f0e2a30610e2aca855",
+  "approval_decision": {
+    "type": "HumanDecision",
+    "id": "decision-65c412b2d1f74c7f8b9a08fcb24853fc",
+    "version": "1"
+  },
+  "change": {
+    "type": "StateChange",
+    "id": "change-e72ae15439d14e94b66af5a2383877ef",
+    "version": "1",
+    "provenance": {
+      "origin": "HUMAN_DECISION",
+      "sources": [],
+      "responsible": "syllabus-author",
+      "rationale": null
+    },
+    "fields": {
+      "context": {
+        "type": "ExecutionContext",
+        "id": "scn01-selected-syllabus-2",
+        "version": "b18e5e4cf85e4f0ba6989421920fd304"
+      },
+      "baseVersion": "b18e5e4cf85e4f0ba6989421920fd304",
+      "newVersion": "d28d7145852b428aa1e4a7cdf76ec358",
+      "cause": {
+        "type": "ChangeProposal",
+        "id": "proposal-5d49b19e39ac40b1bab8f063667f426d",
+        "version": "94e0ba225ee040cc9443d674743acd1a"
+      },
+      "authorizationBasis": "{\"id\":\"decision-65c412b2d1f74c7f8b9a08fcb24853fc\",\"type\":\"HumanDecision\",\"version\":\"1\"}",
+      "change": "Review the exact ASSESSMENT output and host-composed project revision. {\"contract_findings\":[{\"code\":\"GENERATED_CONTRACT\",\"error\":\"missing\",\"location\":[\"resources\"],\"message\":\"Field required\",\"object_id\":\"Pointer1792169221668_USER_96\"},{\"code\":\"GENERATED_CONTRACT\",\"error\":\"literal_error\",\"location\":[\"category\"],\"message\":\"Input should be 'Digital', 'Green', 'Resilience' or 'Deep tech'\",\"object_id\":\"Pointer1792169354742_USER_109\"},{\"code\":\"GENERATED_CONTRACT\",\"error\":\"literal_error\",\"location\":[\"heRelevance\"],\"message\":\"Input should be 'Low', 'Medium' or 'High'\",\"object_id\":\"Pointer1792169354742_USER_109\"},{\"code\":\"GENERATED_CONTRACT\",\"error\":\"literal_error\",\"location\":[\"smeRelevance\"],\"message\":\"Input should be 'Low', 'Medium' or 'High'\",\"object_id\":\"Pointer1792169354742_USER_109\"},{\"code\":\"GENERATED_CONTRACT\",\"error\":\"literal_error\",\"location\":[\"vetRelevance\"],\"message\":\"Input should be 'Low', 'Medium' or 'High'\",\"object_id\":\"Pointer1792169354742_USER_109\"}],\"generator_gaps\":[\"No formal assessment, rubric or passing threshold is specified in the source; this draft proposes unvalidated ASSESS items and descriptors for human review only. No score, acquisition rule or completion claim is made.\",\"No workshop duration beyond the source constraint 'One evening workshop' is invented; no timing is added to units.\",\"Corpus resources wp3:12ce471a0269 (grades 6–12 critical AI literacy) and wp3:4868ba8731b3 (AI in educational measurement) are not used as unit citations because they do not validate transfer to adult SME business learners and do not supply a SCN01 rubric or thresholds.\",\"Notebook/API setup and illustrative lengths from corpus excerpts are not SCN01 requirements and are not imported into any item.\",\"Source competency values are preserved without normalization: category DIGITAL, heRelevance HIGH, smeRelevance HIGH, vetRelevance HIGH are flagged as ENUM_VALUE mismatches; ksa SKILL and proficiency FOUNDATION are flagged as UNTYPED_VOCABULARY_VALUE mismatches. These are not repaired.\",\"The GENERATED_CONTRACT missing-resources cardinality finding on LearningTarget_0 (Pointer1792169221668_USER_96) is left unrepaired.\",\"The five-move taxonomy (INSTRUCTION, PRIMARY CONTENT, EXAMPLE, CUE, TEMPLATE), the two-level rubric shape, the fictional prompt variants and the fictional transcript are newly authored operator illustrations for this assessment proposal; they are not validated source instruments or source-prescribed assessment standards.\",\"The 150-word constraint in improved_prompt is a fictional prompt-output illustration chosen by the operator; it is not a learner response limit, a syllabus requirement or a passing threshold.\",\"Whether customer or business details in a learner's submitted prompt are genuinely fictional cannot be determined from appearance alone; only the presence and scope of the required visible declaration or labelling is assessable. This limitation is retained explicitly.\",\"Any within-package links to other units are descriptive references; the host allocates exact ALM identifiers separately. No future teaching assets are referenced as available.\",\"The format/evidence choices (CASE_ANALYSIS/CASE_RESULT, SHORT_STRUCTURED/CRITERIA_BASED_PRODUCT, CRITERIA_BASED_PRODUCT/CRITERIA_BASED_PRODUCT, SHORT_STRUCTURED/REFLECTIVE_RECORD) are operator authoring requirements, not source-validated assessment standards.\",\"Absence of disagreement in the paired annotation task does not imply absence of engagement; both the disagreement-resolution route and the no-disagreement verification route are recognised in the criteria and evidence requirement.\"],\"input_digest\":\"160ba8035c32b3db0c11d71469e8551b6d2303d0e2aa0d6fe349e646b3a167a5\",\"source_diagnostics\":[{\"code\":\"CARDINALITY\",\"count\":0,\"field\":\"resources\",\"lower\":1,\"model\":\"SCN01\",\"object_id\":\"Pointer1792169221668_USER_96\",\"object_name\":\"LearningTarget_0\",\"upper\":-1},{\"allowed\":[\"Deep tech\",\"Digital\",\"Green\",\"Resilience\"],\"code\":\"ENUM_VALUE\",\"field\":\"category\",\"model\":\"elena_usecase_competencies\",\"object_id\":\"Pointer1792169354742_USER_109\",\"object_name\":\"D04\",\"value\":\"DIGITAL\"},{\"allowed\":[\"High\",\"Low\",\"Medium\"],\"code\":\"ENUM_VALUE\",\"field\":\"heRelevance\",\"model\":\"elena_usecase_competencies\",\"object_id\":\"Pointer1792169354742_USER_109\",\"object_name\":\"D04\",\"value\":\"HIGH\"},{\"allowed\":[\"High\",\"Low\",\"Medium\"],\"code\":\"ENUM_VALUE\",\"field\":\"smeRelevance\",\"model\":\"elena_usecase_competencies\",\"object_id\":\"Pointer1792169354742_USER_109\",\"object_name\":\"D04\",\"value\":\"HIGH\"},{\"allowed\":[\"High\",\"Low\",\"Medium\"],\"code\":\"ENUM_VALUE\",\"field\":\"vetRelevance\",\"model\":\"elena_usecase_competencies\",\"object_id\":\"Pointer1792169354742_USER_109\",\"object_name\":\"D04\",\"value\":\"HIGH\"},{\"allowed\":[\"Attitude\",\"Knowledge\",\"Skill\"],\"code\":\"UNTYPED_VOCABULARY_VALUE\",\"field\":\"ksa\",\"model\":\"elena_usecase_competencies\",\"object_id\":\"Pointer1792169354742_USER_109\",\"object_name\":\"D04\",\"value\":\"SKILL\"},{\"allowed\":[\"Advanced\",\"Foundational\",\"Intermediate\"],\"code\":\"UNTYPED_VOCABULARY_VALUE\",\"field\":\"proficiency\",\"model\":\"elena_usecase_competencies\",\"object_id\":\"Pointer1792169354742_USER_109\",\"object_name\":\"D04\",\"value\":\"FOUNDATION\"}],\"syllabus_gaps\":[\"No formal assessment, rubric, or passing threshold is specified in the source; this is retained as a gap. No ASSESS unit, score, or acquisition rule is proposed.\",\"No workshop duration beyond the source constraint 'One evening workshop' is invented; no timing is added to units.\",\"Corpus resources wp3:12ce471a0269 (grades 6–12 critical AI literacy) and wp3:4868ba8731b3 (AI in educational measurement) are not used as unit citations because they do not validate transfer to adult SME business learners and do not supply a SCN01 rubric or thresholds.\",\"Notebook/API setup and illustrative lengths from corpus excerpts are not SCN01 requirements and are not imported.\",\"Source competency values are preserved without normalization: category DIGITAL, heRelevance HIGH, smeRelevance HIGH, vetRelevance HIGH, ksa SKILL, proficiency FOUNDATION are flagged in the source diagnostics as enum/untyped-vocabulary mismatches against the allowed vocabularies and are not changed.\"]}",
+      "recordedAt": "2026-11-04T10:51:05.696283+00:00"
+    }
+  },
+  "context": {
+    "type": "ExecutionContext",
+    "id": "scn01-selected-syllabus-2",
+    "version": "d28d7145852b428aa1e4a7cdf76ec358"
+  },
+  "project": {
+    "type": "Resource",
+    "id": "authoring-project:072a25dbf8a5773756a614ff6af5f82fa6894e9c0017999c75ab7ec50944dbac",
+    "version": "d28d7145852b428aa1e4a7cdf76ec358"
+  },
+  "design": {
+    "type": "LearningDesign",
+    "id": "authoring-design:f1f187bcbd449dc0d637fa73bac1aa7a4e69e7f6aaa8b557062a93da803ee8e5:a77de8a6daa1129516b14c8ca1e233a51a8414b202eac7c8acfbb9b485046ad4",
+    "version": "b1de953080b54c4fac42c1ad5cd3b9fc"
+  },
+  "assessment_package": {
+    "type": "Resource",
+    "id": "authoring-output:3d13c6e5aa4e6fa11af6f967e7c48b4b874b4595eb8da3a45447f36c47a8d2ce",
+    "version": "b1de953080b54c4fac42c1ad5cd3b9fc"
+  },
+  "assessment_receipt": {
+    "proposal": {
+      "type": "ChangeProposal",
+      "id": "proposal-5d49b19e39ac40b1bab8f063667f426d",
+      "version": "ae25472595774944975fad3a0b3b43b8"
+    },
+    "decision": {
+      "type": "HumanDecision",
+      "id": "decision-65c412b2d1f74c7f8b9a08fcb24853fc",
+      "version": "1"
+    },
+    "change": {
+      "type": "StateChange",
+      "id": "change-e72ae15439d14e94b66af5a2383877ef",
+      "version": "1"
+    }
+  },
+  "syllabus": {
+    "type": "Resource",
+    "id": "aimpro-syllabus-926d751475204cd29c0e3a9f6033ef5f:syllabus",
+    "version": "1"
+  },
+  "counts": {
+    "items": 4,
+    "criteria": 9,
+    "levels": 18,
+    "stimuli": 6
+  },
+  "unresolved_findings_preserved": true,
+  "verification": {
+    "approval_valid_before_application": true,
+    "production_lifecycle_service_used": true,
+    "candidates_unchanged_and_activated": true,
+    "assessment_selected_and_receipt_valid": true,
+    "approved_syllabus_unchanged": true,
+    "no_stale_dependencies": true,
+    "original_and_previous_run_unchanged": true,
+    "idempotent_application_replay": true,
+    "generation_replay_exact_without_models": true,
+    "human_decisions": 4,
+    "state_changes": 3,
+    "new_human_decisions": 0,
+    "new_applications": 1,
+    "tables": {
+      "entities": {
+        "before": 113,
+        "after": 141,
+        "removed_or_replaced_rows": 0,
+        "new_rows": 28
+      },
+      "contexts": {
+        "before": 1,
+        "after": 1,
+        "removed_or_replaced_rows": 1,
+        "new_rows": 1
+      },
+      "operations": {
+        "before": 2,
+        "after": 3,
+        "removed_or_replaced_rows": 0,
+        "new_rows": 1
+      },
+      "requests": {
+        "before": 8,
+        "after": 8,
+        "removed_or_replaced_rows": 0,
+        "new_rows": 0
+      }
+    },
+    "sqlite_integrity": "ok",
+    "network_or_model_calls": 0,
+    "fresh_retrieval": 0,
+    "teacher_or_trainer_selected": false,
+    "learner_runtime_entities_created": false
+  }
+}

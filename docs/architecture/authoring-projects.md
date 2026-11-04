@@ -5,7 +5,11 @@ The local `learning` CLI now initializes, revises and inspects authoring project
 DomainModel and proposal/decision/application services. No schema or external
 AIM-PRO model changes are required. The [lifecycle architecture](authoring-lifecycle.md)
 also describes releases and delivery imports; those commands remain subsequent
-work, as do the dedicated #9/#10 generators.
+work. The [dedicated #9/#10 generators](authoring-generators.md) build pending
+project revisions through this boundary. The [SCN01 Evaluator trial](../aimpro/scn01-evaluator-example.md)
+now records real source-backed generation, separate Lead review, explicit human
+approval and isolated application of the exact assessment package. Teacher/Trainer
+and learner runtime evaluation remain separate work.
 
 ## Authority and lifecycle
 
@@ -120,9 +124,9 @@ a different exact version. Its Resource and associated definitions must be suppl
 for joint review. Every updated generated artifact must depend on the selected
 syllabus; exact inputs must also appear in its Resource `derivedFrom`. Retained
 artifacts must still have valid approval receipts covering their definitions.
-This explicit operator bundle is not evidence of an actual model generation: future
-generators must record dependencies from the task inputs controlled by the host,
-rather than trusting dependency claims in worker text.
+This explicit operator bundle is not evidence of an actual model generation. The
+dedicated generators record dependencies from the task inputs controlled by the
+host, rather than trusting dependency claims in worker text.
 
 An operator can explicitly reselect a different approved/applied Curator source
 and syllabus pair in canonical `source`/`syllabus` slots. Their selections and
@@ -172,18 +176,20 @@ LANGFUSE_ENABLED=false .venv/bin/python -m unittest tests.test_authoring_project
 
 These tests block network access and use temporary databases and synthetic human
 decisions. The full cycle now uses production project initialization/revisions and
-stable syllabus resolution. Model outputs and future #9/#10 generators remain
-simulated. Release preparation/import adapters remain test fixtures over the
+stable syllabus resolution and the dedicated #9/#10 generator services/dispatch.
+Only model responses remain simulated for those generators. Release
+preparation/import adapters remain test fixtures over the
 read-only `learning/authoring.py` reference helpers and real generic ALM services.
 
-Local validation on 3 November 2026: all 409 regression tests passed with the
+Published baseline validation on 3 November 2026: all 409 regression tests passed with the
 existing read-only WP3 PostgreSQL reader and MCP enabled, including the fresh
 temporary demo snapshot check. All 21 project/architecture tests enforce socket
 and DNS blocking. Generated AIM-PRO contracts and `git diff --check` passed.
-This records local validation; no remote CI run or publication is claimed.
+This was local validation of `d299b4d`; its subsequent remote CI also passed.
+Validation of the new local generator increment is recorded in its guide.
 
-Still pending: typed dedicated Evaluator, Teacher and Trainer generation from this
-project boundary; an authorized assessor-facing runtime evaluation adapter;
+Still pending: a documented authorized live Evaluator/Teacher/Trainer generation
+and human-review run; an authorized assessor-facing runtime evaluation adapter;
 production release/import commands with frozen-domain validation; delivery
 migration policy; and an explicitly authorized real source-backed authoring run.
 Existing learner permissions and WorkerOutput/R16 restrictions are unchanged.

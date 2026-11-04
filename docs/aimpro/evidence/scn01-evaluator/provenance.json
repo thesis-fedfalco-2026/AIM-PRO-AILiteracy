@@ -1,0 +1,137 @@
+{
+  "format": "scn01-evaluator-observed-evidence",
+  "format_version": 1,
+  "scope": "Dedicated assessment authoring only; no Teacher/Trainer run or learner evaluation.",
+  "request_id": "scn01-evaluator-assessments-05-revision",
+  "provider": "Anthropic",
+  "model": "claude-sonnet-4-6",
+  "authorized_manifest_sha256": "1503f3059eadf8cc4f4ebc081fc811e08dcbb2a5082a6d76cdbc9ee0fb1708f1",
+  "generation_input_digest": "160ba8035c32b3db0c11d71469e8551b6d2303d0e2aa0d6fe349e646b3a167a5",
+  "model_transmission_authorization": {
+    "recorded_at_utc": "2026-11-04T10:25:53.309426+00:00",
+    "manifest_sha256": "1503f3059eadf8cc4f4ebc081fc811e08dcbb2a5082a6d76cdbc9ee0fb1708f1",
+    "request_id": "scn01-evaluator-assessments-05-revision",
+    "provider": "Anthropic",
+    "model": "claude-sonnet-4-6",
+    "phases": [
+      "EVALUATOR",
+      "LEAD_REVIEW"
+    ],
+    "max_http_transmissions_per_phase": 1,
+    "allow_paid": true,
+    "budget_usd": 2,
+    "explicit_owner_instruction": "si autorizzo",
+    "authorization_scope": "One dedicated Evaluator call and conditional separate Lead review for the exact fifth correction packet. No automatic retry, fresh retrieval, Teacher/Trainer, learner evaluation, new human decision or assessment application is authorized."
+  },
+  "input_references": {
+    "project": {
+      "type": "Resource",
+      "id": "authoring-project:072a25dbf8a5773756a614ff6af5f82fa6894e9c0017999c75ab7ec50944dbac",
+      "version": "b18e5e4cf85e4f0ba6989421920fd304"
+    },
+    "context": {
+      "type": "ExecutionContext",
+      "id": "scn01-selected-syllabus-2",
+      "version": "b18e5e4cf85e4f0ba6989421920fd304"
+    },
+    "syllabus": {
+      "type": "Resource",
+      "id": "aimpro-syllabus-926d751475204cd29c0e3a9f6033ef5f:syllabus",
+      "version": "1"
+    },
+    "subject": "syllabus-author"
+  },
+  "assessment_command": {
+    "project": {
+      "type": "Resource",
+      "id": "authoring-project:072a25dbf8a5773756a614ff6af5f82fa6894e9c0017999c75ab7ec50944dbac",
+      "version": "b18e5e4cf85e4f0ba6989421920fd304"
+    },
+    "base_context": {
+      "type": "ExecutionContext",
+      "id": "scn01-selected-syllabus-2",
+      "version": "b18e5e4cf85e4f0ba6989421920fd304"
+    },
+    "assessments": [],
+    "shared_content": [],
+    "requirements": [
+      "Author one proposed ASSESS item for each of the four exact approved syllabus units, in their original order, covering the exact outcomes and five source actions. Preserve the original EXPLAIN/PRACTICE outline and all source constraints. Assess hypothetical learner evidence; do not claim that any learner work or result has been observed. These are new authoring proposals, not validated instruments.",
+      "Use task-consistent interaction and evidence contracts. For unit-1-adviser-peer-demonstration use format CASE_ANALYSIS and evidence_kind CASE_RESULT for written comparison and diagnosis. For unit-2-prompt-move-annotation use format SHORT_STRUCTURED and evidence_kind CRITERIA_BASED_PRODUCT for an annotated paired artifact with traceable individual contributions. For unit-3-first-prompt-construction use format CRITERIA_BASED_PRODUCT and evidence_kind CRITERIA_BASED_PRODUCT for the authored prompt. For unit-4-prompt-choice-explanation use format SHORT_STRUCTURED and evidence_kind REFLECTIVE_RECORD for two choice rationales attached to that prompt. Do not declare MATCHING or OBJECTIVE_RESPONSE for these specified tasks. These format/evidence choices are operator authoring requirements, not source-validated assessment standards.",
+      "For the demonstration unit, include complete fictional weak/improved/worse prompt variants and a peer-failure illustration in the required typed item.stimuli entries, referenced by key from the instruction. Make the single detrimental change between improved and worse variants identifiable. Ask the learner to explain concrete prompt choices and the peer failure using the supplied text. Label every stimulus as a newly authored assessment illustration, not an actual workshop event, source quotation or observed model response. Do not import an arbitrary response word limit as a syllabus requirement. Put each actual variant in its separate typed item.stimuli entry with the required key; put the complete peer-failure illustration in its own entry. A sentence promising stimuli below does not provide them.",
+      "For the paired annotation unit, require work in pairs and one shared annotated artifact, retaining the approved paired context. Make each participant identify their own annotated segments and briefly explain their own contribution within that artifact. Specify which criteria describe the shared annotation and which concern each individual contribution; group work must not be treated as proof of each learner having demonstrated every feature. Do not replace paired work with an instruction to work individually.",
+      "Include the complete assessment-specific prompt-move card and numbered transcript for annotation. Make enacted moves distinguishable from merely mentioning or discussing a move. For every label requested, identify the observable text evidence the learner must cite; use only moves actually shown in the stimulus or state explicitly how discussion/absence is classified. Do not ask an assessor to infer an unavailable example, cue or placeholder. Avoid unsupported numeric correctness cutoffs such as at least three correct matches. Put the actual card and actual numbered transcript in their required typed item.stimuli entries. Ask learners to distinguish enacted and merely mentioned moves from the supplied text, rather than giving all classifications away in the question.",
+      "For the construction unit, request the learner's own first prompt for a routine business message relevant to their chosen business context, using fictional customer details only. Supply enough fictional scenario information or an explicit instruction to invent and label it, so no real customer data or real payment links are required. Require a visible task instruction and relevant primary content. Do not require API/notebook setup, actual model execution or an assumed generated answer. Do not claim that a name or identifier merely looking real proves real data were used; keep that limitation explicit.",
+      "For the explanation unit, require the learner to include the actual prompt text with the response, identify two distinct choices in that text and explain why each was made. Name that evidence inside the item so the assessor need not assume access to another submission. Do not reference nonexistent future Teacher/Trainer activities. Any within-package link is descriptive until the host allocates exact ALM identifiers.",
+      "Make every item self-contained through its instruction and evidence_requirement. Include all necessary assessment stimuli and response structures in the item, without creating a lesson or practice package. Do not refer to missing materials, future teaching assets or unprovided tool outputs. State what is to be submitted and how it relates to the criterion-specific descriptors. The host renders the complete typed item.stimuli with the owning ActivityDefinition instruction. Reference those exact stimulus keys in the task and do not duplicate or replace their content with promises.",
+      "For each item use two or three analytic criteria covering its exact outcomes, with exactly two mutually exclusive qualitative levels per criterion. This compact rubric shape is an operator proposal, not a validated measurement scale or a passing policy. Every level descriptor must contain at least five whitespace-separated words, as required by the unchanged production validator, and be distinct from all other level descriptors within its unit. Describe concrete evidence relevant to that particular criterion; do not pad generic labels to meet the word minimum.",
+      "Make the two descriptor patterns discriminate between specified evidence features present in a submitted artifact and the relevant feature missing or incomplete. The same artifact must not satisfy both patterns. Distinguish an absent prompt from a present prompt whose described choices do not match it; do not put absence in two different levels. Apply the same non-overlap rule to annotation grounding and prompt specificity. Describe possible evidence patterns without assigning a learner a level, score, pass/fail result or formal verification.",
+      "Cite only exact retained resource/version/document ids with substantive supported_claim text. Attribute prompt-construction concepts to the actual excerpts and distinguish the newly proposed tasks, format/evidence choices and rubric descriptors from the source claims. The grades 6-12 paper does not establish adult-SME transfer; the measurement paper supplies neither a validated SCN01 rubric nor passing rules. Do not invent assessment reliability, efficacy, scores, aggregation rules, passing thresholds, task durations, acquisition or completion.",
+      "Preserve all original source gaps and diagnostics with accurate scope: the source and original syllabus did not specify a formal assessment or rubric; this new draft proposes unvalidated ASSESS items and descriptors for review. Do not copy an absolute statement that no ASSESS item is proposed into an assessment draft that contains ASSESS items. Retain the one-evening workshop, fictional-customer constraint, source cardinality/vocabulary findings and conditional-source limitations without normalizing or repairing external source files.",
+      "REVISION 1 — single semantic change: In improved_prompt and worse_prompt, delimit the actual prompt body with the exact standalone lines PROMPT TEXT and END PROMPT TEXT. improved_prompt must contain exactly once the standalone sentence \"Keep the email under 150 words.\" worse_prompt must equal the improved prompt body with only that exact sentence removed, leaving every other body character unchanged, apart from leading/trailing whitespace around the delimited body. Put that sentence at the end of improved_prompt so removal leaves no broken sentence. Preserve the same fictional customer/invoice/amount/due date, tone and payment deadline expressed as \"within five business days\" in both bodies. No other semantic or textual change is allowed between these two bodies. The 150-word constraint is a fictional prompt-output illustration chosen by the operator, not a learner response limit, syllabus requirement or passing threshold. Do not include either the expected difference or its diagnosis in learner-facing text. The task and both rubric descriptors must match this one change and must not penalize an accurate account of the actual supplied text.",
+      "REVISION 2 — learner-visible content: Every item instruction, evidence_requirement, stimulus title and stimulus content is presented to learners verbatim; the host has no audience filter or assessor-only channel in these fields. Omit all assessor notes, answer keys, solved transcript classifications, variant-comparison answers, peer-failure causal diagnoses and claims that embedded notes are hidden. Do not include headings such as Context note for assessor or Annotation guidance for assessors. Keep only the task, fictional stimulus data, necessary move definitions/examples and empty response structure. The peer_failure illustration may supply a fictional prompt and a clearly fictional unsatisfactory output/situation for diagnosis, but must not supply its causal diagnosis. Rubric criteria/levels remain separate authoring assessment metadata; do not repeat their solution content in the learner fields.",
+      "REVISION 3 — honest paired contribution: Retain paired annotation with one shared artifact and a named statement from each partner identifying their own line contributions and reasoning. Explicitly allow both routes: if a disagreement occurred, describe its resolution; if none occurred, state that and explain how the pair checked their agreement using the transcript/card. Do not require an actual disagreement or invented event. Shared and individual criteria must remain distinct; both descriptor patterns must recognize the no-disagreement route and absence of disagreement must not imply absence of engagement.",
+      "REVISION 4 — fictional data throughout: All illustrated customer/business/invoice details and instructions for replacing template placeholders must explicitly remain fictional. In particular, transcript line 18 must say to substitute fictional details for each fictional customer; never instruct insertion of real customer details or real payment links. This remains an assessment illustration, not evidence of an observed workshop or model run.",
+      "REVISION 5 — precise source support: Define EXAMPLE as supplying one or more examples (one-shot/few-shot), and distinguish zero-shot as supplying no examples if the term is used. Retained Prompt Engineering Fundamentals excerpt 7 explicitly makes that distinction. Claims recommending specific context/outcome/length/format/style details must cite the exact retained best-practice text in excerpt 7 (excerpt 6 may support only text actually present there), not excerpts 3/4 alone. Use excerpts 3/4 only for the construction concepts actually supported. Label numeric example constraints and five-move taxonomy/assessment choices as new operator authoring illustrations, not validated source instruments or source-prescribed rules.",
+      "REVISION 6 — observable fictional-data declarations: Require one explicit visible declaration that all business/customer/invoice details in the learner prompt are fictional, OR an explicit fictional label attached to every such detail. Use the same two permissible declaration routes in the task, evidence requirement and both criterion levels. Do not accept one labelled detail as proof that all unlabelled details are fictional. Do not infer real versus fictional authenticity from appearance; assess only the presence and scope of the required visible declaration. Retain this authenticity limitation in the gaps."
+    ],
+    "stimulus_requirements": [
+      {
+        "unit_key": "unit-1-adviser-peer-demonstration",
+        "key": "weak_prompt",
+        "kind": "PROMPT_VARIANT",
+        "brief": "Complete newly authored fictional weak payment-reminder prompt; label it an assessment illustration. No assessor notes, comparison answers or diagnoses."
+      },
+      {
+        "unit_key": "unit-1-adviser-peer-demonstration",
+        "key": "improved_prompt",
+        "kind": "PROMPT_VARIANT",
+        "brief": "Complete fictional reminder prompt, with PROMPT TEXT / END PROMPT TEXT standalone delimiters around its body. Include a five-business-day payment deadline and end its body with exactly one sentence Keep the email under 150 words. No assessor notes or solved comparison."
+      },
+      {
+        "unit_key": "unit-1-adviser-peer-demonstration",
+        "key": "worse_prompt",
+        "kind": "PROMPT_VARIANT",
+        "brief": "Same fictional prompt body as improved_prompt, with the exact same PROMPT TEXT / END PROMPT TEXT delimiters, except delete only the exact sentence Keep the email under 150 words. Preserve all other body characters, including the five-business-day payment deadline. No assessor notes or diagnosis."
+      },
+      {
+        "unit_key": "unit-1-adviser-peer-demonstration",
+        "key": "peer_failure",
+        "kind": "PEER_FAILURE",
+        "brief": "Complete fictional peer prompt and unsatisfactory result/situation for learner diagnosis, labelled as an invented assessment illustration. No actual model output/workshop observation or causal diagnosis is supplied."
+      },
+      {
+        "unit_key": "unit-2-prompt-move-annotation",
+        "key": "prompt_move_card",
+        "kind": "PROMPT_MOVE_CARD",
+        "brief": "Complete learner-facing five-move card using supported instruction/content/example/cue/template concepts. EXAMPLE supplies examples; zero-shot supplies none. Recognition examples may illustrate the card concepts but must not supply transcript classifications or assessment answers."
+      },
+      {
+        "unit_key": "unit-2-prompt-move-annotation",
+        "key": "annotation_transcript",
+        "kind": "TRANSCRIPT",
+        "brief": "Complete numbered fictional assessment transcript with concrete enacted moves and separate mentions/discussion. Line 18 instructs substitution of fictional details for fictional customers. No annotation answer key, assessor guidance or solved line labels."
+      }
+    ]
+  },
+  "source_input_digest_and_hashes_are_from_original_run": true,
+  "original_artifact_sha256": {
+    "transmission-manifest.json": "1503f3059eadf8cc4f4ebc081fc811e08dcbb2a5082a6d76cdbc9ee0fb1708f1",
+    "generation-input.json": "0f0be1c543e96ac7850203a1f00af68b86ec32f813abe07d0f03868502c9070e",
+    "evaluator-phase.json": "9652006901e624e678863c27f75346c0a1efb2f4209ee1d3de89f6d84457a942",
+    "lead_review-phase.json": "11949fda18c0704aa76d6956ac985021c5c566dea617b4e7c159c382d3bad946",
+    "evaluator-http-response.bin": "f3728bee4e42a664ebbe8e695434fba4e3d08800a4b5abb4e980cd13321e7e83",
+    "lead_review-http-response.bin": "565a11ab238ea29dde759a2505d092bbadf2af605a7d04be0ce9cedae5712066",
+    "assessment-proposal.json": "29ef1d351b20bab0a6c9ebebcd813fdefa09a8fccbddf632cd8aeff06f1d4081",
+    "state-before-evaluator.sqlite": "60abf92b8622350bdc82b3cf03da3a56bf53d25e204a10cf8c44681bfedec1d1"
+  },
+  "original_archive": ".cache/aimpro-examples/evaluator/scn01-assessments-5-revision/",
+  "original_archive_included": false,
+  "source_excerpt_text_included": false,
+  "raw_prompts_and_http_records_included": false,
+  "credentials_or_database_included": false,
+  "reviewed_payload_key": "270be47f84de65d1473684baee9a99b4ab2a0b52482104f0e2a30610e2aca855",
+  "current_state": "APPLIED",
+  "human_decision_count": 4,
+  "state_change_count": 3,
+  "post_publication_new_model_calls": 0
+}

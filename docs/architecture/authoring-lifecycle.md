@@ -1,9 +1,12 @@
 # Versioned authoring projects and frozen learning releases
 
-Status: production authoring-project service/CLI with executable acceptance.
+Status: production authoring-project and dedicated-generator services/CLI with executable acceptance.
 Release/import operations remain reference-only. The repository owner requested
 this design and a complete cycle using simulated agents before implementing the
-dedicated generators in #9 and #10.
+dedicated generators in #9 and #10. Those generators are now implemented locally
+and tested with synthetic model responses; their live generation/review evidence
+remains pending for Teacher/Trainer. See [the generator guide](authoring-generators.md)
+and the [approved SCN01 Evaluator evidence](../aimpro/scn01-evaluator-example.md).
 
 For the existing entity model, its cardinalities and the distinction between
 configuration and execution state, see [the ALM conceptual model](alm-model.md).
@@ -76,7 +79,7 @@ Neither a local project id nor an artifact key replaces a source object id.
 
 ## Commands and role contracts
 
-Every future authoring command needs a request id, subject, owning context,
+Every authoring command needs a request id, subject, owning context,
 base context/project revision, exact input artifact refs and requested output
 slots. Application control authorizes access before retrieval or constructing
 model clients. It reserves the request and records the input snapshot. Inputs,
@@ -85,9 +88,9 @@ source schemas, retrieved text and worker results remain untrusted data.
 | Transformation | Exact input | Proposed output |
 | --- | --- | --- |
 | Curator | Scenario/competency closure, authorized excerpts, explicit local brief | SyllabusDraft with ordered units, purposes, intents, citations and gaps; implemented in #8. |
-| Evaluator authoring | Approved syllabus units/outcomes and authorized sources | Typed assessment items, criterion-specific rubric levels and evidence requirements; pending #9. |
-| Teacher authoring | Approved syllabus, selected assessment guidance where relevant, source/material constraints | Complete explanations, examples and supporting assets tied to planned EXPLAIN slots; pending #10. |
-| Trainer authoring | The same approved syllabus and relevant assessment guidance | Complete practice instructions and worksheets tied to planned PRACTICE slots; pending #10. |
+| Evaluator authoring | Approved syllabus units/outcomes and authorized sources | Typed ASSESS items, criterion-specific rubric levels and evidence requirements; real SCN01 generation, owner approval and isolated application documented in #9. |
+| Teacher authoring | Approved syllabus, exact relevant approved assessments, source/material constraints | Complete explanations, examples and transcripts tied to planned EXPLAIN units; local implementation, #10 live evidence pending. |
+| Trainer authoring | The same approved syllabus, exact relevant approved assessments and optional approved shared Teacher assets | Complete practice instructions and worksheets tied to planned PRACTICE units; local implementation, #10 live evidence pending. |
 | Runtime roles | Frozen definitions, context-authorized exact resources and actual learner evidence | Checked explanation, feedback or a proposed evaluation. No direct approval, activation or acquisition authority. |
 
 Application control allocates activity/asset identities and validates references.
@@ -98,7 +101,7 @@ the PRACTICE submission and assessment submission are separate observed events.
 
 The Lead can propose work within the authorized capability catalogue and review
 results. Deterministic code controls dispatch, validation, review eligibility,
-candidate persistence and state transitions. Production #9/#10 adapters must use
+candidate persistence and state transitions. Production #9/#10 adapters use
 registered typed authoring contracts. Learner WorkerOutput and R16 remain intact.
 
 Agent output is not allowed to select its own permissions, invent reviewed
@@ -135,8 +138,10 @@ commands. The production project service holds a SQLite write transaction throug
 input resolution, request reservation and atomic proposal/result persistence;
 inspection and syllabus resolution each use one read transaction. Application
 rechecks project and artifact approval/dependency conditions under its final write
-lock, in addition to the existing context compare-and-swap. Future model-backed
-generation must reserve inputs before external work and recheck before writes.
+lock, in addition to the existing context compare-and-swap. The dedicated
+generators use two short write transactions, recording their complete input
+snapshot before external work and rechecking it before atomic proposal/result
+persistence. They hold no SQLite write lock during model construction or calls.
 
 ## Dependency freshness and focused revision
 
@@ -227,7 +232,7 @@ It does not touch the existing SCN01 demo or approve the real pending syllabus.
 | Real production mechanism exercised | Simulated boundary |
 | --- | --- |
 | AIM-PRO source preparation, typed Curator checks and candidate mapping | Curator output, Lead verdict and corpus search response |
-| Production project initialization/revisions, stable syllabus resolution, dependency contracts and receipt validation | Future #9/#10 role adapters constructing ALM candidates; release/import command adapters |
+| Production project initialization/revisions, stable syllabus resolution, dedicated #9/#10 services, registry dispatch, candidate mapping, dependency contracts and receipts | Model responses; release/import command adapters |
 | LearningService proposals, exact human-review payloads, decisions and application | Test operator explicitly records synthetic decisions |
 | CrewAI Flow, registry authorization, TaskTool, output guards and SQLite request results | Lead plans/reviews/synthesis and Teacher/Trainer outputs; an Evaluator worker is also simulated for the learner-permission rejection case |
 | Evaluation validation and reviewed application under actual assessor permissions | Future assessor-facing adapter generates the typed formative Evaluation candidate |
@@ -252,12 +257,14 @@ The acceptance covers:
 7. Rejection of an Evaluator proposal produced under learner-only permissions,
    without granting that learner broader state-change authority.
 
-This delivers production project operations and an executable architecture
-specification for subsequent stages. It does not deliver #9/#10, a production
-release CLI, a semantic-quality benchmark or a complete observed activity-completion
-workflow. The existing ALM engine performs authoritative state transitions; the
-future generators, release/import commands and assessor-facing evaluation adapter
-remain to be implemented. No issue closure follows merely from this specification.
+This exercises production project and generator operations with synthetic model
+responses and an executable architecture specification for subsequent stages.
+It does not establish a source-backed #9/#10 live run, a production release CLI,
+a semantic-quality benchmark or a complete observed activity-completion workflow.
+The existing ALM engine performs authoritative state transitions; release/import
+commands and an assessor-facing evaluation adapter remain to be implemented.
+Explicit synthetic completion rules are configured during the reference delivery
+import, separately from generation. No issue closure follows merely from tests.
 
 ## Implementation sequence after architecture review
 
@@ -266,8 +273,9 @@ remain to be implemented. No issue closure follows merely from this specificatio
    approved-syllabus resolution, with request replay, transaction boundaries,
    review receipts and application-time revalidation. See the CLI guide and
    `tests/test_authoring_projects.py`; publication is a separate authorized step.
-3. Implement the dedicated Evaluator adapter (#9), then Teacher/Trainer authoring
-   adapters (#10), replacing fixture outputs while retaining these assertions.
+3. Implemented locally: dedicated Evaluator (#9), then Teacher/Trainer (#10)
+   adapters replace generator fixtures while retaining synthetic model responses.
+   Complete a newly authorized real generation/review run before closing them.
 4. Add production release/import commands and a guided review surface using the
    same services, then exercise one explicitly authorized source-backed real run.
 5. Extend #25 with adversarial/relevance/completeness cases and measured latency.

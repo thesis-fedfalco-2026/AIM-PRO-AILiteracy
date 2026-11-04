@@ -1,0 +1,82 @@
+{
+  "recorded_at_utc": "2026-11-04T10:30:21.829670+00:00",
+  "reviewer": "Assistant local inspection, not a HumanDecision",
+  "lead_verdict_consulted": false,
+  "lead_artifact_available": true,
+  "original_draft_modified": false,
+  "six_prior_findings": [
+    {
+      "finding": 1,
+      "status": "CORRECTED",
+      "evidence": "The delimited worse body removes only Keep the email under 150 words.; the five-business-day deadline and all other body text remain unchanged. Narrow host check passed."
+    },
+    {
+      "finding": 2,
+      "status": "PARTIALLY_CORRECTED",
+      "evidence": "Explicit assessor notes and line-by-line answer key are removed. However transcript line 21 tells learners which four moves were enacted and that examples were discussed but not included, supplying part of the enacted-versus-mentioned classification being assessed."
+    },
+    {
+      "finding": 3,
+      "status": "CORRECTED_WITH_DESCRIPTOR_GAP",
+      "evidence": "Both honest disagreement/no-disagreement routes are allowed. The positive individual descriptor requires annotation reasoning, but its negative counterpart omits missing reasoning as a condition."
+    },
+    {
+      "finding": 4,
+      "status": "CORRECTED",
+      "evidence": "Transcript line 18 explicitly requires fictional substitutions and forbids real customer details/payment links."
+    },
+    {
+      "finding": 5,
+      "status": "CORRECTED_WITH_ILLUSTRATION_LIMIT",
+      "evidence": "Card correctly distinguishes zero-shot from one/few-shot; best-practice citations now include excerpt 7. Its EXAMPLE recognition illustration still substitutes [sample text] for the actual sample output."
+    },
+    {
+      "finding": 6,
+      "status": "CORRECTED_WITH_DESCRIPTOR_LIMIT",
+      "evidence": "Task/evidence/positive descriptor agree on a full-scope declaration or labels for every detail, and appearance/authenticity limits are explicit. The negative descriptor should explicitly cover declarations with incomplete scope, rather than just no explicit declaration."
+    }
+  ],
+  "findings": [
+    {
+      "severity": "REVISION_REQUIRED",
+      "scope": "unit-2 annotation transcript, line 21",
+      "finding": "Line 21 states that instruction, primary content, cue and template were used and that examples were only discussed. This supplies part of the enacted/mentioned classification sought by the task, despite the new requirement to omit solved classifications from learner-visible content."
+    },
+    {
+      "severity": "REVISION_REQUIRED",
+      "scope": "prompt_move_card, MOVE 3 EXAMPLE recognition illustration",
+      "finding": "The recognition example contains [sample text] rather than an actual sample reminder, yet says the inclusion of the sample enacts EXAMPLE. Supply actual fictional sample text so the illustration enacts the defined move, or explicitly present it as an abstract pattern rather than a completed enacted example."
+    },
+    {
+      "severity": "REVISION_REQUIRED",
+      "scope": "unit-2 individual contribution criterion c2",
+      "finding": "The positive level requires reasoning for contributed annotations. The negative level lists missing named statement, missing specific lines and missing agreement/disagreement account, but not missing reasoning. A statement with lines and an agreement account but no reasoning matches neither level; align the lower descriptor with the missing required evidence."
+    },
+    {
+      "severity": "LIMITATION",
+      "scope": "unit-3 fictional declaration negative descriptor",
+      "finding": "The lower descriptor says no explicit fictional declaration and at least one unlabelled detail. Make incomplete-scope declarations explicit as well, so a declaration covering only one detail cannot be interpreted as sufficient. Only visible scope can be assessed, not authenticity."
+    },
+    {
+      "severity": "SOURCE_SUPPORT_LIMITATION",
+      "scope": "unit-2 item supported_claim",
+      "finding": "The citation describes the corpus as providing the five-move taxonomy, while the gaps correctly call the taxonomy an operator illustration. The retained source supplies construction concepts and primary-content techniques; clarify that the assessment classification scheme is derived by the operator, not a validated source-prescribed taxonomy."
+    }
+  ],
+  "recommendation": "REQUEST_REVISION",
+  "human_decision_recorded": false,
+  "lead_verdict": "ACCEPT",
+  "proposal": {
+    "type": "ChangeProposal",
+    "id": "proposal-5d49b19e39ac40b1bab8f063667f426d",
+    "version": "1"
+  },
+  "review_payload_key": "270be47f84de65d1473684baee9a99b4ab2a0b52482104f0e2a30610e2aca855",
+  "persisted_transcript_activity": [
+    {
+      "type": "ActivityDefinition",
+      "id": "authoring-output:3d13c6e5aa4e6fa11af6f967e7c48b4b874b4595eb8da3a45447f36c47a8d2ce:bba190106d0e1a7a0756689d0f0ff5755932aebe31d95479dd8b0c93071a115b",
+      "version": "b1de953080b54c4fac42c1ad5cd3b9fc"
+    }
+  ]
+}
