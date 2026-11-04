@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import replace
 import logging
+import time
 from typing import Any, ClassVar
 
 from crewai import Agent
@@ -20,7 +21,7 @@ from learning.outputs import (LearningResponse, SemanticReview, WorkerOutput, Pr
                               check_final_response, check_worker_output, learning_data, task_result)
 from learning.planning import LearningPlanDraft, authorize_plan, eligible_specializations
 from learning.store import canonical
-from agent_system import telemetry
+from agent_system import events, telemetry
 
 authorize_plan = telemetry.traced("authorize_plan", "guardrail",
     inputs=lambda draft, *a, **kw: draft)(authorize_plan)
@@ -37,7 +38,8 @@ class OrchestrationError(RuntimeError):
 class Orchestrator:
     def __init__(self, *, lead_llm: Any, lead_config: AgentConfig, lead_skills: list, registry: AgentRegistry, dispatcher: TaskDispatcher,
                  search: Callable[..., dict], settings: OrchestratorSettings, logger: logging.Logger,
-                 agent_factory: Callable[..., Any] = Agent):
+                 agent_factory: Callable[..., Any] = Agent, events_log=None):
+        self.events_log = events_log
         self.profiles = {lead_config.name: lead_config.profile, **{item.name: registry.get(item.name).profile for item in registry.summaries()}}
         self.registry, self.dispatcher, self.search = registry, dispatcher, search
         self.settings, self.logger = settings, logger
@@ -56,15 +58,23 @@ class Orchestrator:
     def _call(self, prompt: str, model):
         if self.settings.max_context_chars is not None and len(prompt) > self.settings.max_context_chars:
             raise ValueError("Required context exceeds configured budget")
-        output = self.lead.kickoff(prompt, response_format=model)
-        result = getattr(output, "pydantic", None)
-        if type(result) is not model:
-            raise OrchestrationError("Invalid structured model output")
-        return result
+        started, status = time.monotonic(), "error"
+        try:
+            output = self.lead.kickoff(prompt, response_format=model)
+            result = getattr(output, "pydantic", None)
+            if type(result) is not model:
+                status = "invalid_output"
+                raise OrchestrationError("Invalid structured model output")
+            status = "ok"
+            return result
+        finally:
+            events.emit("lead.call", contract=model.__name__, status=status,
+                        prompt_chars=len(prompt), duration_ms=events.elapsed_ms(started))
 
-    def _review(self, context: RunContext, payload: dict) -> SemanticReview:
+    def _review(self, context: RunContext, payload: dict, step_id: str | None = None) -> SemanticReview:
         with telemetry.observation("semantic_review", "evaluator", input=payload, metadata={"stage": payload["stage"]}) as span:
             result = self._review_impl(context, payload)
+            events.emit("review", stage=payload["stage"], step_id=step_id, verdict=result.verdict)
             span.update(output=result)
             span.score("semantic_review." + payload["stage"], result.verdict, result.reason)
             return result
@@ -94,8 +104,21 @@ class Orchestrator:
         return self.run(request, context=replace(context, request=request)).content
 
     def run(self, request: LearningRequest, *, context: RunContext) -> LearningResponse:
-        with telemetry.request_trace(request, context, self.profiles) as span:
-            response = self._run(request, context=context)
+        with telemetry.request_trace(request, context, self.profiles) as span, events.run(
+                self.events_log, request_id=request.request_id, context_id=context.snapshot.context.id,
+                mode=context.snapshot.context.fields["mode"]):
+            started, kind, error_type = time.monotonic(), "ERROR", None
+            events.emit("run.started", intent=request.intent)
+            try:
+                response = self._run(request, context=context)
+                kind = response.kind
+            except Exception as error:
+                error_type = type(error).__name__
+                raise
+            finally:
+                events.flush_provider_events()
+                events.emit("run.finished", response_kind=kind, error_type=error_type,
+                            duration_ms=events.elapsed_ms(started))
             span.update(output=response, metadata={"response_kind": response.kind})
             return response
 
@@ -134,13 +157,18 @@ class Orchestrator:
                       "specializations": [{"ref": p.ref.model_dump(), "fields": p.fields} for p in profiles],
                       "workers": [summary.model_dump() for summary in self.registry.summaries() if summary.name in eligible_names]}))
         if self.settings.max_context_chars is not None and len(prompt) > self.settings.max_context_chars:
+            events.emit("plan.decided", status="OVER_BUDGET", prompt_chars=len(prompt))
             return LearningResponse(kind="CLARIFICATION", content="The required context exceeds the configured budget; reduce the context or adjust the limit.")
         try:
             draft = self._call(prompt, LearningPlanDraft)
             tasks = authorize_plan(draft, context, self.registry, settings=self.settings)
         except Exception as error:
             self.logger.error("Plan rejected (%s)", type(error).__name__)
+            events.emit("plan.decided", status="REJECTED", error_type=type(error).__name__)
             return LearningResponse(kind="FAILURE", content="The plan is not admissible; no task was executed.")
+        events.emit("plan.decided", status="AUTHORIZED" if tasks else "EMPTY", steps=[{
+            "id": task.step.id, "agent": task.step.agent, "role": task.specialization.fields["role"],
+            "depends_on": list(task.step.depends_on), "retrieval": task.step.retrieval is not None} for task in tasks])
         telemetry.plan_roles(context.snapshot.context.fields["mode"],
                              [task.specialization.fields["role"] for task in tasks])
         plan = make_entity("TaskPlan", canonical([context.snapshot.context.id, request.request_id]) + "/plan", {
@@ -159,20 +187,25 @@ class Orchestrator:
                 "step": task.step, "specialization": task.specialization}, metadata={
                 "step_id": task.step.id, "role": task.specialization.fields["role"],
                 "specialization": task.specialization.id}) as span:
+            started = time.monotonic()
             try:
                 step = task.step
                 if any(outcomes[key].fields["status"] != "SUCCEEDED" for key in step.depends_on):
                     outcomes[step.id] = task_result(task, "SKIPPED", code="dependency_failed")
                     return
                 try:
+                    searched = time.monotonic()
                     evidence = self.search(step.retrieval.query, step.retrieval.k, scope=task.search_scope) if step.retrieval else None
+                    if evidence is not None:
+                        events.emit("retrieval", step_id=step.id, k=step.retrieval.k,
+                                    documents=len(evidence["documents"]), duration_ms=events.elapsed_ms(searched))
                     if evidence is not None and any(not task.search_scope.matches(doc["metadata"]) for doc in evidence["documents"]):
                         raise ValueError("Retrieved source is outside scope")
                     task = replace(task, evidence=evidence)
                     if evidence and context.snapshot.context.fields["mode"] == "PREPARATION":
                         task = replace(task, resources=discovered_resources(task, evidence))
                     if task.specialization.fields["role"] == "SOCRATIC" and evidence:
-                        review = self._review(context, {"stage": "INPUT_SOCRATIC", "documents": evidence})
+                        review = self._review(context, {"stage": "INPUT_SOCRATIC", "documents": evidence}, step.id)
                         if review.verdict != "ACCEPT":
                             raise ValueError("Socratic input may reveal a solution")
                 except Exception as error:
@@ -185,13 +218,13 @@ class Orchestrator:
                     if self.settings.max_context_chars is not None and len(brief) > self.settings.max_context_chars:
                         raise ValueError("Required task context exceeds budget")
                     if task.specialization.fields["role"] == "SOCRATIC":
-                        if self._review(context, {"stage": "INPUT_SOCRATIC", "task": brief}).verdict != "ACCEPT":
+                        if self._review(context, {"stage": "INPUT_SOCRATIC", "task": brief}, step.id).verdict != "ACCEPT":
                             raise ValueError("Socratic briefing may reveal a solution")
                     def guardrail(output):
                         if type(output.pydantic) is not WorkerOutput:
                             return False, "Worker did not return the structured contract"
                         review = self._review(context, {"stage": "WORKER", "task": brief,
-                            "output": output.pydantic.model_dump(mode="json")})
+                            "output": output.pydantic.model_dump(mode="json")}, step.id)
                         outcomes[step.id] = check_worker_output(task, output.pydantic, context, review=review)
                         if outcomes[step.id].fields["status"] != "SUCCEEDED":
                             self.logger.warning("Worker %s rejected (codes=%s, semantic_review=%s)",
@@ -199,10 +232,19 @@ class Orchestrator:
                                 review.verdict)
                         return outcomes[step.id].fields["status"] == "SUCCEEDED", output
 
+                    def delegate():
+                        dispatched, status = time.monotonic(), "error"
+                        try:
+                            result = self.dispatcher.dispatch(agent_name=step.agent, task=brief)
+                            status = "ok"
+                            return result
+                        finally:
+                            events.emit("worker.call", step_id=step.id, agent=step.agent, status=status,
+                                        brief_chars=len(brief), duration_ms=events.elapsed_ms(dispatched))
+
                     crew_task = DelegatedTask(name=step.id, description=brief,
                         expected_output=task.expected_output, output_pydantic=WorkerOutput,
-                        guardrail=guardrail, guardrail_max_retries=0,
-                        delegate=lambda: self.dispatcher.dispatch(agent_name=step.agent, task=brief))
+                        guardrail=guardrail, guardrail_max_retries=0, delegate=delegate)
                     output = crew_task.execute_sync().pydantic
                     if outcomes[step.id].fields["status"] == "SUCCEEDED":
                         checked_sources.append(evidence)
@@ -221,6 +263,10 @@ class Orchestrator:
                 if result is not None:
                     span.update(output=result.fields)
                     span.score("task_status", result.fields["status"])
+                    events.emit("step.finished", step_id=task.step.id, agent=task.step.agent,
+                                role=task.specialization.fields["role"], status=result.fields["status"],
+                                finding_codes=[f["code"] for f in result.fields["findings"]],
+                                duration_ms=events.elapsed_ms(started))
 
     def _synthesize(self, request, context, records, outcomes, checked_sources):
         records.extend(outcomes.values())
@@ -241,7 +287,10 @@ class Orchestrator:
             return LearningResponse(kind="FAILURE", content="Synthesis unavailable; no update claimed.")
         review = self._review(context, {"stage": "FINAL", "basis": synthesis, "sources": checked_sources,
                                        "response": response.model_dump(mode="json")})
-        return check_final_response(response, context, tuple(outcomes.values()), review=review)
+        checked = check_final_response(response, context, tuple(outcomes.values()), review=review)
+        events.emit("final.checked", verdict=review.verdict, proposed_kind=response.kind,
+                    response_kind=checked.kind, finding_codes=[f.code for f in checked.findings])
+        return checked
 
 
 class OrchestrationFlowState(BaseModel):

@@ -141,6 +141,13 @@ Legacy specialization names are not migrated automatically: `teacher` → `lesso
 
 Automated tests use synthetic data. `smoke.py` actually calls the free OpenRouter model and uses the MCP protocol, but selects `mock` search: it does not verify the Qdrant collection, TEI or local vLLM.
 
+## Structured event log (optional)
+
+Set `ALM_EVENT_LOG=<path>.jsonl` to record a content-free event for each plan,
+model call, retrieval, review and step outcome of a learning request. Run
+`python -m agent_system.metrics <path>.jsonl` to derive model calls, rejection
+rates, token usage and latency from that log. See [the event log](docs/architecture/event-log.md).
+
 ## Langfuse tracing (optional)
 
 Telemetry is disabled by default. When `LANGFUSE_ENABLED` is absent or `false`, the module neither imports Langfuse/OpenInference nor sends data. Dependencies are included in `requirements.txt` so integration tests with an in-memory exporter can also run.
