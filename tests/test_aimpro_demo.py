@@ -66,6 +66,21 @@ class DemoRunbookTest(unittest.TestCase):
             self.assertEqual(request.call_args.args[0].references[0].model_dump(), evidence['evidence'])
         self.assertEqual((self.path / 'trainer-answer.md').read_text(), 'Test feedback\n')
 
+    def test_model_profile_override_applies_to_every_role_and_paid_needs_its_own_flag(self):
+        for allow_paid in (False, True):
+            with self.subTest(allow_paid=allow_paid), patch('dotenv.load_dotenv'), \
+                    patch('main.build_orchestrator') as build:
+                with demo.session(self.path, live=True, model_profile='anthropic', allow_paid=allow_paid) as service:
+                    service.orchestrator_factory()
+                catalog = build.call_args.kwargs['model_catalog']
+                self.assertEqual({p.provider for p in catalog.profiles.values()}, {'anthropic'})
+                self.assertEqual({p.allow_paid for p in catalog.profiles.values()}, {allow_paid})
+                runtime = json.loads((self.path / 'runtime-profile.json').read_text())
+                self.assertEqual((runtime['lead_profile'], runtime['paid_model_authorized']), ('anthropic', allow_paid))
+        with patch('dotenv.load_dotenv'), self.assertRaisesRegex(demo.DemoError, 'Unknown model profile'):
+            with demo.session(self.path, live=True, model_profile='missing') as service:
+                service.orchestrator_factory()
+
     def test_cli_status_and_confirmation_diagnostics(self):
         with redirect_stdout(StringIO()) as output:
             self.assertEqual(demo.main(['--run-dir',str(self.path),'status']),0)

@@ -91,7 +91,7 @@ def init(directory):
 
 
 @contextmanager
-def session(directory, *, live=False):
+def session(directory, *, live=False, model_profile=None, allow_paid=False):
     directory = Path(directory)
     policy = TrustedPolicy.model_validate_json((directory / 'policy.json').read_text())
     with LearningStore(directory / 'state.sqlite') as store:
@@ -105,12 +105,20 @@ def session(directory, *, live=False):
                 load_dotenv(ROOT / '.env')
                 set_suppress_console_output(True)
                 catalog = load_model_catalog(ROOT / 'model.properties')
+                if model_profile is not None:
+                    # One explicit profile for Lead and every worker; paid use needs its own flag.
+                    if model_profile not in catalog.profiles:
+                        raise DemoError('Unknown model profile: ' + model_profile)
+                    chosen = catalog.profiles[model_profile]
+                    chosen = chosen.model_copy(update={'allow_paid': chosen.allow_paid or allow_paid})
+                    catalog = catalog.model_copy(update={'profiles': {name: chosen for name in catalog.profiles}})
                 catalog = catalog.model_copy(update={'settings': catalog.settings.model_copy(update={'timeout': 180}),
                     'orchestrator': catalog.orchestrator.model_copy(update={'max_steps': 1})})
                 engine = build_orchestrator(model_catalog=catalog)
                 engines.append(engine)
-                write(directory / 'runtime-profile.json', {'lead_profile': catalog.lead.profile,
+                write(directory / 'runtime-profile.json', {'lead_profile': model_profile or catalog.lead.profile,
                     'lead_model': catalog.profiles[catalog.lead.profile].model,
+                    'paid_model_authorized': allow_paid,
                     'per_call_timeout_seconds': 180, 'max_steps': 1})
                 return engine
         else:
@@ -176,9 +184,9 @@ def submit(directory, answer_file, request_id):
                 'note': 'Submission records receipt only; no acquisition, grade or completion is inferred.'}
 
 
-def ask(directory, role, request_id):
+def ask(directory, role, request_id, *, model_profile=None, allow_paid=False):
     directory = Path(directory)
-    with session(directory, live=True) as service:
+    with session(directory, live=True, model_profile=model_profile, allow_paid=allow_paid) as service:
         context = service._context(CONTEXT, LEARNER)
         intent = 'EXPLAIN' if role == 'teacher' else 'PRACTICE'
         choices = [a for a in ordered_activities(context) if a.fields['intent'] == intent]
@@ -252,7 +260,10 @@ def main(argv=None):
     for name in ('approve-import', 'activate'):
         commands.add_parser(name).add_argument('--confirm', action='store_true')
     for name in ('teacher', 'trainer'):
-        commands.add_parser(name).add_argument('--request-id', required=True)
+        role = commands.add_parser(name)
+        role.add_argument('--request-id', required=True)
+        role.add_argument('--model-profile', help='Use this model.properties profile for Lead and all workers')
+        role.add_argument('--allow-paid', action='store_true', help='Explicitly authorize a paid model profile')
     submission = commands.add_parser('submit')
     submission.add_argument('--answer-file', type=Path, required=True)
     submission.add_argument('--request-id', required=True)
@@ -264,7 +275,8 @@ def main(argv=None):
         elif args.command == 'submit': result = submit(args.run_dir, args.answer_file, args.request_id)
         elif args.command == 'status': result = status(args.run_dir)
         elif args.command == 'check-sources': result = check_sources(args.run_dir)
-        else: result = ask(args.run_dir, args.command, args.request_id)
+        else: result = ask(args.run_dir, args.command, args.request_id,
+                           model_profile=args.model_profile, allow_paid=args.allow_paid)
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 1 if result.get('kind') == 'FAILURE' else 0
     except DemoError as error:

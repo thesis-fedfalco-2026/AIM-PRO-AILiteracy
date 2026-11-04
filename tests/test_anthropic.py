@@ -13,6 +13,7 @@ from agent_system.anthropic import AnthropicJSONCompletion, IncompleteAnthropicO
 from agent_system.config import load_model_catalog
 from agent_system.runtime import LLMFactory
 from learning.contracts import Record
+from learning.outputs import WorkerOutput
 
 
 class TypedResult(Record):
@@ -82,6 +83,19 @@ class AnthropicJSONTest(unittest.TestCase):
         self.assertEqual(wire['output_config']['format']['type'], 'json_schema')
         self.assertIn('units', wire['output_config']['format']['schema']['required'])
         self.assertTrue(llm.completion_record()['usage_finalized'])
+
+    def test_worker_output_schema_has_no_untyped_or_recursive_definitions(self):
+        requests = []
+        payload = {'kind': 'EXPLANATION', 'content': 'Spiegazione'}
+        def respond(request):
+            requests.append(json.loads(request.content))
+            return httpx.Response(200, headers={'content-type': 'text/event-stream'},
+                text=self.stream(json.dumps(payload)))
+        result = self.client(respond).call('Explain', response_model=WorkerOutput)
+        self.assertEqual((result.kind, result.proposals), ('EXPLANATION', ()))
+        schema = requests[0]['output_config']['format']['schema']
+        self.assertNotIn({}, schema['$defs'].values())
+        self.assertNotIn('#/$defs/JsonValue', json.dumps(schema['$defs'].get('JsonValue', {})))
 
     def test_max_tokens_is_detected_before_parse_and_retains_cost(self):
         calls = []
