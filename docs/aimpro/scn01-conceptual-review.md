@@ -87,11 +87,16 @@ the AIM-PRO metamodel to satisfy the runtime.
 - **#3**: D04 resolves across this project and its snapshot matches ownership.
   The adapter rejects ambiguous or unresolved reachable references. Generated
   validation additionally checks reference target inheritance and whether a
-  link is exported in the containment section declared by the metamodel. Full
-  project conformance and export/import round-trip remain outside this check.
+  link is exported in the containment section declared by the metamodel.
+  `aimpro.audit --all` checks the export contract across every model; the
+  export/import round-trip remains outside this check.
 - **#4**: external ownership. Track vocabulary/type incompatibilities here as
   diagnostics. No metamodel edits, instance migrations or re-export are planned
   in this repository.
+
+The requested AIM-PRO changes, the SCN01 completeness status and the closure
+criteria for #2, #3 and #4 are in [the change requests](metamodel-change-requests.md),
+verified by `python -m aimpro.change_requests`.
 - **#5**: implemented generation of 82 runtime Pydantic classes and 67 JSON
   Schemas for concrete classes, from canonical source definitions. Types remain
   qualified, inheritance is preserved, and EString remains string. Generated

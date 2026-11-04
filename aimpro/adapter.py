@@ -12,7 +12,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict
 
-from aimpro.audit import DEFAULT_PROJECT, audit, objects
+from aimpro.audit import DEFAULT_PROJECT, audit, objects, snapshot_difference
 
 
 class SourceObject(BaseModel):
@@ -117,10 +117,9 @@ def load_scenario(path=DEFAULT_PROJECT, *, scenario="SCN01",
             if oid not in resolved:
                 continue
             source = index[oid]
-            if any(snapshot.get(k) != source.get(k) for k in
-                   ("attributes", "references", "children")) or any(
-                       snapshot["class"].get(k) != source["class"].get(k)
-                       for k in ("name", "package")):
+            if snapshot_difference(snapshot, source) == "CONTENT" or any(
+                    snapshot["class"].get(k) != source["class"].get(k)
+                    for k in ("name", "package")):
                 raise ValueError(f"Conflicting external snapshot: {oid}")
 
     competency_ids = []

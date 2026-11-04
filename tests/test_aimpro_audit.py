@@ -3,7 +3,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 
-from aimpro.audit import DEFAULT_PROJECT, audit
+from aimpro.audit import DEFAULT_PROJECT, audit, audit_project, snapshot_difference
 
 
 class AimproAuditTest(unittest.TestCase):
@@ -49,6 +49,40 @@ class AimproAuditTest(unittest.TestCase):
         report = self.audit_changed(change)
         self.assertTrue(any(f["field"] == "title" and f["code"] == "STRING_EXPECTED"
                             for f in report["findings"]))
+
+    def test_project_export_keeps_cross_model_references_consistent(self):
+        # #3 acceptance contract: rerun on every new jjodel export.
+        report = audit_project()
+        self.assertEqual(len(report["models"]), 6)
+        for code in ("DUPLICATE_OWNED_ID", "UNRESOLVED_REFERENCE",
+                     "EXTERNAL_WITHOUT_OWNER", "EXTERNAL_SNAPSHOT_DIFFERS"):
+            self.assertNotIn(code, report["finding_counts"])
+        self.assertEqual(report["finding_counts"]["EXTERNAL_SNAPSHOT_QUALIFIERS"], 5)
+        self.assertTrue(all(m["cross_model_references"] for m in report["models"]
+                            if m["name"] in ("SCN01", "sustainability", "learningphase")))
+
+    def test_snapshot_content_differs_from_qualifier_only_difference(self):
+        source = {"attributes": {"title": "A"}, "children": {"goal": [
+            {"id": "g", "class": {"name": "Goal", "package": "Scenario"}}]}}
+        qualified = json.loads(json.dumps(source))
+        qualified["children"]["goal"][0]["class"]["metamodel"] = {"id": "m", "name": "Scenario"}
+        self.assertIsNone(snapshot_difference(source, source))
+        self.assertEqual(snapshot_difference(qualified, source), "QUALIFIERS")
+        qualified["children"]["goal"][0]["class"]["name"] = "Other"
+        self.assertEqual(snapshot_difference(qualified, source), "CONTENT")
+
+        def change(project):
+            snapshots = next(m for m in project["definitions"]["models"]
+                             if m["metadata"]["name"] == "sustainability")["externalObjects"]
+            snapshots[0]["attributes"]["context"] = "VET"
+        report = self.audit_changed(change)
+        self.assertNotIn("EXTERNAL_SNAPSHOT_DIFFERS", report["finding_counts"])
+        project = json.loads(DEFAULT_PROJECT.read_bytes())
+        change(project)
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "project.json"
+            path.write_text(json.dumps(project), encoding="utf-8")
+            self.assertIn("EXTERNAL_SNAPSHOT_DIFFERS", audit_project(path)["finding_counts"])
 
     def test_rejects_unknown_model_and_format(self):
         with self.assertRaises(ValueError):
