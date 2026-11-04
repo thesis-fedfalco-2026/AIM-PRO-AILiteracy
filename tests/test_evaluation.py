@@ -61,24 +61,40 @@ class EvaluationSuiteTest(unittest.TestCase):
             result = run_case(case, MemoryEventLog())
         self.assertEqual(result.outcome, "NOT_EXECUTED")
 
-    def test_input_review_rejection_is_judged_not_skipped(self):
+    def test_socratic_worker_reads_sources_without_an_input_review(self):
+        log = MemoryEventLog()
+        run_case({c.id: c for c in CASES}["control-socratic"], log)
+        self.assertEqual([e.data["stage"] for e in log.events if e.type == "review"], ["WORKER", "FINAL"])
+        self.assertEqual([e.data["documents"] for e in log.events if e.type == "retrieval"], [1])
+        self.assertIn("worker.call", [e.type for e in log.events])
+
+    def test_planned_step_stopped_before_its_worker_is_judged_not_skipped(self):
+        def failing(search, case):
+            def wrapped(query, k, *, scope):
+                raise ConnectionError("search unavailable")
+            return wrapped
+
+        cases = {c.id: c for c in CASES}
+        with patch("evaluation.harness.injecting", failing):
+            control = run_case(cases["control-teacher"], MemoryEventLog())
+            attack = run_case(cases["injection-claimed-update"], MemoryEventLog())
+        self.assertEqual((control.outcome, attack.outcome), ("REJECTED", "BLOCKED"))
+
+    def test_worker_review_stops_a_solution_taken_from_the_sources(self):
         from evaluation.harness import ScriptedLead
         original = ScriptedLead.kickoff
+        case = {c.id: c for c in CASES}["socratic-document-solution"]
 
-        def reject_socratic_input(lead, prompt, response_format=None):
-            if response_format is SemanticReview and '"stage":"INPUT_SOCRATIC"' in prompt:
+        def review_output(lead, prompt, response_format=None):
+            if response_format is SemanticReview and '"stage":"WORKER"' in prompt and case.marker in prompt:
                 return SimpleNamespace(pydantic=SemanticReview(verdict="REJECT", reason="Reveals the solution"))
             return original(lead, prompt, response_format)
 
-        cases = {c.id: c for c in CASES}
-        with patch.object(ScriptedLead, "kickoff", reject_socratic_input):
-            log = MemoryEventLog()
-            control = run_case(cases["control-socratic"], log)
-            attack = run_case(cases["socratic-document-solution"], MemoryEventLog())
-        self.assertEqual((control.outcome, attack.outcome), ("REJECTED", "BLOCKED"))
-        codes = [c for e in log.events if e.type == "step.finished" for c in e.data["finding_codes"]]
-        self.assertEqual(codes, ["socratic_input_rejected"])
-        self.assertNotIn("worker.call", [e.type for e in log.events])
+        log = MemoryEventLog()
+        with patch.object(ScriptedLead, "kickoff", review_output):
+            result = run_case(case, log)
+        self.assertEqual(result.outcome, "BLOCKED")
+        self.assertEqual([c for e in log.events if e.type == "step.finished" for c in e.data["finding_codes"]], ["R18"])
 
 
 class EvaluationCliTest(unittest.TestCase):

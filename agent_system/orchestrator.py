@@ -36,10 +36,6 @@ class OrchestrationError(RuntimeError):
     pass
 
 
-class SocraticInputRejected(ValueError):
-    """Semantic review judged that Socratic input may reveal the solution."""
-
-
 class Orchestrator:
     def __init__(self, *, lead_llm: Any, lead_config: AgentConfig, lead_skills: list, registry: AgentRegistry, dispatcher: TaskDispatcher,
                  search: Callable[..., dict], settings: OrchestratorSettings, logger: logging.Logger,
@@ -89,7 +85,9 @@ class Orchestrator:
                   "Use ACCEPT only if the content is relevant, coverage is honest, citations actually support claims and the role is respected. "
                   "The content must substantively fulfill the assigned task. Reject a framing-only response that omits "
                   "requested feedback, examples, explanations or questions, even if its disclaimers and citations are correct. "
-                  "Reject solutions or equivalent hints in Socratic mode, including in sources and synthesis. "
+                  "In Socratic mode, sources and the task may contain the solution, as a tutor's material does; "
+                  "do not judge them for it. Reject only if the content delivered to the learner (the worker output "
+                  "or the final response, including its citations) reveals the solution, a final answer or an equivalent hint. "
                   "Reject claims of updates, approvals or acquisition without evidence. "
                   "Synthetic materials are not real-world evidence, but may support an explanation explicitly "
                   "limited to the synthetic example, without claiming verified real-world procedures or completed operations. "
@@ -209,23 +207,17 @@ class Orchestrator:
                     task = replace(task, evidence=evidence)
                     if evidence and context.snapshot.context.fields["mode"] == "PREPARATION":
                         task = replace(task, resources=discovered_resources(task, evidence))
-                    if task.specialization.fields["role"] == "SOCRATIC" and evidence:
-                        review = self._review(context, {"stage": "INPUT_SOCRATIC", "documents": evidence}, step.id)
-                        if review.verdict != "ACCEPT":
-                            raise SocraticInputRejected("Socratic input may reveal a solution")
                 except Exception as error:
                     self.logger.error("Retrieval for %s failed (%s)", step.id, type(error).__name__)
                     span.update(level="ERROR", status_message=str(error))
-                    outcomes[step.id] = task_result(task, "FAILED", code="socratic_input_rejected"
-                                                    if isinstance(error, SocraticInputRejected) else "retrieval_failed")
+                    outcomes[step.id] = task_result(task, "FAILED", code="retrieval_failed")
                     return
                 try:
                     brief = build_brief(task, outcomes, evidence)
                     if self.settings.max_context_chars is not None and len(brief) > self.settings.max_context_chars:
                         raise ValueError("Required task context exceeds budget")
-                    if task.specialization.fields["role"] == "SOCRATIC":
-                        if self._review(context, {"stage": "INPUT_SOCRATIC", "task": brief}, step.id).verdict != "ACCEPT":
-                            raise SocraticInputRejected("Socratic briefing may reveal a solution")
+                    # A Socratic worker may read sources containing the solution; the worker and
+                    # final reviews judge what reaches the learner. Prior results stay excluded.
                     def guardrail(output):
                         if type(output.pydantic) is not WorkerOutput:
                             return False, "Worker did not return the structured contract"
@@ -263,8 +255,7 @@ class Orchestrator:
                 except Exception as error:
                     self.logger.error("Worker %s failed (%s)", step.id, type(error).__name__)
                     span.update(level="ERROR", status_message=str(error))
-                    outcomes.setdefault(step.id, task_result(task, "FAILED", code="socratic_input_rejected"
-                                                             if isinstance(error, SocraticInputRejected) else "worker_failed"))
+                    outcomes.setdefault(step.id, task_result(task, "FAILED", code="worker_failed"))
             finally:
                 result = outcomes.get(task.step.id)
                 if result is not None:
