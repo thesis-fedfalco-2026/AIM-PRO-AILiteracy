@@ -18,7 +18,8 @@ from learning.contracts import Entity, make_entity
 from learning.context import LearningRequest, RunContext
 from learning.metamodel import lead_contract
 from learning.outputs import (LearningResponse, SemanticReview, WorkerOutput, ProposedChange, build_brief, discovered_resources,
-                              check_final_response, check_worker_output, learning_data, task_result)
+                              check_final_response, check_worker_output, final_response_violations,
+                              learning_data, task_result)
 from learning.planning import LearningPlanDraft, authorize_plan, eligible_specializations
 from learning.store import canonical
 from agent_system import events, telemetry
@@ -289,7 +290,8 @@ class Orchestrator:
                                        "response": response.model_dump(mode="json")})
         checked = check_final_response(response, context, tuple(outcomes.values()), review=review)
         events.emit("final.checked", verdict=review.verdict, proposed_kind=response.kind,
-                    response_kind=checked.kind, finding_codes=[f.code for f in checked.findings])
+                    response_kind=checked.kind, finding_codes=[f.code for f in checked.findings],
+                    violations=list(final_response_violations(response, tuple(outcomes.values()), review=review)))
         return checked
 
 

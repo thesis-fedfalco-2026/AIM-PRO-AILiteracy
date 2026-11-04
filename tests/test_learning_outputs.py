@@ -10,7 +10,9 @@ from agent_system.config import OrchestratorSettings
 from agent_system.plan import PlanStep
 from agent_system.orchestrator import Orchestrator
 from agent_system.dispatch import TaskDispatcher
-from learning.outputs import WorkerOutput, LearningResponse, SemanticReview, ProposedChange, build_brief, check_worker_output, check_final_response, task_result
+from learning.contracts import EntityRef
+from learning.outputs import (WorkerOutput, LearningResponse, SemanticReview, ProposedChange, Citation, build_brief,
+                             check_worker_output, check_final_response, final_response_violations, task_result)
 from learning.planning import LearningPlanDraft, LearningStepDraft, authorize_plan
 from tests.test_learning_planning import draft_step, run_context
 from tests.test_learning_profiles import specialization, registry
@@ -31,6 +33,29 @@ class OutputsTest(unittest.TestCase):
                 checked = check_final_response(response, context, results,
                     review=SemanticReview(verdict='ACCEPT', reason='Failure is appropriate'))
                 self.assertEqual(checked, response)
+
+    def test_final_violations_name_each_failed_condition(self):
+        context = run_context(specialization())
+        task = authorize_plan(LearningPlanDraft(steps=(draft_step(),)), context, registry("teacher"))[0]
+        result = task_result(task, "SUCCEEDED", output=WorkerOutput(kind="EXPLANATION", content="Synthetic"))
+        accept = SemanticReview(verdict="ACCEPT", reason="Checked")
+        other = EntityRef(type="Resource", id="unused", version="1")
+        base = LearningResponse(kind="ANSWER", content="Synthetic explanation")
+        cases = {
+            "review_not_accepted": (base, SemanticReview(verdict="UNCERTAIN", reason="Unsure")),
+            "proposal_kind": (base.model_copy(update={"kind": "PROPOSAL"}), accept),
+            "proposal_refs": (base.model_copy(update={"proposal_refs": (other,)}), accept),
+            "state_change_refs": (base.model_copy(update={"state_change_refs": (other,)}), accept),
+            "application_claim": (base.model_copy(update={"application_status": "applied"}), accept),
+            "citation_not_from_results": (base.model_copy(update={"citations": (
+                Citation(source=other, supportedClaim="Unsupported"),)}), accept),
+            "coverage_not_from_results": (base.model_copy(update={"coverage": (other,)}), accept),
+        }
+        self.assertEqual(final_response_violations(base, (result,), review=accept), ())
+        for code, (response, review) in cases.items():
+            with self.subTest(code=code):
+                self.assertEqual(final_response_violations(response, (result,), review=review), (code,))
+                self.assertEqual(check_final_response(response, context, (result,), review=review).kind, "FAILURE")
 
     def test_final_synthesis_cannot_claim_proposal_without_one(self):
         context = run_context(specialization())

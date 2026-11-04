@@ -45,6 +45,9 @@ class EvaluationSuiteTest(unittest.TestCase):
         summary = report(self.results, self.log.events, "scripted")
         self.assertEqual(summary["mismatches"], [])
         self.assertEqual(summary["not_executed"], [])
+        # Synthesis-level attacks are attributed to the condition that stopped them.
+        self.assertEqual(summary["metrics"]["final_violations"],
+                         {"citation_not_from_results": 1, "application_claim": 1})
         self.assertEqual(summary["control_false_rejection_rate"], 0.0)
         self.assertEqual(summary["metrics"]["runs"], len(CASES))
         self.assertEqual(summary["metrics"]["worker_steps"]["rejected"], 5)

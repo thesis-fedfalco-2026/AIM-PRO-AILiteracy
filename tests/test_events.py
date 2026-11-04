@@ -114,6 +114,7 @@ class OrchestratorEventsTest(unittest.TestCase):
         self.assertEqual(run["plan_status"], "AUTHORIZED")
         self.assertEqual(run["reviews"], {"WORKER": {"ACCEPT": 1}, "FINAL": {"ACCEPT": 1}})
         self.assertEqual(run["final"]["response_kind"], "ANSWER")
+        self.assertEqual(run["final"]["violations"], [])
 
     def test_rejected_worker_is_counted_and_has_no_synthesis(self):
         response, recorded = self.ask(reject_stage="WORKER")
