@@ -9,7 +9,7 @@ import unittest
 from agent_system.config import OrchestratorSettings
 from agent_system.plan import PlanStep
 from agent_system.orchestrator import Orchestrator
-from agent_system.task_tool import TaskTool
+from agent_system.dispatch import TaskDispatcher
 from learning.outputs import WorkerOutput, LearningResponse, SemanticReview, ProposedChange, build_brief, check_worker_output, check_final_response, task_result
 from learning.planning import LearningPlanDraft, LearningStepDraft, authorize_plan
 from tests.test_learning_planning import draft_step, run_context
@@ -108,7 +108,7 @@ class OutputsTest(unittest.TestCase):
             content = "BAD_OUTPUT" if payload["step_id"] == "one" else "Independent result"
             return WorkerOutput(kind="EXPLANATION", content=content)
         orchestrator = Orchestrator(lead_llm="llm", registry=reg,
-            task_tool=TaskTool(registry=reg, worker=worker, logger=logging.getLogger("test")),
+            dispatcher=TaskDispatcher(registry=reg, worker=worker, logger=logging.getLogger("test")),
             search=lambda *a, **k: self.fail("Unexpected retrieval"),
             settings=OrchestratorSettings(max_steps=6, max_context_chars=budget),
             logger=logging.getLogger("test"), agent_factory=Lead, lead_config=parse_agent_file(Path(__file__).resolve().parents[1]/'control/lead.md'), lead_skills=[])

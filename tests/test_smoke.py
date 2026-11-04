@@ -27,7 +27,7 @@ class SmokeTest(unittest.TestCase):
         backend = build_backend({'SEARCH_BACKEND': 'mock'})
         self.addCleanup(backend.close)
         orchestrator = demo_orchestrator(backend.search_documents)
-        orchestrator.task_tool.worker = lambda *args: WorkerOutput(
+        orchestrator.dispatcher.worker = lambda *args: WorkerOutput(
             kind='ASSESSMENT', content='PRIVATE_WORKER_CONTENT')
         with patch('smoke.build_orchestrator', return_value=orchestrator), \
                 patch('smoke.load_dotenv'), redirect_stdout(StringIO()), \

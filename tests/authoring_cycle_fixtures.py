@@ -383,7 +383,7 @@ class SimulatedRuntimeAgents:
         from agent_system.orchestrator import Orchestrator
         from agent_system.plan import PlanStep, RetrievalRequest
         from agent_system.registry import AgentRegistry
-        from agent_system.task_tool import TaskTool
+        from agent_system.dispatch import TaskDispatcher
         context = self.service._context(DELIVERY, 'learner', request)
         role, name, kind = {
             'EXPLAIN': ('teacher', 'lesson-explainer', 'EXPLANATION'),
@@ -437,7 +437,7 @@ class SimulatedRuntimeAgents:
             settings=LLMSettings(temperature=.2, top_p=.9, timeout=600),
             categories=load_category_catalog(ROOT / 'categories'))
         return Orchestrator(lead_llm='simulated', registry=registry,
-            task_tool=TaskTool(registry=registry, worker=worker, logger=logging.getLogger('architecture-test')),
+            dispatcher=TaskDispatcher(registry=registry, worker=worker, logger=logging.getLogger('architecture-test')),
             search=search, settings=OrchestratorSettings(max_steps=1), logger=logging.getLogger('architecture-test'),
             agent_factory=lambda **kwargs: Lead(), lead_config=parse_agent_file(ROOT / 'control/lead.md'), lead_skills=[])
 

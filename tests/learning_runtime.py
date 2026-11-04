@@ -9,7 +9,7 @@ from agent_system.orchestrator import Orchestrator
 from agent_system.plan import PlanStep, RetrievalRequest
 from agent_system.registry import AgentRegistry
 from agent_system.runtime import load_skill_catalog
-from agent_system.task_tool import TaskTool
+from agent_system.dispatch import TaskDispatcher
 from learning.contracts import EntityRef
 from learning.outputs import WorkerOutput, LearningResponse, Citation, SemanticReview
 from learning.planning import LearningPlanDraft, LearningStepDraft, Capability
@@ -39,7 +39,7 @@ def demo_orchestrator(search, *, reject_stage=None, worker_kind='EXPLANATION'):
         events.append(('worker',task))
         return WorkerOutput(kind=worker_kind,content='Use the approved release procedure.',citations=(citation,))
     registry=AgentRegistry.load(BASE_DIR/'agents',profiles={'openrouter','local'},tools={'search_documents':object()},skills=load_skill_catalog(BASE_DIR/'skills'), settings=LLMSettings(temperature=.2, top_p=.9, timeout=600), categories=load_category_catalog(BASE_DIR/'categories'))
-    result=Orchestrator(lead_llm='fake',registry=registry,task_tool=TaskTool(registry=registry,worker=worker,logger=logging.getLogger('test')),
+    result=Orchestrator(lead_llm='fake',registry=registry,dispatcher=TaskDispatcher(registry=registry,worker=worker,logger=logging.getLogger('test')),
         search=search,settings=OrchestratorSettings(max_steps=6),logger=logging.getLogger('test'),agent_factory=lambda **k:Lead(), lead_config=parse_agent_file(Path(__file__).resolve().parents[1]/'control/lead.md'), lead_skills=[])
     result.test_events=events
     return result

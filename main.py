@@ -36,7 +36,7 @@ from agent_system.mcp_runtime import (
 from agent_system.orchestrator import Orchestrator
 from agent_system.registry import AgentRegistry
 from agent_system.runtime import CrewAIWorker, LLMFactory, load_skill_catalog
-from agent_system.task_tool import TaskTool
+from agent_system.dispatch import TaskDispatcher
 
 
 LOGGER = logging.getLogger("agent_system")
@@ -149,13 +149,13 @@ def build_orchestrator(
         logger=LOGGER,
         agent_factory=agent_factory,
     )
-    task_tool = TaskTool(registry=registry, worker=worker.run, logger=LOGGER)
+    dispatcher = TaskDispatcher(registry=registry, worker=worker.run, logger=LOGGER)
     return Orchestrator(
         lead_llm=llms(lead.profile, lead.settings),
         lead_config=lead,
         lead_skills=[skills[name] for name in lead.skills],
         registry=registry,
-        task_tool=task_tool,
+        dispatcher=dispatcher,
         search=search_client.search,
         settings=catalog.orchestrator if local else OrchestratorSettings(
             max_steps=catalog.orchestrator.max_steps,

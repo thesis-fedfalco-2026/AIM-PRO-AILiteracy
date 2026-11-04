@@ -11,7 +11,7 @@ from pydantic import BaseModel
 
 from agent_system.config import OrchestratorSettings, AgentConfig, ConfigurationError
 from agent_system.registry import AgentRegistry
-from agent_system.task_tool import TaskTool
+from agent_system.dispatch import TaskDispatcher
 from agent_system.flow_task import DelegatedTask
 from learning.contracts import Entity, make_entity
 from learning.context import LearningRequest, RunContext
@@ -35,11 +35,11 @@ class OrchestrationError(RuntimeError):
 
 
 class Orchestrator:
-    def __init__(self, *, lead_llm: Any, lead_config: AgentConfig, lead_skills: list, registry: AgentRegistry, task_tool: TaskTool,
+    def __init__(self, *, lead_llm: Any, lead_config: AgentConfig, lead_skills: list, registry: AgentRegistry, dispatcher: TaskDispatcher,
                  search: Callable[..., dict], settings: OrchestratorSettings, logger: logging.Logger,
                  agent_factory: Callable[..., Any] = Agent):
         self.profiles = {lead_config.name: lead_config.profile, **{item.name: registry.get(item.name).profile for item in registry.summaries()}}
-        self.registry, self.task_tool, self.search = registry, task_tool, search
+        self.registry, self.dispatcher, self.search = registry, dispatcher, search
         self.settings, self.logger = settings, logger
         self.last_records: tuple[Entity, ...] = ()
         self.last_proposals = []
@@ -202,7 +202,7 @@ class Orchestrator:
                     crew_task = DelegatedTask(name=step.id, description=brief,
                         expected_output=task.expected_output, output_pydantic=WorkerOutput,
                         guardrail=guardrail, guardrail_max_retries=0,
-                        delegate=lambda: self.task_tool.run(agent_name=step.agent, task=brief))
+                        delegate=lambda: self.dispatcher.dispatch(agent_name=step.agent, task=brief))
                     output = crew_task.execute_sync().pydantic
                     if outcomes[step.id].fields["status"] == "SUCCEEDED":
                         checked_sources.append(evidence)
