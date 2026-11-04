@@ -75,7 +75,7 @@ def main(argv=None):
             print(f"RUN {index}/{args.runs}: {catalog.profiles['openrouter'].model}", flush=True)
             orchestrator = build_orchestrator(model_catalog=catalog, environ={**os.environ, "SEARCH_BACKEND": "mock"})
             searches, workers = [], []
-            search, worker = orchestrator.search, orchestrator.task_tool.worker
+            search, worker = orchestrator.search, orchestrator.dispatcher.worker
 
             def checked_search(query, k, *, scope):
                 result = search(query, k, scope=scope)
@@ -88,7 +88,7 @@ def main(argv=None):
                 return result
 
             orchestrator.search = checked_search
-            orchestrator.task_tool.worker = checked_worker
+            orchestrator.dispatcher.worker = checked_worker
             with TemporaryDirectory() as temporary, LearningStore(Path(temporary) / "demo.sqlite") as store:
                 service = prepare_demo(store, lambda: orchestrator)
                 request = LearningRequest(request_id=f"smoke-{index}",context_ref=store.read_context("demo").ref,

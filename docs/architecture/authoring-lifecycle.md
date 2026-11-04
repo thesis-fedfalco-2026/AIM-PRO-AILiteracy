@@ -235,7 +235,7 @@ It does not touch the existing SCN01 demo or approve the real pending syllabus.
 | AIM-PRO source preparation, typed Curator checks and candidate mapping | Curator output, Lead verdict and corpus search response |
 | Production project initialization/revisions, stable syllabus resolution, dedicated #9/#10 services, registry dispatch, candidate mapping, dependency contracts and receipts | Model responses; release/import command adapters |
 | LearningService proposals, exact human-review payloads, decisions and application | Test operator explicitly records synthetic decisions |
-| CrewAI Flow, registry authorization, TaskTool, output guards and SQLite request results | Lead plans/reviews/synthesis and Teacher/Trainer outputs; an Evaluator worker is also simulated for the learner-permission rejection case |
+| CrewAI Flow, registry authorization, TaskDispatcher, output guards and SQLite request results | Lead plans/reviews/synthesis and Teacher/Trainer outputs; an Evaluator worker is also simulated for the learner-permission rejection case |
 | Evaluation validation and reviewed application under actual assessor permissions | Future assessor-facing adapter generates the typed formative Evaluation candidate |
 | Readiness, binding approval, explicit activation, observed attempts and evaluation validation | Lexical retrieval response containing a synthetic exact-version resource |
 | Historical domain refs and read-only ALM execution-trace export | No external provider or external persistence service |

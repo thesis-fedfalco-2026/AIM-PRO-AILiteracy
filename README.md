@@ -116,7 +116,7 @@ This project **does not create or populate** the Qdrant collection. Document ing
 
 ## Local ALM workflow
 
-Orchestration uses a new CrewAI Flow for every request: `@start` prepares and authorizes the plan, `@router` selects steps in dependency order, and `@listen` executes them and starts final synthesis. Each executable step is a CrewAI `Task` (`DelegatedTask`) with `output_pydantic=WorkerOutput` and a guardrail applying semantic review and the checks in `learning/`. The adapter preserves delegation through `TaskTool`, without automatic retries after rejection. Steps depending on failed results are skipped; independent steps continue.
+Orchestration uses a new CrewAI Flow for every request: `@start` prepares and authorizes the plan, `@router` selects steps in dependency order, and `@listen` executes them and starts final synthesis. Each executable step is a CrewAI `Task` (`DelegatedTask`) with `output_pydantic=WorkerOutput` and a guardrail applying semantic review and the checks in `learning/`. The adapter delegates through a plain `TaskDispatcher` registry resolver (not an LLM tool), without automatic retries after rejection. Steps depending on failed results are skipped; independent steps continue.
 
 The Flow keeps only an execution cursor in CrewAI state; automatic memory and Flow persistence are disabled. Permissions, snapshots, results and changes remain under the control of `learning/` and the existing SQLite service.
 

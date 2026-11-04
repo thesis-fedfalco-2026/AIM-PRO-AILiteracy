@@ -16,9 +16,9 @@ from unittest.mock import patch
 import yaml
 
 if "XDG_DATA_HOME" not in os.environ:
-    _task_tool_data_home = tempfile.TemporaryDirectory()
-    atexit.register(_task_tool_data_home.cleanup)
-    os.environ["XDG_DATA_HOME"] = _task_tool_data_home.name
+    _crewai_data_home = tempfile.TemporaryDirectory()
+    atexit.register(_crewai_data_home.cleanup)
+    os.environ["XDG_DATA_HOME"] = _crewai_data_home.name
 
 import main
 
@@ -35,7 +35,7 @@ from agent_system.config import (
 )
 from agent_system.registry import AgentRegistry
 from agent_system.runtime import CrewAIWorker, LLMFactory, load_skill_catalog
-from agent_system.task_tool import TaskTool
+from agent_system.dispatch import TaskDispatcher
 from agent_system.orchestrator import Orchestrator
 from agent_system.plan import ExecutionPlan
 from learning.outputs import WorkerOutput
@@ -547,7 +547,7 @@ class RuntimeTest(unittest.TestCase):
         self.assertFalse(calls["agent"]["allow_delegation"])
 
 
-class TaskToolTest(unittest.TestCase):
+class TaskDispatcherTest(unittest.TestCase):
     def registry(self) -> AgentRegistry:
         return AgentRegistry([
             AgentConfig(
@@ -559,30 +559,39 @@ class TaskToolTest(unittest.TestCase):
             )
         ])
 
-    def test_task_tool_routes_full_config_and_task(self):
+    def test_dispatcher_routes_full_config_and_task(self):
         calls = []
-        tool = TaskTool(
+        dispatcher = TaskDispatcher(
             registry=self.registry(),
             worker=lambda config, task: calls.append((config, task)) or WorkerOutput(kind="EXPLANATION",content="worker answer"),
-            logger=logging.getLogger("test.tool"),
+            logger=logging.getLogger("test.dispatch"),
         )
 
-        result = tool.run(agent_name="agent-x", task="Focused task")
+        result = dispatcher.dispatch(" agent-x ", " Focused task ")
 
+        self.assertIs(type(result), WorkerOutput)
         self.assertEqual(result.content, "worker answer")
         self.assertEqual(calls[0][0].system_prompt, "System X")
         self.assertEqual(calls[0][1], "Focused task")
 
-    def test_task_tool_rejects_unknown_agent_and_empty_task(self):
-        tool = TaskTool(
+    def test_dispatcher_rejects_unknown_agent_and_empty_task(self):
+        calls = []
+        dispatcher = TaskDispatcher(
             registry=self.registry(),
-            worker=lambda config, task: "unused",
-            logger=logging.getLogger("test.tool"),
+            worker=lambda config, task: calls.append(task),
+            logger=logging.getLogger("test.dispatch"),
         )
         with self.assertRaisesRegex(ValueError, "agent-x"):
-            tool.run(agent_name="missing", task="Focused task")
+            dispatcher.dispatch("missing", "Focused task")
         with self.assertRaises(ValueError):
-            tool.run(agent_name="agent-x", task="   ")
+            dispatcher.dispatch("agent-x", "   ")
+        with self.assertRaises(ValueError):
+            dispatcher.dispatch("  ", "Focused task")
+        self.assertEqual(calls, [])
+
+    def test_dispatcher_is_not_a_crewai_tool(self):
+        from crewai.tools import BaseTool
+        self.assertFalse(issubclass(TaskDispatcher, BaseTool))
 
     def test_concurrent_native_delegations_never_overlap(self):
         start = Barrier(2)
@@ -603,13 +612,12 @@ class TaskToolTest(unittest.TestCase):
                 active -= 1
             return f"answer:{task}"
 
-        tool = TaskTool(
-            registry=self.registry(), worker=worker, logger=logging.getLogger("test.tool")
-        ).to_structured_tool()
+        dispatcher = TaskDispatcher(
+            registry=self.registry(), worker=worker, logger=logging.getLogger("test.dispatch"))
 
         def delegate(task):
             start.wait(timeout=2)
-            return tool.invoke({"agent_name": "agent-x", "task": task})
+            return dispatcher.dispatch("agent-x", task)
 
         with ThreadPoolExecutor(max_workers=2) as executor:
             answers = list(executor.map(delegate, ("first", "second")))
@@ -627,7 +635,7 @@ class OrchestratorTest(unittest.TestCase):
 
     def test_lead_has_no_tools_or_generic_catalog(self):
         calls = {}
-        orchestrator = Orchestrator(lead_llm="lead", registry=TaskToolTest().registry(), task_tool=object(),
+        orchestrator = Orchestrator(lead_llm="lead", registry=TaskDispatcherTest().registry(), dispatcher=object(),
             search=lambda *a, **k: None, settings=self.settings, logger=logging.getLogger("test"),
             agent_factory=lambda **values: calls.update(values), lead_config=parse_agent_file(Path(__file__).resolve().parents[1]/'control/lead.md'), lead_skills=[])
         self.assertEqual(calls["tools"], [])
@@ -653,7 +661,7 @@ class OrchestratorTest(unittest.TestCase):
         orchestrator = Orchestrator(
             lead_llm="lead-llm",
             registry=registry,
-            task_tool=object(),
+            dispatcher=object(),
             search=lambda query, k: self.fail("Invalid question must not search"),
             settings=self.settings,
             logger=logging.getLogger("test.lead"),
@@ -818,8 +826,8 @@ class ApplicationTest(unittest.TestCase):
         self.assertEqual(orchestrator.search("needle", 2, scope=SearchScope(mode="PREPARATION",source_scope_keys=("demo",))), {"documents": []})
         self.assertEqual(searches, [("needle", 2)])
 
-        orchestrator.task_tool.run(agent_name="technical-document-researcher", task="technical research")
-        orchestrator.task_tool.run(agent_name="policy-procedure-researcher", task="policy research")
+        orchestrator.dispatcher.dispatch(agent_name="technical-document-researcher", task="technical research")
+        orchestrator.dispatcher.dispatch(agent_name="policy-procedure-researcher", task="policy research")
 
         self.assertEqual(len(agent_calls), 3)
         for worker_call in agent_calls[1:]:

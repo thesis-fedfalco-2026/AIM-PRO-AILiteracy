@@ -9,7 +9,7 @@ from pydantic import Field
 
 
 class DelegatedTask(Task):
-    """Execute through TaskTool while keeping its worker isolation and telemetry.
+    """Execute through TaskDispatcher while keeping its worker isolation and telemetry.
 
     No Crew, implicit delegation, or automatic retries may bypass learning/'s
     authorization. The callable guardrail owns acceptance of the typed output.

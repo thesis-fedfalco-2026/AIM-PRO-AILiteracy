@@ -10,7 +10,7 @@ from agent_system.config import AgentConfig, OrchestratorSettings
 from agent_system.orchestrator import Orchestrator, OrchestrationError
 from agent_system.plan import ExecutionPlan, PlanStep, RetrievalRequest, validate_and_order_plan
 from agent_system.registry import AgentRegistry
-from agent_system.task_tool import TaskTool
+from agent_system.dispatch import TaskDispatcher
 
 
 class PlanValidationTest(unittest.TestCase):
@@ -191,7 +191,7 @@ class OrchestrationExecutionTest(unittest.TestCase):
             return WorkerOutput(kind='EXPLANATION',content='Evidence checked')
         reg=registry('teacher','trainer',tools=('search_documents',))
         orchestration=Orchestrator(lead_llm='llm',registry=reg,
-            task_tool=TaskTool(registry=reg,worker=worker,logger=logging.getLogger('test')),
+            dispatcher=TaskDispatcher(registry=reg,worker=worker,logger=logging.getLogger('test')),
             search=search,settings=OrchestratorSettings(max_steps=6,max_context_chars=budget),logger=logging.getLogger('test'),
             agent_factory=lambda **k:Lead(), lead_config=parse_agent_file(Path(__file__).resolve().parents[1]/'control/lead.md'), lead_skills=[])
         return orchestration,context
@@ -278,7 +278,7 @@ class OrchestrationExecutionTest(unittest.TestCase):
                         citations=(citation,), proposals=(proposal,))
                 reg = AgentRegistry((parse_agent_file(Path(__file__).resolve().parents[1]/'agents'/f'{name}.md'),))
                 orchestration = Orchestrator(lead_llm='offline', registry=reg,
-                    task_tool=TaskTool(registry=reg, worker=worker, logger=logging.getLogger('test')),
+                    dispatcher=TaskDispatcher(registry=reg, worker=worker, logger=logging.getLogger('test')),
                     search=lambda *a, **k: evidence, settings=OrchestratorSettings(max_steps=6),
                     logger=logging.getLogger('test'), agent_factory=lambda **k: Lead(),
                     lead_config=parse_agent_file(Path(__file__).resolve().parents[1]/'control/lead.md'), lead_skills=[])
