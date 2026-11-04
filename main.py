@@ -150,6 +150,11 @@ def build_orchestrator(
         agent_factory=agent_factory,
     )
     dispatcher = TaskDispatcher(registry=registry, worker=worker.run, logger=LOGGER)
+    events_log = None
+    if runtime_environ.get("ALM_EVENT_LOG"):
+        from agent_system.events import JsonlEventLog, install_provider_listener
+        events_log = JsonlEventLog(runtime_environ["ALM_EVENT_LOG"])
+        install_provider_listener()
     return Orchestrator(
         lead_llm=llms(lead.profile, lead.settings),
         lead_config=lead,
@@ -162,6 +167,7 @@ def build_orchestrator(
         ),
         logger=LOGGER,
         agent_factory=agent_factory,
+        events_log=events_log,
     )
 
 
