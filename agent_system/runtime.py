@@ -50,10 +50,12 @@ class LLMFactory:
         *,
         environ: Mapping[str, str],
         client_factory: Callable[..., Any] | None = None,
+        anthropic_json_outputs: bool = False,
     ):
         self.catalog = catalog
         self.environ = environ
         self.client_factory = client_factory
+        self.anthropic_json_outputs = anthropic_json_outputs
 
     def validate(self, profile_names: Collection[str]) -> None:
         for name in profile_names:
@@ -87,6 +89,10 @@ class LLMFactory:
                 from agent_system.openrouter import OpenRouterCompletion
 
                 client_factory = OpenRouterCompletion
+            elif profile.provider == 'anthropic' and self.anthropic_json_outputs:
+                from agent_system.anthropic import AnthropicJSONCompletion
+
+                client_factory = AnthropicJSONCompletion
         return client_factory(
             provider=profile.provider,
             model=profile.model,

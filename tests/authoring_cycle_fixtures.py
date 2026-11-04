@@ -1,9 +1,8 @@
 """Simulated role adapters for the executable architecture specification.
 
-Only model/retrieval outputs, future generators and release/import adapters are
-fixtures. Project initialization/revisions, proposals, human decisions,
-applications, runtime delegation and attempts use production services. This does
-not implement production generators #9/#10.
+Only model/retrieval outputs and release/import adapters are fixtures in the
+full cycle. ProductionAuthoring runs the actual dedicated generators. The older
+SimulatedAuthoring definition builders remain for isolated project-bundle tests.
 """
 
 import json
@@ -254,10 +253,108 @@ class SimulatedAuthoring:
         return proposal
 
 
+class ProductionAuthoring(SimulatedAuthoring):
+    """Real generator services and typed dispatch; only model responses are synthetic."""
+
+    def __init__(self, service):
+        super().__init__(service)
+        from tests.generator_fixtures import SyntheticModels
+        self.models = SyntheticModels()
+        self.activities = {}
+        self.packages = {}
+
+    def generate(self, kind, version='1'):
+        from aimpro.generation_state import GeneratedArtifact
+        from aimpro.generators import GenerationCommand
+        view = self.service.inspect_authoring_project(AUTH, 'admin', 'synthetic-course')
+        command = GenerationCommand(project=self.project.ref,
+            base_context=self.service.store.read_context(AUTH).ref,
+            assessments=tuple(a.resource for a in view.manifest.artifacts if a.kind == 'ASSESSMENT')
+                if kind != 'ASSESSMENT' else (),
+            requirements=('Explain two prompting choices.',) if version != '1' else ())
+        method = {'ASSESSMENT': self.service.generate_project_assessments,
+                  'TEACHER_CONTENT': self.service.generate_project_teacher,
+                  'TRAINER_CONTENT': self.service.generate_project_trainer}[kind]
+        result = method(AUTH, 'admin', command, request_id=kind + '-' + version,
+                        authoring_factory=self.models.factory)
+        assert result.kind == 'PROPOSAL', result
+        proposal = self.service.store.read(result.proposal_refs[0], owner=AUTH)
+        saved = proposal_candidates(self.service.store, proposal)
+        self.project = next(c for c in saved if c.id == self.project.id)
+        self.domain = next(c for c in saved if c.type == 'DomainModel')
+        self.design = next(c for c in saved if c.type == 'LearningDesign')
+        for candidate in saved:
+            if candidate.type == 'Resource':
+                try:
+                    package = GeneratedArtifact.model_validate_json(candidate.fields['contentOrLocator'])
+                except ValueError:
+                    continue
+                self.packages[kind] = package
+                self.definitions[{'ASSESSMENT': 'course:assessment-artifact',
+                    'TEACHER_CONTENT': 'course:teacher-artifact', 'TRAINER_CONTENT': 'course:trainer-artifact'}[kind]] = candidate
+        alias = {'ASSESSMENT': 'course:assess', 'TEACHER_CONTENT': 'course:explain', 'TRAINER_CONTENT': 'course:practice'}[kind]
+        self.activities[alias] = next(c for c in saved if c.type == 'ActivityDefinition')
+        self.definitions.update({c.id: c for c in saved})
+        return proposal
+
+    def delivery_import(self, release):
+        """Reference-only import plus explicit synthetic runtime configuration."""
+        with self.service.store.db:
+            self.service.store.db.execute('BEGIN')
+            manifest, definitions = released_entities(self.service.store, self.context(), release)
+        rules = [entity('RuleDefinition', 'course:' + key, {
+            'purpose': 'Require observed completion of every direct child.',
+            'inputs': ['Direct child statuses'], 'condition': 'all_completed', 'outcome': 'COMPLETED',
+            'unknownBehavior': 'UNKNOWN', 'approvalRequirement': 'Explicit human configuration'})
+            for key in ('phase-rule', 'unit-rule')]
+        pinned = {e.ref: e for e in definitions}
+        original = pinned[manifest.design]
+        phase = pinned[EntityRef.model_validate(original.fields['root'])]
+        units = [pinned[EntityRef.model_validate(r)] for r in phase.fields['children']]
+        configured = [entity('ProcessNode', u.id, {**u.fields, 'completionRule': ref(rules[1])}, 'delivery-1') for u in units]
+        configured_phase = entity('ProcessNode', phase.id, {**phase.fields,
+            'children': [ref(u) for u in configured], 'completionRule': ref(rules[0])}, 'delivery-1')
+        design = entity('LearningDesign', original.id, {**original.fields, 'root': ref(configured_phase)}, 'delivery-1')
+        workers = [entity('AgentSpecialization', 'delivery:' + role.lower(), {
+            'registryName': name, 'category': 'TEACHER_TRAINER' if role != 'EVALUATOR' else role,
+            'role': role, 'skills': ['evidence-search'] if role != 'EVALUATOR' else [],
+            'topics': [ref(self.topic)], 'competenceScope': 'Synthetic prompting',
+            'capabilities': [Capability(capability='search_documents', accessPath='ORCHESTRATOR_RETRIEVAL',
+                operations=('read',), scope='delivery', purpose='Use exact approved resources.').model_dump(mode='json')]})
+            for role, name in [('TEACHER', 'lesson-explainer'), ('TRAINER', 'guided-practice-coach'),
+                               ('EVALUATOR', 'learner-response-evaluator')]]
+        root = self.service.store.read_context(DELIVERY)
+        bindings = []
+        resources = set()
+        for package in self.packages.values():
+            for item in package.items:
+                for requirement_id, resource in item.materials.items():
+                    requirement = next(e for e in definitions if e.id == requirement_id)
+                    bindings.append(entity('ResourceBinding', 'delivery:binding:' + requirement_id, {
+                        'context': ref(root), 'resource': resource.model_dump(), 'requirement': ref(requirement),
+                        'usageScope': 'delivery', 'valid': True, 'reviewPayloadKey': 'pending'}))
+                    resources.add(canonical([resource.id, resource.version]))
+        runtime_model = entity('DomainModel', 'delivery:configuration', {
+            'name': 'Explicit synthetic runtime configuration', 'scope': 'This delivery only.',
+            'topics': [ref(self.topic)], 'definitions': [ref(release), *[ref(e) for e in (*rules, *configured, configured_phase, design, *workers)]]})
+        updated = entity('ExecutionContext', DELIVERY, {**root.fields,
+            'models': [manifest.domain.model_dump(), ref(runtime_model)], 'learningDesign': ref(design),
+            'resourceBindings': [ref(b) for b in bindings]}, 'imported-release-1')
+        # Explicit fixture policy grants for actual generated identities/versions.
+        policy = self.service.policy.model_dump()
+        policy['scopes']['delivery']['activities'] = [a.id for a in self.activities.values()]
+        policy['scopes']['delivery']['resources'] = sorted(resources)
+        self.service.policy = TrustedPolicy.model_validate(policy)
+        return self.service.propose(DELIVERY, 'admin', (root.ref,),
+            (*definitions, release, *rules, *configured, configured_phase, design, *workers, *bindings, runtime_model, updated),
+            'Explicit reference import of frozen release, new destination bindings and synthetic completion configuration; remain PREPARATION/DRAFT')
+
+
 class SimulatedRuntimeAgents:
     """Use the real Flow, authorization and worker guards with no model clients."""
-    def __init__(self, service):
+    def __init__(self, service, authoring=None):
         self.service = service
+        self.authoring = authoring
         self.events = []
         self.scopes = []
 
@@ -345,6 +442,8 @@ class SimulatedRuntimeAgents:
             agent_factory=lambda **kwargs: Lead(), lead_config=parse_agent_file(ROOT / 'control/lead.md'), lead_skills=[])
 
     def request(self, activity_id, intent, request_id, evidence=None):
+        if self.authoring:
+            activity_id = self.authoring.activities[activity_id].id
         context = self.service._context(DELIVERY, 'learner')
         activity = next(e for e in context.snapshot.active_domain() if e.id == activity_id)
         request = LearningRequest(request_id=request_id, context_ref=context.snapshot.context.ref,

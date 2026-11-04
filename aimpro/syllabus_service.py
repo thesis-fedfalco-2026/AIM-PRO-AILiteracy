@@ -15,8 +15,15 @@ from learning.store import StateConflict, canonical
 
 
 def generate_syllabus(service, context_id, subject_key, project, *, request_id, authoring_factory,
-                      source_scope, query, k=5, search_factory,
-                      scenario='SCN01', competencies='elena_usecase_competencies', root_id=None):
+                      source_scope, query=None, k=5, search_factory=None,
+                      scenario='SCN01', competencies='elena_usecase_competencies', root_id=None, prepared_sources=None):
+    if prepared_sources is not None:
+        if query is not None or k != 5 or search_factory is not None:
+            raise ValueError('Prepared sources cannot be combined with fresh retrieval options')
+        from aimpro.source_service import generate_selected_syllabus
+        return generate_selected_syllabus(service, context_id, subject_key, project, request_id=request_id,
+            prepared_sources=prepared_sources, source_scope=source_scope, authoring_factory=authoring_factory,
+            scenario=scenario, competencies=competencies, root_id=root_id)
     context = service._context(context_id, subject_key)
     root = context.snapshot.context
     authorize(service.policy, subject_key, 'propose', root.ref)

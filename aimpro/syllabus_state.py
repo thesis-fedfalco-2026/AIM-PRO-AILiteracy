@@ -43,7 +43,7 @@ class ApprovedSyllabus(Record):
     change: EntityRef
 
 
-def candidates(data, draft, verdict, context):
+def candidates(data, draft, verdict, context, *, retrieval_trace=None):
     draft = checked_syllabus(data, draft)
     verdict = checked_verdict(verdict)
     root = context.snapshot.context
@@ -79,10 +79,20 @@ def candidates(data, draft, verdict, context):
         outcomes[oid] = make('LearningOutcome', 'outcome:' + oid, {
             'statement': obj.attributes['description'],
             'topics': [ref(topics[c]) for c in obj.references['competency']]}, [oid])
+    trace = None
+    if retrieval_trace is not None:
+        if (data.corpus_evidence is None or data.corpus_evidence.selection is None or
+                data.corpus_evidence.selection.trace_sha256 != retrieval_trace.digest):
+            raise ValueError('Source input does not match its recorded retrieval trace')
+        trace = make('Resource', 'retrieval-trace', {
+            'title': 'Source discovery and exact selection trace',
+            'topics': [ref(t) for t in topics.values()],
+            'contentOrLocator': retrieval_trace.model_dump_json(),
+            'usageConditions': 'Retrieval audit only; neither pedagogical approval nor learner access.'}, [data.source.root_id])
     source = make('Resource', 'source-snapshot', {
         'title': 'AIM-PRO syllabus source snapshot and integration diagnostics',
         'contentOrLocator': encoded(data.model_dump(mode='json')),
-        'topics': [ref(t) for t in topics.values()],
+        'topics': [ref(t) for t in topics.values()], 'derivedFrom': [ref(trace)] if trace else [],
         'usageConditions': 'Authoring provenance only; not an approved teaching resource.'}, [data.source.root_id])
     # Match the existing canonical corpus projection: queries do not redefine versions.
     scope = data.corpus_evidence.source_scope
@@ -92,6 +102,10 @@ def candidates(data, draft, verdict, context):
         responsible='corpus-retrieval')), context.contract)
     result.append(corpus_topic)
     cited = {c.resource_key for unit in draft.units for c in unit.corpus_citations}
+    if data.corpus_evidence.selection is not None:
+        # All explicitly selected excerpts belong to the reviewed source input,
+        # including assessment context not cited by a particular outline unit.
+        cited.update(r.key for r in data.corpus_evidence.resources)
     corpus = []
     for resource in data.corpus_evidence.resources:
         if resource.key not in cited:

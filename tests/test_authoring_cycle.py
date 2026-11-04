@@ -15,7 +15,7 @@ from learning.metamodel import load_contract
 from learning.service import LearningService
 from learning.store import LearningStore
 from learning.validation import check_readiness
-from tests.authoring_cycle_fixtures import (AUTH, DELIVERY, SimulatedAuthoring,
+from tests.authoring_cycle_fixtures import (AUTH, DELIVERY, ProductionAuthoring,
     SimulatedRuntimeAgents, entity, ref, trusted_policy)
 
 
@@ -33,24 +33,19 @@ class AuthoringCycleTest(unittest.TestCase):
         self.service = LearningService(self.store, load_contract(), trusted_policy(), Mock())
         self.service.bootstrap(AUTH, 'admin')
         self.service.bootstrap(DELIVERY, 'admin')
-        self.authoring = SimulatedAuthoring(self.service)
-        self.runtime = SimulatedRuntimeAgents(self.service)
+        self.authoring = ProductionAuthoring(self.service)
+        self.runtime = SimulatedRuntimeAgents(self.service, self.authoring)
 
     def build_project(self):
         author = self.authoring
         author.curator()
-        for kind, generate in (
-            ('ASSESSMENT', lambda: author.assessment()),
-            ('TEACHER_CONTENT', lambda: author.content('teacher', author.definitions['course:assessment-artifact'])),
-            ('TRAINER_CONTENT', lambda: author.content('trainer', author.definitions['course:assessment-artifact'])),
-        ):
-            output = generate()
-            proposal = author.stage_output(kind, output)
+        for kind in ('ASSESSMENT', 'TEACHER_CONTENT', 'TRAINER_CONTENT'):
+            proposal = author.generate(kind)
             with self.assertRaises(ValueError):
                 prepare_release(self.store, author.context(), author.project, author.domain.ref)
             if kind == 'ASSESSMENT':
                 with self.assertRaises(ValueError):
-                    author.content('teacher', output[0])
+                    author.generate('TEACHER_CONTENT', 'pending-assessment')
             author.review_and_apply(AUTH, proposal, 'approve-' + kind)
             if kind != 'TRAINER_CONTENT':
                 with self.assertRaises(ValueError):
@@ -78,6 +73,7 @@ class AuthoringCycleTest(unittest.TestCase):
         return release
 
     def submit(self, activity_id, request_id):
+        activity_id = self.authoring.activities[activity_id].id
         context = self.service._context(DELIVERY, 'learner')
         activity = next(e for e in context.snapshot.active_domain() if e.id == activity_id)
         return self.service.submit(DELIVERY, 'learner', activity.ref,
@@ -148,8 +144,7 @@ class AuthoringCycleTest(unittest.TestCase):
         old_activity = old_context.snapshot.get(observed.fields['activity'])
         old_spec = old_context.snapshot.get(old_activity.fields['assessmentSpec'])
         author = self.authoring
-        new_assessment = author.assessment('2')
-        revision = author.stage_output('ASSESSMENT', new_assessment)
+        revision = author.generate('ASSESSMENT', '2')
         author.review_and_apply(AUTH, revision, 'revise-assessment')
         project = ProjectManifest.model_validate_json(author.project.fields['contentOrLocator'])
         self.assertEqual({f.target for f in dependency_findings(project)}, {'teacher_content', 'trainer_content'})
@@ -158,7 +153,7 @@ class AuthoringCycleTest(unittest.TestCase):
         self.assertEqual(review_receipt(self.store, author.context(), author.syllabus).proposal.id,
                          author.initial_receipt.proposal.id)
         for role in ('teacher', 'trainer'):
-            revision = author.stage_output(role.upper() + '_CONTENT', author.content(role, new_assessment[0], '2'))
+            revision = author.generate(role.upper() + '_CONTENT', '2')
             author.review_and_apply(AUTH, revision, 'revise-' + role)
         _, release_two = author.release('2', approve=True)
         self.assertEqual(self.store.read_context(DELIVERY), delivery_before)

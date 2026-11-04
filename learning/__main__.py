@@ -37,6 +37,10 @@ def parse_args(argv=None):
     inspect.add_argument('project_id')
     pinned = commands.add_parser('show-project-syllabus', help='Resolve the approved syllabus through an exact current project revision')
     pinned.add_argument('project', help='Exact project Resource EntityRef JSON')
+    for name in ('generate-project-assessments', 'generate-project-teacher', 'generate-project-trainer'):
+        generator = commands.add_parser(name, help='Generate a typed pending authoring proposal from exact approved project inputs')
+        generator.add_argument('bundle', type=Path, help='GenerationCommand JSON: project, base_context, assessments, shared_content, requirements')
+        generator.add_argument('--request-id', required=True)
     propose = commands.add_parser('propose')
     propose.add_argument('bundle', type=Path, help='JSON: targets, candidates, explanation')
     decide = commands.add_parser('decide')
@@ -71,9 +75,20 @@ def parse_args(argv=None):
         generate.add_argument('--root-id')
         generate.add_argument('--source-scope', required=name == 'generate-aimpro-syllabus',
                               help='Explicit policy/source scope for corpus grounding')
-        generate.add_argument('--query', required=name == 'generate-aimpro-syllabus',
-                              help='Corpus search query, required with --source-scope')
+        if name == 'generate-aimpro-syllabus':
+            grounding = generate.add_mutually_exclusive_group(required=True)
+            grounding.add_argument('--query', help='Single corpus search query')
+            grounding.add_argument('--prepared-sources', help='Exact completed source-preparation request id in this context')
+        else:
+            generate.add_argument('--query', help='Corpus search query, required with --source-scope')
         generate.add_argument('--k', type=int, default=5, choices=range(1, 21))
+    sources = commands.add_parser('prepare-aimpro-syllabus-sources', help='Prepare multi-query exact Curator excerpts without models')
+    sources.add_argument('project', type=Path)
+    sources.add_argument('--plan', type=Path, required=True)
+    sources.add_argument('--request-id', required=True)
+    sources.add_argument('--scenario', default='SCN01')
+    sources.add_argument('--competencies', default='elena_usecase_competencies')
+    sources.add_argument('--root-id')
     syllabus = commands.add_parser('show-aimpro-syllabus', help='Resolve the exact approved/applied current syllabus')
     syllabus.add_argument('design', help='Current LearningDesign EntityRef in JSON')
     trace = commands.add_parser('export-aimpro-trace', help='Read-only ALM execution history linked to unchanged AIM-PRO objects')
@@ -111,12 +126,16 @@ def _aimpro_lead():
 
 
 def _aimpro_search():
+    return _aimpro_search_client().search
+
+
+def _aimpro_search_client():
     import os
     from dotenv import load_dotenv
-    from main import BASE_DIR
     from agent_system.mcp_runtime import DocumentSearchClient, build_document_search_params
-    load_dotenv(BASE_DIR / '.env')
-    return DocumentSearchClient(build_document_search_params(BASE_DIR, os.environ, unlimited_text=True)).search
+    base_dir = Path(__file__).resolve().parents[1]
+    load_dotenv(base_dir / '.env')
+    return DocumentSearchClient(build_document_search_params(base_dir, os.environ, unlimited_text=True))
 
 
 def _aimpro_authoring():
@@ -153,6 +172,10 @@ def main(argv=None):
             elif command == 'show-project-syllabus':
                 result = service.approved_project_syllabus(args.context, args.subject,
                     EntityRef.model_validate_json(args.project)).model_dump(mode='json')
+            elif command in ('generate-project-assessments', 'generate-project-teacher', 'generate-project-trainer'):
+                method = getattr(service, command.replace('-', '_'))
+                result = method(args.context, args.subject, json.loads(args.bundle.read_text()),
+                    request_id=args.request_id, authoring_factory=_aimpro_authoring).model_dump(mode='json')
             elif command == 'propose':
                 bundle = json.loads(args.bundle.read_text())
                 if not isinstance(bundle, dict) or any(
@@ -204,7 +227,13 @@ def main(argv=None):
                     request_id=args.request_id, authoring_factory=_aimpro_authoring,
                     scenario=args.scenario, competencies=args.competencies, root_id=args.root_id,
                     source_scope=args.source_scope, query=args.query, k=args.k,
-                    search_factory=_aimpro_search).model_dump(mode='json')
+                    search_factory=_aimpro_search if args.prepared_sources is None else None,
+                    prepared_sources=args.prepared_sources).model_dump(mode='json')
+            elif command == 'prepare-aimpro-syllabus-sources':
+                result = service.prepare_aimpro_syllabus_sources(args.context, args.subject, args.project,
+                    json.loads(args.plan.read_text()), request_id=args.request_id,
+                    search_client_factory=_aimpro_search_client, scenario=args.scenario,
+                    competencies=args.competencies, root_id=args.root_id).model_dump(mode='json')
             elif command == 'show-aimpro-syllabus':
                 result = service.approved_aimpro_syllabus(args.context, args.subject,
                     EntityRef.model_validate_json(args.design)).model_dump(mode='json')

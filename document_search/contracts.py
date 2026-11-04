@@ -11,6 +11,31 @@ def resource_key(identity: str, version: str) -> str:
     return json.dumps([identity, version], ensure_ascii=False, separators=(",", ":"))
 
 
+class PreparationDocumentRef(BaseModel):
+    """An exact, content-pinned excerpt requested by authoring application control."""
+    model_config = ConfigDict(extra='forbid', frozen=True, hide_input_in_errors=True)
+    resource_id: Key
+    resource_version: Key
+    document_id: Key
+    content_sha256: Annotated[str, StringConstraints(strict=True, pattern=r'^[0-9a-f]{64}$')]
+
+    @model_validator(mode='after')
+    def exact_version(self):
+        if self.resource_version.lower() == 'latest':
+            raise ValueError('An exact resource version is required')
+        return self
+
+
+def preparation_selection(selections, scope):
+    scope = SearchScope.model_validate(scope)
+    refs = tuple(PreparationDocumentRef.model_validate(ref) for ref in selections)
+    if scope.mode != 'PREPARATION' or not scope.source_scope_keys:
+        raise ValueError('Exact authoring fetch requires an explicit preparation source scope')
+    if not 1 <= len(refs) <= 20 or len({r.document_id for r in refs}) != len(refs):
+        raise ValueError('Request between one and twenty unique excerpts')
+    return refs, scope
+
+
 class SearchScope(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True, hide_input_in_errors=True)
     mode: Literal["PREPARATION", "LEARNING"]
