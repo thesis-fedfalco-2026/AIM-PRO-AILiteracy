@@ -3,12 +3,22 @@ from io import StringIO
 import json
 import os
 from pathlib import Path
+import sys
 from tempfile import TemporaryDirectory
+from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from aimpro import demo
 from learning.outputs import LearningResponse
+
+
+def live_runtime_stubs():
+    # The live factory imports the CrewAI runtime; stub it so this test also runs without those dependencies.
+    build = Mock()
+    modules = {'dotenv': SimpleNamespace(load_dotenv=Mock()), 'main': SimpleNamespace(build_orchestrator=build),
+               'crewai.events.utils.console_formatter': SimpleNamespace(set_suppress_console_output=Mock())}
+    return patch.dict(sys.modules, modules), build
 
 
 class DemoRunbookTest(unittest.TestCase):
@@ -68,8 +78,8 @@ class DemoRunbookTest(unittest.TestCase):
 
     def test_model_profile_override_applies_to_every_role_and_paid_needs_its_own_flag(self):
         for allow_paid in (False, True):
-            with self.subTest(allow_paid=allow_paid), patch('dotenv.load_dotenv'), \
-                    patch('main.build_orchestrator') as build:
+            stubs, build = live_runtime_stubs()
+            with self.subTest(allow_paid=allow_paid), stubs:
                 with demo.session(self.path, live=True, model_profile='anthropic', allow_paid=allow_paid) as service:
                     service.orchestrator_factory()
                 catalog = build.call_args.kwargs['model_catalog']
@@ -77,7 +87,8 @@ class DemoRunbookTest(unittest.TestCase):
                 self.assertEqual({p.allow_paid for p in catalog.profiles.values()}, {allow_paid})
                 runtime = json.loads((self.path / 'runtime-profile.json').read_text())
                 self.assertEqual((runtime['lead_profile'], runtime['paid_model_authorized']), ('anthropic', allow_paid))
-        with patch('dotenv.load_dotenv'), self.assertRaisesRegex(demo.DemoError, 'Unknown model profile'):
+        stubs, _ = live_runtime_stubs()
+        with stubs, self.assertRaisesRegex(demo.DemoError, 'Unknown model profile'):
             with demo.session(self.path, live=True, model_profile='missing') as service:
                 service.orchestrator_factory()
 
