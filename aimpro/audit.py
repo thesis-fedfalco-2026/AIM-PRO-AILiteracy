@@ -20,14 +20,45 @@ def objects(items):
             yield from objects(children)
 
 
+def _without_class_qualifiers(value):
+    """Drop nested class metamodel qualifiers; class identity is (package, name)."""
+    if isinstance(value, dict):
+        return {k: {ck: cv for ck, cv in v.items() if ck != "metamodel"}
+                if k == "class" and isinstance(v, dict) else _without_class_qualifiers(v)
+                for k, v in value.items()}
+    if isinstance(value, list):
+        return [_without_class_qualifiers(v) for v in value]
+    return value
+
+
+def snapshot_difference(snapshot, source):
+    """Return None, "QUALIFIERS" when only nested class qualifiers differ, or "CONTENT"."""
+    fields = ("attributes", "references", "children")
+    if all(snapshot.get(k) == source.get(k) for k in fields):
+        return None
+    if all(_without_class_qualifiers(snapshot.get(k)) == _without_class_qualifiers(source.get(k))
+           for k in fields):
+        return "QUALIFIERS"
+    return "CONTENT"
+
+
 def audit(path=DEFAULT_PROJECT, scenario="SCN01", competencies="elena_usecase_competencies"):
+    return _audit(path, (scenario, competencies))
+
+
+def audit_project(path=DEFAULT_PROJECT):
+    """Audit every model in the project, not only a selected scenario closure."""
+    return _audit(path, None)
+
+
+def _audit(path, names):
     raw = Path(path).read_bytes()
     project = json.loads(raw)
     if project.get("format") != "jjodel-megamodel" or project.get("formatVersion") != "1.0":
         raise ValueError("Expected jjodel-megamodel format 1.0")
     models = project["definitions"]["models"]
-    selected = []
-    for name in (scenario, competencies):
+    selected = [] if names is not None else list(models)
+    for name in names or ():
         matches = [m for m in models if m["metadata"]["name"] == name]
         if len(matches) != 1:
             raise ValueError(f"Expected exactly one model named {name}")
@@ -71,8 +102,11 @@ def audit(path=DEFAULT_PROJECT, scenario="SCN01", competencies="elena_usecase_co
         for oid, snapshot in snapshots.items():
             if oid not in owned:
                 finding("EXTERNAL_WITHOUT_OWNER", name, snapshot, "id")
-            elif any(snapshot.get(k) != owned[oid].get(k) for k in ("attributes", "references", "children")):
+            elif (difference := snapshot_difference(snapshot, owned[oid])) == "CONTENT":
                 finding("EXTERNAL_SNAPSHOT_DIFFERS", name, snapshot, "id")
+            elif difference == "QUALIFIERS":
+                # Same content; jjodel qualifies nested snapshot classes but not owned ones.
+                finding("EXTERNAL_SNAPSHOT_QUALIFIERS", name, snapshot, "id")
         cross_refs = []
         local_ids = {o["id"] for o in items}
         for item in items:
@@ -126,8 +160,10 @@ def main():
     parser.add_argument("project", nargs="?", type=Path, default=DEFAULT_PROJECT)
     parser.add_argument("--scenario", default="SCN01")
     parser.add_argument("--competencies", default="elena_usecase_competencies")
+    parser.add_argument("--all", action="store_true", help="audit every model in the project")
     args = parser.parse_args()
-    print(json.dumps(audit(args.project, args.scenario, args.competencies), indent=2, ensure_ascii=False))
+    report = audit_project(args.project) if args.all else audit(args.project, args.scenario, args.competencies)
+    print(json.dumps(report, indent=2, ensure_ascii=False))
 
 
 if __name__ == "__main__":

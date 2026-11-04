@@ -20,8 +20,10 @@ Local application for managing an ALM learning context with state and tracking i
 Work on the AIM-PRO integration starts with the [SCN01 integration review and issue dependency path](docs/aimpro/scn01-conceptual-review.md).
 The [2 November 2026 jjodel project](docs/resources/aimpro-megamodel-2026-11-02.json)
 is preserved as exported. Run `python3 -m aimpro.audit` to inspect `SCN01` and
-`elena_usecase_competencies`; this inspection does not migrate the ALM runtime.
-The AIM-PRO metamodel is externally owned and remains unchanged. Run
+`elena_usecase_competencies`, or add `--all` for every model; this inspection does
+not migrate the ALM runtime. The AIM-PRO metamodel is externally owned and remains
+unchanged; requested changes are tracked in [the change requests](docs/aimpro/metamodel-change-requests.md)
+and checked by `python3 -m aimpro.change_requests`. Run
 `.venv/bin/python -m aimpro.adapter` to export the resolved scenario closure for
 authoring review, preserving raw values, source identities and diagnostics.
 This envelope is for authoring review and does not authorize learning execution.
