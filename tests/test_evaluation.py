@@ -1,12 +1,17 @@
 from collections import Counter
+from contextlib import redirect_stderr, redirect_stdout
 from dataclasses import replace
+import io
+import json
 import logging
+from pathlib import Path
+from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
 from agent_system.events import MemoryEventLog
 from learning.planning import LearningPlanDraft
-from evaluation.__main__ import report
+from evaluation.__main__ import main, report
 from evaluation.cases import CASES, socratic
 from evaluation.harness import run_case
 
@@ -50,6 +55,44 @@ class EvaluationSuiteTest(unittest.TestCase):
         with patch("evaluation.harness.plan", return_value=LearningPlanDraft(steps=())):
             result = run_case(case, MemoryEventLog())
         self.assertEqual(result.outcome, "NOT_EXECUTED")
+
+
+class EvaluationCliTest(unittest.TestCase):
+    def run_cli(self, *argv):
+        stdout, stderr = io.StringIO(), io.StringIO()
+        with TemporaryDirectory() as directory, redirect_stdout(stdout), redirect_stderr(stderr):
+            path = Path(directory) / "events.jsonl"
+            try:
+                main([*argv, "--log", str(path)])
+                code = 0
+            except SystemExit as exit:
+                code = exit.code
+            logged = path.exists()
+        return json.loads(stdout.getvalue()), stderr.getvalue(), code, logged
+
+    def test_progress_goes_to_stderr_and_the_report_to_stdout(self):
+        summary, progress, code, logged = self.run_cli("--case", "control-teacher", "--repeat", "2", "--check")
+        self.assertEqual(code, 0)
+        self.assertTrue(logged)
+        self.assertEqual(summary["metrics"]["runs"], 2)
+        self.assertIn("2 scripted runs", progress)
+        self.assertIn("[2/2] control-teacher: ANSWERED (ANSWER)", progress)
+
+    def test_a_failing_run_is_reported_without_discarding_the_others(self):
+        real = run_case
+
+        def flaky(case, *args, **kwargs):
+            if case.id == "control-socratic":
+                raise TimeoutError("provider stalled")
+            return real(case, *args, **kwargs)
+
+        with patch("evaluation.__main__.run_case", side_effect=flaky):
+            summary, progress, code, _ = self.run_cli(
+                "--case", "control-teacher", "--case", "control-socratic", "--check")
+        self.assertEqual(code, 1)
+        self.assertEqual(summary["errors"], ["control-socratic: TimeoutError"])
+        self.assertEqual(summary["control_false_rejection_rate"], 0.0)
+        self.assertIn("control-socratic: ERROR", progress)
 
 
 if __name__ == "__main__":
