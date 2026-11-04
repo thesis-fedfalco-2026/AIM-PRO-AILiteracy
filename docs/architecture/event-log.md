@@ -51,7 +51,7 @@ operator: do not encode personal data in them.
 | --- | --- |
 | `run.started` | `intent` |
 | `lead.call` | `contract` (`LearningPlanDraft`, `SemanticReview`, `LearningResponse`), `status` (`ok`, `error`, `invalid_output`), `prompt_chars`, `duration_ms` |
-| `plan.decided` | `status` (`AUTHORIZED`, `EMPTY`, `REJECTED`, `OVER_BUDGET`); `steps` with `id`, `agent`, `role`, `depends_on`, `retrieval`; or `error_type`/`prompt_chars` |
+| `plan.decided` | `status` (`AUTHORIZED`, `EMPTY`, `REJECTED`, `OVER_BUDGET`); `steps` with `id`, `agent`, `role`, `depends_on`, `retrieval`; or `error_type` with the plan-rule `reason` (fixed text, truncated to 160 characters), or `prompt_chars` |
 | `retrieval` | `step_id`, `k`, `documents`, `duration_ms` |
 | `worker.call` | `step_id`, `agent`, `status`, `brief_chars`, `duration_ms` |
 | `review` | `stage` (`WORKER`, `FINAL`), `step_id`, `verdict` |

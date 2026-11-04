@@ -30,8 +30,13 @@ calls. On a free provider, expect hours.
 
 **Live** (`--live`):
 
-- Keeps the configured Lead for planning, semantic review and synthesis.
-- Injects only the adversarial worker output and documents.
+- Keeps the configured Lead for planning and semantic review, and for the
+  synthesis of every case that does not attack the synthesis.
+- Injects the adversarial worker output and documents. For the synthesis attacks
+  (`citation-synthesis-fabricated`, `injection-synthesis-applied`,
+  `socratic-synthesis-solution`) it also substitutes the case's synthesis, so that
+  the live final review and the final check actually see the attack. The
+  substituted synthesis still emits a `lead.call` event, with a near-zero duration.
 - Measures whether the real reviewer catches what the deterministic checks miss.
 - **Sends case content to the configured provider. Run it only with explicit
   authorization**, as for the other live runs.

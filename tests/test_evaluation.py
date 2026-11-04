@@ -14,8 +14,9 @@ from agent_system.events import MemoryEventLog
 from learning.outputs import SemanticReview
 from learning.planning import LearningPlanDraft
 from evaluation.__main__ import main, report
-from evaluation.cases import CASES, socratic
-from evaluation.harness import run_case
+from document_search.backend import build_backend
+from evaluation.cases import CASES, echo, socratic
+from evaluation.harness import SynthesisOverride, run_case, scripted_orchestrator
 
 
 class EvaluationSuiteTest(unittest.TestCase):
@@ -95,6 +96,56 @@ class EvaluationSuiteTest(unittest.TestCase):
             result = run_case(case, log)
         self.assertEqual(result.outcome, "BLOCKED")
         self.assertEqual([c for e in log.events if e.type == "step.finished" for c in e.data["finding_codes"]], ["R18"])
+
+
+class LiveModeTest(unittest.TestCase):
+    """Live wiring with the provider replaced by the scripted Lead: no model calls."""
+
+    def run_live(self, case_id):
+        backend = build_backend({"SEARCH_BACKEND": "mock"})
+        self.addCleanup(backend.close)
+        case = {c.id: c for c in CASES}[case_id]
+        built = []
+
+        def build_orchestrator(environ):
+            # The "live" Lead writes an innocent synthesis; live mode replaces the scripted
+            # worker, so it rebuilds the worker output instead of observing it.
+            innocent = replace(case, synthesis=lambda _output: echo(case.worker()))
+            built.append(scripted_orchestrator(innocent, backend.search_documents, None))
+            return built[0]
+
+        log = MemoryEventLog()
+        with patch("main.build_orchestrator", build_orchestrator):
+            result = run_case(case, log, mode="live", environ={})
+        return result, built[0], log.events
+
+    def test_synthesis_attacks_are_injected_and_reach_the_live_final_review(self):
+        result, orchestrator, events = self.run_live("socratic-synthesis-solution")
+        self.assertIsInstance(orchestrator.lead, SynthesisOverride)
+        self.assertEqual(result.outcome, "LEAKED")
+        self.assertIn("FINAL", [e.data["stage"] for e in events if e.type == "review"])
+        result, _, events = self.run_live("injection-synthesis-applied")
+        self.assertEqual(result.outcome, "BLOCKED")
+        self.assertEqual([e.data["violations"] for e in events if e.type == "final.checked"], [["application_claim"]])
+
+    def test_a_rejected_plan_records_its_rule_and_is_not_executed(self):
+        from evaluation import harness
+        case = {c.id: c for c in CASES}["control-teacher"]
+        draft = harness.plan(case)
+        step = draft.steps[0]
+        unknown = draft.model_copy(update={"steps": (step.model_copy(update={
+            "step": step.step.model_copy(update={"agent": "missing-agent"})}),)})
+        log = MemoryEventLog()
+        with patch("evaluation.harness.plan", return_value=unknown):
+            result = run_case(case, log)
+        [decided] = [e.data for e in log.events if e.type == "plan.decided"]
+        self.assertEqual((decided["status"], result.outcome), ("REJECTED", "NOT_EXECUTED"))
+        self.assertIn("missing-agent", decided["reason"])
+
+    def test_cases_without_a_synthesis_attack_keep_the_live_lead_synthesis(self):
+        result, orchestrator, _ = self.run_live("control-teacher")
+        self.assertNotIsInstance(orchestrator.lead, SynthesisOverride)
+        self.assertEqual(result.outcome, "ANSWERED")
 
 
 class EvaluationCliTest(unittest.TestCase):

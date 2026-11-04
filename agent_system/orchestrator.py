@@ -167,7 +167,9 @@ class Orchestrator:
             tasks = authorize_plan(draft, context, self.registry, settings=self.settings)
         except Exception as error:
             self.logger.error("Plan rejected (%s)", type(error).__name__)
-            events.emit("plan.decided", status="REJECTED", error_type=type(error).__name__)
+            # Plan-rule messages are fixed text, at most naming an agent; truncated for safety.
+            events.emit("plan.decided", status="REJECTED", error_type=type(error).__name__,
+                        reason=str(error)[:160] if isinstance(error, ValueError) else None)
             return LearningResponse(kind="FAILURE", content="The plan is not admissible; no task was executed.")
         events.emit("plan.decided", status="AUTHORIZED" if tasks else "EMPTY", steps=[{
             "id": task.step.id, "agent": task.step.agent, "role": task.specialization.fields["role"],
