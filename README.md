@@ -147,6 +147,7 @@ Set `ALM_EVENT_LOG=<path>.jsonl` to record a content-free event for each plan,
 model call, retrieval, review and step outcome of a learning request. Run
 `python -m agent_system.metrics <path>.jsonl` to derive model calls, rejection
 rates, token usage and latency from that log. See [the event log](docs/architecture/event-log.md).
+`python -m evaluation --check` runs the adversarial [evaluation suite](docs/evaluation.md) without model calls.
 
 ## Langfuse tracing (optional)
 
