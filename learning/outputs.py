@@ -162,7 +162,8 @@ def final_response_violations(response: LearningResponse, results: tuple[Entity,
         ("proposal_kind", response.kind == "PROPOSAL"),
         ("proposal_refs", bool(response.proposal_refs)),
         ("state_change_refs", bool(response.state_change_refs)),
-        ("application_claim", response.application_status != "none"),
+        # "not_applied" states that nothing was written; any other status claims a write or proposal.
+        ("application_claim", response.application_status not in {"none", "not_applied"}),
         ("citation_not_from_results", any(c.source not in sources for c in response.citations)),
         ("coverage_not_from_results", not set(response.coverage) <= coverage),
     )

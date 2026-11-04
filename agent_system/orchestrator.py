@@ -36,6 +36,10 @@ class OrchestrationError(RuntimeError):
     pass
 
 
+class SocraticInputRejected(ValueError):
+    """Semantic review judged that Socratic input may reveal the solution."""
+
+
 class Orchestrator:
     def __init__(self, *, lead_llm: Any, lead_config: AgentConfig, lead_skills: list, registry: AgentRegistry, dispatcher: TaskDispatcher,
                  search: Callable[..., dict], settings: OrchestratorSettings, logger: logging.Logger,
@@ -208,11 +212,12 @@ class Orchestrator:
                     if task.specialization.fields["role"] == "SOCRATIC" and evidence:
                         review = self._review(context, {"stage": "INPUT_SOCRATIC", "documents": evidence}, step.id)
                         if review.verdict != "ACCEPT":
-                            raise ValueError("Socratic input may reveal a solution")
+                            raise SocraticInputRejected("Socratic input may reveal a solution")
                 except Exception as error:
                     self.logger.error("Retrieval for %s failed (%s)", step.id, type(error).__name__)
                     span.update(level="ERROR", status_message=str(error))
-                    outcomes[step.id] = task_result(task, "FAILED", code="retrieval_failed")
+                    outcomes[step.id] = task_result(task, "FAILED", code="socratic_input_rejected"
+                                                    if isinstance(error, SocraticInputRejected) else "retrieval_failed")
                     return
                 try:
                     brief = build_brief(task, outcomes, evidence)
@@ -220,7 +225,7 @@ class Orchestrator:
                         raise ValueError("Required task context exceeds budget")
                     if task.specialization.fields["role"] == "SOCRATIC":
                         if self._review(context, {"stage": "INPUT_SOCRATIC", "task": brief}, step.id).verdict != "ACCEPT":
-                            raise ValueError("Socratic briefing may reveal a solution")
+                            raise SocraticInputRejected("Socratic briefing may reveal a solution")
                     def guardrail(output):
                         if type(output.pydantic) is not WorkerOutput:
                             return False, "Worker did not return the structured contract"
@@ -258,7 +263,8 @@ class Orchestrator:
                 except Exception as error:
                     self.logger.error("Worker %s failed (%s)", step.id, type(error).__name__)
                     span.update(level="ERROR", status_message=str(error))
-                    outcomes.setdefault(step.id, task_result(task, "FAILED", code="worker_failed"))
+                    outcomes.setdefault(step.id, task_result(task, "FAILED", code="socratic_input_rejected"
+                                                             if isinstance(error, SocraticInputRejected) else "worker_failed"))
             finally:
                 result = outcomes.get(task.step.id)
                 if result is not None:
@@ -290,7 +296,8 @@ class Orchestrator:
                                        "response": response.model_dump(mode="json")})
         checked = check_final_response(response, context, tuple(outcomes.values()), review=review)
         events.emit("final.checked", verdict=review.verdict, proposed_kind=response.kind,
-                    response_kind=checked.kind, finding_codes=[f.code for f in checked.findings],
+                    response_kind=checked.kind, application_status=response.application_status,
+                    finding_codes=[f.code for f in checked.findings],
                     violations=list(final_response_violations(response, tuple(outcomes.values()), review=review)))
         return checked
 

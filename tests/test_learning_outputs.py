@@ -52,6 +52,9 @@ class OutputsTest(unittest.TestCase):
             "coverage_not_from_results": (base.model_copy(update={"coverage": (other,)}), accept),
         }
         self.assertEqual(final_response_violations(base, (result,), review=accept), ())
+        not_applied = base.model_copy(update={"application_status": "not_applied"})
+        self.assertEqual(final_response_violations(not_applied, (result,), review=accept), ())
+        self.assertEqual(check_final_response(not_applied, context, (result,), review=accept), not_applied)
         for code, (response, review) in cases.items():
             with self.subTest(code=code):
                 self.assertEqual(final_response_violations(response, (result,), review=review), (code,))

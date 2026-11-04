@@ -56,7 +56,7 @@ operator: do not encode personal data in them.
 | `worker.call` | `step_id`, `agent`, `status`, `brief_chars`, `duration_ms` |
 | `review` | `stage` (`INPUT_SOCRATIC`, `WORKER`, `FINAL`), `step_id`, `verdict` |
 | `step.finished` | `step_id`, `agent`, `role`, `status` (`SUCCEEDED`, `FAILED`, `SKIPPED`), `finding_codes`, `duration_ms` |
-| `final.checked` | `verdict`, `proposed_kind`, `response_kind` (after the admissibility check), `finding_codes`, `violations` (failed admissibility conditions: `review_not_accepted`, `proposal_kind`, `proposal_refs`, `state_change_refs`, `application_claim`, `citation_not_from_results`, `coverage_not_from_results`) |
+| `final.checked` | `verdict`, `proposed_kind`, `response_kind` (after the admissibility check), `application_status` (as proposed), `finding_codes`, `violations` (failed admissibility conditions: `review_not_accepted`, `proposal_kind`, `proposal_refs`, `state_change_refs`, `application_claim`, `citation_not_from_results`, `coverage_not_from_results`) |
 | `provider.call` | `agent` (CrewAI role), `model`, `status`, `call_type`, `input_tokens`, `output_tokens`, `duration_ms` |
 | `run.finished` | `response_kind` (or `ERROR`), `error_type`, `duration_ms` |
 
