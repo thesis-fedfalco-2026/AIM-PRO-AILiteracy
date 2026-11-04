@@ -223,3 +223,6 @@ instructions.md
 **/superpowers/
 .worktrees/
 .gitignore
+
+# macOS
+.DS_Store
