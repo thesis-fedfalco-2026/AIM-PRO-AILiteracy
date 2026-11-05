@@ -101,6 +101,32 @@ class LearningPlanningTest(unittest.TestCase):
             authorize_plan(LearningPlanDraft(steps=(item.model_copy(update={"step": step}),)),
                            run_context(specialization()), registry("teacher", tools=("search_documents",)))
 
+    def test_omitted_retrieval_capability_is_derived_only_from_a_single_grant(self):
+        from learning.planning import Capability
+        from learning.policies import ScopeGrant
+        grant = Capability(capability="search_documents", accessPath="ORCHESTRATOR_RETRIEVAL",
+                           operations=("read", "list"), scope="demo", purpose="Evidence")
+        item = draft_step()
+        step = item.step.model_copy(update={"retrieval": RetrievalRequest(tool="search_documents", query="topic", k=3)})
+        plan = LearningPlanDraft(steps=(item.model_copy(update={"step": step}),))
+        reg = registry("teacher", tools=("search_documents",))
+
+        def context(*grants):
+            run = run_context(specialization(capabilities=tuple(g.model_dump(mode="json") for g in grants)))
+            root = run.snapshot.context.model_copy(update={"fields": {**run.snapshot.context.fields, "mode": "PREPARATION"}})
+            return replace(run, snapshot=replace(run.snapshot, context=root), policy=run.policy.model_copy(update={
+                "scopes": {name: ScopeGrant(contexts=["session"], subjects=["learner"], sources=["demo"])
+                           for name in ("demo", "other")}}))
+
+        [task] = authorize_plan(plan, context(grant), reg)
+        self.assertEqual(task.record.fields["requiredCapabilities"],
+                         [grant.model_copy(update={"operations": ("read",)}).model_dump(mode="json")])
+        self.assertEqual(task.search_scope.source_scope_keys, ("demo",))
+        with self.assertRaisesRegex(ValueError, "Retrieval requires an authorized capability"):
+            authorize_plan(plan, context(grant, grant.model_copy(update={"scope": "other"})), reg)
+        with self.assertRaisesRegex(ValueError, "Retrieval requires an authorized capability"):
+            authorize_plan(plan, context(grant.model_copy(update={"accessPath": "WORKER_TOOL"})), reg)
+
     def test_draft_refs_cannot_authorize_execution(self):
         step = draft_step().model_copy(update={"specialization": specialization().ref.model_copy(update={"version": "candidate"})})
         with self.assertRaises(ValueError):

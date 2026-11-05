@@ -21,7 +21,7 @@ SOURCE = EntityRef(type='Resource',id='technical-deployment-guide',version='1')
 
 def demo_orchestrator(search, *, reject_stage=None, worker_kind='EXPLANATION', steps=1, invalid_plans=0):
     """steps=2 plans two independent steps, so the response goes through synthesis and final review.
-    The first invalid_plans plans omit the retrieval capability and are rejected."""
+    The first invalid_plans plans name an unavailable specialization and are rejected."""
     events=[]
     plans=[]
     citation=Citation(source=SOURCE,supportedClaim='Use the approved release procedure.')
@@ -30,10 +30,11 @@ def demo_orchestrator(search, *, reject_stage=None, worker_kind='EXPLANATION', s
             events.append(('lead',prompt))
             if response_format is LearningPlanDraft:
                 plans.append(prompt)
-                capabilities=() if len(plans) <= invalid_plans else (Capability(capability='search_documents',accessPath='ORCHESTRATOR_RETRIEVAL',operations=('read',),scope='lesson',purpose='Explain'),)
+                capabilities=(Capability(capability='search_documents',accessPath='ORCHESTRATOR_RETRIEVAL',operations=('read',),scope='lesson',purpose='Explain'),)
+                profile='teacher-missing' if len(plans) <= invalid_plans else 'teacher-demo'
                 value=LearningPlanDraft(steps=tuple(LearningStepDraft(
                     step=PlanStep(id=step_id,agent='lesson-explainer',task='Explain the deployment guide',retrieval=RetrievalRequest(tool='search_documents',query='deployment',k=3)),
-                    specialization=EntityRef(type='AgentSpecialization',id='teacher-demo',version='1'),intent='EXPLAIN',expected_output='EXPLANATION',
+                    specialization=EntityRef(type='AgentSpecialization',id=profile,version='1'),intent='EXPLAIN',expected_output='EXPLANATION',
                     required_capabilities=capabilities) for step_id in ('teach','teach-2')[:steps]))
             elif response_format is SemanticReview:
                 value=SemanticReview(verdict='REJECT' if reject_stage and f'"stage":"{reject_stage}"' in prompt else 'ACCEPT',reason='Fixture verdict')

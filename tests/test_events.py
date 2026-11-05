@@ -130,7 +130,7 @@ class OrchestratorEventsTest(unittest.TestCase):
         decided = [e.data for e in recorded if e.type == "plan.decided"]
         self.assertEqual([(d["status"], d.get("will_retry")) for d in decided],
                          [("REJECTED", True), ("AUTHORIZED", None)])
-        self.assertEqual(decided[0]["reason"], "Retrieval requires an authorized capability")
+        self.assertEqual(decided[0]["reason"], "Specialization is unavailable")
         self.assertEqual(summarize(recorded)["plan_retries"], {"total": 1, "recovered": 1})
         response, recorded = self.ask(invalid_plans=2)
         self.assertEqual(response.kind, "FAILURE")
