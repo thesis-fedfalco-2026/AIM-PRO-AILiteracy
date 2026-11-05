@@ -1,0 +1,274 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1791888876673_USER_33",
+      "sustainability",
+      "HardwareEfficiencyMetric"
+    ]
+  },
+  "properties": {
+    "activity": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SustainabilityMetric"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1784885200968_USER_211",
+          "Activities",
+          "Activity"
+        ]
+      },
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Activity"
+    },
+    "confidence": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SustainabilityMetric"
+        ],
+        "enum": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "EAssessmentMode"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "enum": [
+            "ESTIMATED",
+            "MEASURED",
+            "HYBRID"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Confidence"
+    },
+    "cpuUtilPct": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "HardwareEfficiencyMetric"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Cpuutilpct"
+    },
+    "endTime": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SustainabilityMetric"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Endtime"
+    },
+    "gpuUtilPct": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "HardwareEfficiencyMetric"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Gpuutilpct"
+    },
+    "memoryMb": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "HardwareEfficiencyMetric"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Memorymb"
+    },
+    "name": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SustainabilityMetric"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Name"
+    },
+    "networkMb": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "HardwareEfficiencyMetric"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Networkmb"
+    },
+    "source": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SustainabilityMetric"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source"
+    },
+    "startTime": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SustainabilityMetric"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Starttime"
+    },
+    "unit": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SustainabilityMetric"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Unit"
+    },
+    "value": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SustainabilityMetric"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Value"
+    }
+  },
+  "title": "Aimpro_53ac62a14e79b1ced5ef",
+  "type": "object"
+}

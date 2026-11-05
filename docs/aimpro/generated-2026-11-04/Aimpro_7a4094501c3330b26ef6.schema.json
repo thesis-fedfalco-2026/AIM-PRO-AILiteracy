@@ -1,0 +1,234 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1780748811132_USER_248",
+      "Competencies",
+      "Competency"
+    ]
+  },
+  "properties": {
+    "ID": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "NamedElement"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Id"
+    },
+    "category": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "Competency"
+        ],
+        "enum": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "Category"
+        ],
+        "kind": "attributes"
+      },
+      "enum": [
+        "Digital",
+        "Green",
+        "Resilience",
+        "Deep tech"
+      ],
+      "title": "Category",
+      "type": "string"
+    },
+    "description": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "NamedElement"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Description"
+    },
+    "heRelevance": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "Competency"
+        ],
+        "enum": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "Relevance"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "enum": [
+            "Low",
+            "Medium",
+            "High"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Herelevance"
+    },
+    "ksa": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "Competency"
+        ],
+        "kind": "attributes"
+      },
+      "title": "Ksa",
+      "type": "string"
+    },
+    "proficiency": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "Competency"
+        ],
+        "kind": "attributes"
+      },
+      "title": "Proficiency",
+      "type": "string"
+    },
+    "smeRelevance": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "Competency"
+        ],
+        "enum": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "Relevance"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "enum": [
+            "Low",
+            "Medium",
+            "High"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Smerelevance"
+    },
+    "sourceFrameworks": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "Competency"
+        ],
+        "kind": "attributes"
+      },
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Sourceframeworks",
+      "type": "array"
+    },
+    "title": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "NamedElement"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Title"
+    },
+    "vetRelevance": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "Competency"
+        ],
+        "enum": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "Relevance"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "enum": [
+            "Low",
+            "Medium",
+            "High"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Vetrelevance"
+    }
+  },
+  "required": [
+    "category",
+    "ksa",
+    "proficiency",
+    "sourceFrameworks"
+  ],
+  "title": "Aimpro_7a4094501c3330b26ef6",
+  "type": "object"
+}

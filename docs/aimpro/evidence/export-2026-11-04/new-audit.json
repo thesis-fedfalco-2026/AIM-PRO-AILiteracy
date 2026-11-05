@@ -1,0 +1,614 @@
+{
+  "source_sha256": "e2d842b6dc88dc9b40af6d848b67d001d940df82fc48dde88b259ca6878f253a",
+  "models": [
+    {
+      "name": "learningphase",
+      "metamodel": "Scenario",
+      "object_count": 18,
+      "classes": {
+        "BlueprintedAssessment": 1,
+        "ClusterGoal": 1,
+        "CompetencyGoal": 5,
+        "CustomAssessment": 1,
+        "Module": 5,
+        "Phase": 2,
+        "PhaseGroup": 1,
+        "Scenario": 2
+      },
+      "cross_model_references": [
+        {
+          "source": "Pointer1785744528769_USER_200",
+          "field": "blueprint",
+          "target": "Pointer1785744592205_USER_210"
+        }
+      ]
+    },
+    {
+      "name": "assessment",
+      "metamodel": "Certification Design",
+      "object_count": 4,
+      "classes": {
+        "Activity": 1,
+        "AssessmentBlueprint": 1,
+        "CompetencyCluster": 1,
+        "Domain": 1
+      },
+      "cross_model_references": []
+    },
+    {
+      "name": "elena_usecase_competencies",
+      "metamodel": "Competencies",
+      "object_count": 13,
+      "classes": {
+        "Competency": 13
+      },
+      "cross_model_references": []
+    },
+    {
+      "name": "elena_usecase_scenario",
+      "metamodel": "Scenario",
+      "object_count": 11,
+      "classes": {
+        "CompetencyGoal": 3,
+        "Module": 2,
+        "Phase": 1,
+        "PhaseGroup": 1,
+        "Scenario": 1,
+        "iSQD_Profile": 3
+      },
+      "cross_model_references": [
+        {
+          "source": "Pointer1786537548379_USER_186",
+          "field": "mappedCompetencies",
+          "target": "Pointer1786053979162_USER_191"
+        },
+        {
+          "source": "Pointer1786537548379_USER_186",
+          "field": "mappedCompetencies",
+          "target": "Pointer1786054039831_USER_217"
+        },
+        {
+          "source": "Pointer1786537548379_USER_186",
+          "field": "mappedCompetencies",
+          "target": "Pointer1786054052274_USER_230"
+        },
+        {
+          "source": "Pointer1786537548379_USER_186",
+          "field": "mappedCompetencies",
+          "target": "Pointer1786054072281_USER_256"
+        },
+        {
+          "source": "Pointer1786537548379_USER_186",
+          "field": "mappedCompetencies",
+          "target": "Pointer1786054008235_USER_204"
+        },
+        {
+          "source": "Pointer1786537565343_USER_192",
+          "field": "mappedCompetencies",
+          "target": "Pointer1786054008235_USER_204"
+        },
+        {
+          "source": "Pointer1786537565343_USER_192",
+          "field": "mappedCompetencies",
+          "target": "Pointer1786054060473_USER_243"
+        },
+        {
+          "source": "Pointer1786537565343_USER_192",
+          "field": "mappedCompetencies",
+          "target": "Pointer1786054087944_USER_269"
+        },
+        {
+          "source": "Pointer1786537565343_USER_192",
+          "field": "mappedCompetencies",
+          "target": "Pointer1786054099433_USER_282"
+        },
+        {
+          "source": "Pointer1786537565343_USER_192",
+          "field": "mappedCompetencies",
+          "target": "Pointer1786054113697_USER_295"
+        },
+        {
+          "source": "Pointer1786537565343_USER_192",
+          "field": "mappedCompetencies",
+          "target": "Pointer1786054124082_USER_308"
+        },
+        {
+          "source": "Pointer1786537565343_USER_192",
+          "field": "mappedCompetencies",
+          "target": "Pointer1786054133217_USER_321"
+        },
+        {
+          "source": "Pointer1786537565343_USER_192",
+          "field": "mappedCompetencies",
+          "target": "Pointer1786054141840_USER_334"
+        },
+        {
+          "source": "Pointer1786055463089_USER_482",
+          "field": "mappedCompetencies",
+          "target": "Pointer1786053979162_USER_191"
+        },
+        {
+          "source": "Pointer1786055463089_USER_482",
+          "field": "mappedCompetencies",
+          "target": "Pointer1786054008235_USER_204"
+        },
+        {
+          "source": "Pointer1786055463089_USER_482",
+          "field": "mappedCompetencies",
+          "target": "Pointer1786054039831_USER_217"
+        },
+        {
+          "source": "Pointer1786055463089_USER_482",
+          "field": "mappedCompetencies",
+          "target": "Pointer1786054052274_USER_230"
+        },
+        {
+          "source": "Pointer1786055463089_USER_482",
+          "field": "mappedCompetencies",
+          "target": "Pointer1786054060473_USER_243"
+        },
+        {
+          "source": "Pointer1786055463089_USER_482",
+          "field": "mappedCompetencies",
+          "target": "Pointer1786054072281_USER_256"
+        },
+        {
+          "source": "Pointer1786055463089_USER_482",
+          "field": "mappedCompetencies",
+          "target": "Pointer1786054087944_USER_269"
+        },
+        {
+          "source": "Pointer1786055463089_USER_482",
+          "field": "mappedCompetencies",
+          "target": "Pointer1786054099433_USER_282"
+        },
+        {
+          "source": "Pointer1786055463089_USER_482",
+          "field": "mappedCompetencies",
+          "target": "Pointer1786054113697_USER_295"
+        },
+        {
+          "source": "Pointer1786055463089_USER_482",
+          "field": "mappedCompetencies",
+          "target": "Pointer1786054124082_USER_308"
+        },
+        {
+          "source": "Pointer1786055463089_USER_482",
+          "field": "mappedCompetencies",
+          "target": "Pointer1786054133217_USER_321"
+        },
+        {
+          "source": "Pointer1786055463089_USER_482",
+          "field": "mappedCompetencies",
+          "target": "Pointer1786054141840_USER_334"
+        }
+      ]
+    },
+    {
+      "name": "sustainability",
+      "metamodel": "Sustainability",
+      "object_count": 9,
+      "classes": {
+        "AIModelProfile": 1,
+        "CO2EmissionMetric": 1,
+        "CarbonIntensity": 1,
+        "DeviceContext": 1,
+        "EnergyConsumptionMetric": 1,
+        "HardwareEfficiencyMetric": 1,
+        "SessionFootprint": 1,
+        "SustainabilityConstraint": 1,
+        "SustainabilityProfile": 1
+      },
+      "cross_model_references": [
+        {
+          "source": "Pointer1791890893120_USER_52",
+          "field": "scenario",
+          "target": "Pointer1786055100443_USER_439"
+        },
+        {
+          "source": "Pointer1791891759563_USER_106",
+          "field": "scenario",
+          "target": "Pointer1786055100443_USER_439"
+        }
+      ]
+    },
+    {
+      "name": "SCN01",
+      "metamodel": "iSQD",
+      "object_count": 7,
+      "classes": {
+        "Familiarization": 1,
+        "LearnerPersona": 2,
+        "LearningTarget": 1,
+        "LearningTask": 1,
+        "ModellingAIPractices": 1,
+        "Scenario": 1
+      },
+      "cross_model_references": [
+        {
+          "source": "Pointer1792169221668_USER_96",
+          "field": "competency",
+          "target": "Pointer1792169354742_USER_109"
+        }
+      ]
+    }
+  ],
+  "finding_counts": {
+    "CARDINALITY": 27,
+    "ENUM_VALUE": 5,
+    "SCALAR_EXPECTED": 1,
+    "UNTYPED_VOCABULARY_VALUE": 2
+  },
+  "findings": [
+    {
+      "code": "CARDINALITY",
+      "model": "learningphase",
+      "object_id": "Pointer1785744480768_USER_190",
+      "object_name": "LearningPhase_0",
+      "field": "learners",
+      "count": 0,
+      "lower": 1,
+      "upper": -1
+    },
+    {
+      "code": "CARDINALITY",
+      "model": "learningphase",
+      "object_id": "Pointer1785744480768_USER_190",
+      "object_name": "LearningPhase_0",
+      "field": "subphases",
+      "count": 0,
+      "lower": 1,
+      "upper": 1
+    },
+    {
+      "code": "CARDINALITY",
+      "model": "learningphase",
+      "object_id": "Pointer1785744480768_USER_190",
+      "object_name": "LearningPhase_0",
+      "field": "goal",
+      "count": 0,
+      "lower": 1,
+      "upper": 1
+    },
+    {
+      "code": "CARDINALITY",
+      "model": "learningphase",
+      "object_id": "Pointer1785750963972_USER_188",
+      "object_name": "fase_principale",
+      "field": "learners",
+      "count": 0,
+      "lower": 1,
+      "upper": -1
+    },
+    {
+      "code": "CARDINALITY",
+      "model": "learningphase",
+      "object_id": "Pointer1785750964100_USER_203",
+      "object_name": "mod1_interazione_ai",
+      "field": "learners",
+      "count": 0,
+      "lower": 1,
+      "upper": -1
+    },
+    {
+      "code": "CARDINALITY",
+      "model": "learningphase",
+      "object_id": "Pointer1785750964100_USER_203",
+      "object_name": "mod1_interazione_ai",
+      "field": "learningActivities",
+      "count": 0,
+      "lower": 1,
+      "upper": -1
+    },
+    {
+      "code": "CARDINALITY",
+      "model": "learningphase",
+      "object_id": "Pointer1785750964129_USER_210",
+      "object_name": "goal_mod1",
+      "field": "mappedCompetencies",
+      "count": 0,
+      "lower": 1,
+      "upper": -1
+    },
+    {
+      "code": "CARDINALITY",
+      "model": "learningphase",
+      "object_id": "Pointer1785750964381_USER_259",
+      "object_name": "mod5_rielaborazione",
+      "field": "learners",
+      "count": 0,
+      "lower": 1,
+      "upper": -1
+    },
+    {
+      "code": "CARDINALITY",
+      "model": "learningphase",
+      "object_id": "Pointer1785750964381_USER_259",
+      "object_name": "mod5_rielaborazione",
+      "field": "learningActivities",
+      "count": 0,
+      "lower": 1,
+      "upper": -1
+    },
+    {
+      "code": "CARDINALITY",
+      "model": "learningphase",
+      "object_id": "Pointer1785750964417_USER_266",
+      "object_name": "goal_mod5",
+      "field": "mappedCompetencies",
+      "count": 0,
+      "lower": 1,
+      "upper": -1
+    },
+    {
+      "code": "CARDINALITY",
+      "model": "learningphase",
+      "object_id": "Pointer1785750964036_USER_197",
+      "object_name": "goal_principale",
+      "field": "mappedClusters",
+      "count": 0,
+      "lower": 1,
+      "upper": -1
+    },
+    {
+      "code": "CARDINALITY",
+      "model": "learningphase",
+      "object_id": "Pointer1785750964439_USER_269",
+      "object_name": "valutazione_finale",
+      "field": "activities",
+      "count": 0,
+      "lower": 1,
+      "upper": -1
+    },
+    {
+      "code": "CARDINALITY",
+      "model": "learningphase",
+      "object_id": "Pointer1785750964156_USER_213",
+      "object_name": "mod2_analisi_critica",
+      "field": "learners",
+      "count": 0,
+      "lower": 1,
+      "upper": -1
+    },
+    {
+      "code": "CARDINALITY",
+      "model": "learningphase",
+      "object_id": "Pointer1785750964156_USER_213",
+      "object_name": "mod2_analisi_critica",
+      "field": "learningActivities",
+      "count": 0,
+      "lower": 1,
+      "upper": -1
+    },
+    {
+      "code": "CARDINALITY",
+      "model": "learningphase",
+      "object_id": "Pointer1785750964184_USER_220",
+      "object_name": "goal_mod2",
+      "field": "mappedCompetencies",
+      "count": 0,
+      "lower": 1,
+      "upper": -1
+    },
+    {
+      "code": "CARDINALITY",
+      "model": "learningphase",
+      "object_id": "Pointer1785750964206_USER_223",
+      "object_name": "mod3_verifica_fonti",
+      "field": "learners",
+      "count": 0,
+      "lower": 1,
+      "upper": -1
+    },
+    {
+      "code": "CARDINALITY",
+      "model": "learningphase",
+      "object_id": "Pointer1785750964206_USER_223",
+      "object_name": "mod3_verifica_fonti",
+      "field": "learningActivities",
+      "count": 0,
+      "lower": 1,
+      "upper": -1
+    },
+    {
+      "code": "CARDINALITY",
+      "model": "learningphase",
+      "object_id": "Pointer1785750964235_USER_230",
+      "object_name": "goal_mod3",
+      "field": "mappedCompetencies",
+      "count": 0,
+      "lower": 1,
+      "upper": -1
+    },
+    {
+      "code": "CARDINALITY",
+      "model": "learningphase",
+      "object_id": "Pointer1785750964295_USER_249",
+      "object_name": "mod4_prompt_engineering",
+      "field": "learners",
+      "count": 0,
+      "lower": 1,
+      "upper": -1
+    },
+    {
+      "code": "CARDINALITY",
+      "model": "learningphase",
+      "object_id": "Pointer1785750964295_USER_249",
+      "object_name": "mod4_prompt_engineering",
+      "field": "learningActivities",
+      "count": 0,
+      "lower": 1,
+      "upper": -1
+    },
+    {
+      "code": "CARDINALITY",
+      "model": "learningphase",
+      "object_id": "Pointer1785750964333_USER_256",
+      "object_name": "goal_mod4",
+      "field": "mappedCompetencies",
+      "count": 0,
+      "lower": 1,
+      "upper": -1
+    },
+    {
+      "code": "CARDINALITY",
+      "model": "assessment",
+      "object_id": "Pointer1785744844827_USER_226",
+      "object_name": "Activity_0",
+      "field": "tags",
+      "count": 0,
+      "lower": 1,
+      "upper": -1
+    },
+    {
+      "code": "CARDINALITY",
+      "model": "assessment",
+      "object_id": "Pointer1785744844827_USER_226",
+      "object_name": "Activity_0",
+      "field": "resources",
+      "count": 0,
+      "lower": 1,
+      "upper": -1
+    },
+    {
+      "code": "ENUM_VALUE",
+      "model": "elena_usecase_competencies",
+      "object_id": "Pointer1792169354742_USER_109",
+      "object_name": "D04",
+      "field": "category",
+      "value": "DIGITAL",
+      "allowed": [
+        "Deep tech",
+        "Digital",
+        "Green",
+        "Resilience"
+      ]
+    },
+    {
+      "code": "ENUM_VALUE",
+      "model": "elena_usecase_competencies",
+      "object_id": "Pointer1792169354742_USER_109",
+      "object_name": "D04",
+      "field": "heRelevance",
+      "value": "HIGH",
+      "allowed": [
+        "High",
+        "Low",
+        "Medium"
+      ]
+    },
+    {
+      "code": "ENUM_VALUE",
+      "model": "elena_usecase_competencies",
+      "object_id": "Pointer1792169354742_USER_109",
+      "object_name": "D04",
+      "field": "smeRelevance",
+      "value": "HIGH",
+      "allowed": [
+        "High",
+        "Low",
+        "Medium"
+      ]
+    },
+    {
+      "code": "ENUM_VALUE",
+      "model": "elena_usecase_competencies",
+      "object_id": "Pointer1792169354742_USER_109",
+      "object_name": "D04",
+      "field": "vetRelevance",
+      "value": "HIGH",
+      "allowed": [
+        "High",
+        "Low",
+        "Medium"
+      ]
+    },
+    {
+      "code": "UNTYPED_VOCABULARY_VALUE",
+      "model": "elena_usecase_competencies",
+      "object_id": "Pointer1792169354742_USER_109",
+      "object_name": "D04",
+      "field": "ksa",
+      "value": "SKILL",
+      "allowed": [
+        "Attitude",
+        "Knowledge",
+        "Skill"
+      ]
+    },
+    {
+      "code": "UNTYPED_VOCABULARY_VALUE",
+      "model": "elena_usecase_competencies",
+      "object_id": "Pointer1792169354742_USER_109",
+      "object_name": "D04",
+      "field": "proficiency",
+      "value": "FOUNDATION",
+      "allowed": [
+        "Advanced",
+        "Foundational",
+        "Intermediate"
+      ]
+    },
+    {
+      "code": "CARDINALITY",
+      "model": "elena_usecase_scenario",
+      "object_id": "Pointer1786537244317_USER_211",
+      "object_name": "IndividualTrainingModule",
+      "field": "learningActivities",
+      "count": 0,
+      "lower": 1,
+      "upper": -1
+    },
+    {
+      "code": "CARDINALITY",
+      "model": "elena_usecase_scenario",
+      "object_id": "Pointer1786537246421_USER_221",
+      "object_name": "TeamWorkshopModule",
+      "field": "learningActivities",
+      "count": 0,
+      "lower": 1,
+      "upper": -1
+    },
+    {
+      "code": "CARDINALITY",
+      "model": "sustainability",
+      "object_id": "Pointer1791891756443_USER_93",
+      "object_name": "SustainabilityConstraint_0",
+      "field": "scope",
+      "count": 2,
+      "lower": 0,
+      "upper": 1
+    },
+    {
+      "code": "SCALAR_EXPECTED",
+      "model": "sustainability",
+      "object_id": "Pointer1791891756443_USER_93",
+      "object_name": "SustainabilityConstraint_0",
+      "field": "scope"
+    },
+    {
+      "code": "ENUM_VALUE",
+      "model": "sustainability",
+      "object_id": "Pointer1791891756443_USER_93",
+      "object_name": "SustainabilityConstraint_0",
+      "field": "scope",
+      "value": "",
+      "allowed": [
+        "ACTIVITY",
+        "RESOURCE",
+        "SCENARIO",
+        "SESSION"
+      ]
+    },
+    {
+      "code": "CARDINALITY",
+      "model": "SCN01",
+      "object_id": "Pointer1792169221668_USER_96",
+      "object_name": "LearningTarget_0",
+      "field": "resources",
+      "count": 0,
+      "lower": 1,
+      "upper": -1
+    }
+  ]
+}

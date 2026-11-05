@@ -1,0 +1,54 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1783071715532_USER_192",
+      "Scenario",
+      "ClusterGoal"
+    ]
+  },
+  "properties": {
+    "description": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "Goal"
+        ],
+        "kind": "attributes"
+      },
+      "title": "Description",
+      "type": "string"
+    },
+    "mappedClusters": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "ClusterGoal"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "CompetencyCluster"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Mappedclusters",
+      "type": "array"
+    }
+  },
+  "required": [
+    "description",
+    "mappedClusters"
+  ],
+  "title": "Aimpro_a1f0dd62228f483a3472",
+  "type": "object"
+}

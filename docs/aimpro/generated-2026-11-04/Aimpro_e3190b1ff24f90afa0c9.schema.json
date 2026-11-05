@@ -1,0 +1,155 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1783071715532_USER_192",
+      "Scenario",
+      "Phase"
+    ]
+  },
+  "properties": {
+    "assessment": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "Phase"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "Assessment"
+        ]
+      },
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Assessment"
+    },
+    "duration": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "APhase"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Duration"
+    },
+    "goal": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "Phase"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "Goal"
+        ]
+      },
+      "minLength": 1,
+      "title": "Goal",
+      "type": "string"
+    },
+    "learners": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "APhase"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "iSQD_Profile"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Learners",
+      "type": "array"
+    },
+    "subphases": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "Phase"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "PhaseGroup"
+        ]
+      },
+      "minLength": 1,
+      "title": "Subphases",
+      "type": "string"
+    },
+    "teacher": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "APhase"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "iSQD_Profile"
+        ]
+      },
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Teacher"
+    }
+  },
+  "required": [
+    "learners",
+    "subphases",
+    "goal"
+  ],
+  "title": "Aimpro_e3190b1ff24f90afa0c9",
+  "type": "object"
+}

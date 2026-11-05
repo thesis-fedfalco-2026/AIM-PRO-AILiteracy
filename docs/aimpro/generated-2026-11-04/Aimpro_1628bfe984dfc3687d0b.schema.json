@@ -1,0 +1,275 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1780849660386_USER_186",
+      "Certification Design",
+      "CompetencyCluster"
+    ]
+  },
+  "properties": {
+    "ID": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "NamedElement"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Id"
+    },
+    "competencies": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "CompetencyCluster"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "Competency"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 0,
+      "title": "Competencies",
+      "type": "array"
+    },
+    "contextPriority": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "CompetencyCluster"
+        ],
+        "kind": "attributes"
+      },
+      "title": "Contextpriority",
+      "type": "string"
+    },
+    "description": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "NamedElement"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Description"
+    },
+    "evidenceTypes": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "CompetencyCluster"
+        ],
+        "enum": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "EvidenceTypes"
+        ],
+        "kind": "attributes"
+      },
+      "items": {
+        "enum": [
+          "OBJECTIVE_ITEM_RESPONSE",
+          "SCENARIO_CASE_ITEM",
+          "RUBRIC_MICROTASK",
+          "TOOL_TRACE",
+          "REFLECTIVE_LOG",
+          "PEER_TEACHER_REVIEW",
+          "IDENTITY_INTEGRITY_CHECK"
+        ],
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Evidencetypes",
+      "type": "array"
+    },
+    "optionalCompetencies": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "CompetencyCluster"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "Competency"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 0,
+      "title": "Optionalcompetencies",
+      "type": "array"
+    },
+    "prerequisites": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "CompetencyCluster"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "Prerequisite"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 0,
+      "title": "Prerequisites",
+      "type": "array"
+    },
+    "primaryKSA": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "CompetencyCluster"
+        ],
+        "kind": "attributes"
+      },
+      "title": "Primaryksa",
+      "type": "string"
+    },
+    "proficiency": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "CompetencyCluster"
+        ],
+        "kind": "attributes"
+      },
+      "title": "Proficiency",
+      "type": "string"
+    },
+    "reviewCycle": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "VersionableElement"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reviewcycle"
+    },
+    "status": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "VersionableElement"
+        ],
+        "enum": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "Status"
+        ],
+        "kind": "attributes"
+      },
+      "enum": [
+        "Draft",
+        "Approved",
+        "Active",
+        "Retired",
+        "Superseeded"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "title": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "NamedElement"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Title"
+    },
+    "version": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "VersionableElement"
+        ],
+        "kind": "attributes"
+      },
+      "title": "Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "status",
+    "version",
+    "primaryKSA",
+    "proficiency",
+    "contextPriority",
+    "evidenceTypes"
+  ],
+  "title": "Aimpro_1628bfe984dfc3687d0b",
+  "type": "object"
+}

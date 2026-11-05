@@ -1,0 +1,204 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1793789994832_USER_35",
+      "alm",
+      "LearningState"
+    ]
+  },
+  "properties": {
+    "basis": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "LearningState"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Evaluation"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 0,
+      "title": "Basis",
+      "type": "array"
+    },
+    "context": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "LearningState"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "ExecutionContext"
+        ]
+      },
+      "minLength": 1,
+      "title": "Context",
+      "type": "string"
+    },
+    "id": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Identifier"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Entity"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "title": "Id",
+      "type": "string"
+    },
+    "learner": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "LearningState"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Participant"
+        ]
+      },
+      "minLength": 1,
+      "title": "Learner",
+      "type": "string"
+    },
+    "outcome": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "LearningState"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "LearningOutcome"
+        ]
+      },
+      "minLength": 1,
+      "title": "Outcome",
+      "type": "string"
+    },
+    "progress": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "LearningState"
+        ],
+        "enum": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "ProgressStatus"
+        ],
+        "kind": "attributes"
+      },
+      "enum": [
+        "NOT_OBSERVED",
+        "IN_PROGRESS",
+        "ACQUIRED"
+      ],
+      "title": "Progress",
+      "type": "string"
+    },
+    "provenance": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Entity"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Provenance"
+        ]
+      },
+      "minLength": 1,
+      "title": "Provenance",
+      "type": "string"
+    },
+    "verification": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "LearningState"
+        ],
+        "enum": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "VerificationStatus"
+        ],
+        "kind": "attributes"
+      },
+      "enum": [
+        "UNVERIFIED",
+        "PENDING_CONFIRMATION",
+        "VERIFIED"
+      ],
+      "title": "Verification",
+      "type": "string"
+    },
+    "version": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Version"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Entity"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "title": "Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "version",
+    "provenance",
+    "progress",
+    "verification",
+    "context",
+    "learner",
+    "outcome"
+  ],
+  "title": "Aimpro_b6db4ffba126550e87a6",
+  "type": "object"
+}

@@ -1,0 +1,95 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1781791213267_USER_197",
+      "iSQD",
+      "LearnerPersona"
+    ]
+  },
+  "properties": {
+    "attitude": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "LearnerPersona"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Attitude"
+    },
+    "confidence": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "LearnerPersona"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Confidence"
+    },
+    "knowledge": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "LearnerPersona"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Knowledge"
+    },
+    "role": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "LearnerPersona"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Role"
+    }
+  },
+  "title": "Aimpro_87598fa75a7126e56add",
+  "type": "object"
+}

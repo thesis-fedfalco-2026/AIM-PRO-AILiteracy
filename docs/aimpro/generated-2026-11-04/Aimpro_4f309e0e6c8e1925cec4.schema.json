@@ -1,0 +1,295 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1780849660386_USER_186",
+      "Certification Design",
+      "AssessmentBlueprint"
+    ]
+  },
+  "properties": {
+    "ID": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "NamedElement"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Id"
+    },
+    "assessmentItems": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "AssessmentBlueprint"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1784885200968_USER_211",
+          "Activities",
+          "Activity"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Assessmentitems",
+      "type": "array"
+    },
+    "clusterReference": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "AssessmentBlueprint"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "CompetencyCluster"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Clusterreference",
+      "type": "array"
+    },
+    "description": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "NamedElement"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Description"
+    },
+    "evidenceTypesAllowed": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "AssessmentBlueprint"
+        ],
+        "enum": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "EvidenceTypes"
+        ],
+        "kind": "attributes"
+      },
+      "items": {
+        "enum": [
+          "OBJECTIVE_ITEM_RESPONSE",
+          "SCENARIO_CASE_ITEM",
+          "RUBRIC_MICROTASK",
+          "TOOL_TRACE",
+          "REFLECTIVE_LOG",
+          "PEER_TEACHER_REVIEW",
+          "IDENTITY_INTEGRITY_CHECK"
+        ],
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Evidencetypesallowed",
+      "type": "array"
+    },
+    "identifyIntegrityRules": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "AssessmentBlueprint"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Identifyintegrityrules"
+    },
+    "itemCoverageRules": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "AssessmentBlueprint"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Itemcoveragerules"
+    },
+    "passRules": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "AssessmentBlueprint"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Passrules"
+    },
+    "reviewCycle": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "VersionableElement"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reviewcycle"
+    },
+    "status": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "VersionableElement"
+        ],
+        "enum": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "Status"
+        ],
+        "kind": "attributes"
+      },
+      "enum": [
+        "Draft",
+        "Approved",
+        "Active",
+        "Retired",
+        "Superseeded"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "timingRules": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "AssessmentBlueprint"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Timingrules"
+    },
+    "title": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "NamedElement"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Title"
+    },
+    "version": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "VersionableElement"
+        ],
+        "kind": "attributes"
+      },
+      "title": "Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "status",
+    "version",
+    "evidenceTypesAllowed",
+    "clusterReference",
+    "assessmentItems"
+  ],
+  "title": "Aimpro_4f309e0e6c8e1925cec4",
+  "type": "object"
+}

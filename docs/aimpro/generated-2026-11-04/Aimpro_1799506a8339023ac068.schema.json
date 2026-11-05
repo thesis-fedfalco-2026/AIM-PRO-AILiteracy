@@ -1,0 +1,37 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1783071715532_USER_192",
+      "Scenario",
+      "BlueprintedAssessment"
+    ]
+  },
+  "properties": {
+    "blueprint": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "BlueprintedAssessment"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "AssessmentBlueprint"
+        ]
+      },
+      "minLength": 1,
+      "title": "Blueprint",
+      "type": "string"
+    }
+  },
+  "required": [
+    "blueprint"
+  ],
+  "title": "Aimpro_1799506a8339023ac068",
+  "type": "object"
+}

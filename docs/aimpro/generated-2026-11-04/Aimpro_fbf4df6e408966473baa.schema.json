@@ -1,0 +1,41 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1783071715532_USER_192",
+      "Scenario",
+      "CustomAssessment"
+    ]
+  },
+  "properties": {
+    "activities": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "CustomAssessment"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1784885200968_USER_211",
+          "Activities",
+          "Activity"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Activities",
+      "type": "array"
+    }
+  },
+  "required": [
+    "activities"
+  ],
+  "title": "Aimpro_fbf4df6e408966473baa",
+  "type": "object"
+}

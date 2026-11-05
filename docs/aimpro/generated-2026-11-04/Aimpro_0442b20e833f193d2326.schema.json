@@ -1,0 +1,110 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1793789994832_USER_35",
+      "alm",
+      "Provenance"
+    ]
+  },
+  "properties": {
+    "origin": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Provenance"
+        ],
+        "enum": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "ValueOrigin"
+        ],
+        "kind": "attributes"
+      },
+      "enum": [
+        "CONFIGURATION",
+        "GENERATED_PROPOSAL",
+        "INITIAL_CONTEXT",
+        "HUMAN_DECISION",
+        "OBSERVED_EVENT",
+        "UNRESOLVED_GAP"
+      ],
+      "title": "Origin",
+      "type": "string"
+    },
+    "rationale": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Text"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Provenance"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Rationale"
+    },
+    "responsible": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Text"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Provenance"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "title": "Responsible",
+      "type": "string"
+    },
+    "sources": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Text"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Provenance"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "items": {
+        "type": "string"
+      },
+      "minItems": 0,
+      "title": "Sources",
+      "type": "array"
+    }
+  },
+  "required": [
+    "origin",
+    "responsible"
+  ],
+  "title": "Aimpro_0442b20e833f193d2326",
+  "type": "object"
+}

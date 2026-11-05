@@ -1,0 +1,116 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1793789994832_USER_35",
+      "alm",
+      "Finding"
+    ]
+  },
+  "properties": {
+    "code": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Identifier"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Finding"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "title": "Code",
+      "type": "string"
+    },
+    "reason": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Text"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Finding"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "title": "Reason",
+      "type": "string"
+    },
+    "resolution": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Text"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Finding"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "title": "Resolution",
+      "type": "string"
+    },
+    "severity": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Finding"
+        ],
+        "enum": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "FindingSeverity"
+        ],
+        "kind": "attributes"
+      },
+      "enum": [
+        "BLOCKING",
+        "WARNING",
+        "INFORMATION"
+      ],
+      "title": "Severity",
+      "type": "string"
+    },
+    "target": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Text"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Finding"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "title": "Target",
+      "type": "string"
+    }
+  },
+  "required": [
+    "code",
+    "target",
+    "severity",
+    "reason",
+    "resolution"
+  ],
+  "title": "Aimpro_6d178b35ac008df6bb2f",
+  "type": "object"
+}

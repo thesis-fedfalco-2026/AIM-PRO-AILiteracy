@@ -1,0 +1,260 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1791888876673_USER_33",
+      "sustainability",
+      "SustainabilityConstraint"
+    ]
+  },
+  "properties": {
+    "metricType": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SustainabilityConstraint"
+        ],
+        "enum": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "EMetricKind"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "enum": [
+            "ENERGY",
+            "CO2",
+            "HARDWARE_EFFICIENCY"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Metrictype"
+    },
+    "operator": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SustainabilityConstraint"
+        ],
+        "enum": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "EConstraintOp"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "enum": [
+            "LT",
+            "LE",
+            "EQ",
+            "GE",
+            "GT"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Operator"
+    },
+    "scope": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SustainabilityConstraint"
+        ],
+        "enum": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "EConstraintScope"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "enum": [
+            "RESOURCE",
+            "ACTIVITY",
+            "SCENARIO",
+            "SESSION"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Scope"
+    },
+    "sustainabilityConstraintId": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SustainabilityConstraint"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Sustainabilityconstraintid"
+    },
+    "targetActivity": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SustainabilityConstraint"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1784885200968_USER_211",
+          "Activities",
+          "Activity"
+        ]
+      },
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Targetactivity"
+    },
+    "targetPhase": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SustainabilityConstraint"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "APhase"
+        ]
+      },
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Targetphase"
+    },
+    "targetResource": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SustainabilityConstraint"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1784886057063_USER_240",
+          "Resources",
+          "Resource"
+        ]
+      },
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Targetresource"
+    },
+    "threshold": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SustainabilityConstraint"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Threshold"
+    },
+    "violationPolicy": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SustainabilityConstraint"
+        ],
+        "enum": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "EViolationPolicy"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "enum": [
+            "WARN",
+            "BLOCK",
+            "SUBSTITUTE",
+            "DEGRADE"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Violationpolicy"
+    }
+  },
+  "title": "Aimpro_98d3ceffb9eb51468b24",
+  "type": "object"
+}

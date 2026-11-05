@@ -16,6 +16,19 @@ A checker verifies any new export against these requests:
 Evidence below refers to `docs/resources/aimpro-megamodel-2026-11-02.json`
 (jjodel v2.23). Request identifiers are stable and are used by the checker.
 
+**5 November consumer update:** the actual 4 November export is retained
+separately as `docs/resources/aimpro-megamodel-2026-11-04.json`, SHA-256
+`e2d842b6dc88dc9b40af6d848b67d001d940df82fc48dde88b259ca6878f253a`.
+Its six `alm` dataTypes are now supported by the consumer. The new metamodel
+declares `Rubric`, `RuleDefinition`, `EvidenceKind` and `AssessmentSpecification`,
+but no model instantiates `alm` and iSQD does not reference it. The historical
+statements below about absent rubric declarations describe the 2 November
+baseline; they do not imply the newer export lacks `alm.Rubric`. All 15 requests
+remain `PENDING`, and SCN01 completeness is unchanged. See the
+[source verification, consumer results and open #1–#4 criteria](evidence/export-2026-11-04/README.md).
+Neither export/import acceptance nor model-owner approval is established.
+The default and approved authoring source remain pinned to the 2 November export.
+
 ## #4: type the free-text attributes
 
 ### Attributes with an existing enum

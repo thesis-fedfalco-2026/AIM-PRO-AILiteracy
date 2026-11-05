@@ -1,0 +1,108 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1781791213267_USER_197",
+      "iSQD",
+      "Scenario"
+    ]
+  },
+  "properties": {
+    "challenge": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "Scenario"
+        ],
+        "kind": "attributes"
+      },
+      "title": "Challenge",
+      "type": "string"
+    },
+    "learner": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "Scenario"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "LearnerPersona"
+        ]
+      },
+      "minLength": 1,
+      "title": "Learner",
+      "type": "string"
+    },
+    "setting": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "Scenario"
+        ],
+        "enum": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "ESetting"
+        ],
+        "kind": "attributes"
+      },
+      "enum": [
+        "SME",
+        "VET",
+        "HE",
+        "HE_Teacher_Education",
+        "VET_DUAL_TRAINING"
+      ],
+      "title": "Setting",
+      "type": "string"
+    },
+    "task": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "Scenario"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "LearningTask"
+        ]
+      },
+      "minLength": 1,
+      "title": "Task",
+      "type": "string"
+    },
+    "title": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "Scenario"
+        ],
+        "kind": "attributes"
+      },
+      "title": "Title",
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "setting",
+    "challenge",
+    "learner",
+    "task"
+  ],
+  "title": "Aimpro_8e9e50d07fe19ee54be5",
+  "type": "object"
+}
