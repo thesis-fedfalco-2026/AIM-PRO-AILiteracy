@@ -51,12 +51,12 @@ operator: do not encode personal data in them.
 | --- | --- |
 | `run.started` | `intent` |
 | `lead.call` | `contract` (`LearningPlanDraft`, `SemanticReview`, `LearningResponse`), `status` (`ok`, `error`, `invalid_output`), `prompt_chars`, `duration_ms` |
-| `plan.decided` | `status` (`AUTHORIZED`, `EMPTY`, `REJECTED`, `OVER_BUDGET`); `steps` with `id`, `agent`, `role`, `depends_on`, `retrieval`; or `error_type` with the plan-rule `reason` (fixed text, truncated to 160 characters), or `prompt_chars` |
+| `plan.decided` | `status` (`AUTHORIZED`, `EMPTY`, `REJECTED`, `OVER_BUDGET`); `steps` with `id`, `agent`, `role`, `depends_on`, `retrieval`; or `error_type` with the plan-rule `reason` (fixed text, truncated to 160 characters) and `will_retry` when one corrected attempt follows, or `prompt_chars` |
 | `retrieval` | `step_id`, `k`, `documents`, `duration_ms` |
 | `worker.call` | `step_id`, `agent`, `status`, `brief_chars`, `duration_ms` |
 | `review` | `stage` (`WORKER`, `FINAL`), `step_id`, `verdict` |
 | `step.finished` | `step_id`, `agent`, `role`, `status` (`SUCCEEDED`, `FAILED`, `SKIPPED`), `finding_codes`, `duration_ms` |
-| `final.checked` | `verdict`, `proposed_kind`, `response_kind` (after the admissibility check), `application_status` (as proposed), `finding_codes`, `violations` (failed admissibility conditions: `review_not_accepted`, `proposal_kind`, `proposal_refs`, `state_change_refs`, `application_claim`, `citation_not_from_results`, `coverage_not_from_results`) |
+| `final.checked` | `synthesis` (`lead`, or `pass_through` for a single accepted step delivered as is), `verdict` (final review; `null` for a pass-through), `proposed_kind`, `response_kind` (after the admissibility check), `application_status` (as proposed), `finding_codes`, `violations` (failed admissibility conditions: `review_not_accepted`, `proposal_kind`, `proposal_refs`, `state_change_refs`, `application_claim`, `citation_not_from_results`, `coverage_not_from_results`) |
 | `provider.call` | `agent` (CrewAI role), `model`, `status`, `call_type`, `input_tokens`, `output_tokens`, `duration_ms` |
 | `run.finished` | `response_kind` (or `ERROR`), `error_type`, `duration_ms` |
 

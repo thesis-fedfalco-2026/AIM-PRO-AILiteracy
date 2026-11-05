@@ -103,18 +103,40 @@ class OrchestratorEventsTest(unittest.TestCase):
         self.assertEqual(response.kind, "ANSWER")
         self.assertEqual([e.type for e in recorded], [
             "run.started", "lead.call", "plan.decided", "retrieval", "worker.call", "lead.call",
-            "review", "step.finished", "lead.call", "lead.call", "review", "final.checked", "run.finished"])
+            "review", "step.finished", "final.checked", "run.finished"])
         self.assertEqual(len({e.run_id for e in recorded}), 1)
         serialized = json.dumps([e.model_dump(mode="json") for e in recorded])
         for text in (QUESTION, "approved release procedure", "learner"):
             self.assertNotIn(text, serialized)
         [run] = run_metrics(recorded)
-        self.assertEqual(run["lead_calls"], {"LearningPlanDraft": 1, "SemanticReview": 2, "LearningResponse": 1})
-        self.assertEqual(run["model_calls"], 5)
+        self.assertEqual(run["lead_calls"], {"LearningPlanDraft": 1, "SemanticReview": 1})
+        self.assertEqual(run["model_calls"], 3)
         self.assertEqual(run["plan_status"], "AUTHORIZED")
-        self.assertEqual(run["reviews"], {"WORKER": {"ACCEPT": 1}, "FINAL": {"ACCEPT": 1}})
-        self.assertEqual(run["final"]["response_kind"], "ANSWER")
+        self.assertEqual(run["reviews"], {"WORKER": {"ACCEPT": 1}})
+        self.assertEqual((run["final"]["synthesis"], run["final"]["response_kind"]), ("pass_through", "ANSWER"))
         self.assertEqual(run["final"]["violations"], [])
+
+    def test_several_steps_are_synthesized_and_reviewed(self):
+        response, recorded = self.ask(steps=2)
+        self.assertEqual(response.kind, "ANSWER")
+        [run] = run_metrics(recorded)
+        self.assertEqual(run["lead_calls"], {"LearningPlanDraft": 1, "SemanticReview": 3, "LearningResponse": 1})
+        self.assertEqual(run["reviews"], {"WORKER": {"ACCEPT": 2}, "FINAL": {"ACCEPT": 1}})
+        self.assertEqual(run["final"]["synthesis"], "lead")
+
+    def test_a_plan_rule_violation_gets_one_corrected_attempt(self):
+        response, recorded = self.ask(invalid_plans=1)
+        self.assertEqual(response.kind, "ANSWER")
+        decided = [e.data for e in recorded if e.type == "plan.decided"]
+        self.assertEqual([(d["status"], d.get("will_retry")) for d in decided],
+                         [("REJECTED", True), ("AUTHORIZED", None)])
+        self.assertEqual(decided[0]["reason"], "Retrieval requires an authorized capability")
+        self.assertEqual(summarize(recorded)["plan_retries"], {"total": 1, "recovered": 1})
+        response, recorded = self.ask(invalid_plans=2)
+        self.assertEqual(response.kind, "FAILURE")
+        self.assertEqual([e.data["contract"] for e in recorded if e.type == "lead.call"],
+                         ["LearningPlanDraft", "LearningPlanDraft"])
+        self.assertEqual(summarize(recorded)["plan_retries"], {"total": 1, "recovered": 0})
 
     def test_rejected_worker_is_counted_and_has_no_synthesis(self):
         response, recorded = self.ask(reject_stage="WORKER")

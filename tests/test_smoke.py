@@ -65,7 +65,8 @@ class SmokeTest(unittest.TestCase):
                 backend=build_backend({'SEARCH_BACKEND':'mock'})
                 self.addCleanup(backend.close)
                 search=backend.search_documents if mode != 'empty-retrieval' else lambda *a,**k:{'documents':[]}
-                orchestrator=demo_orchestrator(search,reject_stage={'rejected-worker':'WORKER','rejected-final':'FINAL'}.get(mode))
+                orchestrator=demo_orchestrator(search,reject_stage={'rejected-worker':'WORKER','rejected-final':'FINAL'}.get(mode),
+                    steps=2 if mode == 'rejected-final' else 1)
                 with patch('smoke.build_orchestrator',return_value=orchestrator),patch('smoke.load_dotenv'),redirect_stdout(StringIO()) as output:
                     self.assertEqual(smoke.main([]),status,output.getvalue())
                     if mode == 'empty-retrieval':

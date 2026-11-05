@@ -100,16 +100,20 @@ class TelemetryIntegrationTest(unittest.TestCase):
         self.assertEqual({s.context.trace_id for s in spans}, {root.context.trace_id})
         self.assertIn('check_worker_output', [s.name for s in spans])
         self.assertIn('check_final_response', [s.name for s in spans])
-        self.assertEqual(len([s for s in spans if s.name == 'semantic_review']), 2)
+        # One step: its worker review only; a single accepted step is not re-synthesized.
+        self.assertEqual(len([s for s in spans if s.name == 'semantic_review']), 1)
         self.assertGreaterEqual(self.scores.call_count, 5)
         self.assertNotIn(context.request.subject_key, json.dumps([dict(s.attributes) for s in spans]))
 
     def test_plan_rejection_has_cause(self):
         result, spans, _ = self.run_request(invalid=True)
         self.assertEqual(result.kind, 'FAILURE')
-        gate, = [s for s in spans if s.name == 'authorize_plan']
-        self.assertEqual(gate.attributes['langfuse.observation.level'], 'ERROR')
-        self.assertTrue(gate.attributes['langfuse.observation.status_message'])
+        # A plan-rule violation gets one corrected attempt; both are inspectable.
+        gates = [s for s in spans if s.name == 'authorize_plan']
+        self.assertEqual(len(gates), 2)
+        for gate in gates:
+            self.assertEqual(gate.attributes['langfuse.observation.level'], 'ERROR')
+            self.assertTrue(gate.attributes['langfuse.observation.status_message'])
         self.assertFalse(any(s.name.startswith('step.') for s in spans))
 
     def test_rejected_worker_review_remains_inspectable(self):

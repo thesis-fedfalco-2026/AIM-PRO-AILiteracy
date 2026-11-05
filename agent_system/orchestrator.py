@@ -14,10 +14,10 @@ from agent_system.config import OrchestratorSettings, AgentConfig, Configuration
 from agent_system.registry import AgentRegistry
 from agent_system.dispatch import TaskDispatcher
 from agent_system.flow_task import DelegatedTask
-from learning.contracts import Entity, make_entity
+from learning.contracts import Entity, EntityRef, make_entity
 from learning.context import LearningRequest, RunContext
 from learning.metamodel import lead_contract
-from learning.outputs import (LearningResponse, SemanticReview, WorkerOutput, ProposedChange, build_brief, discovered_resources,
+from learning.outputs import (Citation, LearningResponse, SemanticReview, WorkerOutput, ProposedChange, build_brief, discovered_resources,
                               check_final_response, check_worker_output, final_response_violations,
                               learning_data, task_result)
 from learning.planning import LearningPlanDraft, authorize_plan, eligible_specializations
@@ -163,8 +163,7 @@ class Orchestrator:
             events.emit("plan.decided", status="OVER_BUDGET", prompt_chars=len(prompt))
             return LearningResponse(kind="CLARIFICATION", content="The required context exceeds the configured budget; reduce the context or adjust the limit.")
         try:
-            draft = self._call(prompt, LearningPlanDraft)
-            tasks = authorize_plan(draft, context, self.registry, settings=self.settings)
+            tasks = self._plan(prompt, context)
         except Exception as error:
             self.logger.error("Plan rejected (%s)", type(error).__name__)
             # Plan-rule messages are fixed text, at most naming an agent; truncated for safety.
@@ -186,6 +185,23 @@ class Orchestrator:
             self.last_records = tuple(records)
             return LearningResponse(kind="CLARIFICATION", content="Specify the activity or clarification needed in the selected context.")
         return tasks, records
+
+    def _plan(self, prompt, context):
+        """Ask the Lead for a plan; a plan-rule violation gets one corrected attempt.
+
+        The rule text is fixed and names no data. Infrastructure errors are not retried.
+        """
+        draft = self._call(prompt, LearningPlanDraft)
+        try:
+            return authorize_plan(draft, context, self.registry, settings=self.settings)
+        except ValueError as error:
+            reason = str(error)[:160]
+            self.logger.warning("Plan rejected (%s); requesting one correction", type(error).__name__)
+            events.emit("plan.decided", status="REJECTED", error_type=type(error).__name__,
+                        reason=reason, will_retry=True)
+        draft = self._call(prompt + "\nPLAN_REJECTED: the previous LearningPlanDraft violated this rule: "
+                           + reason + ". Return a corrected LearningPlanDraft.", LearningPlanDraft)
+        return authorize_plan(draft, context, self.registry, settings=self.settings)
 
     def _execute_step(self, task, context, outcomes, checked_sources):
         with telemetry.observation("step." + task.step.id, "agent", input={
@@ -273,6 +289,8 @@ class Orchestrator:
         self.last_records = tuple(records)
         if not any(result.fields["status"] == "SUCCEEDED" for result in outcomes.values()):
             return LearningResponse(kind="FAILURE", content="No task produced a usable result.")
+        if len(outcomes) == 1:
+            return self._pass_through(context, outcomes)
         usable = [result.fields for result in outcomes.values() if result.fields["status"] == "SUCCEEDED"]
         synthesis = {"request": request.text, "intent": request.intent, "results": usable,
                      "statuses": {key: value.fields["status"] for key, value in outcomes.items()}}
@@ -288,12 +306,33 @@ class Orchestrator:
         review = self._review(context, {"stage": "FINAL", "basis": synthesis, "sources": checked_sources,
                                        "response": response.model_dump(mode="json")})
         checked = check_final_response(response, context, tuple(outcomes.values()), review=review)
-        events.emit("final.checked", verdict=review.verdict, proposed_kind=response.kind,
+        events.emit("final.checked", synthesis="lead", verdict=review.verdict, proposed_kind=response.kind,
                     response_kind=checked.kind, application_status=response.application_status,
                     finding_codes=[f.code for f in checked.findings],
                     violations=list(final_response_violations(response, tuple(outcomes.values()), review=review)))
         return checked
 
+
+    def _pass_through(self, context, outcomes):
+        """Deliver a single accepted step as is.
+
+        Its worker review already accepted it, and rewriting it only added failure
+        modes in the live evaluation (claimed writes, rejected rewrites). The
+        deterministic final check still applies.
+        """
+        [result] = outcomes.values()
+        fields = result.fields
+        response = LearningResponse(kind="ANSWER", content=fields["content"],
+            citations=tuple(Citation.model_validate(c) for c in fields["citations"]),
+            coverage=tuple(EntityRef.model_validate(r) for r in fields["coverage"]))
+        # SUCCEEDED already required an ACCEPT worker review (check_worker_output).
+        review = SemanticReview(verdict="ACCEPT", reason="Single step accepted by its worker review.")
+        checked = check_final_response(response, context, (result,), review=review)
+        events.emit("final.checked", synthesis="pass_through", verdict=None, proposed_kind=response.kind,
+                    response_kind=checked.kind, application_status=response.application_status,
+                    finding_codes=[f.code for f in checked.findings],
+                    violations=list(final_response_violations(response, (result,), review=review)))
+        return checked
 
 class OrchestrationFlowState(BaseModel):
     """Ephemeral scheduling state only; learning/ owns all domain decisions."""

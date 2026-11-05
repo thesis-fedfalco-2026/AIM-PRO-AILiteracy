@@ -280,7 +280,8 @@ class AcceptanceTest(unittest.TestCase):
         self.assertTrue(any(f.code=='R04' for f in validate_snapshot(snapshot(a,b))))
 
     def test_case22(self):
-        self.orchestrator=demo_orchestrator(self.backend.search_documents,reject_stage='FINAL')
+        # A single accepted step is delivered without synthesis; the final review guards syntheses.
+        self.orchestrator=demo_orchestrator(self.backend.search_documents,reject_stage='FINAL',steps=2)
         self.service.orchestrator_factory=lambda:self.orchestrator
         result=self.ask()
         self.assertEqual(result.kind,'FAILURE')
