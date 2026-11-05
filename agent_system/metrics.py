@@ -27,7 +27,8 @@ def run_metrics(events: list[Event]) -> list[dict]:
                    duration_ms=None, plan_status=None, planned_steps=0,
                    lead_calls=Counter(), worker_calls=0, provider_calls=0,
                    input_tokens=None, output_tokens=None, reviews=defaultdict(Counter),
-                   step_status=Counter(), rejected_steps=0, finding_codes=Counter(), final=None)
+                   step_status=Counter(), rejected_steps=0, finding_codes=Counter(), final=None,
+                   plan_retries=0)
         for event in items:
             data = event.data
             if event.type == "run.started":
@@ -38,6 +39,7 @@ def run_metrics(events: list[Event]) -> list[dict]:
             elif event.type == "plan.decided":
                 run["plan_status"] = data.get("status")
                 run["planned_steps"] = len(data.get("steps", []))
+                run["plan_retries"] += bool(data.get("will_retry"))
             elif event.type == "lead.call":
                 run["lead_calls"][data["contract"]] += 1
             elif event.type == "worker.call":
@@ -56,7 +58,8 @@ def run_metrics(events: list[Event]) -> list[dict]:
                 if data["status"] == "FAILED" and REJECTION_CODES & set(codes):
                     run["rejected_steps"] += 1
             elif event.type == "final.checked":
-                run["final"] = {k: data.get(k) for k in ("verdict", "proposed_kind", "response_kind", "violations")}
+                run["final"] = {k: data.get(k) for k in ("synthesis", "verdict", "proposed_kind", "response_kind",
+                                                       "application_status", "violations")}
         run["model_calls"] = sum(run["lead_calls"].values()) + run["worker_calls"]
         run["lead_calls"] = dict(run["lead_calls"])
         run["reviews"] = {stage: dict(verdicts) for stage, verdicts in run["reviews"].items()}
@@ -92,6 +95,8 @@ def summarize(events: list[Event]) -> dict:
         runs=len(runs),
         response_kinds=dict(Counter(r["response_kind"] for r in runs)),
         plan_status=dict(Counter(r["plan_status"] for r in runs)),
+        plan_retries=dict(total=sum(r["plan_retries"] for r in runs),
+                          recovered=sum(r["plan_retries"] and r["plan_status"] == "AUTHORIZED" for r in runs)),
         model_calls=dict(total=sum(calls), mean=round(sum(calls) / len(calls), 2) if calls else None,
                          max=max(calls, default=None)),
         lead_calls=dict(sum((Counter(r["lead_calls"]) for r in runs), Counter())),

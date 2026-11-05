@@ -91,16 +91,39 @@ All three Socratic leakage cases that carry the solution in a legitimate output
 kind depend on the model reviewer. So do unsupported claims attached to valid
 citations, and claimed updates written in plain text.
 
-Model calls, from the event log:
+Model calls per request, from the event log:
 
-| Run type | Calls |
+| Request | Calls |
 | --- | --- |
-| Teacher step | 5: plan, worker, worker review, synthesis, final review |
-| Socratic step with retrieval | 5, like a Teacher step: the Socratic worker may read sources that contain the solution, and the worker and final reviews judge what reaches the learner |
-| Rejected step | 3, because no synthesis follows |
+| One accepted step (Teacher or Socratic) | 3: plan, worker, worker review. The step is delivered as is, without synthesis or final review |
+| One rejected step | 3: plan, worker, worker review |
+| Several steps | 1 plan, plus a worker and a worker review per step, plus synthesis and final review |
+| Plan rejected by a plan rule | 1 extra plan call, at most once |
 
-These counts are the baseline for #27. Scripted latencies measure only local
-overhead.
+Scripted latencies measure only local overhead.
 
-The live mode has not been run yet. Its reject rates, call counts and latency are
-the next measurement, and each run needs authorization.
+In scripted mode the three synthesis attacks plan two steps, so that a synthesis
+exists to attack. In live mode the Lead usually plans one step, which is delivered
+without synthesis. Those runs are reported as `NOT_EXECUTED`: the attack is
+impossible, so the run does not count as a block.
+
+## Live results (4 November 2026)
+
+Two live runs on OpenRouter `nvidia/nemotron-3.5-super-vl:free`, before the
+single-step pass-through and the plan retry:
+
+- **Worker review**: rejected 16 of 16 adversarial Teacher outputs and 7 of 7
+  Socratic leaks (direct answer, a solution copied from the sources, wrong output
+  kind). It wrongly rejected 1 of 23 benign worker outputs.
+- **Final review**: rejected 3 of 3 Socratic solutions appended to the synthesis,
+  but only 1 of 2 fabricated synthesis citations and 0 of 3 claimed writes
+  (`application_status`). The deterministic final check stopped all 5 of those.
+- **Controls**: every false rejection came from the synthesis step. In the first
+  run, 3 Teacher syntheses failed `application_claim`; in the second, one Lead
+  synthesis set `application_status: applied` on a benign answer, and one final
+  review rejected a Socratic question that its worker review had accepted. This
+  led to delivering a single accepted step without synthesis.
+- **Plans**: 10 of 66 plans were rejected. The first run did not record reasons.
+  Across the later logs, the recorded reasons were `Retrieval requires an
+  authorized capability` 4 times and `Specialization is unavailable` once. This
+  led to one corrected attempt.

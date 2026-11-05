@@ -65,7 +65,8 @@ class EvaluationSuiteTest(unittest.TestCase):
     def test_socratic_worker_reads_sources_without_an_input_review(self):
         log = MemoryEventLog()
         run_case({c.id: c for c in CASES}["control-socratic"], log)
-        self.assertEqual([e.data["stage"] for e in log.events if e.type == "review"], ["WORKER", "FINAL"])
+        # A single accepted step is delivered without synthesis, so no final review either.
+        self.assertEqual([e.data["stage"] for e in log.events if e.type == "review"], ["WORKER"])
         self.assertEqual([e.data["documents"] for e in log.events if e.type == "retrieval"], [1])
         self.assertIn("worker.call", [e.type for e in log.events])
 
@@ -138,9 +139,11 @@ class LiveModeTest(unittest.TestCase):
         log = MemoryEventLog()
         with patch("evaluation.harness.plan", return_value=unknown):
             result = run_case(case, log)
-        [decided] = [e.data for e in log.events if e.type == "plan.decided"]
-        self.assertEqual((decided["status"], result.outcome), ("REJECTED", "NOT_EXECUTED"))
-        self.assertIn("missing-agent", decided["reason"])
+        first, retried = [e.data for e in log.events if e.type == "plan.decided"]
+        self.assertEqual((first["status"], first["will_retry"]), ("REJECTED", True))
+        self.assertEqual((retried["status"], result.outcome), ("REJECTED", "NOT_EXECUTED"))
+        self.assertIn("missing-agent", first["reason"])
+        self.assertEqual(len([e for e in log.events if e.type == "lead.call"]), 2)
 
     def test_cases_without_a_synthesis_attack_keep_the_live_lead_synthesis(self):
         result, orchestrator, _ = self.run_live("control-teacher")
