@@ -1,0 +1,61 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1784792907017_USER_186",
+      "Educators",
+      "EducatorGroup"
+    ]
+  },
+  "properties": {
+    "defines": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1784792907017_USER_186",
+          "Educators",
+          "EducatorGroup"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1784792907017_USER_186",
+          "Educators",
+          "Contraint"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 0,
+      "title": "Defines",
+      "type": "array"
+    },
+    "ownedEducators": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1784792907017_USER_186",
+          "Educators",
+          "EducatorGroup"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1784792907017_USER_186",
+          "Educators",
+          "Educator"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 0,
+      "title": "Ownededucators",
+      "type": "array"
+    }
+  },
+  "title": "Aimpro_6f24c8301ceff2d5ac96",
+  "type": "object"
+}

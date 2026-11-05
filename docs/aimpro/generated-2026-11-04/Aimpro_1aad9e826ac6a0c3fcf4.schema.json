@@ -1,0 +1,149 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1784885200968_USER_211",
+      "Activities",
+      "ShortStructured"
+    ]
+  },
+  "properties": {
+    "difficulty": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1784885200968_USER_211",
+          "Activities",
+          "Activity"
+        ],
+        "enum": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "Proficiency"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "enum": [
+            "Foundational",
+            "Intermediate",
+            "Advanced"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Difficulty"
+    },
+    "evidenceType": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1784885200968_USER_211",
+          "Activities",
+          "Activity"
+        ],
+        "enum": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "EvidenceTypes"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "enum": [
+            "OBJECTIVE_ITEM_RESPONSE",
+            "SCENARIO_CASE_ITEM",
+            "RUBRIC_MICROTASK",
+            "TOOL_TRACE",
+            "REFLECTIVE_LOG",
+            "PEER_TEACHER_REVIEW",
+            "IDENTITY_INTEGRITY_CHECK"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Evidencetype"
+    },
+    "promptStem": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1784885200968_USER_211",
+          "Activities",
+          "Activity"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Promptstem"
+    },
+    "resources": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1784885200968_USER_211",
+          "Activities",
+          "Activity"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1784886057063_USER_240",
+          "Resources",
+          "Resource"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Resources",
+      "type": "array"
+    },
+    "tags": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1784885200968_USER_211",
+          "Activities",
+          "Activity"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "Competency"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Tags",
+      "type": "array"
+    }
+  },
+  "required": [
+    "tags",
+    "resources"
+  ],
+  "title": "Aimpro_1aad9e826ac6a0c3fcf4",
+  "type": "object"
+}

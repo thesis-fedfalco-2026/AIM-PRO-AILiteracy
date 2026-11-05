@@ -1,0 +1,74 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1793789994832_USER_35",
+      "alm",
+      "EntityRef"
+    ]
+  },
+  "properties": {
+    "id": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Identifier"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "EntityRef"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "title": "Id",
+      "type": "string"
+    },
+    "type": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Text"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "EntityRef"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "title": "Type",
+      "type": "string"
+    },
+    "version": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Version"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "EntityRef"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "title": "Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "type",
+    "id",
+    "version"
+  ],
+  "title": "Aimpro_0b6368280d3c857e4b39",
+  "type": "object"
+}

@@ -1,0 +1,256 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1793789994832_USER_35",
+      "alm",
+      "AssessmentSpecification"
+    ]
+  },
+  "properties": {
+    "activities": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "AssessmentSpecification"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "ActivityDefinition"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Activities",
+      "type": "array"
+    },
+    "administrationConstraints": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Text"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "AssessmentSpecification"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "items": {
+        "type": "string"
+      },
+      "minItems": 0,
+      "title": "Administrationconstraints",
+      "type": "array"
+    },
+    "allowedEvidence": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "AssessmentSpecification"
+        ],
+        "enum": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "EvidenceKind"
+        ],
+        "kind": "attributes"
+      },
+      "items": {
+        "enum": [
+          "OBJECTIVE_RESPONSE",
+          "CASE_RESULT",
+          "CRITERIA_BASED_PRODUCT",
+          "TOOL_TRACE",
+          "REFLECTIVE_RECORD",
+          "PEER_REVIEW",
+          "INTEGRITY_CHECK"
+        ],
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Allowedevidence",
+      "type": "array"
+    },
+    "answerKey": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Text"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "AssessmentSpecification"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Answerkey"
+    },
+    "decisionRule": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "AssessmentSpecification"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "RuleDefinition"
+        ]
+      },
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Decisionrule"
+    },
+    "id": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Identifier"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Entity"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "title": "Id",
+      "type": "string"
+    },
+    "outcomes": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "AssessmentSpecification"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "LearningOutcome"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Outcomes",
+      "type": "array"
+    },
+    "provenance": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Entity"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Provenance"
+        ]
+      },
+      "minLength": 1,
+      "title": "Provenance",
+      "type": "string"
+    },
+    "rubric": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "AssessmentSpecification"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Rubric"
+        ]
+      },
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Rubric"
+    },
+    "version": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Version"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Entity"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "title": "Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "version",
+    "provenance",
+    "allowedEvidence",
+    "outcomes",
+    "activities"
+  ],
+  "title": "Aimpro_3f30b8f7e8631692b980",
+  "type": "object"
+}

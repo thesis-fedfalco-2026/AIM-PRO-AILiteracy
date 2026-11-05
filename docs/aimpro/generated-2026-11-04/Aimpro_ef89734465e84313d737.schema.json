@@ -1,0 +1,228 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1793789994832_USER_35",
+      "alm",
+      "Resource"
+    ]
+  },
+  "properties": {
+    "contentOrLocator": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Text"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Resource"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "title": "Contentorlocator",
+      "type": "string"
+    },
+    "derivedFrom": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Resource"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Resource"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 0,
+      "title": "Derivedfrom",
+      "type": "array"
+    },
+    "id": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Identifier"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Entity"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "title": "Id",
+      "type": "string"
+    },
+    "language": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Text"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Resource"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Language"
+    },
+    "outcomes": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Resource"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "LearningOutcome"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 0,
+      "title": "Outcomes",
+      "type": "array"
+    },
+    "provenance": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Entity"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Provenance"
+        ]
+      },
+      "minLength": 1,
+      "title": "Provenance",
+      "type": "string"
+    },
+    "title": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Text"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Resource"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "title": "Title",
+      "type": "string"
+    },
+    "topics": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Resource"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Topic"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Topics",
+      "type": "array"
+    },
+    "usageConditions": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Text"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Resource"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "title": "Usageconditions",
+      "type": "string"
+    },
+    "version": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Version"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Entity"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "title": "Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "version",
+    "provenance",
+    "title",
+    "contentOrLocator",
+    "usageConditions",
+    "topics"
+  ],
+  "title": "Aimpro_ef89734465e84313d737",
+  "type": "object"
+}

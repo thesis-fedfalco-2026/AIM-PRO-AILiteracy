@@ -1,0 +1,276 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1793789994832_USER_35",
+      "alm",
+      "Evaluation"
+    ]
+  },
+  "properties": {
+    "assistedBy": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Evaluation"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "AgentSpecialization"
+        ]
+      },
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Assistedby"
+    },
+    "context": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Evaluation"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "ExecutionContext"
+        ]
+      },
+      "minLength": 1,
+      "title": "Context",
+      "type": "string"
+    },
+    "criterionJudgments": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Evaluation"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "CriterionJudgment"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 0,
+      "title": "Criterionjudgments",
+      "type": "array"
+    },
+    "evidence": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Evaluation"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "LearningEvidence"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Evidence",
+      "type": "array"
+    },
+    "humanDecision": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Evaluation"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "HumanDecision"
+        ]
+      },
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Humandecision"
+    },
+    "id": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Identifier"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Entity"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "title": "Id",
+      "type": "string"
+    },
+    "mode": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Evaluation"
+        ],
+        "enum": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "EvaluationMode"
+        ],
+        "kind": "attributes"
+      },
+      "enum": [
+        "FORMATIVE",
+        "FORMAL"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "provenance": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Entity"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Provenance"
+        ]
+      },
+      "minLength": 1,
+      "title": "Provenance",
+      "type": "string"
+    },
+    "result": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Text"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Evaluation"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "title": "Result",
+      "type": "string"
+    },
+    "reviewPayloadKey": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Identifier"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Evaluation"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "title": "Reviewpayloadkey",
+      "type": "string"
+    },
+    "specification": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Evaluation"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "AssessmentSpecification"
+        ]
+      },
+      "minLength": 1,
+      "title": "Specification",
+      "type": "string"
+    },
+    "version": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Version"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Entity"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "title": "Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "version",
+    "provenance",
+    "mode",
+    "result",
+    "reviewPayloadKey",
+    "context",
+    "evidence",
+    "specification"
+  ],
+  "title": "Aimpro_fcef5ba64b64bff4d7aa",
+  "type": "object"
+}

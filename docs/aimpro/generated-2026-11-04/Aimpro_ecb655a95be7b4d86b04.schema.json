@@ -1,0 +1,101 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1780849660386_USER_186",
+      "Certification Design",
+      "Domain"
+    ]
+  },
+  "properties": {
+    "ID": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "NamedElement"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Id"
+    },
+    "description": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "NamedElement"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Description"
+    },
+    "ownedClusters": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "Domain"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1780849660386_USER_186",
+          "Certification Design",
+          "CompetencyCluster"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Ownedclusters",
+      "type": "array"
+    },
+    "title": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "NamedElement"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Title"
+    }
+  },
+  "required": [
+    "ownedClusters"
+  ],
+  "title": "Aimpro_ecb655a95be7b4d86b04",
+  "type": "object"
+}

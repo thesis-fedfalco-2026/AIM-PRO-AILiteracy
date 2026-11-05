@@ -1,0 +1,274 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1793789994832_USER_35",
+      "alm",
+      "ActivityDefinition"
+    ]
+  },
+  "properties": {
+    "assessmentSpec": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "ActivityDefinition"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "AssessmentSpecification"
+        ]
+      },
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Assessmentspec"
+    },
+    "expectedEvidence": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "ActivityDefinition"
+        ],
+        "enum": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "EvidenceKind"
+        ],
+        "kind": "attributes"
+      },
+      "items": {
+        "enum": [
+          "OBJECTIVE_RESPONSE",
+          "CASE_RESULT",
+          "CRITERIA_BASED_PRODUCT",
+          "TOOL_TRACE",
+          "REFLECTIVE_RECORD",
+          "PEER_REVIEW",
+          "INTEGRITY_CHECK"
+        ],
+        "type": "string"
+      },
+      "minItems": 0,
+      "title": "Expectedevidence",
+      "type": "array"
+    },
+    "format": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "ActivityDefinition"
+        ],
+        "enum": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "InteractionFormat"
+        ],
+        "kind": "attributes"
+      },
+      "enum": [
+        "EXPOSITION",
+        "GUIDED_DIALOGUE",
+        "CHOICE",
+        "BINARY_DECISION",
+        "MATCHING",
+        "SHORT_STRUCTURED",
+        "CASE_ANALYSIS",
+        "CRITERIA_BASED_PRODUCT"
+      ],
+      "title": "Format",
+      "type": "string"
+    },
+    "id": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Identifier"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Entity"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "title": "Id",
+      "type": "string"
+    },
+    "instruction": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Text"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "ActivityDefinition"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "title": "Instruction",
+      "type": "string"
+    },
+    "intent": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "ActivityDefinition"
+        ],
+        "enum": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Intent"
+        ],
+        "kind": "attributes"
+      },
+      "enum": [
+        "EXPLAIN",
+        "PRACTICE",
+        "CURATE",
+        "ASSESS",
+        "SOCRATIC_GUIDANCE"
+      ],
+      "title": "Intent",
+      "type": "string"
+    },
+    "outcomes": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "ActivityDefinition"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "LearningOutcome"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Outcomes",
+      "type": "array"
+    },
+    "provenance": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Entity"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Provenance"
+        ]
+      },
+      "minLength": 1,
+      "title": "Provenance",
+      "type": "string"
+    },
+    "resourceRequirements": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "ActivityDefinition"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "ResourceRequirement"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 0,
+      "title": "Resourcerequirements",
+      "type": "array"
+    },
+    "strategies": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "ActivityDefinition"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Strategy"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 0,
+      "title": "Strategies",
+      "type": "array"
+    },
+    "version": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Version"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Entity"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "title": "Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "version",
+    "provenance",
+    "instruction",
+    "intent",
+    "format",
+    "outcomes"
+  ],
+  "title": "Aimpro_f9a7065eb3c85388a96d",
+  "type": "object"
+}

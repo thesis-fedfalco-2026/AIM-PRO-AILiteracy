@@ -1,0 +1,184 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1793789994832_USER_35",
+      "alm",
+      "LearningDesign"
+    ]
+  },
+  "properties": {
+    "assessmentSpecs": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "LearningDesign"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "AssessmentSpecification"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 0,
+      "title": "Assessmentspecs",
+      "type": "array"
+    },
+    "id": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Identifier"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Entity"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "title": "Id",
+      "type": "string"
+    },
+    "name": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Text"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "LearningDesign"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "title": "Name",
+      "type": "string"
+    },
+    "outcomes": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "LearningDesign"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "LearningOutcome"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Outcomes",
+      "type": "array"
+    },
+    "provenance": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Entity"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Provenance"
+        ]
+      },
+      "minLength": 1,
+      "title": "Provenance",
+      "type": "string"
+    },
+    "root": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "LearningDesign"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "ProcessNode"
+        ]
+      },
+      "minLength": 1,
+      "title": "Root",
+      "type": "string"
+    },
+    "strategies": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "LearningDesign"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Strategy"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 0,
+      "title": "Strategies",
+      "type": "array"
+    },
+    "version": {
+      "aimpro": {
+        "data_type": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Version"
+        ],
+        "declared_by": [
+          "Pointer1793789994832_USER_35",
+          "alm",
+          "Entity"
+        ],
+        "instance_class_name": "java.lang.String",
+        "kind": "attributes"
+      },
+      "title": "Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "version",
+    "provenance",
+    "name",
+    "outcomes",
+    "root"
+  ],
+  "title": "Aimpro_d07109fc625d9996f780",
+  "type": "object"
+}

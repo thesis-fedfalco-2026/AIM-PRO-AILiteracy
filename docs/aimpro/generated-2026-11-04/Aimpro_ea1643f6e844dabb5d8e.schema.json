@@ -1,0 +1,67 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1783071715532_USER_192",
+      "Scenario",
+      "Scenario"
+    ]
+  },
+  "properties": {
+    "context": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "Scenario"
+        ],
+        "enum": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "LearningContext"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "enum": [
+            "High Education",
+            "Small Medium Enterprise",
+            "Vocational Education"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Context"
+    },
+    "pathway": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "Scenario"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "Phase"
+        ]
+      },
+      "minLength": 1,
+      "title": "Pathway",
+      "type": "string"
+    }
+  },
+  "required": [
+    "pathway"
+  ],
+  "title": "Aimpro_ea1643f6e844dabb5d8e",
+  "type": "object"
+}

@@ -1,0 +1,54 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1783071715532_USER_192",
+      "Scenario",
+      "CompetencyGoal"
+    ]
+  },
+  "properties": {
+    "description": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "Goal"
+        ],
+        "kind": "attributes"
+      },
+      "title": "Description",
+      "type": "string"
+    },
+    "mappedCompetencies": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "CompetencyGoal"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "Competency"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Mappedcompetencies",
+      "type": "array"
+    }
+  },
+  "required": [
+    "description",
+    "mappedCompetencies"
+  ],
+  "title": "Aimpro_057597578a60c999294c",
+  "type": "object"
+}

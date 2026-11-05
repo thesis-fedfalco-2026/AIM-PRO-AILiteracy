@@ -7,10 +7,11 @@ No exported text is evaluated as Python code.
 from __future__ import annotations
 
 from datetime import datetime
+from decimal import Decimal
 import hashlib
 import json
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import Annotated, ClassVar, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, create_model
 
@@ -18,7 +19,10 @@ from aimpro.audit import DEFAULT_PROJECT
 
 
 Key = tuple[str, str, str]
-GENERATOR_VERSION = "1"
+GENERATOR_VERSION = "2"
+PRIMITIVES = {"EString": str, "EInt": int, "EDouble": float,
+              "EBoolean": bool, "EDate": datetime}
+DATA_TYPE_CLASSES = {"java.lang.String": str, "java.math.BigDecimal": Decimal}
 
 
 def encoded(value):
@@ -33,6 +37,28 @@ def type_name(key: Key):
 class DomainObject(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True, allow_inf_nan=False,
                               populate_by_name=False, validate_default=True)
+    decimal_fields: ClassVar[tuple[str, ...]] = ()
+
+    @classmethod
+    def model_validate_json(cls, json_data, **kwargs):
+        # Pydantic's JSON decoder passes fractional numbers through binary floats.
+        # Preserve BigDecimal tokens as exact decimal strings before validation.
+        # The generated Decimal schema accepts numbers and decimal strings; its
+        # JSON serialization uses strings, never a lossy float conversion.
+        if cls.decimal_fields:
+            try:
+                value = json.loads(json_data, parse_float=Decimal)
+            except (ValueError, UnicodeDecodeError):
+                return super().model_validate_json(json_data, **kwargs)
+            if isinstance(value, dict):
+                for name in cls.decimal_fields:
+                    raw = value.get(name)
+                    if isinstance(raw, Decimal):
+                        value[name] = str(raw)
+                    elif isinstance(raw, list):
+                        value[name] = [str(v) if isinstance(v, Decimal) else v for v in raw]
+                json_data = json.dumps(value, default=float)
+        return super().model_validate_json(json_data, **kwargs)
 
 
 class Contracts:
@@ -42,23 +68,45 @@ class Contracts:
         if source.get("format") != "jjodel-megamodel" or source.get("formatVersion") != "1.0":
             raise ValueError("Expected jjodel-megamodel format 1.0")
         self.source_sha256 = hashlib.sha256(raw).hexdigest()
-        self.definitions, self.enums, self.classes, self.fields = {}, {}, {}, {}
+        self.definitions, self.enums, self.data_types = {}, {}, {}
+        self.classes, self.fields = {}, {}
         canonical = []
         for metamodel in source["definitions"]["metamodels"]:
             mid = metamodel["metadata"]["id"]
             canonical.append(dict(id=mid, packages=metamodel["packages"]))
             for package in metamodel["packages"]:
-                for kind, destination in (("classes", self.definitions), ("enums", self.enums)):
+                for kind, destination in (("classes", self.definitions), ("enums", self.enums),
+                                          ("dataTypes", self.data_types)):
                     for entry in package.get(kind, []):
+                        if kind == "dataTypes" and (not isinstance(entry, dict)
+                                or not isinstance(entry.get("name"), str) or not entry["name"]):
+                            raise ValueError(f"Invalid dataType identity in {mid}/{package['name']}")
                         key = (mid, package["name"], entry["name"])
-                        if key in self.definitions or key in self.enums:
+                        if any(key in index for index in
+                               (self.definitions, self.enums, self.data_types)):
                             raise ValueError(f"Duplicate type identity: {key}")
                         destination[key] = entry
         self.fingerprint = hashlib.sha256(encoded(canonical).encode()).hexdigest()
+        # Validate even unused declarations; never guess a primitive from a name.
+        for key, declaration in self.data_types.items():
+            if (set(declaration) != {"name", "instanceClassName"}
+                    or not isinstance(declaration.get("instanceClassName"), str)
+                    or declaration.get("instanceClassName") not in DATA_TYPE_CLASSES):
+                raise ValueError(f"Unsupported dataType declaration: {key}: {declaration}")
         for key in self.definitions:
             self._build(key, ())
 
     def resolve(self, descriptor, owner: Key) -> Key:
+        if (not isinstance(descriptor, dict)
+                or set(descriptor) - {"name", "package", "metamodel"}
+                or any(not isinstance(descriptor.get(k), str) or not descriptor[k]
+                       for k in ("name", "package"))):
+            raise ValueError(f"Unsupported type descriptor on {owner}: {descriptor}")
+        if "metamodel" in descriptor:
+            metamodel = descriptor["metamodel"]
+            if (not isinstance(metamodel, dict) or set(metamodel) - {"id", "name", "nsURI"}
+                    or not isinstance(metamodel.get("id"), str) or not metamodel["id"]):
+                raise ValueError(f"Ambiguous metamodel qualifier on {owner}: {descriptor}")
         return (descriptor.get("metamodel", {}).get("id", owner[0]),
                 descriptor["package"], descriptor["name"])
 
@@ -106,20 +154,24 @@ class Contracts:
                 annotation = Annotated[str, Field(min_length=1)]
                 metadata["aimpro"].update(target=list(target), containment=spec.get("containment", False))
             elif isinstance(typ, dict):
-                enum_key = self.resolve(typ, owner)
-                if enum_key not in self.enums:
-                    raise ValueError(f"Unknown attribute enum: {enum_key}")
-                literals = [v["name"] for v in self.enums[enum_key]["literals"]]
-                if not literals or len(literals) != len(set(literals)):
-                    raise ValueError(f"Empty or duplicate enum: {enum_key}")
-                annotation = Literal[tuple(literals)]
-                metadata["aimpro"]["enum"] = list(enum_key)
+                attribute_key = self.resolve(typ, owner)
+                if attribute_key in self.enums:
+                    literals = [v["name"] for v in self.enums[attribute_key]["literals"]]
+                    if not literals or len(literals) != len(set(literals)):
+                        raise ValueError(f"Empty or duplicate enum: {attribute_key}")
+                    annotation = Literal[tuple(literals)]
+                    metadata["aimpro"]["enum"] = list(attribute_key)
+                elif attribute_key in self.data_types:
+                    declaration = self.data_types[attribute_key]
+                    annotation = DATA_TYPE_CLASSES[declaration["instanceClassName"]]
+                    metadata["aimpro"].update(data_type=list(attribute_key),
+                                             instance_class_name=declaration["instanceClassName"])
+                else:
+                    raise ValueError(f"Unknown or non-scalar attribute type: {attribute_key}")
             else:
-                primitives = {"EString": str, "EInt": int, "EDouble": float,
-                              "EBoolean": bool, "EDate": datetime}
-                if typ not in primitives:
+                if typ not in PRIMITIVES:
                     raise ValueError(f"Unsupported primitive: {typ}")
-                annotation = primitives[typ]
+                annotation = PRIMITIVES[typ]
             options = dict(alias=name, json_schema_extra=metadata)
             if upper != 1:
                 annotation = list[annotation]
@@ -139,6 +191,11 @@ class Contracts:
             safe_name = "f_" + hashlib.sha256(name.encode()).hexdigest()
             generated[safe_name] = (annotation, default)
         cls = create_model(type_name(key), __base__=bases or DomainObject, **generated)
+        cls.decimal_fields = tuple(name for name, (kind, spec, owner) in fields.items()
+                                   if kind == "attributes" and isinstance(spec["type"], dict)
+                                   and self.resolve(spec["type"], owner) in self.data_types
+                                   and self.data_types[self.resolve(spec["type"], owner)][
+                                       "instanceClassName"] == "java.math.BigDecimal")
         cls.model_config["json_schema_extra"] = {
             "aimpro": {"type": list(key), "abstract": definition.get("abstract", False)}}
         cls.model_rebuild(force=True)
@@ -150,8 +207,12 @@ class Contracts:
                 for key in sorted(self.classes) if not self.definitions[key].get("abstract", False)}
 
     def manifest(self):
-        return dict(generator_version=GENERATOR_VERSION, source_sha256=self.source_sha256,
+        manifest = dict(generator_version=GENERATOR_VERSION, source_sha256=self.source_sha256,
                     metamodel_fingerprint=self.fingerprint,
                     types=[dict(identity=list(key), python_name=type_name(key),
                                 abstract=self.definitions[key].get("abstract", False))
                            for key in sorted(self.classes)])
+        if self.data_types:
+            manifest["data_types"] = [dict(identity=list(key), **self.data_types[key])
+                                      for key in sorted(self.data_types)]
+        return manifest

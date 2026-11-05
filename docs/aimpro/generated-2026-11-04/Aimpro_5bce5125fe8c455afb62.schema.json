@@ -1,0 +1,41 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1781791213267_USER_197",
+      "iSQD",
+      "AuthenticExperience"
+    ]
+  },
+  "properties": {
+    "activities": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "AuthenticExperience"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "AAuthenticExperience"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Activities",
+      "type": "array"
+    }
+  },
+  "required": [
+    "activities"
+  ],
+  "title": "Aimpro_5bce5125fe8c455afb62",
+  "type": "object"
+}

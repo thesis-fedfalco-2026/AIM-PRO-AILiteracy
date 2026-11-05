@@ -1,0 +1,41 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1781791213267_USER_197",
+      "iSQD",
+      "CollaborativeDesign"
+    ]
+  },
+  "properties": {
+    "activities": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "CollaborativeDesign"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "ACollaborativeDesign"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Activities",
+      "type": "array"
+    }
+  },
+  "required": [
+    "activities"
+  ],
+  "title": "Aimpro_c0c7264f126b39a61405",
+  "type": "object"
+}

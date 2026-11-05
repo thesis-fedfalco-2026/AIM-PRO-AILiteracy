@@ -1,0 +1,137 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1791888876673_USER_33",
+      "sustainability",
+      "SessionFootprint"
+    ]
+  },
+  "properties": {
+    "activitiesCount": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SessionFootprint"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Activitiescount"
+    },
+    "estimatedActivities": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SessionFootprint"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Estimatedactivities"
+    },
+    "measuredActivities": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SessionFootprint"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Measuredactivities"
+    },
+    "scenario": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SessionFootprint"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "Scenario"
+        ]
+      },
+      "minLength": 1,
+      "title": "Scenario",
+      "type": "string"
+    },
+    "totalCO2g": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SessionFootprint"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Totalco2G"
+    },
+    "totalEnergyWh": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SessionFootprint"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Totalenergywh"
+    }
+  },
+  "required": [
+    "scenario"
+  ],
+  "title": "Aimpro_c1f358cdb8a75404444a",
+  "type": "object"
+}

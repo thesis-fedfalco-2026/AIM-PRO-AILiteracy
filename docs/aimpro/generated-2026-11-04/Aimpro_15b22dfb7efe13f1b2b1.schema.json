@@ -1,0 +1,235 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1791888876673_USER_33",
+      "sustainability",
+      "AIModelProfile"
+    ]
+  },
+  "properties": {
+    "aiModelProfileId": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "AIModelProfile"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Aimodelprofileid"
+    },
+    "aiModelType": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "AIModelProfile"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Aimodeltype"
+    },
+    "avgInferenceSec": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "AIModelProfile"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Avginferencesec"
+    },
+    "avgOutputTokens": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "AIModelProfile"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Avgoutputtokens"
+    },
+    "avgPromptTokens": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "AIModelProfile"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Avgprompttokens"
+    },
+    "baselineCO2g": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "AIModelProfile"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Baselineco2G"
+    },
+    "baselineEnergyWh": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "AIModelProfile"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Baselineenergywh"
+    },
+    "generatedResources": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "AIModelProfile"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1784886057063_USER_240",
+          "Resources",
+          "GeneratedOER"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 0,
+      "title": "Generatedresources",
+      "type": "array"
+    },
+    "inferenceMode": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "AIModelProfile"
+        ],
+        "enum": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "EInferenceMode"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "enum": [
+            "SINGLE",
+            "BATCH",
+            "STREAMING"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Inferencemode"
+    },
+    "refAMPDevice": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "AIModelProfile"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "DeviceContext"
+        ]
+      },
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Refampdevice"
+    }
+  },
+  "title": "Aimpro_15b22dfb7efe13f1b2b1",
+  "type": "object"
+}

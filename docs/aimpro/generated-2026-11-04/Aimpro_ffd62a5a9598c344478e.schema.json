@@ -1,0 +1,14 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1784792907017_USER_186",
+      "Educators",
+      "EducatorDT"
+    ]
+  },
+  "properties": {},
+  "title": "Aimpro_ffd62a5a9598c344478e",
+  "type": "object"
+}

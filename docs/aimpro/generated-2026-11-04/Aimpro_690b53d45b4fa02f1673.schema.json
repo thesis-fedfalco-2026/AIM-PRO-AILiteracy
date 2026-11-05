@@ -1,0 +1,206 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1791888876673_USER_33",
+      "sustainability",
+      "SustainabilityProfile"
+    ]
+  },
+  "properties": {
+    "assessmentMode": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SustainabilityProfile"
+        ],
+        "enum": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "EAssessmentMode"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "enum": [
+            "ESTIMATED",
+            "MEASURED",
+            "HYBRID"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Assessmentmode"
+    },
+    "constraints": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SustainabilityProfile"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SustainabilityConstraint"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 0,
+      "title": "Constraints",
+      "type": "array"
+    },
+    "footprints": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SustainabilityProfile"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SessionFootprint"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 0,
+      "title": "Footprints",
+      "type": "array"
+    },
+    "greenCompetencies": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SustainabilityProfile"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "Competency"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 0,
+      "title": "Greencompetencies",
+      "type": "array"
+    },
+    "metrics": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SustainabilityProfile"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SustainabilityMetric"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 0,
+      "title": "Metrics",
+      "type": "array"
+    },
+    "refSPDevice": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SustainabilityProfile"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "DeviceContext"
+        ]
+      },
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Refspdevice"
+    },
+    "scenario": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SustainabilityProfile"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1783071715532_USER_192",
+          "Scenario",
+          "Scenario"
+        ]
+      },
+      "minLength": 1,
+      "title": "Scenario",
+      "type": "string"
+    },
+    "sustainabilityProfileId": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1791888876673_USER_33",
+          "sustainability",
+          "SustainabilityProfile"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Sustainabilityprofileid"
+    }
+  },
+  "required": [
+    "scenario"
+  ],
+  "title": "Aimpro_690b53d45b4fa02f1673",
+  "type": "object"
+}

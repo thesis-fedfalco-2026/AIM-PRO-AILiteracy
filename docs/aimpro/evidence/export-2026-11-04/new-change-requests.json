@@ -1,0 +1,268 @@
+{
+  "source_sha256": "e2d842b6dc88dc9b40af6d848b67d001d940df82fc48dde88b259ca6878f253a",
+  "project_findings": {
+    "learningphase": {
+      "CARDINALITY": 21
+    },
+    "assessment": {
+      "CARDINALITY": 2
+    },
+    "elena_usecase_competencies": {
+      "ENUM_VALUE": 4,
+      "UNTYPED_VOCABULARY_VALUE": 2
+    },
+    "elena_usecase_scenario": {
+      "CARDINALITY": 2
+    },
+    "sustainability": {
+      "CARDINALITY": 1,
+      "ENUM_VALUE": 1,
+      "SCALAR_EXPECTED": 1
+    },
+    "SCN01": {
+      "CARDINALITY": 1
+    }
+  },
+  "typing": [
+    {
+      "request": "CR-T1",
+      "attribute": "Competencies.Competency.ksa",
+      "proposed": "Competencies/KSA",
+      "current": "EString",
+      "status": "PENDING",
+      "blocking_values": [
+        {
+          "model": "elena_usecase_competencies",
+          "object_id": "Pointer1792169354742_USER_109",
+          "object_name": "D04",
+          "value": "SKILL"
+        }
+      ]
+    },
+    {
+      "request": "CR-T2",
+      "attribute": "Competencies.Competency.proficiency",
+      "proposed": "Competencies/Proficiency",
+      "current": "EString",
+      "status": "PENDING",
+      "blocking_values": [
+        {
+          "model": "elena_usecase_competencies",
+          "object_id": "Pointer1792169354742_USER_109",
+          "object_name": "D04",
+          "value": "FOUNDATION"
+        }
+      ]
+    },
+    {
+      "request": "CR-T3",
+      "attribute": "Certification Design.CompetencyCluster.primaryKSA",
+      "proposed": "Competencies/KSA",
+      "current": "EString",
+      "status": "PENDING",
+      "blocking_values": [
+        {
+          "model": "assessment",
+          "object_id": "Pointer1785745033695_USER_240",
+          "object_name": "cluster competency",
+          "value": "test"
+        }
+      ]
+    },
+    {
+      "request": "CR-T4",
+      "attribute": "Certification Design.CompetencyCluster.proficiency",
+      "proposed": "Competencies/Proficiency",
+      "current": "EString",
+      "status": "PENDING",
+      "blocking_values": [
+        {
+          "model": "assessment",
+          "object_id": "Pointer1785745033695_USER_240",
+          "object_name": "cluster competency",
+          "value": "test"
+        }
+      ]
+    },
+    {
+      "request": "CR-T5",
+      "attribute": "Resources.Resource.resourceType",
+      "proposed": "Resources/ResourceType",
+      "current": "EString",
+      "status": "PENDING",
+      "blocking_values": []
+    },
+    {
+      "request": "CR-T6",
+      "attribute": "Users.iSQD_Profile.context",
+      "proposed": "Users/LearningContext",
+      "current": "EString",
+      "status": "PENDING",
+      "blocking_values": []
+    },
+    {
+      "request": "CR-T7",
+      "attribute": "Scenario.iSQD_Profile.aiAttitude",
+      "proposed": "Users/Attitude",
+      "current": "EString",
+      "status": "PENDING",
+      "blocking_values": []
+    },
+    {
+      "request": "CR-T8",
+      "attribute": "Scenario.iSQD_Profile.aiConfidence",
+      "proposed": "Users/Confidence",
+      "current": "EString",
+      "status": "PENDING",
+      "blocking_values": [
+        {
+          "model": "elena_usecase_scenario",
+          "object_id": "Pointer1786055085967_USER_432",
+          "object_name": "Elena",
+          "value": "Low"
+        },
+        {
+          "model": "elena_usecase_scenario",
+          "object_id": "Pointer1786055297922_USER_466",
+          "object_name": "Antonio",
+          "value": "Medium"
+        },
+        {
+          "model": "elena_usecase_scenario",
+          "object_id": "Pointer1786055315356_USER_473",
+          "object_name": "Anita",
+          "value": "Low"
+        }
+      ]
+    },
+    {
+      "request": "CR-T9",
+      "attribute": "iSQD.LearnerPersona.attitude",
+      "proposed": "Users/Attitude",
+      "current": "EString",
+      "status": "PENDING",
+      "blocking_values": [
+        {
+          "model": "SCN01",
+          "object_id": "Pointer1793275119129_USER_33",
+          "object_name": "LearnerPersona_1",
+          "value": "Programmers"
+        }
+      ]
+    },
+    {
+      "request": "CR-T10",
+      "attribute": "iSQD.LearnerPersona.confidence",
+      "proposed": "Users/Confidence",
+      "current": "EString",
+      "status": "PENDING",
+      "blocking_values": [
+        {
+          "model": "SCN01",
+          "object_id": "Pointer1793275119129_USER_33",
+          "object_name": "LearnerPersona_1",
+          "value": "1,0"
+        }
+      ]
+    },
+    {
+      "request": "CR-S1",
+      "attribute": "Certification Design.AssessmentBlueprint.passRules",
+      "proposed": "structured type",
+      "current": "EString",
+      "status": "PENDING",
+      "observed_values": []
+    },
+    {
+      "request": "CR-S2",
+      "attribute": "Activities.RubricTask.rubricKey",
+      "proposed": "structured type",
+      "current": "EString",
+      "status": "PENDING",
+      "observed_values": []
+    },
+    {
+      "request": "CR-S3",
+      "attribute": "iSQD.LearnerPersona.role",
+      "proposed": "structured type",
+      "current": "EString",
+      "status": "PENDING",
+      "observed_values": [
+        {
+          "model": "SCN01",
+          "object_id": "Pointer1792169082292_USER_80",
+          "object_name": "LearnerPersona_0",
+          "value": "Owners and office managers of six micro-businesses"
+        }
+      ]
+    },
+    {
+      "request": "CR-S4",
+      "attribute": "Scenario.iSQD_Profile.role",
+      "proposed": "structured type",
+      "current": "EString",
+      "status": "PENDING",
+      "observed_values": [
+        {
+          "model": "elena_usecase_scenario",
+          "object_id": "Pointer1786055085967_USER_432",
+          "object_name": "Elena",
+          "value": "HR Director"
+        },
+        {
+          "model": "elena_usecase_scenario",
+          "object_id": "Pointer1786055297922_USER_466",
+          "object_name": "Antonio",
+          "value": "HR team"
+        },
+        {
+          "model": "elena_usecase_scenario",
+          "object_id": "Pointer1786055315356_USER_473",
+          "object_name": "Anita",
+          "value": "HR team"
+        }
+      ]
+    },
+    {
+      "request": "CR-S5",
+      "attribute": "Users.iSQD_Profile.role",
+      "proposed": "structured type",
+      "current": "EString",
+      "status": "PENDING",
+      "observed_values": []
+    }
+  ],
+  "scenario": [
+    {
+      "requirement": "activities",
+      "status": "SATISFIED",
+      "objects": [
+        "Pointer1792169384659_USER_127"
+      ]
+    },
+    {
+      "requirement": "competency_tags",
+      "status": "SATISFIED",
+      "objects": [
+        "Pointer1792169354742_USER_109"
+      ]
+    },
+    {
+      "requirement": "evidence_type",
+      "status": "NOT_EXPRESSIBLE"
+    },
+    {
+      "requirement": "rubric",
+      "status": "NOT_EXPRESSIBLE"
+    },
+    {
+      "requirement": "source_conformance",
+      "status": "MISSING",
+      "findings": {
+        "CARDINALITY": 1,
+        "ENUM_VALUE": 4,
+        "UNTYPED_VOCABULARY_VALUE": 2
+      }
+    }
+  ]
+}

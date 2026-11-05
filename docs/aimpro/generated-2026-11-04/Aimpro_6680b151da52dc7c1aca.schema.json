@@ -1,0 +1,78 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1781791213267_USER_197",
+      "iSQD",
+      "AICaseBasedInstruction"
+    ]
+  },
+  "properties": {
+    "inPractice": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "Activity"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Inpractice"
+    },
+    "rationale": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "Activity"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Rationale"
+    },
+    "supportActivities": {
+      "aimpro": {
+        "containment": true,
+        "declared_by": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "Activity"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1781791213267_USER_197",
+          "iSQD",
+          "Activity"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 0,
+      "title": "Supportactivities",
+      "type": "array"
+    }
+  },
+  "title": "Aimpro_6680b151da52dc7c1aca",
+  "type": "object"
+}

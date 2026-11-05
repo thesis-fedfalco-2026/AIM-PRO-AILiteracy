@@ -1,0 +1,261 @@
+{
+  "additionalProperties": false,
+  "aimpro": {
+    "abstract": false,
+    "type": [
+      "Pointer1784886057063_USER_240",
+      "Resources",
+      "OER"
+    ]
+  },
+  "properties": {
+    "ID": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "NamedElement"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Id"
+    },
+    "description": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "NamedElement"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Description"
+    },
+    "dublin_core": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1784886057063_USER_240",
+          "Resources",
+          "Resource"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Dublin Core"
+    },
+    "isSelfContained": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1784886057063_USER_240",
+          "Resources",
+          "Resource"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Isselfcontained"
+    },
+    "markdown": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1784886057063_USER_240",
+          "Resources",
+          "Resource"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Markdown"
+    },
+    "proficiency": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1784886057063_USER_240",
+          "Resources",
+          "Resource"
+        ],
+        "enum": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "Proficiency"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "enum": [
+            "Foundational",
+            "Intermediate",
+            "Advanced"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Proficiency"
+    },
+    "provenance": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1784886057063_USER_240",
+          "Resources",
+          "OER"
+        ],
+        "enum": [
+          "Pointer1784886057063_USER_240",
+          "Resources",
+          "Provenance"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "enum": [
+            "Repo",
+            "License",
+            "Fetched"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Provenance"
+    },
+    "resourceType": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1784886057063_USER_240",
+          "Resources",
+          "Resource"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Resourcetype"
+    },
+    "source_uri": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1784886057063_USER_240",
+          "Resources",
+          "Resource"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source Uri"
+    },
+    "tags": {
+      "aimpro": {
+        "containment": false,
+        "declared_by": [
+          "Pointer1784886057063_USER_240",
+          "Resources",
+          "Resource"
+        ],
+        "kind": "references",
+        "target": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "Competency"
+        ]
+      },
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Tags",
+      "type": "array"
+    },
+    "title": {
+      "aimpro": {
+        "declared_by": [
+          "Pointer1780748811132_USER_248",
+          "Competencies",
+          "NamedElement"
+        ],
+        "kind": "attributes"
+      },
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Title"
+    }
+  },
+  "required": [
+    "tags"
+  ],
+  "title": "Aimpro_7535b796a7262e22647c",
+  "type": "object"
+}
