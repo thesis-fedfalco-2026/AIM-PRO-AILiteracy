@@ -132,21 +132,31 @@ def task_result(task: AuthorizedTask, status: str, *, code: str = "", output: Wo
     return make_entity("TaskResult", task.record.id + "/result", fields, origin="OBSERVED_EVENT")
 
 
-def check_worker_output(task: AuthorizedTask, output: WorkerOutput, context: RunContext,
-                        *, review: SemanticReview | None = None) -> Entity:
-    if output.kind != task.expected_output or review is None or review.verdict != "ACCEPT":
-        return task_result(task, "FAILED", code="R18")
+def worker_output_violation(task: AuthorizedTask, output: WorkerOutput) -> str:
+    """The first deterministic admissibility code the worker output fails, or "" if none."""
+    if output.kind != task.expected_output:
+        return "R18"
     permitted = {r.ref for r in task.resources}
     retrieved = {doc["metadata"].get("resource_key") for doc in (task.evidence or {}).get("documents", [])}
     for citation in output.citations:
         if citation.source.type != "Resource" or citation.source not in permitted or resource_key(citation.source.id, citation.source.version) not in retrieved:
-            return task_result(task, "FAILED", code="R09")
+            return "R09"
     if not set(output.coverage) <= set(task.coverage):
-        return task_result(task, "FAILED", code="R07")
+        return "R07"
     if set(task.coverage) - set(output.coverage) and not output.findings:
-        return task_result(task, "FAILED", code="R07")
+        return "R07"
     if output.proposals and (output.kind == "SUPPORT_MATERIAL" or task.specialization.fields["role"] not in {"CURATOR", "EVALUATOR"}):
-        return task_result(task, "FAILED", code="R16")
+        return "R16"
+    return ""
+
+
+def check_worker_output(task: AuthorizedTask, output: WorkerOutput, context: RunContext,
+                        *, review: SemanticReview | None = None) -> Entity:
+    code = worker_output_violation(task, output)
+    if not code and (review is None or review.verdict != "ACCEPT"):
+        code = "R18"
+    if code:
+        return task_result(task, "FAILED", code=code)
     return task_result(task, "SUCCEEDED", output=output)
 
 

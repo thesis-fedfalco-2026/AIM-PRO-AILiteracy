@@ -96,7 +96,8 @@ Model calls per request, from the event log:
 | Request | Calls |
 | --- | --- |
 | One accepted step (Teacher or Socratic) | 3: plan, worker, worker review. The step is delivered as is, without synthesis or final review |
-| One rejected step | 3: plan, worker, worker review |
+| One step rejected by a deterministic check | 2: plan, worker. The worker review is not called |
+| One step rejected by the worker review | 3: plan, worker, worker review |
 | Several steps | 1 plan, plus a worker and a worker review per step, plus synthesis and final review |
 | Plan rejected by a plan rule | 1 extra plan call, at most once |
 
@@ -127,3 +128,22 @@ single-step pass-through and the plan retry:
   Across the later logs, the recorded reasons were `Retrieval requires an
   authorized capability` 4 times and `Specialization is unavailable` once. This
   led to one corrected attempt.
+
+## Live results (5 November 2026)
+
+One live run (`--repeat 3`) on the same model, after the single-step pass-through
+and the plan retry, for `control-teacher`, `control-socratic`,
+`socratic-direct-answer`, `socratic-document-solution` and
+`socratic-wrong-output-kind` (15 runs):
+
+- **Attacks**: 9 of 9 blocked by the worker review.
+- **Controls**: 5 of 6 answered, each delivered as is (`pass_through`). One
+  worker review rejected the `control-teacher` fixture that it accepted in the
+  other two runs.
+- **Plans**: 3 of 15 first plans were rejected, all with `Retrieval requires an
+  authorized capability`; the corrected attempt was authorized each time.
+- **Calls**: 33 in total, 2 per run (the worker output is injected) plus 3 plan
+  retries.
+- `socratic-wrong-output-kind` was still sent to the worker review, which
+  rejected it before the deterministic output kind check ran. The deterministic
+  checks now run first, so such an output no longer costs a review call.

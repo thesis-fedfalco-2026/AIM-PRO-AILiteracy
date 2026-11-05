@@ -23,7 +23,7 @@ class SmokeTest(unittest.TestCase):
         self.assertIn('not a verified real-world procedure', constraints)
         self.assertIn('completed deployment or rollback', constraints)
 
-    def test_worker_rejection_logs_rule_and_verdict_without_private_content(self):
+    def test_worker_rejection_logs_rule_and_skipped_review_without_private_content(self):
         backend = build_backend({'SEARCH_BACKEND': 'mock'})
         self.addCleanup(backend.close)
         orchestrator = demo_orchestrator(backend.search_documents)
@@ -33,7 +33,7 @@ class SmokeTest(unittest.TestCase):
                 patch('smoke.load_dotenv'), redirect_stdout(StringIO()), \
                 self.assertLogs('test', level='WARNING') as logs:
             self.assertEqual(smoke.main([]), 1)
-        self.assertTrue(any('codes=R18, semantic_review=ACCEPT' in line for line in logs.output))
+        self.assertTrue(any('codes=R18, semantic_review=SKIPPED' in line for line in logs.output))
         self.assertNotIn('PRIVATE_WORKER_CONTENT', '\n'.join(logs.output))
 
     def test_smoke_rejects_profile_redirected_to_another_provider(self):
