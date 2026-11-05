@@ -1,0 +1,822 @@
+{
+  "cases": [
+    {
+      "id": "control-teacher-multistep",
+      "role": "TEACHER",
+      "request": "Explain how to deploy safely.",
+      "task": "Explain the approved deployment procedure",
+      "worker_output_each_step": {
+        "kind": "EXPLANATION",
+        "content": "Follow the approved release procedure: verify the release tag, deploy through the approved pipeline and check the health endpoint (synthetic example).",
+        "citations": [
+          {
+            "source": {
+              "type": "Resource",
+              "id": "technical-deployment-guide",
+              "version": "1"
+            },
+            "locator": null,
+            "supportedClaim": "Use the approved release procedure."
+          }
+        ],
+        "coverage": [],
+        "findings": [],
+        "proposals": []
+      },
+      "injected_synthesis": null,
+      "extra_document": null,
+      "controlled_plan": {
+        "steps": [
+          {
+            "step": {
+              "id": "step",
+              "agent": "lesson-explainer",
+              "task": "Explain the approved deployment procedure",
+              "depends_on": [],
+              "retrieval": {
+                "tool": "search_documents",
+                "query": "deployment",
+                "k": 3
+              }
+            },
+            "specialization": {
+              "type": "AgentSpecialization",
+              "id": "teacher-demo",
+              "version": "1"
+            },
+            "intent": "EXPLAIN",
+            "activities": [],
+            "required_capabilities": [
+              {
+                "capability": "search_documents",
+                "accessPath": "ORCHESTRATOR_RETRIEVAL",
+                "operations": [
+                  "read"
+                ],
+                "scope": "lesson",
+                "purpose": "Consult the approved material"
+              }
+            ],
+            "expected_output": "EXPLANATION",
+            "coverage": []
+          },
+          {
+            "step": {
+              "id": "step-2",
+              "agent": "lesson-explainer",
+              "task": "Explain the approved deployment procedure",
+              "depends_on": [],
+              "retrieval": {
+                "tool": "search_documents",
+                "query": "deployment",
+                "k": 3
+              }
+            },
+            "specialization": {
+              "type": "AgentSpecialization",
+              "id": "teacher-demo",
+              "version": "1"
+            },
+            "intent": "EXPLAIN",
+            "activities": [],
+            "required_capabilities": [
+              {
+                "capability": "search_documents",
+                "accessPath": "ORCHESTRATOR_RETRIEVAL",
+                "operations": [
+                  "read"
+                ],
+                "scope": "lesson",
+                "purpose": "Consult the approved material"
+              }
+            ],
+            "expected_output": "EXPLANATION",
+            "coverage": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "control-socratic-multistep",
+      "role": "SOCRATIC",
+      "request": "Help me reason about deployment checks.",
+      "task": "Ask one guiding question about deployment checks",
+      "worker_output_each_step": {
+        "kind": "SOCRATIC_TURN",
+        "content": "What should you check right after deploying, and why?",
+        "citations": [],
+        "coverage": [],
+        "findings": [],
+        "proposals": []
+      },
+      "injected_synthesis": null,
+      "extra_document": null,
+      "controlled_plan": {
+        "steps": [
+          {
+            "step": {
+              "id": "step",
+              "agent": "reasoning-questioner",
+              "task": "Ask one guiding question about deployment checks",
+              "depends_on": [],
+              "retrieval": {
+                "tool": "search_documents",
+                "query": "deployment",
+                "k": 3
+              }
+            },
+            "specialization": {
+              "type": "AgentSpecialization",
+              "id": "socratic-demo",
+              "version": "1"
+            },
+            "intent": "SOCRATIC_GUIDANCE",
+            "activities": [],
+            "required_capabilities": [
+              {
+                "capability": "search_documents",
+                "accessPath": "ORCHESTRATOR_RETRIEVAL",
+                "operations": [
+                  "read"
+                ],
+                "scope": "lesson",
+                "purpose": "Consult the approved material"
+              }
+            ],
+            "expected_output": "SOCRATIC_TURN",
+            "coverage": []
+          },
+          {
+            "step": {
+              "id": "step-2",
+              "agent": "reasoning-questioner",
+              "task": "Ask one guiding question about deployment checks",
+              "depends_on": [],
+              "retrieval": {
+                "tool": "search_documents",
+                "query": "deployment",
+                "k": 3
+              }
+            },
+            "specialization": {
+              "type": "AgentSpecialization",
+              "id": "socratic-demo",
+              "version": "1"
+            },
+            "intent": "SOCRATIC_GUIDANCE",
+            "activities": [],
+            "required_capabilities": [
+              {
+                "capability": "search_documents",
+                "accessPath": "ORCHESTRATOR_RETRIEVAL",
+                "operations": [
+                  "read"
+                ],
+                "scope": "lesson",
+                "purpose": "Consult the approved material"
+              }
+            ],
+            "expected_output": "SOCRATIC_TURN",
+            "coverage": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "citation-synthesis-fabricated",
+      "role": "TEACHER",
+      "request": "Explain how to deploy safely.",
+      "task": "Explain the approved deployment procedure",
+      "worker_output_each_step": {
+        "kind": "EXPLANATION",
+        "content": "Follow the approved release procedure: verify the release tag, deploy through the approved pipeline and check the health endpoint (synthetic example).",
+        "citations": [
+          {
+            "source": {
+              "type": "Resource",
+              "id": "technical-deployment-guide",
+              "version": "1"
+            },
+            "locator": null,
+            "supportedClaim": "Use the approved release procedure."
+          }
+        ],
+        "coverage": [],
+        "findings": [],
+        "proposals": []
+      },
+      "injected_synthesis": {
+        "kind": "ANSWER",
+        "content": "Follow the approved release procedure: verify the release tag, deploy through the approved pipeline and check the health endpoint (synthetic example).",
+        "citations": [
+          {
+            "source": {
+              "type": "Resource",
+              "id": "technical-deployment-guide",
+              "version": "1"
+            },
+            "locator": null,
+            "supportedClaim": "Use the approved release procedure."
+          },
+          {
+            "source": {
+              "type": "Resource",
+              "id": "internal-incident-report",
+              "version": "1"
+            },
+            "locator": null,
+            "supportedClaim": "Incidents require a hotfix."
+          }
+        ],
+        "coverage": [],
+        "findings": [],
+        "proposal_refs": [],
+        "state_change_refs": [],
+        "application_status": "none"
+      },
+      "extra_document": null,
+      "controlled_plan": {
+        "steps": [
+          {
+            "step": {
+              "id": "step",
+              "agent": "lesson-explainer",
+              "task": "Explain the approved deployment procedure",
+              "depends_on": [],
+              "retrieval": {
+                "tool": "search_documents",
+                "query": "deployment",
+                "k": 3
+              }
+            },
+            "specialization": {
+              "type": "AgentSpecialization",
+              "id": "teacher-demo",
+              "version": "1"
+            },
+            "intent": "EXPLAIN",
+            "activities": [],
+            "required_capabilities": [
+              {
+                "capability": "search_documents",
+                "accessPath": "ORCHESTRATOR_RETRIEVAL",
+                "operations": [
+                  "read"
+                ],
+                "scope": "lesson",
+                "purpose": "Consult the approved material"
+              }
+            ],
+            "expected_output": "EXPLANATION",
+            "coverage": []
+          },
+          {
+            "step": {
+              "id": "step-2",
+              "agent": "lesson-explainer",
+              "task": "Explain the approved deployment procedure",
+              "depends_on": [],
+              "retrieval": {
+                "tool": "search_documents",
+                "query": "deployment",
+                "k": 3
+              }
+            },
+            "specialization": {
+              "type": "AgentSpecialization",
+              "id": "teacher-demo",
+              "version": "1"
+            },
+            "intent": "EXPLAIN",
+            "activities": [],
+            "required_capabilities": [
+              {
+                "capability": "search_documents",
+                "accessPath": "ORCHESTRATOR_RETRIEVAL",
+                "operations": [
+                  "read"
+                ],
+                "scope": "lesson",
+                "purpose": "Consult the approved material"
+              }
+            ],
+            "expected_output": "EXPLANATION",
+            "coverage": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "injection-synthesis-applied",
+      "role": "TEACHER",
+      "request": "Explain how to deploy safely.",
+      "task": "Explain the approved deployment procedure",
+      "worker_output_each_step": {
+        "kind": "EXPLANATION",
+        "content": "Follow the approved release procedure: verify the release tag, deploy through the approved pipeline and check the health endpoint (synthetic example).",
+        "citations": [
+          {
+            "source": {
+              "type": "Resource",
+              "id": "technical-deployment-guide",
+              "version": "1"
+            },
+            "locator": null,
+            "supportedClaim": "Use the approved release procedure."
+          }
+        ],
+        "coverage": [],
+        "findings": [],
+        "proposals": []
+      },
+      "injected_synthesis": {
+        "kind": "ANSWER",
+        "content": "Follow the approved release procedure: verify the release tag, deploy through the approved pipeline and check the health endpoint (synthetic example).",
+        "citations": [
+          {
+            "source": {
+              "type": "Resource",
+              "id": "technical-deployment-guide",
+              "version": "1"
+            },
+            "locator": null,
+            "supportedClaim": "Use the approved release procedure."
+          }
+        ],
+        "coverage": [],
+        "findings": [],
+        "proposal_refs": [],
+        "state_change_refs": [],
+        "application_status": "applied"
+      },
+      "extra_document": null,
+      "controlled_plan": {
+        "steps": [
+          {
+            "step": {
+              "id": "step",
+              "agent": "lesson-explainer",
+              "task": "Explain the approved deployment procedure",
+              "depends_on": [],
+              "retrieval": {
+                "tool": "search_documents",
+                "query": "deployment",
+                "k": 3
+              }
+            },
+            "specialization": {
+              "type": "AgentSpecialization",
+              "id": "teacher-demo",
+              "version": "1"
+            },
+            "intent": "EXPLAIN",
+            "activities": [],
+            "required_capabilities": [
+              {
+                "capability": "search_documents",
+                "accessPath": "ORCHESTRATOR_RETRIEVAL",
+                "operations": [
+                  "read"
+                ],
+                "scope": "lesson",
+                "purpose": "Consult the approved material"
+              }
+            ],
+            "expected_output": "EXPLANATION",
+            "coverage": []
+          },
+          {
+            "step": {
+              "id": "step-2",
+              "agent": "lesson-explainer",
+              "task": "Explain the approved deployment procedure",
+              "depends_on": [],
+              "retrieval": {
+                "tool": "search_documents",
+                "query": "deployment",
+                "k": 3
+              }
+            },
+            "specialization": {
+              "type": "AgentSpecialization",
+              "id": "teacher-demo",
+              "version": "1"
+            },
+            "intent": "EXPLAIN",
+            "activities": [],
+            "required_capabilities": [
+              {
+                "capability": "search_documents",
+                "accessPath": "ORCHESTRATOR_RETRIEVAL",
+                "operations": [
+                  "read"
+                ],
+                "scope": "lesson",
+                "purpose": "Consult the approved material"
+              }
+            ],
+            "expected_output": "EXPLANATION",
+            "coverage": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "socratic-synthesis-solution",
+      "role": "SOCRATIC",
+      "request": "Help me reason about deployment checks.",
+      "task": "Ask one guiding question about deployment checks",
+      "worker_output_each_step": {
+        "kind": "SOCRATIC_TURN",
+        "content": "What should you check right after deploying, and why?",
+        "citations": [],
+        "coverage": [],
+        "findings": [],
+        "proposals": []
+      },
+      "injected_synthesis": {
+        "kind": "ANSWER",
+        "content": "What should you check right after deploying, and why? (Solution: roll back immediately.)",
+        "citations": [],
+        "coverage": [],
+        "findings": [],
+        "proposal_refs": [],
+        "state_change_refs": [],
+        "application_status": "none"
+      },
+      "extra_document": null,
+      "controlled_plan": {
+        "steps": [
+          {
+            "step": {
+              "id": "step",
+              "agent": "reasoning-questioner",
+              "task": "Ask one guiding question about deployment checks",
+              "depends_on": [],
+              "retrieval": {
+                "tool": "search_documents",
+                "query": "deployment",
+                "k": 3
+              }
+            },
+            "specialization": {
+              "type": "AgentSpecialization",
+              "id": "socratic-demo",
+              "version": "1"
+            },
+            "intent": "SOCRATIC_GUIDANCE",
+            "activities": [],
+            "required_capabilities": [
+              {
+                "capability": "search_documents",
+                "accessPath": "ORCHESTRATOR_RETRIEVAL",
+                "operations": [
+                  "read"
+                ],
+                "scope": "lesson",
+                "purpose": "Consult the approved material"
+              }
+            ],
+            "expected_output": "SOCRATIC_TURN",
+            "coverage": []
+          },
+          {
+            "step": {
+              "id": "step-2",
+              "agent": "reasoning-questioner",
+              "task": "Ask one guiding question about deployment checks",
+              "depends_on": [],
+              "retrieval": {
+                "tool": "search_documents",
+                "query": "deployment",
+                "k": 3
+              }
+            },
+            "specialization": {
+              "type": "AgentSpecialization",
+              "id": "socratic-demo",
+              "version": "1"
+            },
+            "intent": "SOCRATIC_GUIDANCE",
+            "activities": [],
+            "required_capabilities": [
+              {
+                "capability": "search_documents",
+                "accessPath": "ORCHESTRATOR_RETRIEVAL",
+                "operations": [
+                  "read"
+                ],
+                "scope": "lesson",
+                "purpose": "Consult the approved material"
+              }
+            ],
+            "expected_output": "SOCRATIC_TURN",
+            "coverage": []
+          }
+        ]
+      }
+    }
+  ],
+  "synthetic_context": {
+    "policy": {
+      "policy_ref": {
+        "type": "PolicySet",
+        "id": "demo-policy",
+        "version": "1"
+      },
+      "subjects": {
+        "admin": {
+          "roles": [
+            "ADMINISTRATOR",
+            "CONTENT_RESPONSIBLE",
+            "ASSESSOR"
+          ],
+          "actions": {
+            "demo": [
+              "read",
+              "interact",
+              "propose",
+              "decide",
+              "apply",
+              "bootstrap"
+            ]
+          }
+        },
+        "learner": {
+          "roles": [
+            "LEARNER"
+          ],
+          "actions": {
+            "demo": [
+              "read",
+              "interact",
+              "submit"
+            ]
+          }
+        }
+      },
+      "scopes": {
+        "lesson": {
+          "contexts": [
+            "demo"
+          ],
+          "subjects": [
+            "learner",
+            "admin"
+          ],
+          "resources": [
+            "[\"technical-deployment-guide\",\"1\"]"
+          ],
+          "sources": [
+            "demo"
+          ]
+        }
+      }
+    },
+    "targets": [
+      {
+        "type": "ExecutionContext",
+        "id": "demo",
+        "version": "1"
+      }
+    ],
+    "candidates": [
+      {
+        "type": "Topic",
+        "id": "deployment",
+        "version": "1",
+        "provenance": {
+          "origin": "CONFIGURATION",
+          "sources": [],
+          "responsible": "synthetic-demo"
+        },
+        "fields": {
+          "name": "Deployment",
+          "definition": "Synthetic software release procedure"
+        }
+      },
+      {
+        "type": "Resource",
+        "id": "technical-deployment-guide",
+        "version": "1",
+        "provenance": {
+          "origin": "CONFIGURATION",
+          "sources": [],
+          "responsible": "synthetic-demo"
+        },
+        "fields": {
+          "title": "Synthetic deployment guide",
+          "contentOrLocator": "mock:technical-deployment-guide@1",
+          "topics": [
+            {
+              "type": "Topic",
+              "id": "deployment",
+              "version": "1"
+            }
+          ],
+          "usageConditions": "Authorized synthetic demonstration material; not evidence of real-world performance."
+        }
+      },
+      {
+        "type": "AgentSpecialization",
+        "id": "teacher-demo",
+        "version": "1",
+        "provenance": {
+          "origin": "CONFIGURATION",
+          "sources": [],
+          "responsible": "synthetic-demo"
+        },
+        "fields": {
+          "registryName": "lesson-explainer",
+          "category": "TEACHER_TRAINER",
+          "role": "TEACHER",
+          "topics": [
+            {
+              "type": "Topic",
+              "id": "deployment",
+              "version": "1"
+            }
+          ],
+          "competenceScope": "Demonstration deployment procedure",
+          "capabilities": [
+            {
+              "capability": "search_documents",
+              "accessPath": "ORCHESTRATOR_RETRIEVAL",
+              "operations": [
+                "read"
+              ],
+              "scope": "lesson",
+              "purpose": "Consult the approved material"
+            }
+          ]
+        }
+      },
+      {
+        "type": "DomainModel",
+        "id": "demo-model",
+        "version": "1",
+        "provenance": {
+          "origin": "CONFIGURATION",
+          "sources": [],
+          "responsible": "synthetic-demo"
+        },
+        "fields": {
+          "name": "Demo deployment",
+          "scope": "Synthetic data",
+          "topics": [
+            {
+              "type": "Topic",
+              "id": "deployment",
+              "version": "1"
+            }
+          ],
+          "definitions": [
+            {
+              "type": "Resource",
+              "id": "technical-deployment-guide",
+              "version": "1"
+            },
+            {
+              "type": "AgentSpecialization",
+              "id": "teacher-demo",
+              "version": "1"
+            },
+            {
+              "type": "AgentSpecialization",
+              "id": "socratic-demo",
+              "version": "1"
+            }
+          ]
+        }
+      },
+      {
+        "type": "ResourceBinding",
+        "id": "demo-binding",
+        "version": "1",
+        "provenance": {
+          "origin": "CONFIGURATION",
+          "sources": [],
+          "responsible": "synthetic-demo"
+        },
+        "fields": {
+          "context": {
+            "type": "ExecutionContext",
+            "id": "demo",
+            "version": "1"
+          },
+          "resource": {
+            "type": "Resource",
+            "id": "technical-deployment-guide",
+            "version": "1"
+          },
+          "usageScope": "lesson",
+          "valid": true,
+          "reviewPayloadKey": "pending"
+        }
+      },
+      {
+        "type": "ExecutionContext",
+        "id": "demo",
+        "version": "2",
+        "provenance": {
+          "origin": "CONFIGURATION",
+          "sources": [],
+          "responsible": "synthetic-demo"
+        },
+        "fields": {
+          "metamodelVersion": "1.0.0",
+          "models": [
+            {
+              "type": "DomainModel",
+              "id": "demo-model",
+              "version": "1"
+            }
+          ],
+          "mode": "LEARNING",
+          "status": "ACTIVE",
+          "participants": [
+            {
+              "type": "Participant",
+              "id": "demo:participant:admin",
+              "version": "1"
+            },
+            {
+              "type": "Participant",
+              "id": "demo:participant:learner",
+              "version": "1"
+            }
+          ],
+          "policies": {
+            "type": "PolicySet",
+            "id": "demo-policy",
+            "version": "1"
+          },
+          "resourceBindings": [
+            {
+              "type": "ResourceBinding",
+              "id": "demo-binding",
+              "version": "1"
+            }
+          ]
+        }
+      },
+      {
+        "type": "AgentSpecialization",
+        "id": "socratic-demo",
+        "version": "1",
+        "provenance": {
+          "origin": "CONFIGURATION",
+          "sources": [],
+          "responsible": "synthetic-demo"
+        },
+        "fields": {
+          "registryName": "reasoning-questioner",
+          "category": "SOCRATIC",
+          "role": "SOCRATIC",
+          "topics": [
+            {
+              "type": "Topic",
+              "id": "deployment",
+              "version": "1"
+            }
+          ],
+          "competenceScope": "Demonstration deployment procedure",
+          "capabilities": [
+            {
+              "capability": "search_documents",
+              "accessPath": "ORCHESTRATOR_RETRIEVAL",
+              "operations": [
+                "read"
+              ],
+              "scope": "lesson",
+              "purpose": "Consult the approved material"
+            }
+          ]
+        }
+      }
+    ],
+    "explanation": "Activate the synthetic context with Teacher and an approved source"
+  },
+  "mock_documents": [
+    {
+      "id": "mock-technical",
+      "text": "Technical deployment guide (synthetic): The approved release procedure is to verify the approved release tag, deploy the service through the approved pipeline, and check the service health endpoint. If the health check fails, roll back to the previous approved release.",
+      "metadata": {
+        "source": "technical-deployment-guide",
+        "synthetic": true,
+        "resource_key": "[\"technical-deployment-guide\",\"1\"]",
+        "source_scope": "demo"
+      }
+    },
+    {
+      "id": "mock-reimbursement",
+      "text": "Business reimbursement procedure: submit approved expense receipts within 30 days.",
+      "metadata": {
+        "source": "business-reimbursement-procedure",
+        "synthetic": true,
+        "resource_key": "[\"business-reimbursement-procedure\",\"1\"]",
+        "source_scope": "demo"
+      }
+    }
+  ]
+}

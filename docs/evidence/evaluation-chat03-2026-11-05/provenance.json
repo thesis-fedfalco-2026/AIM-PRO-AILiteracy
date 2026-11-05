@@ -1,0 +1,61 @@
+{
+  "kind": "authorized-controlled-synthesis-evaluation",
+  "reviewed_on": "2026-11-05",
+  "run_source_commit": "71d810bc4ae2cb10c10114694d439e8c69e0482b",
+  "source_dirty": false,
+  "implementation_sha256": "b849a375eac7b70fde38f54142224fb612ff4c74953dfbdf29b34e6584423e55",
+  "configuration_sha256": "f5732ba4dde0945e68e366f2b9d3fb946f7cb7e1010894387dfebe07c4e4258a",
+  "transmission_manifest_sha256": "847ea5c400f4a4d249d1e35259ee38051a70fb00945cb2780559fc0d75f4a90d",
+  "archive_runner_sha256": "e524633485c4c0fd18c6e4d2aa13e6c4d6e490914f979eb62aa3afbb8d6d1989",
+  "started_at_utc": "2026-11-05T11:58:41.405+00:00",
+  "finished_at_utc": "2026-11-05T12:27:04.646+00:00",
+  "actual_requested_and_observed_model": "nvidia/nemotron-3.5-super-vl:free",
+  "observed_upstream_provider": "Nvidia",
+  "model_transmission_authorization": {
+    "owner_approved_specific_packet": true,
+    "authorization_record_retained_locally": ".cache/evaluation/chat03-packet/live-authorized/authorization.json",
+    "authorization_record_sha256": "77abdbf8513c1414824d20258359e05e5720a92ef333f18e0c837db06adfd570",
+    "scope": {
+      "trials": 15,
+      "repeat_per_case": 3,
+      "expected_provider_calls": 51,
+      "expected_logical_calls": 105,
+      "max_http_attempts_including_native_retries": 75,
+      "http_admission_window_seconds": 5400,
+      "per_attempt_timeout_seconds": 600,
+      "max_tokens": null,
+      "budget_usd": 0,
+      "allow_paid": false,
+      "native_sdk_retries": 2,
+      "native_sse_retries": 2,
+      "whole_trial_retries": 0,
+      "telemetry_enabled": false
+    },
+    "no_additional_trial_or_whole_run_retry": true
+  },
+  "private_archive": ".cache/evaluation/chat03-packet/live-authorized/",
+  "original_archive_ledger_sha256": "8a1a28a467840c0ddd3d156662cde20935d28788a334f020e197a64f8a577003",
+  "original_report": {
+    "private_path": ".cache/evaluation/chat03-packet/live-authorized/report.json",
+    "published_file": "live-controlled.json",
+    "sha256": "a256ca344b10d198c4e7188612ffcef819e7ca6f69ed2a2f47dc0c7af79aa60a"
+  },
+  "original_event_log": {
+    "private_path": ".cache/evaluation/chat03-packet/live-authorized/events.jsonl",
+    "published_file": "events.jsonl",
+    "sha256": "3b9fc21baff6724be4803a3b46acae8d0b2abd07433355433d44444ea0c2009a"
+  },
+  "private_evidence_not_published": [
+    "Raw prompts and full generated responses",
+    "Raw HTTP request/response bytes including reasoning streams",
+    "Synthetic SQLite databases",
+    "Private exception records and owner authorization message"
+  ],
+  "publication_limits": [
+    "Only these synthetic fixtures and the configured model were evaluated.",
+    "All plans and worker outputs were injected; benign synthesis and every semantic review were live.",
+    "Two benign Socratic requests failed after inadequate synthesis; this is not a reviewer-only false-positive rate.",
+    "Semantic review accepted one fabricated citation and all three claimed application states; deterministic checks blocked them.",
+    "Transmission authorization does not constitute human approval of generated content or a claim of general robustness."
+  ]
+}

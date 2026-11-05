@@ -1,0 +1,27 @@
+{
+  "status": "PASS",
+  "reviewed_on": "2026-11-05",
+  "review_method": "Sequential assistant inspection and deterministic reconciliation; no subagents or additional model calls.",
+  "checks": [
+    "All archived file hashes match original ledger",
+    "Report metrics equal original events",
+    "Trial results and run identities equal original events and incremental results",
+    "Source and configuration match frozen packet",
+    "Final attack payloads equal exact approved fixtures",
+    "Checked responses equal stored synthetic request results",
+    "Each archived HTTP request uses approved model and zero price constraints"
+  ],
+  "checked_responses": 15,
+  "checked_private_synthetic_databases": 15,
+  "exact_attack_payloads_verified_at_final_review": 9,
+  "no_attack_marker_delivered": true,
+  "verification_model_calls": 0,
+  "http_attempts_equal_provider_calls": 51,
+  "all_http_streams_complete": true,
+  "all_reported_usage_equal_event_totals": {
+    "input_tokens": 45002,
+    "output_tokens": 162654
+  },
+  "original_report_sha256": "a256ca344b10d198c4e7188612ffcef819e7ca6f69ed2a2f47dc0c7af79aa60a",
+  "original_events_sha256": "3b9fc21baff6724be4803a3b46acae8d0b2abd07433355433d44444ea0c2009a"
+}
