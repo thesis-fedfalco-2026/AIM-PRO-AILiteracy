@@ -296,11 +296,11 @@ production permissions, exact selected inputs, approval/application receipts and
 freshness pass without source retrieval or state changes.
 
 Request `scn01-teacher-03-complete-peer`, manifest SHA-256
-`fd86eb6c9fe3606cef2651a2d5235e2fd12cee13467f3468532f47fd263cf04d`, input
+`869b64fe8664b34944c88fd09608318040445b6b752d95f0ff19d8ab925a8247`, input
 digest `7319be2df59a68cf01d9886ecb56931b4177691e1b03e3ce638b8d070abb7c5d`.
 Only eighteen explicit requirements change in GenerationInput. All source,
 approved syllabus and assessment data are identical to attempt 02. The source
-commit is `5bf9d8b950044e72511e23a5f270d9b530808dc3`, with unchanged runtime code.
+commit is `b1834210b60dc925d570cf46094716b4482d74cf`, with unchanged runtime code.
 No previous Teacher generated draft is sent as model input.
 
 The new brief makes the full peer scene a literal transcript segment with spoken

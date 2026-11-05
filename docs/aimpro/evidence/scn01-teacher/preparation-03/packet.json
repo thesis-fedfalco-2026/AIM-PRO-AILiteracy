@@ -1,6 +1,6 @@
 {
   "status": "AWAITING_EXPLICIT_MODEL_TRANSMISSION_AUTHORIZATION",
-  "source_commit": "5bf9d8b950044e72511e23a5f270d9b530808dc3",
+  "source_commit": "b1834210b60dc925d570cf46094716b4482d74cf",
   "preparation_scope": "OFFLINE_ONLY_NO_MODELS",
   "context": {
     "type": "ExecutionContext",
@@ -43,7 +43,7 @@
   "previous_owner_decision": "REQUEST_REVISION",
   "previous_result": "FAILURE",
   "prior_generated_draft_sent_to_models": false,
-  "manifest_sha256": "fd86eb6c9fe3606cef2651a2d5235e2fd12cee13467f3468532f47fd263cf04d",
+  "manifest_sha256": "869b64fe8664b34944c88fd09608318040445b6b752d95f0ff19d8ab925a8247",
   "command": {
     "project": {
       "type": "Resource",

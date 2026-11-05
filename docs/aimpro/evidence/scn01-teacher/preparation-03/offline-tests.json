@@ -1,7 +1,7 @@
 {
   "tests": 26,
   "result": "PASS",
-  "seconds": 3.433,
+  "seconds": 3.977,
   "network_and_dns_blocked": true,
   "model_endpoints_reached": 0,
   "http_responses": "Synthetic in disposable copies only; no real provider/model execution.",
@@ -19,5 +19,6 @@
     "missing asset and Lead rejection",
     "wrong endpoint/model, tools, oversized body, cache tier and second-transmission guards"
   ],
-  "pedagogical_validity_established": false
+  "pedagogical_validity_established": false,
+  "source_excerpt_rendering_preserves_exact_text": true
 }

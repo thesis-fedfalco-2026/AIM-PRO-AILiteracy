@@ -152,9 +152,9 @@ preserves every post-failure row and the complete second archive inventory.
 Production refs/receipts/permissions/freshness above are unchanged and valid.
 
 - Request: `scn01-teacher-03-complete-peer`.
-- Manifest SHA-256: `fd86eb6c9fe3606cef2651a2d5235e2fd12cee13467f3468532f47fd263cf04d`.
+- Manifest SHA-256: `869b64fe8664b34944c88fd09608318040445b6b752d95f0ff19d8ab925a8247`.
 - Input digest: `7319be2df59a68cf01d9886ecb56931b4177691e1b03e3ce638b8d070abb7c5d`.
-- Source commit: `5bf9d8b950044e72511e23a5f270d9b530808dc3`; runtime code unchanged.
+- Source commit: `b1834210b60dc925d570cf46094716b4482d74cf`; runtime code unchanged.
 - Exact future command: `LANGFUSE_ENABLED=false CREWAI_DISABLE_TELEMETRY=true CREWAI_TRACING_ENABLED=false .venv/bin/python .cache/aimpro-examples/teacher/scn01-teacher-3-complete-peer/run.py`.
 - Eighteen requirements; full peer scene with identical full prompt/email blocks,
   sole tone instruction, fictional-only reuse and distinct gap provenance.

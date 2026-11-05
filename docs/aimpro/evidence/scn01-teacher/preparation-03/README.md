@@ -12,7 +12,7 @@ The earlier authorizations do not cover this packet.
   sockets/DNS blocked.
 
 Request: `scn01-teacher-03-complete-peer`. Manifest SHA-256:
-`fd86eb6c9fe3606cef2651a2d5235e2fd12cee13467f3468532f47fd263cf04d`.
+`869b64fe8664b34944c88fd09608318040445b6b752d95f0ff19d8ab925a8247`.
 Input digest:
 `7319be2df59a68cf01d9886ecb56931b4177691e1b03e3ce638b8d070abb7c5d`.
 
@@ -44,3 +44,9 @@ schemas, requirement and guard details at the path in packet.json. Credentials,
 source excerpt text, full inputs/prompts, databases and raw traffic stay local.
 The first human REQUEST_REVISION and second actual FAILURE remain unchanged.
 #10 stays open and Chat 06 must not start with Teacher prerequisites unresolved.
+
+The final preparation renders excerpts with nested Markdown fences intact.
+This updates only the review rendering/manifest and its source-commit metadata;
+requirements and production input are unchanged. Superseded preparation manifests
+remain in the local preparation-iterations archive. No live consent existed or
+was reused.
