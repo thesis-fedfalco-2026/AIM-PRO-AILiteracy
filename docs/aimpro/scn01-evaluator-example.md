@@ -16,6 +16,11 @@ syllabus remains unchanged. Documented findings, source gaps and the descriptors
 unvalidated status remain. No learner evaluation or release readiness is inferred.
 Historical status statements below describe their individual stages.
 
+Publication status, checked on 5 November 2026: PR #31 merged as `a571682` on
+4 November and issue #9 is closed. The earlier open/uncommitted statements below
+retain the state of each preparation, run or review checkpoint. Teacher/Trainer
+#10, production release/import and learner runtime evaluation remain separate.
+
 Status on 3 November 2026: the exact Curator syllabus and a new authoring project
 are approved/applied in an isolated database. The owner separately authorized three
 exact dedicated Evaluator/conditional Lead packets. The first attempt failed a

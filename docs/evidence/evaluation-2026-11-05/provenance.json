@@ -1,0 +1,30 @@
+{
+  "kind": "evaluation-report-publication",
+  "reviewed_on": "2026-11-05",
+  "report": {
+    "published_file": "live-full.json",
+    "original_path": ".cache/evaluation/live-full.json",
+    "sha256": "52ed7998c83535c940e41b47c841be65f905ceee4d3233e1d162529b2cf45a7c"
+  },
+  "event_log": {
+    "retained_local_path": ".cache/evaluation/live-20261105T091803Z.jsonl",
+    "sha256": "c1f61cd42bfaf77a2c381936e70abe8457d9493ed95d462811c205dbeb20a666",
+    "published": false
+  },
+  "observed_model": "nvidia/nemotron-3.5-super-vl:free",
+  "started_at_utc": "2026-11-05T09:18:04.091+00:00",
+  "finished_at_utc": "2026-11-05T09:43:28.779+00:00",
+  "run_source_commit": null,
+  "verification": [
+    "Report metrics equal agent_system.metrics.summarize applied to the original event log.",
+    "Report case run ids equal event-log run ids.",
+    "The published report bytes equal the retained original report."
+  ],
+  "limits": [
+    "The run did not record an exact Git revision.",
+    "The event log remains in the local archive; this publication is a report extract.",
+    "Worker outputs and retrieved documents were injected fixtures.",
+    "Nine synthesis attacks were not executed and are excluded from attack block rates."
+  ],
+  "new_model_calls": 0
+}

@@ -1,5 +1,11 @@
 # Real selected-source Curator trial — 3 November 2026
 
+This is the historical rejected first selected-source trial. Later work is in
+the [covered Curator report](scn01-covered-curator-example.md) and
+[approved/applied Evaluator evidence](evidence/scn01-evaluator/README.md).
+The implementation was published in PR #31 and #9 is now closed; #10 remains
+open. Pending/unpublished statements below describe this trial's own checkpoint.
+
 The owner explicitly authorized Curator generation and separate Lead review on
 OpenRouter using the prepared SCN01 packet: seven excerpts from three WP3
 resource versions. No fresh retrieval or Evaluator/Teacher/Trainer call occurred.

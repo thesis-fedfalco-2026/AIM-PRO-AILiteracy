@@ -165,8 +165,9 @@ Current actual state remains PREPARATION/DRAFT with the five originally approved
 bindings and current policy intact. No execution-configuration decision,
 activation, attempt or learning state was recorded by this preparation. Applying
 the new configuration would require its own human decision and a subsequent
-switch to the exact proposed policy version. The local code and report updates
-for this step remain uncommitted.
+switch to the exact proposed policy version. At this preparation checkpoint,
+the code and report updates were uncommitted; they were subsequently published
+in `1839161`. The following sections record the later decisions and application.
 
 ### Execution configuration approved and applied
 

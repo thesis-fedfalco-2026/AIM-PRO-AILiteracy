@@ -1,6 +1,6 @@
 # Prepare exact Curator sources before model authorization
 
-This local, unpublished increment separates model-free source preparation from
+The published source-preparation workflow separates model-free source preparation from
 syllabus generation. It uses real scoped multi-query MCP discovery, exact
 document deduplication and content-pinned excerpt fetches. The original
 single-query route remains available. Preparation is neither source-use approval
@@ -132,10 +132,13 @@ synthetic responses. It covers authorization, deduplication/conflicts, exact
 content fidelity, missing/changed selections, reservation, replay, stale source/
 context, rollback, abandonment, review rejection/uncertainty, CLI separation and
 retained assessment-context sources. Full regression also enables the real
-read-only PostgreSQL/MCP tests and exact-fetch round trip. Remote CI is narrower;
-no remote result is claimed for this uncommitted increment.
+read-only PostgreSQL/MCP tests and exact-fetch round trip. Remote CI is narrower.
+The implementation was published in PR #31, merged as `a571682` on 4 November.
+[CI run 42000601341](https://github.com/thesis-fedfalco-2026/py-prototype/actions/runs/42000601341)
+passed on `7987eba` on 5 November, including the source-selection and coverage
+suites. It uses synthetic responses and does not establish a new live MCP run.
 
-Observed local validation on 3 November 2026: **454 full-regression tests pass,
+Historical local validation on 3 November 2026: **454 full-regression tests passed,
 with no skips and the real PostgreSQL/MCP reader enabled**, including the new
 exact-fetch round trip and whitespace-fidelity regression. Generated-contract and whitespace
 checks pass. No external model, approval, commit or push was used for validation.
