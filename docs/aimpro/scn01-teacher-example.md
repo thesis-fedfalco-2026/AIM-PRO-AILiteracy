@@ -1,4 +1,13 @@
-# SCN01 dedicated Teacher — real run and review disagreement
+# SCN01 dedicated Teacher — revision request and failed correction
+
+**Latest outcome:** after the first proposal's actual human REQUEST_REVISION, the
+owner separately authorized the corrected packet. That second attempt returned
+terminal FAILURE before Lead because the required peer scene/email is missing
+from its transcript. There is no new proposal or content decision. No Teacher is
+approved, applied or selected. The actual failure is recorded for Chat 05; #10
+remains open and Chat 06 must not start.
+
+[Second-attempt original output, failure and replay evidence](evidence/scn01-teacher/revision-02/README.md).
 
 The separately authorized production Teacher + Lead run completed on 5 November
 2026. It produced an unchanged, human-reviewable proposal with separate Lead
@@ -178,7 +187,7 @@ error. A fresh isolated revision packet is being prepared; any new live call
 requires its own exact transmission authorization. #10 remains open and Chat 06
 must not start.
 
-## Corrected revision packet prepared — separate authorization pending
+## Historical corrected-packet preparation — before second authorization
 
 The fresh isolated directory is
 `.cache/aimpro-examples/teacher/scn01-teacher-2-revision/`. SQLite backup preserves
@@ -218,5 +227,60 @@ Anthropic direct `claude-sonnet-4-6`, one Teacher and conditional separate Lead,
 no tools/delegation/retry/fallback, and $5 operational budget. The new Teacher
 task is 365,939 UTF-8 bytes. Expected cost is $0.70–$1.80, with the same conservative
 listed-rate estimate $4.80072 under the local guards, not a verified billing cap
-or invoice. A new explicit live authorization naming this exact manifest is
-pending. No new transmission or content approval/application is inferred.
+or invoice. At that preparation checkpoint, a new explicit live authorization naming the
+exact manifest was pending. The later authorization and failed execution are
+recorded below; no content approval/application is inferred.
+
+## Second authorized observation — terminal FAILURE before Lead
+
+The owner explicitly authorized the exact second packet and $5 operational
+budget. Request `scn01-teacher-02-revision` ran once without retrieval, retry or
+fallback. Teacher returned complete native JSON with end_turn after 167.101 s;
+the total service operation took 167.353 s. Finalized usage supports an estimated
+$0.505561 at the authorized dated rates, not an invoice. No Lead HTTP call or
+verdict exists. Across the two Teacher attempts the estimated total is $1.407360,
+with three HTTP transmissions and no automatic retries.
+
+Production `checked_draft` accepts the exact input digest, unit/outcome/intent,
+four required material keys/kinds and citation membership. The frozen pre-Lead
+packet guard then raises ReviewError: “The peer result needs the complete
+delimited fictional email, not a summary.” Offline inspection reproduces it:
+
+- `mat-example-peer-failure` has one complete delimited 101-word fictional email.
+- `mat-transcript-adviser-demo` has nineteen adviser-only numbered turns and no
+  peer case, prompt, dialogue or email. Its last turn refers to the separate peer
+  material. Requirements 11/12 explicitly require the complete peer email in both
+  assets. No whitespace/delimiter repair would supply the absent scene.
+
+The production service retains the full original reserved input and terminal
+FAILURE. No new accepted proposal, mapped candidate, package ref, human decision
+or application exists. No original draft/packet was edited; no third attempt
+was made. [Original complete draft and all findings](evidence/scn01-teacher/revision-02/README.md)
+are published separately from the first observation.
+
+Inspection confirms meaningful corrections: distinct fictional cases without
+exact assessment prompt-body reproduction, the correct five-move labels, qualified
+model-behaviour claims, excerpt-6 citations in each material, an openly commented
+teaching transcript and an actual fictional peer email in the EXAMPLE. Remaining
+review points include transcript line 18's real-customer substitution suggestion
+outside the fictional-only scope, the tone-removal example retaining other tone
+guidance, and a gap conflating source diagnostics with prior assessment findings.
+The tone illustration is not empirical evidence of degraded output. Trial and
+error has retained support in excerpts 6 and 7, while notebook context does not
+validate adult-SME efficacy or add a setup requirement.
+
+Post-run production verification proves exact fresh source/syllabus/assessment
+receipts, unchanged input, every previous database row, unchanged context and
+operations, preserved first REQUEST_REVISION, and no learner-runtime entities.
+There are still 164 entity rows, five HumanDecisions and three StateChanges, with
+ten requests. All seven historical generation requests replay exactly with model
+construction/network forbidden and unchanged database bytes. Original Curator,
+Evaluator and first Teacher archives remain preserved; packet/code hashes match.
+
+This is Chat 05's actual terminal-failure observation, not a human REJECT or an
+approved/applied Teacher package. #10 remains open for satisfactory Teacher and
+Trainer content. The failed output must not be supplied as approved Trainer
+shared_content; no learning activation, binding or release occurs. Do not start
+Chat 06. Further Teacher work requires a new correction packet and separate
+authorization, addressing the missing complete peer transcript and retained
+findings; no automatic retry is authorized by this failure record.

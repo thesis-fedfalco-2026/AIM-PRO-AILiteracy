@@ -1,0 +1,52 @@
+{
+  "recorded_at_utc": "2026-11-05T19:55:39.237851+00:00",
+  "reviewer": "assistant local inspection, not a human content decision",
+  "separate_lead": "NOT_INVOKED; no verdict exists",
+  "findings": [
+    {
+      "id": "R02-F01",
+      "severity": "OBSERVED_TERMINAL_FAILURE",
+      "scope": "mat-transcript-adviser-demo; requirements 11/12 (T05/T06)",
+      "finding": "The complete transcript has nineteen adviser-only numbered turns. It contains no peer dialogue, peer prompt or peer email; it ends by referring readers to the later peer material. The peer EXAMPLE separately contains the complete 101-word delimited fictional email, but the approved packet explicitly required that email in both peer material and transcript. The frozen pre-Lead guard rejects the absent transcript email. This is missing required content, not merely indentation or delimiter styling. No accepted proposal was persisted and Lead was not called.",
+      "guard_error": "The peer result needs the complete delimited fictional email, not a summary"
+    },
+    {
+      "id": "R02-F02",
+      "severity": "REVISION_REQUIRED",
+      "scope": "transcript line 18",
+      "finding": "After workshop-only fictional-data instructions, line 18 introduces reuse with fictional or, in real use, real customer details. This is outside the authorized fictional-only workshop scope and can blur its constraint. A future revision should retain the fictional-only framing rather than suggesting real-customer substitution. No actual customer data was used or collected."
+    },
+    {
+      "id": "R02-F03",
+      "severity": "SOURCE_CONTEXT_LIMITATION",
+      "scope": "trial-and-error claims in transcript and worked example",
+      "finding": "The retained excerpt 6 directly frames prompt engineering as trial and error; excerpt 7 also describes trial-and-error exploration in the notebook exercise context. The materials cite both excerpts, so the concept has retained support. Notebook/API setup remains outside SCN01 requirements and does not validate adult-SME teaching efficacy."
+    },
+    {
+      "id": "R02-F04",
+      "severity": "INSTRUCTIONAL_LIMITATION",
+      "scope": "improved/worse tone comparison",
+      "finding": "The worse prompt retains friendly-but-firm tone guidance and removes only an additional calm-and-respectful sentence. The draft acknowledges remaining guidance and does not guarantee worse output. This is a proposed illustration of reduced explicit reinforcement, not empirical evidence of degraded output or validated teaching efficacy."
+    },
+    {
+      "id": "R02-F05",
+      "severity": "PROVENANCE_WORDING_LIMITATION",
+      "scope": "last generated gap",
+      "finding": "The gap calls the previously accepted assessment-authoring findings original source diagnostics. The actual export diagnostics and assessment review findings have different origins; both are preserved, but should not be conflated."
+    }
+  ],
+  "confirmed_corrections": [
+    "No exact approved assessment prompt body is reproduced; distinct adviser/peer names, invoices and amounts are used.",
+    "Correct INSTRUCTION, PRIMARY CONTENT, EXAMPLE, CUE, TEMPLATE taxonomy is used; previous incorrect label-set claim is not repeated.",
+    "Qualifiers about model/system/context dependence and stochastic variation replace the recorded categorical guarantees.",
+    "All four material citation lists now include excerpt 6 where invoked.",
+    "Transcript truthfully identifies commented teaching rather than claiming to be answer-free.",
+    "A complete authored fictional peer email exists in the peer EXAMPLE material.",
+    "Single tone-sentence deletion preserves every other compared prompt body character after outer whitespace.",
+    "All four typed material keys are used by the sole EXPLAIN item; no new scores, durations, learner results or future Trainer ids are produced."
+  ],
+  "original_draft_unchanged": true,
+  "no_new_proposal_or_human_decision": true,
+  "further_model_run_authorized": false,
+  "next_action": "Record the actual terminal failure in #10 and handoff. Do not apply, retry or start Chat 06. Any further Teacher revision requires a fresh packet and new authorization."
+}

@@ -1,0 +1,16 @@
+{
+  "manifest_sha256": "803dbe29b7a89f2b0080d53af3a9c9babbc4b0cd26488dff888f1e3525f8ae08",
+  "request_id": "scn01-teacher-02-revision",
+  "provider": "Anthropic",
+  "model": "claude-sonnet-4-6",
+  "phases": [
+    "TEACHER",
+    "LEAD_REVIEW"
+  ],
+  "max_http_transmissions_per_phase": 1,
+  "allow_paid": true,
+  "budget_usd": 5,
+  "recorded_at_utc": "2026-11-05T19:50:31.919410+00:00",
+  "scope": "Generation and conditional separate Lead review only. No human content decision or application inferred.",
+  "owner_instruction_english": "I authorize this new packet and the USD 5 budget."
+}

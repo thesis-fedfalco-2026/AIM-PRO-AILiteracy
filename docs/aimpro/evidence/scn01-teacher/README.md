@@ -1,5 +1,19 @@
 # Portable SCN01 Teacher evidence
 
+**Current disposition:** first proposal has actual human REQUEST_REVISION and
+remains DRAFT/unapplied; the separately authorized corrected attempt returned
+**terminal FAILURE before Lead**. No Teacher package is approved or selected.
+[Complete second-attempt failure evidence](revision-02/README.md) records the
+actual failure without relabelling it a human rejection. No retry was made.
+
+| Attempt | Generation / Lead | Human decision | Application |
+| --- | --- | --- | --- |
+| 01 | PROPOSAL / ACCEPT | REQUEST_REVISION, DRAFT | None |
+| 02 correction | FAILURE before Lead | No new proposal or decision | None |
+
+The sections below preserve the first observation and second packet's historical
+preparation boundary. The later authorization and result are in `revision-02/`.
+
 The owner-authorized dedicated Teacher + separate Lead ran on Anthropic direct
 `claude-sonnet-4-6`, with two transmissions, no retry and no retrieval. Total
 service time: 214.197 seconds. Estimated cost: $0.901799 at the authorized dated
@@ -43,7 +57,7 @@ provenance.json. It includes all generated materials unchanged. The
 [chronological report](../../scn01-teacher-example.md) separates production checks,
 Lead judgment, local findings and the actual human REQUEST_REVISION decision.
 
-## Requested correction packet — no new transmission
+## Historical correction preparation — before second authorization
 
 A fresh isolated copy preserves the complete post-REQUEST_REVISION archive.
 The [new packet metadata and complete command requirements](revision-packet.json)
@@ -58,4 +72,25 @@ The proposed corrected run uses the same direct Anthropic model and $5 budget,
 with a distinct request and one conditional call per role. No new request has
 been reserved or transmitted at this preparation checkpoint. The owner's revision
 decision and first-run authorization do not authorize it; a separate exact live
-transmission question is pending. No corrected Teacher output exists yet.
+transmission question was pending at that checkpoint. The later authorization
+and terminal failure are recorded separately in revision-02/.
+
+## Actual corrected-run failure
+
+The owner explicitly authorized manifest
+`803dbe29b7a89f2b0080d53af3a9c9babbc4b0cd26488dff888f1e3525f8ae08`.
+The complete typed draft passed production structure checks, but the reviewed
+packet guard stopped it: the peer EXAMPLE contains the full fictional email
+while the nineteen-turn adviser-only transcript omits the entire peer scene and
+email required by requirements 11/12. This is missing content, not a delimiter
+formatting mismatch. No separate Lead call/verdict or accepted proposal exists.
+
+One transmission, no retry/retrieval, 167.353 seconds total and estimated
+$0.505561 from finalized usage. All seven historical generation requests replay
+exactly with model construction/network forbidden and unchanged DB bytes. The
+first human REQUEST_REVISION and approved project remain untouched; five
+decisions, three StateChanges, 164 entity rows and ten requests remain.
+
+This records Chat 05's actual-failure branch; it does not satisfy #10's successful
+Teacher/Trainer scope or make Trainer ready. A new reviewed and separately
+authorized Teacher revision is required before Chat 06. No third run is started.

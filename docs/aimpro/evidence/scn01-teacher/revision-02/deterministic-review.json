@@ -1,0 +1,60 @@
+{
+  "production_checked_draft": {
+    "passed": true
+  },
+  "packet_regression_guards": {
+    "passed": false,
+    "error_type": "ReviewError",
+    "message": "The peer result needs the complete delimited fictional email, not a summary"
+  },
+  "assessed_prompt_body_reproduction": {
+    "weak_prompt": false,
+    "improved_prompt": false,
+    "worse_prompt": false
+  },
+  "materials": [
+    {
+      "key": "mat-explanation-prompt-structure",
+      "kind": "EXPLANATION",
+      "content_characters": 5821,
+      "citation_documents": [
+        "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3",
+        "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:4",
+        "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:6",
+        "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:7"
+      ]
+    },
+    {
+      "key": "mat-transcript-adviser-demo",
+      "kind": "TRANSCRIPT",
+      "content_characters": 8614,
+      "citation_documents": [
+        "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3",
+        "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:4",
+        "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:6",
+        "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:7"
+      ]
+    },
+    {
+      "key": "mat-example-weak-improved-worse",
+      "kind": "EXAMPLE",
+      "content_characters": 5192,
+      "citation_documents": [
+        "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3",
+        "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:6",
+        "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:7"
+      ]
+    },
+    {
+      "key": "mat-example-peer-failure",
+      "kind": "EXAMPLE",
+      "content_characters": 4715,
+      "citation_documents": [
+        "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3",
+        "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:6",
+        "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:7"
+      ]
+    }
+  ],
+  "semantic_pedagogical_validation": false
+}

@@ -1,10 +1,12 @@
-# Chat 05 — Dedicated Teacher run and human REQUEST_REVISION
+# Chat 05 — Dedicated Teacher revision request and actual correction failure
 
-Status on 5 November 2026: **REVISION_REQUIRED — REQUEST_REVISION RECORDED, NOT APPLIED**.
-The exact packet was authorized and completed with separate Lead ACCEPT.
-After reviewing the findings, the owner explicitly requested revision and no
-application. The proposal is DRAFT; it was not REJECTED or approved. A corrected
-Teacher revision is required; Chat 06 must not start. No agents were spawned.
+Status on 5 November 2026: **ACTUAL TERMINAL FAILURE RECORDED; NO TEACHER APPROVAL/APPLICATION**.
+The first run produced a proposal with separate Lead ACCEPT; the owner explicitly
+requested revision and no application, leaving that proposal DRAFT. The owner
+then separately authorized the corrected packet, which returned FAILURE before
+Lead. No second proposal or human decision exists. This records Chat 05's
+failure branch, while Teacher prerequisites remain unsatisfied and #10 stays
+open. **Do not start Chat 06.** No agents were spawned.
 
 ## Exact approved prerequisites
 
@@ -191,9 +193,73 @@ application, request reservation, retrieval or model call occurred.
 
 Public safe metadata: `revision-packet.json` and
 `revision-preparation-verification.json` in the portable Teacher directory.
-The owner has been asked for the new exact transmission authorization; keep that
-question pending. REQUEST_REVISION and the first packet consent do not authorize
-this call. On authorization, execute only this fresh request once, preserve its
-original output and separate Lead verdict, inspect all findings and obtain the
-actual next human content decision. Do not apply either package without express
-authorization or start Chat 06 while Teacher prerequisites remain unresolved.
+At this historical preparation checkpoint, the new exact transmission question
+was pending. The owner subsequently authorized it; the execution and actual
+failure are recorded below. REQUEST_REVISION and the first packet consent were
+not reused as transmission authorization.
+
+## Final observed outcome — second packet FAILURE before Lead
+
+The owner explicitly authorized manifest
+`803dbe29b7a89f2b0080d53af3a9c9babbc4b0cd26488dff888f1e3525f8ae08`
+and the $5 budget. Request `scn01-teacher-02-revision` ran once: Teacher 167.101 s,
+total 167.353 s, one HTTP transmission, no Lead call/retry/fallback/retrieval.
+Native JSON completed with end_turn; estimated cost is $0.505561, not an invoice.
+
+The four-material typed draft passes production structure/citation membership.
+The pre-Lead packet guard rejects missing required peer transcript/email. The
+peer EXAMPLE has a complete 101-word email; the transcript ends after nineteen
+adviser-only turns and contains neither the peer scene nor its email, despite
+requirements 11/12. This omission is reproduced offline without models and is
+not merely a delimiter mismatch.
+
+**New proposal/package/candidates/decision/application: none.** The terminal
+request stores FAILURE. Source/syllabus/assessment/project refs remain exactly
+as listed above; the applied context/project stays
+`d28d7145852b428aa1e4a7cdf76ec358`. The first Teacher proposal remains DRAFT under
+`decision-f2c1781b2a5d4811bee41ac494c3053c@1`; its twenty candidates are unchanged.
+Five HumanDecisions, three StateChanges and 164 entity rows remain, with ten
+requests. Production receipts are valid/fresh. All previous rows and archives
+are intact; all seven historical generation requests replay exactly without
+model construction/network and without DB changes. No new StateChange or
+Teacher application receipt exists.
+
+The original second output, raw HTTP/SSE and complete source/prompt history are
+retained in `.cache/aimpro-examples/teacher/scn01-teacher-2-revision/`. Read
+`RUN_RESULT.md`, `teacher-draft-review.md`, `failure-detail.json`,
+`manual-review-findings.json`, `deterministic-review.json`,
+`post-run-verification.json` and `all-terminal-replays.json`. Public evidence is
+`docs/aimpro/evidence/scn01-teacher/revision-02/`; report and PR #57 preserve both
+attempts and distinguish model review, the real human decision and the failure.
+
+Inspection confirms distinct cases, correct taxonomy, qualified claims and
+excerpt-6 citations, with a real authored peer email in its separate material.
+Still retain the missing peer transcript, line 18's real-customer substitution
+suggestion, unvalidated/redundant tone-guidance illustration and provenance
+wording limitation. Original Evaluator findings, rubric validity limitations,
+source diagnostics and #51/#52 remain unresolved as previously accepted.
+
+## Exact next action after failure — Teacher prerequisite remains unresolved
+
+Do not start Chat 06, activate learning, create a release or bind resources.
+There is no approved/applied Teacher input for Trainer. The only usable exact
+approved authoring inputs remain the unchanged syllabus/assessment/project above.
+Neither the first DRAFT Teacher package nor the second failed draft can be
+passed as approved shared_content. Trainer will later need fresh production
+refs and an actual approved/applied Teacher package only if it consumes those
+assets; it must author a distinct unannotated practice stimulus if required.
+
+The authorized second run is terminal and must not be retried. Any further
+Teacher revision requires a new isolated copy, reviewed correction packet and
+specific transmission authorization, followed by separate Lead/human review and
+application only when expressly authorized. Chat 05's actual-failure record is
+not successful Teacher/Trainer acceptance or closure of #10.
+
+## Final publication boundary
+
+PR #57 now records the actual second-attempt FAILURE and the first human
+REQUEST_REVISION as distinct observations. Its review concerns this evidence
+report; it does not approve any Teacher content. Portable typed-output/receipt/
+failure/hash checks pass locally, with complete raw evidence retained privately.
+The corrected packet's fifteen offline tests preceded the authorized run and do
+not imply that its actual output was acceptable. No runtime code was changed.
