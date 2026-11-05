@@ -2,7 +2,8 @@
 
 Reviewed on 3 November 2026 against published `d299b4d`, current issue bodies and
 comments, and the dedicated-generator increment; refreshed on 4 November 2026
-after PR #31 (`a571682`) closed #9. Implementation evidence,
+after PR #31 (`a571682`) closed #9, with issue/publication status refreshed on
+5 November 2026 against `7987eba`. Implementation evidence,
 owner direction, proposed decisions and unresolved stakeholder choices are
 recorded separately. All six original topics remain represented; this register
 does not narrow #29 to project services or change #1/#4 scopes.
@@ -38,17 +39,20 @@ Proposed decision process: implement the same contracts and replay/stale/approva
 cases in #15, compare behavior, complexity, observability and measured calls/
 latency on a shared workload, then choose. No stack winner or stakeholder approval
 is recorded. Current use of CrewAI is evidence of implementation only. #14's
-registry-resolver work and #27's call-reduction work retain their separate scope.
+registry-resolver work and #27's call-reduction work are closed implementation
+increments; neither settles the orchestration comparison.
 
 ## 3. Digital twins and dashboard technology
 
 Evidence: ALM records and the read-only AIM-PRO trace preserve exact state,
 provenance and history. #30 delivered tracing; this is not a digital twin model
-or a choice between MontiGem and jjodel. #17, #19 and #26 remain open.
+or a choice between MontiGem and jjodel. #17 and #19 remain open. #26 is closed
+for structured event logging and metrics; it does not deliver a dashboard or twin.
 
 Proposed decision process: specify teacher/learner twin views and permission
 boundaries in #17, evaluate both dashboard options against those views in #19,
-and use #26 for structured state/events. Compare approved-state visualization,
+and use #26's delivered event log and metrics as implementation inputs. Compare
+approved-state visualization,
 historical/version navigation, review integration and maintenance ownership.
 Technology selection and pilot acceptance remain stakeholder decisions.
 

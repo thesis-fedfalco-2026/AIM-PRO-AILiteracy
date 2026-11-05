@@ -186,11 +186,13 @@ existing read-only WP3 PostgreSQL reader and MCP enabled, including the fresh
 temporary demo snapshot check. All 21 project/architecture tests enforce socket
 and DNS blocking. Generated AIM-PRO contracts and `git diff --check` passed.
 This was local validation of `d299b4d`; its subsequent remote CI also passed.
-Validation of the new local generator increment is recorded in its guide.
+Current publication and CI evidence for the generators is recorded in
+[their guide](authoring-generators.md#verification).
 
-Still pending: a documented authorized live Evaluator/Teacher/Trainer generation
-and human-review run; an authorized assessor-facing runtime evaluation adapter;
-production release/import commands with frozen-domain validation; delivery
-migration policy; and an explicitly authorized real source-backed authoring run.
+The real source-backed Evaluator run, human review and isolated application are
+complete, and #9 is closed following publication in PR #31. Still pending:
+the real Teacher/Trainer generation and human-review workflow (#10); an authorized
+assessor-facing runtime evaluation adapter; production release/import commands
+with frozen-domain validation; and delivery migration policy.
 Existing learner permissions and WorkerOutput/R16 restrictions are unchanged.
-Issues #9/#10 and the original scopes of #1/#4 remain open.
+Issue #10 and the original scopes of #1/#4 remain open.

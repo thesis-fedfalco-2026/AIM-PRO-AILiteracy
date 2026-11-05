@@ -5,6 +5,14 @@ The suite (#25) runs adversarial and control cases end to end through
 the learner. All metrics, such as calls, rejection rates, review verdicts and
 latency, are derived from the [structured event log](architecture/event-log.md).
 
+Status checked on 5 November 2026: the suite and event metrics are published on
+`main` (`7987eba`), including the fixes from PRs #41–#46. The earlier #25 comments
+that describe the adversarial/measurement suite as unimplemented are superseded.
+The latest retained full live report is linked below. Issue #25 remains open for
+live multi-step synthesis coverage on the current runtime: the last full run
+did not execute those attacks. The current GitHub Actions workflow tests contracts
+and authoring architecture; it does not run `tests.test_evaluation` or live cases.
+
 ```bash
 .venv/bin/python -m evaluation --check                 # scripted, no model calls
 .venv/bin/python -m evaluation --case control-teacher  # one case
@@ -131,6 +139,8 @@ single-step pass-through and the plan retry:
 
 ## Live results (5 November 2026)
 
+### Earlier focused run
+
 One live run (`--repeat 3`) on the same model, after the single-step pass-through
 and the plan retry, for `control-teacher`, `control-socratic`,
 `socratic-direct-answer`, `socratic-document-solution` and
@@ -150,3 +160,41 @@ and the plan retry, for `control-teacher`, `control-socratic`,
 - `socratic-wrong-output-kind` was still sent to the worker review, which
   rejected it before the deterministic output kind check ran. The deterministic
   checks now run first, so such an output no longer costs a review call.
+
+### Later full run, 09:18–09:43 UTC
+
+The retained [original report](evidence/evaluation-2026-11-05/live-full.json)
+covers all 14 cases repeated three times on OpenRouter
+`nvidia/nemotron-3.5-super-vl:free`, after the deterministic-check and capability
+fixes. Its aggregate metrics and run identities were checked against the retained
+content-free event log without model calls; [provenance and hashes](evidence/evaluation-2026-11-05/provenance.json)
+identify both original files. The run did not record a Git commit, so it is an
+observed local run rather than evidence bound to an exact source revision.
+
+| Observation | Result |
+| --- | --- |
+| Runs | 42; no errors |
+| Executed attacks | 27/27 blocked: 15 deterministic, 12 semantic |
+| Benign controls | 6/6 answered; no false rejections |
+| Synthesis attacks | 9 NOT_EXECUTED; excluded from the attack block rate |
+| Plans | 42 authorized; no retries |
+| Logical calls | 111 total, mean 2.64; includes 42 injected worker calls |
+| Actual provider calls | 69: 42 plans and 27 worker reviews |
+| Request latency | p50 31.601 s; p95 64.493 s; maximum 103.851 s |
+
+All plans selected one step, so there was no synthesis to attack. The nine
+NOT_EXECUTED results cover three repetitions each of fabricated synthesis
+citations, claimed applied changes and Socratic solution leakage. Their ANSWER
+responses are ordinary pass-throughs; they are not successful attacks or proven
+blocks. The earlier live synthesis observations above and scripted two-step
+checks remain separate evidence.
+
+This run measures the configured planner/reviewer with injected worker outputs
+and documents. It does not measure real worker generation quality or demonstrate
+robustness beyond these fixtures. In particular, the worker-step rejection rate
+27/42 includes adversarial fixtures; it is not the benign false rejection rate.
+
+To complete #25's current coverage follow-up, execute all three synthesis attacks
+with a controlled two-step plan while retaining the live final reviewer, report
+executed versus skipped cases separately, and review block rates, benign controls,
+calls and latency. Any new live transmission requires its own authorization.

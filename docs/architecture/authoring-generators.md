@@ -1,6 +1,15 @@
 # Dedicated project authoring generators — issues #9 and #10
 
-## Subsequent SCN01 observations and assessment stimulus fix
+Current status, checked on 5 November 2026: the production generator services,
+source preparation and portable Evaluator evidence are published on `main`.
+[PR #31](https://github.com/thesis-fedfalco-2026/py-prototype/pull/31)
+merged on 4 November as `a571682`; #9 is closed after real generation, separate
+Lead review, owner approval and isolated application. #10 remains open for real
+Teacher/Trainer generation and human review. Release/import and runtime learner
+evaluation remain separate work. The trial sections below are chronological
+observations; their pending or unpublished states describe those earlier stages.
+
+## Historical SCN01 observations and assessment stimulus fix
 
 The [SCN01 Evaluator report](../aimpro/scn01-evaluator-example.md) records two
 separately authorized real attempts after the initial implementation status below:
@@ -63,11 +72,11 @@ delivery occurred; any further model transmission requires a new reviewed packet
 and authorization. Native JSON can still truncate and does not establish
 pedagogical validity.
 
-Initial implementation status on 3 November 2026, before the real attempts described above: implemented locally on top of published `d299b4d`,
-uncommitted and unpublished. Synthetic model tests exercise the production
-services, CLI, registry dispatcher and ALM lifecycle. No new external model call
-or source-backed generator trial has been performed. #9 and #10 remain open for
-that documented generation/review evidence.
+At the initial implementation checkpoint on 3 November 2026, before these real
+attempts, the increment was local on top of `d299b4d`, uncommitted and unpublished.
+Synthetic tests exercised the services, CLI, dispatcher and ALM lifecycle; real
+generation/review evidence for #9/#10 was still pending. Publication and #9's
+completion have since superseded that status, as recorded above.
 
 ### Fifth correction packet and observed result
 
@@ -84,12 +93,13 @@ terminal requests replay exactly without model clients. The linked SCN01 report
 pins the new input/manifest, sources and command. The owner subsequently authorized
 this exact packet. The real run completed in 206.626 seconds with a $0.407995 usage
 estimate: four items, nine criteria, eighteen levels and separate Lead ACCEPT.
-The new proposal is AWAITING_DECISION. Local review still recommends revision for
-a transcript classification hint, an incomplete recognition example and descriptor
+At the post-generation checkpoint the proposal was AWAITING_DECISION. Local review
+recommended revision for a transcript classification hint, an incomplete recognition example and descriptor
 gaps, with declaration-scope and source-attribution limitations. The narrow guards
 passed but do not prove semantic adequacy. The original outputs remain unchanged;
-no new human decision/application or learner delivery has occurred. Further model
-transmission and human approval remain separate explicit boundaries.
+no human decision/application or learner delivery had occurred at that checkpoint.
+The subsequent approval/application is recorded below; further model transmission
+still requires its own authorization.
 
 The owner subsequently explicitly approved the exact fifth proposal after review
 of the remaining findings. Production HumanDecision
@@ -249,6 +259,10 @@ requires CONFIRM; `apply` remains a separate authorized command.
 
 Required live evidence before claiming #9/#10 completion:
 
+For SCN01, the approved/applied syllabus, initialized project and Evaluator
+evidence in steps 2–3 are complete. Continue #10 from those exact fresh inputs;
+the checklist below also describes the complete sequence for a new project.
+
 1. Obtain new explicit authorization naming provider/model, source/excerpts,
    scope and isolated run. No previous trial authorization is reused.
 2. Have the responsible human inspect a Curator proposal's exact syllabus,
@@ -283,15 +297,18 @@ use temporary databases and explicit synthetic human decisions. The acceptance
 cycle exercises production generator services/typed dispatch with synthetic model
 responses; release/import and assessor-facing adapters remain fixtures. The
 full local regression additionally enables the existing read-only PostgreSQL/MCP
-tests from the protected reader configuration. Remote CI has a narrower scope;
-the published passing baseline is [run 41543110884](https://github.com/thesis-fedfalco-2026/py-prototype/actions/runs/41543110884),
-not validation of these unpublished changes.
+tests from the protected reader configuration. Remote CI has a narrower scope.
+On 5 November 2026, [run 42000601341](https://github.com/thesis-fedfalco-2026/py-prototype/actions/runs/42000601341)
+passed on published `7987eba`: `generated-contracts` and `authoring-architecture`,
+including source selection, coverage, generators, projects, lifecycle, Anthropic
+adapter and portable Evaluator evidence tests. These jobs do not run the live
+Teacher/Trainer workflow or the evaluation suite in `tests.test_evaluation`.
 
 Observed local validation on 3 November 2026: **81 focused tests passed** and
 **433 full-regression tests passed**, with the real read-only PostgreSQL/MCP tests
 enabled and no skips. The **45 generator/project/architecture tests** independently
 block socket connections and DNS. Generated-contract and whitespace checks pass;
-the protected AIM-PRO export and ALM metamodel match HEAD byte for byte. The
-prepared CI architecture job now includes the generator suite, but has not run
-remotely for this uncommitted increment. No existing demo database, real pending
-syllabus, external model, commit or push was used to obtain these results.
+the protected AIM-PRO export and ALM metamodel matched that checkpoint byte for
+byte. These are historical local results; the later published CI result is given
+above. No existing demo database, real pending syllabus or external model was
+used to obtain those local test results.
