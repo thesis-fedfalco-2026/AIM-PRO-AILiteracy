@@ -54,7 +54,9 @@ and qualified cross-metamodel inheritance; they are not replacement exports.
 
 `Number` uses Pydantic's Decimal contract: Python validation requires a `Decimal`;
 JSON validation accepts numbers or decimal strings and JSON serialization emits
-decimal strings. This is a generated-contract transport representation, not an
+decimal strings. Decimal strings use optional sign, decimal point and exponent;
+whitespace and underscores are rejected. The schema includes exponent notation
+emitted by serialization. This is a generated-contract transport representation, not an
 edit to source instance values or evidence of jjodel import acceptance. See
 [Pydantic's Decimal documentation](https://docs.pydantic.dev/latest/api/standard_library_types/#decimals).
 The generated model's `model_validate_json` parses fractional `Number` tokens
@@ -100,9 +102,10 @@ CI checks both artifact directories and runs the new tests.
 
 Full offline regression command:
 `LANGFUSE_ENABLED=false CREWAI_DISABLE_TELEMETRY=true CREWAI_TRACING_ENABLED=false .venv/bin/python -m unittest discover -q`.
-Result: **543 tests, OK (4 skipped), 94.735 seconds**. The focused tests are
+Final result: **543 tests, OK (4 skipped), 97.459 seconds**. The focused tests are
 included in this run. This is offline regression evidence, not live model or
-jjodel acceptance. `git diff --check` also passes. The artifact hash ledger is
+jjodel acceptance. All four skips require the unavailable WP3 database.
+`git diff --check` also passes. The artifact hash ledger is
 [artifact-sha256.json](artifact-sha256.json).
 
 The [old audit](old-audit.json) and [new audit](new-audit.json) both show zero

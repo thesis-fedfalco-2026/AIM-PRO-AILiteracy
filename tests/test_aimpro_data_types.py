@@ -5,6 +5,7 @@ from decimal import Decimal
 import hashlib
 import json
 from pathlib import Path
+import re
 from tempfile import TemporaryDirectory
 import unittest
 
@@ -83,10 +84,15 @@ class AimproDataTypesTest(unittest.TestCase):
                 self.assertEqual(value.model_dump(by_alias=True)["score"], expected)
                 replay = cls.model_validate_json(value.model_dump_json(by_alias=True))
                 self.assertEqual(replay.model_dump(by_alias=True)["score"], expected)
+                schema = cls.model_json_schema(by_alias=True)["properties"]["score"]
+                pattern = next(s["pattern"] for s in schema["anyOf"] if s.get("type") == "string")
+                self.assertIsNotNone(re.fullmatch(pattern, json.loads(
+                    value.model_dump_json(by_alias=True))["score"]))
         exact = Decimal(number)
         value = cls.model_validate(dict(key="level", descriptor="original", score=exact))
         self.assertEqual(value.model_dump(by_alias=True)["score"].as_tuple(), exact.as_tuple())
-        for token in ("true", "[]", "{}", '"invalid"', '"NaN"', '"Infinity"', "NaN", "Infinity"):
+        for token in ("true", "[]", "{}", '"invalid"', '"NaN"', '"Infinity"', "NaN", "Infinity",
+                      '"1_000"', '" 1.0 "'):
             with self.subTest(token=token), self.assertRaises(ValidationError):
                 cls.model_validate_json('{"key":"k","descriptor":"d","score":' + token + '}')
         with self.assertRaises(ValidationError):
