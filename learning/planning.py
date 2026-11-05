@@ -178,6 +178,13 @@ def authorize_plan(draft: LearningPlanDraft, context: RunContext, registry: Agen
                     learner_ref=context.participant.ref, policy=context.policy, subject_key=context.request.subject_key)):
                 raise ValueError("Activity is not ready")
         grants = [Capability.model_validate(cap) for cap in fields["capabilities"]]
+        if step.retrieval and not proposed.required_capabilities:
+            # The Lead often omits the capability; derive it only when exactly one grant fits, so nothing is guessed.
+            fitting = [grant for grant in grants if grant.capability == "search_documents"
+                       and grant.accessPath == "ORCHESTRATOR_RETRIEVAL" and "read" in grant.operations]
+            if len(fitting) == 1:
+                proposed = proposed.model_copy(update={"required_capabilities": (
+                    fitting[0].model_copy(update={"operations": ("read",)}),)})
         for need in proposed.required_capabilities:
             if need.capability != "search_documents" or need.accessPath != "ORCHESTRATOR_RETRIEVAL" or set(need.operations) != {"read"}:
                 raise ValueError("Unsupported task capability")

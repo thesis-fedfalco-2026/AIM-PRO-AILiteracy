@@ -141,7 +141,10 @@ and the plan retry, for `control-teacher`, `control-socratic`,
   worker review rejected the `control-teacher` fixture that it accepted in the
   other two runs.
 - **Plans**: 3 of 15 first plans were rejected, all with `Retrieval requires an
-  authorized capability`; the corrected attempt was authorized each time.
+  authorized capability`; the corrected attempt was authorized each time. When
+  a retrieval step omits the capability, it is now derived from the
+  specialization if exactly one grant fits (`search_documents`,
+  `ORCHESTRATOR_RETRIEVAL`, `read`), so those plans no longer cost a retry.
 - **Calls**: 33 in total, 2 per run (the worker output is injected) plus 3 plan
   retries.
 - `socratic-wrong-output-kind` was still sent to the worker review, which
