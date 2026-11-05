@@ -19,7 +19,7 @@ from learning.context import LearningRequest, RunContext
 from learning.metamodel import lead_contract
 from learning.outputs import (Citation, LearningResponse, SemanticReview, WorkerOutput, ProposedChange, build_brief, discovered_resources,
                               check_final_response, check_worker_output, final_response_violations,
-                              learning_data, task_result)
+                              learning_data, task_result, worker_output_violation)
 from learning.planning import LearningPlanDraft, authorize_plan, eligible_specializations
 from learning.store import canonical
 from agent_system import events, telemetry
@@ -239,13 +239,15 @@ class Orchestrator:
                     def guardrail(output):
                         if type(output.pydantic) is not WorkerOutput:
                             return False, "Worker did not return the structured contract"
-                        review = self._review(context, {"stage": "WORKER", "task": brief,
-                            "output": output.pydantic.model_dump(mode="json")}, step.id)
+                        # Deterministic checks come first: an inadmissible output needs no review call.
+                        review = None if worker_output_violation(task, output.pydantic) else self._review(
+                            context, {"stage": "WORKER", "task": brief,
+                                      "output": output.pydantic.model_dump(mode="json")}, step.id)
                         outcomes[step.id] = check_worker_output(task, output.pydantic, context, review=review)
                         if outcomes[step.id].fields["status"] != "SUCCEEDED":
                             self.logger.warning("Worker %s rejected (codes=%s, semantic_review=%s)",
                                 step.id, ",".join(f["code"] for f in outcomes[step.id].fields["findings"]),
-                                review.verdict)
+                                review.verdict if review else "SKIPPED")
                         return outcomes[step.id].fields["status"] == "SUCCEEDED", output
 
                     def delegate():

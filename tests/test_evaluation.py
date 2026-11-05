@@ -98,6 +98,14 @@ class EvaluationSuiteTest(unittest.TestCase):
         self.assertEqual(result.outcome, "BLOCKED")
         self.assertEqual([c for e in log.events if e.type == "step.finished" for c in e.data["finding_codes"]], ["R18"])
 
+    def test_deterministic_worker_rejection_skips_the_review_call(self):
+        cases = {c.id: c for c in CASES}
+        for case_id in ("socratic-wrong-output-kind", "citation-fabricated-source", "injection-change-proposal"):
+            with self.subTest(case_id):
+                log = MemoryEventLog()
+                self.assertEqual(run_case(cases[case_id], log).outcome, "BLOCKED")
+                self.assertNotIn("review", [e.type for e in log.events])
+
 
 class LiveModeTest(unittest.TestCase):
     """Live wiring with the provider replaced by the scripted Lead: no model calls."""
