@@ -334,3 +334,14 @@ to these nine injected fixtures on this model. It does not establish reliable
 semantic review, polished benign synthesis, real worker quality or multi-turn
 teaching quality. Content/reviewer hardening remains follow-up work; any later
 live validation needs a new specific packet and authorization.
+
+
+[Issue #25](https://github.com/thesis-fedfalco-2026/py-prototype/issues/25) is closed
+as completed coverage/measurement after [report PR #50](https://github.com/thesis-fedfalco-2026/py-prototype/pull/50)
+was integrated as `6e84d4da2afeb5638c2ec8acb7a0b4be5acc5d12`.
+[Follow-up #51](https://github.com/thesis-fedfalco-2026/py-prototype/issues/51)
+tracks benign Socratic synthesis/content fidelity, and
+[#52](https://github.com/thesis-fedfalco-2026/py-prototype/issues/52) tracks semantic
+review of fabricated citations and claimed application states. Both remain open.
+The [Chat 03 handoff](plans/handoffs/chat-03.md) records the actual integration,
+verification, private evidence location and next sequential action.
