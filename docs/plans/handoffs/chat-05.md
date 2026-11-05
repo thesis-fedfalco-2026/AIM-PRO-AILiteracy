@@ -166,3 +166,34 @@ and the then-pending human decision. The later REQUEST_REVISION receipt is
 published as a separate checkpoint, without relabelling it REJECTED or applied. This PR has not been integrated. Initial head checks were in progress;
 their actual final state must be read before integration. Unrelated untracked
 planning files and `examples/lpo-ai/` remain untouched.
+
+## Requested revision packet ready, untransmitted
+
+Fresh archive: `.cache/aimpro-examples/teacher/scn01-teacher-2-revision/`.
+Source copy: complete post-decision `scn01-teacher-1/`; every database row and
+the complete source inventory match. Production receipts and permissions remain
+valid/fresh. Five decisions and three changes are preserved; no new decision,
+application, request reservation, retrieval or model call occurred.
+
+- Request: `scn01-teacher-02-revision`.
+- Input digest: `c58bcc659971be84eafb2510798a7afd61580c2bbac4efc4cf24cfba0ae2b02b`.
+- Frozen manifest SHA-256: `803dbe29b7a89f2b0080d53af3a9c9babbc4b0cd26488dff888f1e3525f8ae08`.
+- Exact command: `LANGFUSE_ENABLED=false CREWAI_DISABLE_TELEMETRY=true CREWAI_TRACING_ENABLED=false .venv/bin/python .cache/aimpro-examples/teacher/scn01-teacher-2-revision/run.py`.
+- Same provider/model, source excerpts, approved syllabus/assessment and operational
+  caps/budget as first packet; only the fifteen explicit requirements change in
+  GenerationInput. The prior generated draft is not a model input.
+- New teaching cases and tone-only comparison avoid the assessed cases/length
+  answer; corrected taxonomy/qualified claims/citations and full fictional peer
+  email resolve the requested briefs. Transcript is openly commented teaching
+  material, not promised as an answer-free Trainer stimulus.
+- Fifteen offline tests pass; all six historical generation requests replay
+  exactly without model clients. No corrected output is claimed.
+
+Public safe metadata: `revision-packet.json` and
+`revision-preparation-verification.json` in the portable Teacher directory.
+The owner has been asked for the new exact transmission authorization; keep that
+question pending. REQUEST_REVISION and the first packet consent do not authorize
+this call. On authorization, execute only this fresh request once, preserve its
+original output and separate Lead verdict, inspect all findings and obtain the
+actual next human content decision. Do not apply either package without express
+authorization or start Chat 06 while Teacher prerequisites remain unresolved.

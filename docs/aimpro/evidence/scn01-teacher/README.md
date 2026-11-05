@@ -42,3 +42,20 @@ source excerpt text and raw HTTP/SSE. Those remain in the local archive named in
 provenance.json. It includes all generated materials unchanged. The
 [chronological report](../../scn01-teacher-example.md) separates production checks,
 Lead judgment, local findings and the actual human REQUEST_REVISION decision.
+
+## Requested correction packet — no new transmission
+
+A fresh isolated copy preserves the complete post-REQUEST_REVISION archive.
+The [new packet metadata and complete command requirements](revision-packet.json)
+and [offline verification](revision-preparation-verification.json) record request
+`scn01-teacher-02-revision`, manifest
+`803dbe29b7a89f2b0080d53af3a9c9babbc4b0cd26488dff888f1e3525f8ae08`.
+Only explicit requirements change in the production input; approved source,
+syllabus and assessment remain exact. Fifteen offline driver/regression tests pass.
+All six previous generation requests replay exactly without models.
+
+The proposed corrected run uses the same direct Anthropic model and $5 budget,
+with a distinct request and one conditional call per role. No new request has
+been reserved or transmitted at this preparation checkpoint. The owner's revision
+decision and first-run authorization do not authorize it; a separate exact live
+transmission question is pending. No corrected Teacher output exists yet.

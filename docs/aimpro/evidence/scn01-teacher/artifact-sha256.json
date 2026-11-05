@@ -1,5 +1,5 @@
 {
-  "README.md": "dc4c489fea1c1f30edd8c724da37c09422346c245395ad921f9f0b23c8cc0ca6",
+  "README.md": "edcca76730571759b8772544007e75895da2933bc4cdca828f9ee9b4dbf633da",
   "assessment-overlap-check.json": "266059ab7025d62b28476f9fa57114e2a7579287413163e08399e856ce13efe6",
   "independent-local-review.json": "359734878e0148886b11f71e8be5fb969a6cbaed3f0923b9f5d783b094927a27",
   "lead-review.json": "e098b32ff7992287dfe0c2f652488ef5b48d1a2b7ad4409df81005b92fa7041e",
@@ -10,6 +10,8 @@
   "proposal-review-key.json": "bfef4e28cb56fdf5f7ad15882333d8f54db48a7ef3851f389b498d109431f0ce",
   "provenance.json": "3f88fb743b8b293aed8271ef192f46543103342ac6c836cef9ab331019bdcdb3",
   "provider-usage-and-cost.json": "4e424b31c566e9cf53818adb9dd58cb90ff166fa3839d896ec59cb9bfc5cf8bc",
+  "revision-packet.json": "16012c1a8cfeb5da60b1f10c3c59bc9312cad9c075037fcc747ed5cb3655f4dc",
+  "revision-preparation-verification.json": "448dc59b425342cea768b648d154b0c2091172fbf8dd47456f7294f9b2c28a10",
   "run-summary.json": "109189ebd6e423fd9f8c551ef1aeb252c74fa64a83ca7feade98fcaa3f4aac99",
   "source-ledger.json": "1fb04886bf37076d45094d6012e6d8a67237475216b9b4331d8748033abcea77",
   "teacher-draft-review.md": "c8c7877b0dfffeb2b83a5280e817cb6011ccc5e33723ec68b2044f45013cf5d3",

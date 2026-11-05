@@ -177,3 +177,46 @@ must address all documented findings, including the assistant's packet taxonomy
 error. A fresh isolated revision packet is being prepared; any new live call
 requires its own exact transmission authorization. #10 remains open and Chat 06
 must not start.
+
+## Corrected revision packet prepared — separate authorization pending
+
+The fresh isolated directory is
+`.cache/aimpro-examples/teacher/scn01-teacher-2-revision/`. SQLite backup preserves
+all 164 entity rows, one context, three operations and nine requests, including
+the original Teacher result and actual REQUEST_REVISION. Current production
+authorization, approval/application receipts and freshness pass. The complete
+post-decision archive inventory remains unchanged.
+
+New request: `scn01-teacher-02-revision`; input digest
+`c58bcc659971be84eafb2510798a7afd61580c2bbac4efc4cf24cfba0ae2b02b`.
+New manifest SHA-256:
+`803dbe29b7a89f2b0080d53af3a9c9babbc4b0cd26488dff888f1e3525f8ae08`.
+Source/approved syllabus/assessment inputs are identical; only explicit command
+requirements change. The prior Teacher draft is not sent to the model.
+
+The fifteen corrected requirements address all T01–T06 findings: distinct
+fictional adviser/peer cases; a tone-only detrimental change rather than the
+assessed length deletion; correct five-move labels; qualified model-behaviour
+claims and exact excerpt-6 attribution; an openly commented teaching transcript
+that is not an answer-free Trainer stimulus; and a complete fictional peer email
+instead of a narrative result summary. Original accepted Evaluator limitations
+remain visible and unchanged. Later Trainer may author its own distinct
+unannotated practice stimulus; no future Trainer ids are invented here.
+
+Fifteen offline packet tests pass, including synthetic production success,
+transport/truncation failures, missing assets, separate Lead rejection and narrow
+regression checks for assessment exposure, exact tone-only change, false
+unannotated claims and missing excerpt-6 attribution. These guards do not prove
+semantic adequacy. The five prior Evaluator results and first Teacher result
+replay exactly without models. Database bytes and all approved inputs remain
+unchanged; the new request is unreserved and no corrected output exists.
+
+The concrete local RUN_REVIEW.md shows all seven exact source excerpts, complete
+production prompts/schemas/requirements and the command. The proposed profile is
+Anthropic direct `claude-sonnet-4-6`, one Teacher and conditional separate Lead,
+16,000/2,000 output tokens, 600 seconds per phase, 600,000 body bytes per phase,
+no tools/delegation/retry/fallback, and $5 operational budget. The new Teacher
+task is 365,939 UTF-8 bytes. Expected cost is $0.70–$1.80, with the same conservative
+listed-rate estimate $4.80072 under the local guards, not a verified billing cap
+or invoice. A new explicit live authorization naming this exact manifest is
+pending. No new transmission or content approval/application is inferred.
