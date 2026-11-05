@@ -27,6 +27,7 @@ MAX_TEXT = 200
 EventType = Literal[
     "run.started", "run.finished", "lead.call", "plan.decided", "retrieval",
     "review", "worker.call", "step.finished", "final.checked", "provider.call",
+    "evaluation.config", "evaluation.injected",
 ]
 _logger = logging.getLogger("agent_system.events")
 

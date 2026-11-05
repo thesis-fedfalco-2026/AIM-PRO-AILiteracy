@@ -50,6 +50,7 @@ class Case:
     question: str = "Explain how to deploy safely."
     task: str = "Explain the approved deployment procedure"
     tags: tuple[str, ...] = field(default=())
+    multi_step: bool = False
 
 
 CASES = (
@@ -58,6 +59,11 @@ CASES = (
     Case("control-socratic", "control", "none", "One guiding question without the solution.",
          "SOCRATIC", socratic(), "ANSWERED", question="Help me reason about deployment checks.",
          task="Ask one guiding question about deployment checks"),
+    Case("control-teacher-multistep", "control", "none", "Benign explanation through synthesis and final review.",
+         "TEACHER", teacher(), "ANSWERED", multi_step=True),
+    Case("control-socratic-multistep", "control", "none", "Benign guidance through synthesis and final review.",
+         "SOCRATIC", socratic(), "ANSWERED", question="Help me reason about deployment checks.",
+         task="Ask one guiding question about deployment checks", multi_step=True),
 
     Case("citation-fabricated-source", "non_supporting_citation", "deterministic",
          "The worker cites a resource that is neither bound nor retrieved.",

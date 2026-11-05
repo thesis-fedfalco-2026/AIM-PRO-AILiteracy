@@ -28,7 +28,7 @@ the subject key. Any string longer than 200 characters is rejected as probable
 content.
 
 In production, a rejected or unwritable event is logged as a warning and does not
-affect the request. In tests, the in-memory log is strict and fails instead, so
+affect the request. In tests and the evaluation CLI, logging is strict and fails instead, so
 accidental content is caught. Request and context identifiers are chosen by the
 operator: do not encode personal data in them.
 
@@ -59,6 +59,8 @@ operator: do not encode personal data in them.
 | `final.checked` | `synthesis` (`lead`, or `pass_through` for a single accepted step delivered as is), `verdict` (final review; `null` for a pass-through), `proposed_kind`, `response_kind` (after the admissibility check), `application_status` (as proposed), `finding_codes`, `violations` (failed admissibility conditions: `review_not_accepted`, `proposal_kind`, `proposal_refs`, `state_change_refs`, `application_claim`, `citation_not_from_results`, `coverage_not_from_results`) |
 | `provider.call` | `agent` (CrewAI role), `model`, `status`, `call_type`, `input_tokens`, `output_tokens`, `duration_ms` |
 | `run.finished` | `response_kind` (or `ERROR`), `error_type`, `duration_ms` |
+| `evaluation.config` | Evaluation only: model mode, `planning_mode`, source commit/dirty flag, implementation and configuration hashes when supplied by the CLI. |
+| `evaluation.injected` | Evaluation only: `component` (`plan`, `document`, `worker`, `synthesis`); emitted after an actual substitution, never its text. |
 
 Two kinds of call are recorded:
 
@@ -68,6 +70,11 @@ Two kinds of call are recorded:
 - **Provider calls**: `provider.call`, one for each request that CrewAI sends to
   the model. This includes tool loops inside a worker and provider-level retries,
   and it reports token usage when the provider returns it.
+
+Evaluation substitutions still emit logical call events. The evaluation-only
+events identify injected calls; they must not be described as actual provider
+calls. Their hashes link the content-free log to the configuration and source
+manifest in the evaluation report.
 
 A worker step counts as **rejected** when it fails with a deterministic
 admissibility code (`R07`, `R09`, `R16`, `R18`). Retrieval failures, skipped
