@@ -94,3 +94,14 @@ decisions, three StateChanges, 164 entity rows and ten requests remain.
 This records Chat 05's actual-failure branch; it does not satisfy #10's successful
 Teacher/Trainer scope or make Trainer ready. A new reviewed and separately
 authorized Teacher revision is required before Chat 06. No third run is started.
+
+## Third packet prepared without models
+
+The owner subsequently requested a third packet with no model execution.
+[Preparation 03](preparation-03/README.md) records eighteen corrected requirements,
+twenty-six offline tests, fresh production receipts and all seven exact
+historical replays. The complete peer scene must now contain the identical full
+prompt/email present in the separate example; residual tone guidance, real-data
+substitution and gap-provenance issues are also addressed by the brief/guards.
+No third request or transmission is authorized, reserved or run. The actual
+first REQUEST_REVISION and second FAILURE remain the only Teacher observations.

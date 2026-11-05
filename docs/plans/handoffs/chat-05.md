@@ -143,3 +143,31 @@ and specific live authorization, followed by separate Lead/human review and
 application only when expressly authorized. Address the missing full peer scene
 and retained findings. Do not retry the terminal request, infer approval from
 Lead ACCEPT, activate learning or create a release. #10 remains open.
+
+## Subsequent third-packet preparation — offline only
+
+The owner requested preparation of a third Teacher packet without executing
+models. The new copy `.cache/aimpro-examples/teacher/scn01-teacher-3-complete-peer/`
+preserves every post-failure row and the complete second archive inventory.
+Production refs/receipts/permissions/freshness above are unchanged and valid.
+
+- Request: `scn01-teacher-03-complete-peer`.
+- Manifest SHA-256: `fd86eb6c9fe3606cef2651a2d5235e2fd12cee13467f3468532f47fd263cf04d`.
+- Input digest: `7319be2df59a68cf01d9886ecb56931b4177691e1b03e3ce638b8d070abb7c5d`.
+- Source commit: `5bf9d8b950044e72511e23a5f270d9b530808dc3`; runtime code unchanged.
+- Exact future command: `LANGFUSE_ENABLED=false CREWAI_DISABLE_TELEMETRY=true CREWAI_TRACING_ENABLED=false .venv/bin/python .cache/aimpro-examples/teacher/scn01-teacher-3-complete-peer/run.py`.
+- Eighteen requirements; full peer scene with identical full prompt/email blocks,
+  sole tone instruction, fictional-only reuse and distinct gap provenance.
+- Proposed Anthropic direct `claude-sonnet-4-6`, one Teacher plus conditional Lead,
+  16,000/2,000 output tokens, no retry/fallback/tools/delegation and $5 budget.
+- Twenty-six offline tests pass with synthetic HTTP and blocked sockets/DNS; all
+  seven historical requests replay exactly without models and DB changes.
+
+Safe evidence: `docs/aimpro/evidence/scn01-teacher/preparation-03/`. Complete local
+review: `RUN_REVIEW.md` in the new archive. Verification:
+`LANGFUSE_ENABLED=false .venv/bin/python .cache/chat05/verify_third_prepared.py`.
+There is no live authorization, new request reservation, model run, output,
+proposal, human content decision or application. No execution question is pending;
+the user's scope is preparation only. Before any later execution obtain a new
+explicit authorization for this exact packet. Do not reuse earlier consent or
+start Chat 06. The first REQUEST_REVISION and second FAILURE remain unchanged.

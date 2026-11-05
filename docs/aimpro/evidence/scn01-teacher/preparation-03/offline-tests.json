@@ -1,0 +1,23 @@
+{
+  "tests": 26,
+  "result": "PASS",
+  "seconds": 3.433,
+  "network_and_dns_blocked": true,
+  "model_endpoints_reached": 0,
+  "http_responses": "Synthetic in disposable copies only; no real provider/model execution.",
+  "production_dispatch_with_synthetic_http": true,
+  "observed_second_output_omission_reproduced": true,
+  "regressions_checked": [
+    "email without peer scene",
+    "missing complete peer case or spoken introduction/diagnosis",
+    "mismatched prompt/email across two assets",
+    "remaining tone guidance after claimed sole-tone removal",
+    "recorded real-data substitution suggestion",
+    "conflated or missing gap-provenance entries",
+    "original assessed prompt exposure",
+    "incomplete/truncated response and transport error",
+    "missing asset and Lead rejection",
+    "wrong endpoint/model, tools, oversized body, cache tier and second-transmission guards"
+  ],
+  "pedagogical_validity_established": false
+}

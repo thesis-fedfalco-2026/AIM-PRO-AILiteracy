@@ -284,3 +284,47 @@ shared_content; no learning activation, binding or release occurs. Do not start
 Chat 06. Further Teacher work requires a new correction packet and separate
 authorization, addressing the missing complete peer transcript and retained
 findings; no automatic retry is authorized by this failure record.
+
+## Third packet — requested offline preparation, no models
+
+After the actual second-run failure was recorded, the owner requested preparation
+of a third Teacher packet without executing models. A new complete SQLite backup
+under `.cache/aimpro-examples/teacher/scn01-teacher-3-complete-peer/` preserves the
+post-failure archive, including all 164 entity rows, ten requests, five decisions
+and three StateChanges. The prior archive inventory and all rows match. Current
+production permissions, exact selected inputs, approval/application receipts and
+freshness pass without source retrieval or state changes.
+
+Request `scn01-teacher-03-complete-peer`, manifest SHA-256
+`fd86eb6c9fe3606cef2651a2d5235e2fd12cee13467f3468532f47fd263cf04d`, input
+digest `7319be2df59a68cf01d9886ecb56931b4177691e1b03e3ce638b8d070abb7c5d`.
+Only eighteen explicit requirements change in GenerationInput. All source,
+approved syllabus and assessment data are identical to attempt 02. The source
+commit is `5bf9d8b950044e72511e23a5f270d9b530808dc3`, with unchanged runtime code.
+No previous Teacher generated draft is sent as model input.
+
+The new brief makes the full peer scene a literal transcript segment with spoken
+introduction/diagnosis, exact fictional case, and complete peer prompt/email
+blocks duplicated verbatim from the separate peer material. The final calm-tone
+sentence must be the only tone guidance, so its deletion leaves none; the result
+remains an unvalidated instruction illustration, not observed degradation. All
+reuse stays fictional. Distinct gap prefixes separate original source diagnostics
+from accepted assessment-authoring findings. Existing source/citation, EXPLAIN
+intent, approved-assessment limitations and original-output boundaries remain.
+
+Twenty-six offline tests pass with sockets/DNS blocked and synthetic HTTP only,
+including real service dispatch, success/failure/replay and the actual second
+output as an omission regression fixture. No provider/model executes. All seven
+historical requests replay exactly with model construction forbidden and no DB
+changes. The third request is unreserved; no live authorization, output, proposal,
+content decision or application exists. Structural guards are narrow and cannot
+replace substantive Lead and human review.
+
+The complete local RUN_REVIEW.md contains all exact excerpts, prompts/schemas,
+requirements, guards and proposed command/profile. The proposed budget remains
+$5 for direct Anthropic Sonnet 4.6, one Teacher and conditional Lead, no retry or
+fallback. Full private source inputs, databases and raw traffic are not
+published. [Safe preparation evidence](evidence/scn01-teacher/preparation-03/README.md)
+is separate from the real-run observations. A later live execution would require
+its own explicit exact authorization; none is requested or inferred by this
+offline preparation. #10 remains open and Chat 06 remains blocked.
