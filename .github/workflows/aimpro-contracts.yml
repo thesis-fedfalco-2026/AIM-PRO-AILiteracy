@@ -30,3 +30,20 @@ jobs:
           cache: pip
       - run: python -m pip install -r requirements.txt
       - run: python -m unittest tests.test_syllabus_coverage tests.test_source_selection tests.test_authoring_generators tests.test_authoring_projects tests.test_authoring_cycle tests.test_anthropic tests.test_scn01_evaluator_evidence -v
+
+  offline-evaluation:
+    runs-on: ubuntu-latest
+    env:
+      LANGFUSE_ENABLED: 'false'
+      CREWAI_DISABLE_TELEMETRY: 'true'
+      CREWAI_TRACING_ENABLED: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - run: python -m unittest tests.test_evaluation tests.test_events -v
+      - run: python -m evaluation --check
+      - run: python -m evaluation --planning-mode controlled-two-step --check
