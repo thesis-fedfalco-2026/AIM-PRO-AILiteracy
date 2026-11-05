@@ -133,3 +133,14 @@ apply only if expressly authorized, then verify receipts/history and exact
 no-model replay again. Publish the disposition and update #10, leaving it open
 for Trainer and unresolved Teacher prerequisites. A Teacher revision requires a
 corrected fresh packet and new transmission authorization. Do not start Chat 06.
+
+## Publication checkpoint
+
+Evidence commit: `fd8a022` on `docs/scn01-teacher-observation`.
+Published as [draft PR #57](https://github.com/thesis-fedfalco-2026/py-prototype/pull/57).
+The explicit [#10 observation](https://github.com/thesis-fedfalco-2026/py-prototype/issues/10#issuecomment-6667202043)
+records the real run and distinguishes Lead ACCEPT, local REJECT recommendation
+and pending human decision. No completion, actual rejection or application is
+claimed. This PR has not been integrated. Initial head checks were in progress;
+their actual final state must be read before integration. Unrelated untracked
+planning files and `examples/lpo-ai/` remain untouched.
