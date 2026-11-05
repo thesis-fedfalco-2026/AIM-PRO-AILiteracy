@@ -1,9 +1,10 @@
-# Chat 05 — Dedicated Teacher real run and pending human decision
+# Chat 05 — Dedicated Teacher run and human REQUEST_REVISION
 
-Status on 5 November 2026: **AWAITING_HUMAN_DECISION**.
+Status on 5 November 2026: **REVISION_REQUIRED — REQUEST_REVISION RECORDED, NOT APPLIED**.
 The exact packet was authorized and completed with separate Lead ACCEPT.
-Independent local review recommends REJECT; no human rejection is inferred.
-This checkpoint is not completion of Chat 05. Chat 06 must not start from it. No agents were spawned.
+After reviewing the findings, the owner explicitly requested revision and no
+application. The proposal is DRAFT; it was not REJECTED or approved. A corrected
+Teacher revision is required; Chat 06 must not start. No agents were spawned.
 
 ## Exact approved prerequisites
 
@@ -65,7 +66,8 @@ missing transcript, Lead rejection, transmission/size/model/tool/cache guards an
 exact replay without clients. Production input verification confirms all frozen
 hashes, receipts, freshness, unchanged DB bytes and all five prior Evaluator exact
 terminal replays without models. The new Teacher request completed and its original result replays exactly
-without models. No new human decision or application exists at this checkpoint.
+without models. At the generation checkpoint no new human decision/application existed; the later
+REQUEST_REVISION is recorded below.
 
 ## Preserved limitations and Trainer inputs
 
@@ -82,7 +84,7 @@ explanation, weak/improved/worse examples, fictional peer failure and transcript
 The other three syllabus units retain PRACTICE intent. Trainer must later resolve
 the exact fresh project/context and selected assessment above through production;
 include an exact approved/applied Teacher package in `shared_content` only if it
-actually consumes its material. A pending Teacher package exists, but is not approved/applied and must not be
+actually consumes its material. A Teacher package exists under DRAFT status after REQUEST_REVISION, is not approved/applied and must not be
 used as Trainer shared content.
 No learning activation, ResourceBinding or release is authorized here.
 
@@ -123,16 +125,36 @@ Portable extract: `docs/aimpro/evidence/scn01-teacher/`.
 Private complete owner packet: `.cache/aimpro-examples/teacher/scn01-teacher-1/OWNER_REVIEW.md`.
 Verification scripts/logs: `.cache/chat05/`.
 
+## Actual owner decision and verification
+
+The owner explicitly instructed REQUEST_REVISION and no application. Production
+LearningService.decide recorded `decision-f2c1781b2a5d4811bee41ac494c3053c@1`
+against the exact version-1 proposal and reviewed payload. Proposal status
+revision `21221259852f4d61b4942bc7242c6691` is DRAFT. The complete pre-decision
+database is retained as `state-before-owner-decision.sqlite`.
+
+Exactly two entity rows were added; there are now 164 entity rows, five
+HumanDecisions, three StateChanges and nine requests. Every original candidate
+and prior row remains unchanged; context/operations/requests remain unchanged.
+No application occurred and no Teacher package is selected. Project/artifact
+receipts remain valid and fresh. Exact terminal replay still returns the original
+PROPOSAL with model construction forbidden, despite the later human revision
+request. This historical replay does not approve or reapply anything.
+
+Public receipts: `owner-decision.json` and `post-decision-verification.json` in the
+portable Teacher directory. Private exact instruction: `owner-decision-instruction.json`;
+readable decision: `OWNER_DECISION.md`. All findings T01–T06 remain in the unchanged
+package. No new model transmission was authorized by the human content decision.
+
 ## Exact next action
 
-The owner has been asked to choose REJECT, REQUEST_REVISION, or explicit
-APPROVE/application for the exact proposal/payload after receiving the complete
-materials and findings. Keep that decision pending; neither time nor Lead ACCEPT
-is approval. Record only the actual owner decision through production services,
-apply only if expressly authorized, then verify receipts/history and exact
-no-model replay again. Publish the disposition and update #10, leaving it open
-for Trainer and unresolved Teacher prerequisites. A Teacher revision requires a
-corrected fresh packet and new transmission authorization. Do not start Chat 06.
+Prepare the requested corrected Teacher revision in a fresh isolated copy of the
+post-decision archive. Re-resolve exact fresh project/syllabus/assessment receipts,
+correct the taxonomy, require genuinely distinct fictional cases without assessed
+answer exposure, accurate qualified claims/citations and a compatible transcript.
+Present the new frozen packet and obtain its specific live transmission
+authorization. Do not retry request scn01-teacher-01, silently edit its output,
+apply the DRAFT proposal or start Chat 06.
 
 ## Publication checkpoint
 
@@ -140,7 +162,7 @@ Evidence commit: `fd8a022` on `docs/scn01-teacher-observation`.
 Published as [draft PR #57](https://github.com/thesis-fedfalco-2026/py-prototype/pull/57).
 The explicit [#10 observation](https://github.com/thesis-fedfalco-2026/py-prototype/issues/10#issuecomment-6667202043)
 records the real run and distinguishes Lead ACCEPT, local REJECT recommendation
-and pending human decision. No completion, actual rejection or application is
-claimed. This PR has not been integrated. Initial head checks were in progress;
+and the then-pending human decision. The later REQUEST_REVISION receipt is
+published as a separate checkpoint, without relabelling it REJECTED or applied. This PR has not been integrated. Initial head checks were in progress;
 their actual final state must be read before integration. Unrelated untracked
 planning files and `examples/lpo-ai/` remain untouched.

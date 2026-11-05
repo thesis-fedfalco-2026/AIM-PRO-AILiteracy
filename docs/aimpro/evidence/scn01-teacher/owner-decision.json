@@ -1,0 +1,60 @@
+{
+  "recorded_at_utc": "2026-11-05T19:41:41.717745+00:00",
+  "owner_instruction_english": "I request revision of the documented findings; record REQUEST_REVISION and do not apply.",
+  "reviewed_target": {
+    "type": "ChangeProposal",
+    "id": "proposal-269745fc7eb140bbaa72a42bf6dd1d2a",
+    "version": "1"
+  },
+  "review_payload_key": "5e1c62ad695210f52ee4862b3f7fe28827b010fbb350a983f1fdf04af8b7870c",
+  "decision": {
+    "type": "HumanDecision",
+    "id": "decision-f2c1781b2a5d4811bee41ac494c3053c",
+    "version": "1",
+    "provenance": {
+      "origin": "HUMAN_DECISION",
+      "sources": [],
+      "responsible": "syllabus-author",
+      "rationale": null
+    },
+    "fields": {
+      "context": {
+        "type": "ExecutionContext",
+        "id": "scn01-selected-syllabus-2",
+        "version": "d28d7145852b428aa1e4a7cdf76ec358"
+      },
+      "decider": {
+        "type": "Participant",
+        "id": "scn01-selected-syllabus-2:participant:syllabus-author",
+        "version": "1"
+      },
+      "target": {
+        "type": "ChangeProposal",
+        "id": "proposal-269745fc7eb140bbaa72a42bf6dd1d2a",
+        "version": "1"
+      },
+      "decision": "REQUEST_REVISION",
+      "reason": "Recorded by the assistant on behalf of the repository owner after the exact OWNER_REVIEW.md, complete original Teacher materials and independent findings were presented. The owner explicitly chose REQUEST_REVISION. This decision covers proposal proposal-269745fc7eb140bbaa72a42bf6dd1d2a@1 and review payload 5e1c62ad695210f52ee4862b3f7fe28827b010fbb350a983f1fdf04af8b7870c. Revise all documented findings T01–T06: replace assessment-identical worked examples and peer case with distinct fictional demonstration assets without exposing assessed answers; correct the transmitted taxonomy error and generated gap; remove categorical unsupported model-behaviour claims; include claim-specific excerpt-6 attribution where used; resolve the transcript's embedded labels/diagnoses and false unannotated claim before Trainer reuse; supply a complete fictional peer response message if the teaching sequence requires it. This requests revision of the exact unchanged twenty-candidate proposal, not approval or application. Lead ACCEPT does not resolve these findings. All original outputs and accepted Evaluator limitations remain unchanged. No new model run, source retrieval, release, delivery binding or learning activation is authorized.",
+      "decidedAt": "2026-11-05T19:41:41.598098+00:00",
+      "reviewedPayloadKey": "5e1c62ad695210f52ee4862b3f7fe28827b010fbb350a983f1fdf04af8b7870c",
+      "coveredPayloadKeys": [
+        "5e1c62ad695210f52ee4862b3f7fe28827b010fbb350a983f1fdf04af8b7870c"
+      ]
+    }
+  },
+  "proposal_after_decision": {
+    "type": "ChangeProposal",
+    "id": "proposal-269745fc7eb140bbaa72a42bf6dd1d2a",
+    "version": "21221259852f4d61b4942bc7242c6691"
+  },
+  "proposal_status": "DRAFT",
+  "application": null,
+  "applied_project": {
+    "type": "Resource",
+    "id": "authoring-project:072a25dbf8a5773756a614ff6af5f82fa6894e9c0017999c75ab7ec50944dbac",
+    "version": "d28d7145852b428aa1e4a7cdf76ec358"
+  },
+  "teacher_selected": false,
+  "original_candidates_unchanged": true,
+  "further_model_transmission_authorized": false
+}

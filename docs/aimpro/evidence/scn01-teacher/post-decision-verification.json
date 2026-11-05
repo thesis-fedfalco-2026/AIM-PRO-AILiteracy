@@ -1,0 +1,20 @@
+{
+  "production_decision_recorded": "REQUEST_REVISION",
+  "proposal_status": "DRAFT",
+  "review_payload_key_valid": true,
+  "candidates_unchanged": true,
+  "human_decisions": 5,
+  "state_changes": 3,
+  "new_decisions": 1,
+  "new_applications": 0,
+  "applied_context_unchanged": true,
+  "applied_project_unchanged": true,
+  "existing_project_receipts_valid": true,
+  "existing_project_fresh": true,
+  "teacher_selected": false,
+  "terminal_replay_exact_without_models": true,
+  "historical_replay_kind": "PROPOSAL",
+  "model_calls": 0,
+  "retrieval_calls": 0,
+  "sqlite_integrity": "ok"
+}

@@ -1,9 +1,11 @@
 {
-  "README.md": "f9fd096c4e2e083ab4260d1b45718d74cb8afc918d0994cd7d07959468e92ace",
+  "README.md": "dc4c489fea1c1f30edd8c724da37c09422346c245395ad921f9f0b23c8cc0ca6",
   "assessment-overlap-check.json": "266059ab7025d62b28476f9fa57114e2a7579287413163e08399e856ce13efe6",
   "independent-local-review.json": "359734878e0148886b11f71e8be5fb969a6cbaed3f0923b9f5d783b094927a27",
   "lead-review.json": "e098b32ff7992287dfe0c2f652488ef5b48d1a2b7ad4409df81005b92fa7041e",
   "model-transmission-authorization.json": "523c4a6c85cef76f8dc8a9dac485a64eca5a4ef6fe8fe2c160d326218bba1fdf",
+  "owner-decision.json": "71c03000c4cd46330dac2770fb5dc67bef7f782c2b8047586b0807a809637443",
+  "post-decision-verification.json": "776594c2e2d13ff6e94439e9de2f8011fe7d511013b455c04fd37de8521c8063",
   "post-run-verification.json": "85840241cce8f7e68f16158bf3ced0d41758057f92ca1161cd58b1d1323042bb",
   "proposal-review-key.json": "bfef4e28cb56fdf5f7ad15882333d8f54db48a7ef3851f389b498d109431f0ce",
   "provenance.json": "3f88fb743b8b293aed8271ef192f46543103342ac6c836cef9ab331019bdcdb3",

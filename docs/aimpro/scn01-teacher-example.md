@@ -4,8 +4,8 @@ The separately authorized production Teacher + Lead run completed on 5 November
 2026. It produced an unchanged, human-reviewable proposal with separate Lead
 ACCEPT. Independent local review recommends REJECT because the Teacher reproduces
 and explains the exact selected assessment stimuli, with further packet-taxonomy,
-source-support and transcript-reuse findings. Human decision is pending at this
-checkpoint; no approval or application is inferred.
+source-support and transcript-reuse findings. The owner subsequently explicitly requested revision. Production recorded
+REQUEST_REVISION; the proposal is DRAFT, with no approval or application.
 
 [Portable evidence](evidence/scn01-teacher/README.md) contains the complete original
 typed draft, readable materials/citations/gaps, separate Lead verdict, local
@@ -138,7 +138,8 @@ operations, no learner-runtime entities, complete original archive inventory,
 valid packet/code hashes and exact completed replay with model construction
 forbidden. These checks do not establish pedagogical adequacy.
 
-The owner has the full decision packet and original materials. No decision is
+The owner reviewed the full decision packet and original materials and explicitly
+requested revision of the documented findings without application. No approval is
 inferred from Lead ACCEPT or from the transmission authorization. The accepted
 Evaluator's hint, placeholder, descriptor and attribution limitations remain;
 its descriptors are not validated instruments. Original source diagnostics,
@@ -149,3 +150,30 @@ approved, release created, learning activated, learner evaluated or acquisition
 claimed. Any Teacher revision needs a fresh corrected transmission packet and
 new authorization. Chat 06 must not start while the documented prerequisite
 findings require a new Teacher revision.
+
+## Actual human decision — REQUEST_REVISION, no application
+
+The owner instructed: request revision of the documented findings, record
+REQUEST_REVISION and do not apply. Production LearningService.decide recorded
+HumanDecision `decision-f2c1781b2a5d4811bee41ac494c3053c@1` against the exact
+version-1 proposal and review payload above. The resulting proposal status
+revision is `21221259852f4d61b4942bc7242c6691`, **DRAFT**. This is not REJECTED,
+APPROVED or APPLIED; it does not rewrite any generated text.
+
+The complete database was backed up before recording the decision. Exactly two
+entity rows were added (HumanDecision and proposal status revision); the twenty
+candidates, all prior rows, context selector, operations and requests remain
+unchanged. Five HumanDecisions and three StateChanges remain, with zero new
+applications and no Teacher selection. The applied project/context remains
+`d28d7145852b428aa1e4a7cdf76ec358`; production project/artifact receipts remain
+valid and fresh. Exact terminal replay still returns the historical PROPOSAL
+without model construction. No network/model/retrieval call was used to record
+or verify the decision.
+
+The [decision receipt](evidence/scn01-teacher/owner-decision.json) and
+[post-decision verification](evidence/scn01-teacher/post-decision-verification.json)
+record that boundary separately from the generation-time checks. The correction
+must address all documented findings, including the assistant's packet taxonomy
+error. A fresh isolated revision packet is being prepared; any new live call
+requires its own exact transmission authorization. #10 remains open and Chat 06
+must not start.
