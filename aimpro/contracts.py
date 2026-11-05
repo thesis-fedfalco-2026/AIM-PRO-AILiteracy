@@ -11,9 +11,10 @@ from decimal import Decimal
 import hashlib
 import json
 from pathlib import Path
+import re
 from typing import Annotated, ClassVar, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, create_model
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, WithJsonSchema, create_model
 
 from aimpro.audit import DEFAULT_PROJECT
 
@@ -22,7 +23,21 @@ Key = tuple[str, str, str]
 GENERATOR_VERSION = "2"
 PRIMITIVES = {"EString": str, "EInt": int, "EDouble": float,
               "EBoolean": bool, "EDate": datetime}
-DATA_TYPE_CLASSES = {"java.lang.String": str, "java.math.BigDecimal": Decimal}
+DECIMAL_PATTERN = r"^[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?$"
+
+
+def decimal_string(value, info):
+    if isinstance(value, str) and re.fullmatch(DECIMAL_PATTERN, value) is None:
+        raise ValueError("Expected a finite decimal string with optional exponent")
+    if info.mode == "json" and type(value) in (str, int, float):
+        return Decimal(str(value))
+    return value
+
+
+# Include exponent notation emitted by Decimal serialization in the contract.
+ExactDecimal = Annotated[Decimal, BeforeValidator(decimal_string), WithJsonSchema({
+    "anyOf": [{"type": "number"}, {"type": "string", "pattern": DECIMAL_PATTERN}]})]
+DATA_TYPE_CLASSES = {"java.lang.String": str, "java.math.BigDecimal": ExactDecimal}
 
 
 def encoded(value):
