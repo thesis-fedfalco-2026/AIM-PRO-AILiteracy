@@ -1,0 +1,142 @@
+{
+  "source_export_sha256": "2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c",
+  "metamodel_fingerprint": "b81b76d3e5004afa0b2515a6d0619d7af9a233fd9e1cff4c80c74366dbacc003",
+  "syllabus_gaps": [
+    "No formal assessment, rubric, or passing threshold is specified in the source; this is retained as a gap. No ASSESS unit, score, or acquisition rule is proposed.",
+    "No workshop duration beyond the source constraint 'One evening workshop' is invented; no timing is added to units.",
+    "Corpus resources wp3:12ce471a0269 (grades 6–12 critical AI literacy) and wp3:4868ba8731b3 (AI in educational measurement) are not used as unit citations because they do not validate transfer to adult SME business learners and do not supply a SCN01 rubric or thresholds.",
+    "Notebook/API setup and illustrative lengths from corpus excerpts are not SCN01 requirements and are not imported.",
+    "Source competency values are preserved without normalization: category DIGITAL, heRelevance HIGH, smeRelevance HIGH, vetRelevance HIGH, ksa SKILL, proficiency FOUNDATION are flagged in the source diagnostics as enum/untyped-vocabulary mismatches against the allowed vocabularies and are not changed."
+  ],
+  "source_constraints": [
+    "One evening workshop",
+    "use fictional customer details only."
+  ],
+  "resources": [
+    {
+      "resource_id": "wp3:32c2119d5504",
+      "resource_version": "31057b5b35cfcfa5f31ee406f855477a",
+      "title": "Prompt Engineering Fundamentals",
+      "uri": "https://github.com/microsoft/generative-ai-for-beginners/blob/main/04-prompt-engineering-fundamentals/README.md",
+      "licence": "MIT",
+      "documents": [
+        {
+          "id": "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3",
+          "text_sha256": "241330808d00a9bc76ddaae76ed4dbb7e36854179a36e0bc0f0db44cf0210968",
+          "retained_selection": {
+            "resource_id": "wp3:32c2119d5504",
+            "resource_version": "31057b5b35cfcfa5f31ee406f855477a",
+            "document_id": "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3",
+            "content_sha256": "241330808d00a9bc76ddaae76ed4dbb7e36854179a36e0bc0f0db44cf0210968",
+            "purpose": "Prompt construction, examples, supporting context and clarity.",
+            "limitations": [
+              "Notebook/API setup and illustrative lengths are not SCN01 requirements."
+            ]
+          }
+        },
+        {
+          "id": "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:4",
+          "text_sha256": "2e6a4c6616d8706e128250a38869b2f675456c24444300e968afd1a12f781468",
+          "retained_selection": {
+            "resource_id": "wp3:32c2119d5504",
+            "resource_version": "31057b5b35cfcfa5f31ee406f855477a",
+            "document_id": "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:4",
+            "content_sha256": "2e6a4c6616d8706e128250a38869b2f675456c24444300e968afd1a12f781468",
+            "purpose": "Prompt construction, examples, supporting context and clarity.",
+            "limitations": [
+              "Notebook/API setup and illustrative lengths are not SCN01 requirements."
+            ]
+          }
+        },
+        {
+          "id": "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:6",
+          "text_sha256": "ce73029e69ae6992715b98138c425144bfa17597cd9d1978efb66d23fd6fd33e",
+          "retained_selection": {
+            "resource_id": "wp3:32c2119d5504",
+            "resource_version": "31057b5b35cfcfa5f31ee406f855477a",
+            "document_id": "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:6",
+            "content_sha256": "ce73029e69ae6992715b98138c425144bfa17597cd9d1978efb66d23fd6fd33e",
+            "purpose": "Prompt construction, examples, supporting context and clarity.",
+            "limitations": [
+              "Notebook/API setup and illustrative lengths are not SCN01 requirements."
+            ]
+          }
+        },
+        {
+          "id": "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:7",
+          "text_sha256": "69353c606d16dea7a3212f6611fc711bd98040fbf18515d1e6d84dba2a07b751",
+          "retained_selection": {
+            "resource_id": "wp3:32c2119d5504",
+            "resource_version": "31057b5b35cfcfa5f31ee406f855477a",
+            "document_id": "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:7",
+            "content_sha256": "69353c606d16dea7a3212f6611fc711bd98040fbf18515d1e6d84dba2a07b751",
+            "purpose": "Prompt construction, examples, supporting context and clarity.",
+            "limitations": [
+              "Notebook/API setup and illustrative lengths are not SCN01 requirements."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "resource_id": "wp3:12ce471a0269",
+      "resource_version": "1111cea0926dac4935b24bdf54ea8a55",
+      "title": "Teaching Students to Work With, Not Against, Al: A Classroom Model for Critical Literacy in Grades 6-12",
+      "uri": "https://zenodo.org/records/20562112",
+      "licence": "CC-BY-4.0",
+      "documents": [
+        {
+          "id": "wp3:12ce471a0269:1111cea0926dac4935b24bdf54ea8a55:2",
+          "text_sha256": "9d8f29ea033f7ae2c909aea2a90ad360c21312e417c22fce89961551cca52c56",
+          "retained_selection": {
+            "resource_id": "wp3:12ce471a0269",
+            "resource_version": "1111cea0926dac4935b24bdf54ea8a55",
+            "document_id": "wp3:12ce471a0269:1111cea0926dac4935b24bdf54ea8a55:2",
+            "content_sha256": "9d8f29ea033f7ae2c909aea2a90ad360c21312e417c22fce89961551cca52c56",
+            "purpose": "Candidate pedagogical support for process reflection, critique and criterion-based feedback.",
+            "limitations": [
+              "Grades 6–12 perspective; not a validated instrument for adult SME beginners. Do not import points or passing rules."
+            ]
+          }
+        },
+        {
+          "id": "wp3:12ce471a0269:1111cea0926dac4935b24bdf54ea8a55:4",
+          "text_sha256": "8a4e660f7fa87419cbadc49c3f6dd68c34d586949451487327444404bfa44c27",
+          "retained_selection": {
+            "resource_id": "wp3:12ce471a0269",
+            "resource_version": "1111cea0926dac4935b24bdf54ea8a55",
+            "document_id": "wp3:12ce471a0269:1111cea0926dac4935b24bdf54ea8a55:4",
+            "content_sha256": "8a4e660f7fa87419cbadc49c3f6dd68c34d586949451487327444404bfa44c27",
+            "purpose": "Candidate pedagogical support for process reflection, critique and criterion-based feedback.",
+            "limitations": [
+              "Grades 6–12 perspective; not a validated instrument for adult SME beginners. Do not import points or passing rules."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "resource_id": "wp3:4868ba8731b3",
+      "resource_version": "7ace1e7ee4f206b3ef9f729cb1f6efaa",
+      "title": "The Rise of Artificial Intelligence in Educational Measurement: Opportunities and Ethical Challenges",
+      "uri": "https://arxiv.org/abs/2406.18900",
+      "licence": "CC-BY-4.0",
+      "documents": [
+        {
+          "id": "wp3:4868ba8731b3:7ace1e7ee4f206b3ef9f729cb1f6efaa:0",
+          "text_sha256": "0a2d2bbca44a747305fd99726bebcecb26346d6d5a1bbe914822ff2eb901e315",
+          "retained_selection": {
+            "resource_id": "wp3:4868ba8731b3",
+            "resource_version": "7ace1e7ee4f206b3ef9f729cb1f6efaa",
+            "document_id": "wp3:4868ba8731b3:7ace1e7ee4f206b3ef9f729cb1f6efaa:0",
+            "content_sha256": "0a2d2bbca44a747305fd99726bebcecb26346d6d5a1bbe914822ff2eb901e315",
+            "purpose": "Context on validity, fairness, transparency and accountable use of AI-assisted assessment.",
+            "limitations": [
+              "General assessment context; does not supply a SCN01 rubric or validate proposed thresholds."
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

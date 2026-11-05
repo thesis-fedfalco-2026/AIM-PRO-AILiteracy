@@ -1,0 +1,11 @@
+{
+  "exact_prompt_body_matches": {
+    "weak_prompt": true,
+    "improved_prompt": true,
+    "worse_prompt": true
+  },
+  "bodies_identical": true,
+  "single_change_only": true,
+  "assessment_unchanged": true,
+  "diagnoses_also_exposed": true
+}

@@ -1,0 +1,14 @@
+{
+  "proposal": {
+    "type": "ChangeProposal",
+    "id": "proposal-269745fc7eb140bbaa72a42bf6dd1d2a",
+    "version": "1"
+  },
+  "review_payload_key": "5e1c62ad695210f52ee4862b3f7fe28827b010fbb350a983f1fdf04af8b7870c",
+  "package": {
+    "type": "Resource",
+    "id": "authoring-output:0550349a953f4fee5c161eb8fcbf1023759589d79c752fdeb99191c4f0713b83",
+    "version": "a733301db6b549b2a10051475a2cf6ab"
+  },
+  "candidate_count": 20
+}
