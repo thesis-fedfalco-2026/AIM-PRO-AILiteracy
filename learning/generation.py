@@ -6,6 +6,7 @@ import logging
 from aimpro.generators import (ArtifactInput, GenerationCommand, GenerationInput,
     UnitInput, generate)
 from aimpro.syllabus_state import resolve_artifact
+from aimpro.teacher_contracts import ApprovedReview
 from learning.authoring import dependency_findings, review_receipt
 from learning.context import LearningRequest
 from learning.outputs import LearningResponse
@@ -27,6 +28,8 @@ def resolve_inputs(service, context, role, command):
         raise ValueError('Generation requires one fresh selected syllabus')
     _coverage(service.store, context, syllabuses[0])
     syllabus = resolve_artifact(service.store, context, syllabuses[0].resource)
+    if command.teacher_plan is not None and role != 'TEACHER_CONTENT':
+        raise ValueError('A structured Teacher plan requires Teacher authoring')
     if role == 'ASSESSMENT' and (command.assessments or command.shared_content):
         raise ValueError('Assessment authoring takes the syllabus and explicit requirements only')
     if role == 'TEACHER_CONTENT' and command.shared_content:
@@ -38,9 +41,17 @@ def resolve_inputs(service, context, role, command):
             if selection is None or selection.key in stale:
                 raise ValueError('Generation input must be an exact fresh selected artifact of the required kind')
             approval = _coverage(service.store, context, selection)
+            review = None
+            if command.teacher_plan is not None:
+                decision = service.store.read(approval.decision, owner=context.snapshot.context.id)
+                review = ApprovedReview(artifact=ref, decision=decision.ref,
+                    reviewed_target=decision.fields['target'],
+                    reviewed_payload_key=decision.fields['reviewedPayloadKey'],
+                    reason=decision.fields['reason'])
             inputs.append(ArtifactInput(selection=selection, receipt=approval,
                 resource=context.snapshot.get(ref),
-                definitions=tuple(context.snapshot.get(r) for r in selection.definitions)))
+                definitions=tuple(context.snapshot.get(r) for r in selection.definitions),
+                approved_review=review))
     # Relevant assessments cannot be silently omitted from the model task. All
     # selected assessments intersecting the role's syllabus units are required.
     units = tuple(UnitInput(key=u.key, node=context.snapshot.get(u.node)) for u in syllabus.artifact.units)
@@ -65,6 +76,9 @@ def resolve_inputs(service, context, role, command):
             constraints.extend(raw if isinstance(raw, list) else [raw])
     data = GenerationInput(role=role, command=command, project_receipt=receipt, syllabus=syllabus,
         units=units, inputs=tuple(inputs), constraints=tuple(constraints))
+    if command.teacher_plan is not None:
+        from aimpro.teacher import validate_plan
+        validate_plan(data)
     if not data.target_units:
         raise ValueError('Syllabus has no units for this authoring intent')
     return data, manifest

@@ -16,6 +16,9 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def synthetic_draft(data):
+    if data.command.teacher_plan is not None:
+        from tests.teacher_fixtures import structured_draft
+        return structured_draft(data)
     citation = data.syllabus.artifact.draft.units[0].corpus_citations[0].model_dump(mode='json')
     units, materials = [], []
     for unit in data.target_units:

@@ -124,3 +124,10 @@ their zero-call/no-authorization status preceded the separately recorded live
 consent and execution. No fourth run is authorized or started. Review the lexical
 guard and provide anchored accepted human-review findings before any further paid
 scope. #10 remains open and Chat 06 must not start.
+
+## Subsequent offline correction
+
+The owner then requested an offline production-flow correction. See
+[implementation evidence and limits](offline-flow-fix/README.md). No new live
+attempt, human content decision or application is implied; the three observed
+results above remain unchanged.
