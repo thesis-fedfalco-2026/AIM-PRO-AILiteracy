@@ -1,0 +1,187 @@
+[
+  {
+    "id": "C01",
+    "name": "legacy-accepted",
+    "expected": "ACCEPT",
+    "outcome": "ACCEPTED",
+    "status": 200,
+    "provider_request_id": "req_011Cgn4AjtJHeJxu7bNsR9sE",
+    "stop_reason": "max_tokens",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "input_tokens": 1844,
+      "output_tokens": 1,
+      "server_tool_use": null,
+      "service_tier": "standard",
+      "inference_geo": "global",
+      "speed": "standard"
+    },
+    "estimated_cost_usd": 0.005547,
+    "seconds": 2.294
+  },
+  {
+    "id": "C02",
+    "name": "compact-full",
+    "expected": "REJECT",
+    "status": 400,
+    "provider_request_id": "req_011Cgn4Au4hYZ4Snp5HHGxF4",
+    "message": "The compiled grammar is too large, which would cause performance issues. Simplify your tool schemas or reduce the number of strict tools.",
+    "outcome": "REJECTED_GRAMMAR",
+    "seconds": 0.302
+  },
+  {
+    "id": "C03",
+    "name": "compact-no-descriptions",
+    "expected": null,
+    "status": 400,
+    "provider_request_id": "req_011Cgn4AvMqbmnX7ZHv6Ch4g",
+    "message": "The compiled grammar is too large, which would cause performance issues. Simplify your tool schemas or reduce the number of strict tools.",
+    "outcome": "REJECTED_GRAMMAR",
+    "seconds": 0.306
+  },
+  {
+    "id": "C04",
+    "name": "compact-no-union",
+    "expected": null,
+    "status": 400,
+    "provider_request_id": "req_011Cgn4AweUgxNncYc21inag",
+    "message": "The compiled grammar is too large, which would cause performance issues. Simplify your tool schemas or reduce the number of strict tools.",
+    "outcome": "REJECTED_GRAMMAR",
+    "seconds": 0.268
+  },
+  {
+    "id": "C05",
+    "name": "compact-no-citations",
+    "expected": null,
+    "status": 400,
+    "provider_request_id": "req_011Cgn4AyZq2pScJTx6XRL1p",
+    "message": "The compiled grammar is too large, which would cause performance issues. Simplify your tool schemas or reduce the number of strict tools.",
+    "outcome": "REJECTED_GRAMMAR",
+    "seconds": 0.457
+  },
+  {
+    "id": "C06",
+    "name": "subset-explanations",
+    "expected": null,
+    "outcome": "ACCEPTED",
+    "status": 200,
+    "provider_request_id": "req_011Cgn4Aznju6TsHvcQf7vgg",
+    "stop_reason": "max_tokens",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "input_tokens": 1515,
+      "output_tokens": 1,
+      "server_tool_use": null,
+      "service_tier": "standard",
+      "inference_geo": "global",
+      "speed": "standard"
+    },
+    "estimated_cost_usd": 0.00456,
+    "seconds": 8.097
+  },
+  {
+    "id": "C07",
+    "name": "subset-comparisons",
+    "expected": null,
+    "outcome": "ACCEPTED",
+    "status": 200,
+    "provider_request_id": "req_011Cgn4BbPbz8iP8esb9YjYq",
+    "stop_reason": "max_tokens",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "input_tokens": 1840,
+      "output_tokens": 1,
+      "server_tool_use": null,
+      "service_tier": "standard",
+      "inference_geo": "global",
+      "speed": "standard"
+    },
+    "estimated_cost_usd": 0.005535,
+    "seconds": 8.729
+  },
+  {
+    "id": "C08",
+    "name": "subset-peers",
+    "expected": null,
+    "outcome": "ACCEPTED",
+    "status": 200,
+    "provider_request_id": "req_011Cgn4CEmeniw76d3TqeJEK",
+    "stop_reason": "max_tokens",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "input_tokens": 2117,
+      "output_tokens": 1,
+      "server_tool_use": null,
+      "service_tier": "standard",
+      "inference_geo": "global",
+      "speed": "standard"
+    },
+    "estimated_cost_usd": 0.006366,
+    "seconds": 10.189
+  },
+  {
+    "id": "C09",
+    "name": "subset-transcripts",
+    "expected": null,
+    "outcome": "ACCEPTED",
+    "status": 200,
+    "provider_request_id": "req_011Cgn4CzLkwnyDPxa2amWGo",
+    "stop_reason": "max_tokens",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "input_tokens": 2120,
+      "output_tokens": 1,
+      "server_tool_use": null,
+      "service_tier": "standard",
+      "inference_geo": "global",
+      "speed": "standard"
+    },
+    "estimated_cost_usd": 0.006375,
+    "seconds": 8.41
+  },
+  {
+    "id": "C10",
+    "name": "subset-no-transcripts",
+    "expected": null,
+    "status": 400,
+    "provider_request_id": "req_011Cgn4DcDmeZyE7eFtinuEa",
+    "message": "The compiled grammar is too large, which would cause performance issues. Simplify your tool schemas or reduce the number of strict tools.",
+    "outcome": "REJECTED_GRAMMAR",
+    "seconds": 0.284
+  },
+  {
+    "id": "C11",
+    "name": "compact-no-union-no-citations",
+    "expected": null,
+    "status": 400,
+    "provider_request_id": "req_011Cgn4DdSByWGr8NtvgPQ5c",
+    "message": "The compiled grammar is too large, which would cause performance issues. Simplify your tool schemas or reduce the number of strict tools.",
+    "outcome": "REJECTED_GRAMMAR",
+    "seconds": 0.327
+  }
+]

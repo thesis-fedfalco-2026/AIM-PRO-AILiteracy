@@ -1,0 +1,20 @@
+{
+  "http_requests": 11,
+  "stopped": null,
+  "known_estimated_cost_usd": 0.028383,
+  "cost_complete": false,
+  "cost_is_usage_estimate_not_provider_invoice": true,
+  "outcomes": {
+    "C01": "ACCEPTED",
+    "C02": "REJECTED_GRAMMAR",
+    "C03": "REJECTED_GRAMMAR",
+    "C04": "REJECTED_GRAMMAR",
+    "C05": "REJECTED_GRAMMAR",
+    "C06": "ACCEPTED",
+    "C07": "ACCEPTED",
+    "C08": "ACCEPTED",
+    "C09": "ACCEPTED",
+    "C10": "REJECTED_GRAMMAR",
+    "C11": "REJECTED_GRAMMAR"
+  }
+}

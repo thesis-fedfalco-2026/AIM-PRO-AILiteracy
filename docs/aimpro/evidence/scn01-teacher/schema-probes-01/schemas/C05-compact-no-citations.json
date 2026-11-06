@@ -1,0 +1,438 @@
+{
+  "$defs": {
+    "CaseFact": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        },
+        "value": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "label",
+        "value"
+      ]
+    },
+    "EntityRef": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        },
+        "id": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        },
+        "version": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "id",
+        "version"
+      ]
+    },
+    "IllustrativeEmail": {
+      "type": "object",
+      "properties": {
+        "subject": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        },
+        "salutation": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        },
+        "paragraphs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "{minLength: 1}"
+          },
+          "description": "{maxItems: 64}\n\n{minItems: 1}"
+        },
+        "closing": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        },
+        "signature": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "subject",
+        "salutation",
+        "paragraphs",
+        "closing",
+        "signature"
+      ]
+    },
+    "PeerExample": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        },
+        "title": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        },
+        "notice": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        },
+        "facts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CaseFact"
+          },
+          "description": "{maxItems: 32}\n\n{minItems: 1}"
+        },
+        "introduction": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        },
+        "email_introduction": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        },
+        "prompt": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        },
+        "email": {
+          "$ref": "#/$defs/IllustrativeEmail"
+        },
+        "diagnosis": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "title",
+        "notice",
+        "facts",
+        "introduction",
+        "email_introduction",
+        "prompt",
+        "email",
+        "diagnosis"
+      ]
+    },
+    "PeerReference": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "description": "{const: PEER_SCENE, default: PEER_SCENE}"
+        },
+        "peer_key": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "peer_key"
+      ]
+    },
+    "PromptComparison": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        },
+        "title": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        },
+        "notice": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        },
+        "facts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CaseFact"
+          },
+          "description": "{maxItems: 32}\n\n{minItems: 1}"
+        },
+        "weak_prompt": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        },
+        "improved_prompt": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        },
+        "worse_prompt": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        },
+        "commentary": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "title",
+        "notice",
+        "facts",
+        "weak_prompt",
+        "improved_prompt",
+        "worse_prompt",
+        "commentary"
+      ]
+    },
+    "PromptReference": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "description": "{const: PROMPT, default: PROMPT}"
+        },
+        "comparison_key": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        },
+        "variant": {
+          "type": "string",
+          "description": "{enum: ['WEAK', 'IMPROVED', 'WORSE']}"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "comparison_key",
+        "variant"
+      ]
+    },
+    "ProseMaterial": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        },
+        "title": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        },
+        "content": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "title",
+        "content"
+      ]
+    },
+    "Speech": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "description": "{const: SPEECH, default: SPEECH}"
+        },
+        "speaker": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        },
+        "text": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "speaker",
+        "text"
+      ]
+    },
+    "StructuredTeacherItem": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        },
+        "intent": {
+          "type": "string",
+          "description": "{const: EXPLAIN}"
+        },
+        "instruction": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        },
+        "outcomes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EntityRef"
+          },
+          "description": "{minItems: 1}"
+        },
+        "material_keys": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "{minLength: 1}"
+          },
+          "description": "{minItems: 1}"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "intent",
+        "instruction",
+        "outcomes",
+        "material_keys"
+      ]
+    },
+    "StructuredTeacherUnit": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StructuredTeacherItem"
+          },
+          "description": "{maxItems: 24}\n\n{minItems: 1}"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "items"
+      ]
+    },
+    "TeachingTranscript": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        },
+        "title": {
+          "type": "string",
+          "description": "{minLength: 1}"
+        },
+        "parts": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Speech"
+              },
+              {
+                "$ref": "#/$defs/PromptReference"
+              },
+              {
+                "$ref": "#/$defs/PeerReference"
+              }
+            ],
+            "description": "{discriminator: {'mapping': {'PEER_SCENE': '#/$defs/PeerReference', 'PROMPT': '#/$defs/PromptReference', 'SPEECH': '#/$defs/Speech'}, 'propertyName': 'kind'}}"
+          },
+          "description": "{maxItems: 128}\n\n{minItems: 1}"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "title",
+        "parts"
+      ]
+    }
+  },
+  "type": "object",
+  "properties": {
+    "kind": {
+      "type": "string",
+      "description": "{const: STRUCTURED_TEACHER_DRAFT, default: STRUCTURED_TEACHER_DRAFT}"
+    },
+    "input_digest": {
+      "type": "string",
+      "description": "{minLength: 1}"
+    },
+    "units": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/StructuredTeacherUnit"
+      },
+      "description": "{maxItems: 24}\n\n{minItems: 1}"
+    },
+    "explanations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ProseMaterial"
+      },
+      "description": "{maxItems: 24}\n\n{minItems: 1}"
+    },
+    "comparisons": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PromptComparison"
+      },
+      "description": "{maxItems: 24}"
+    },
+    "peers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PeerExample"
+      },
+      "description": "{maxItems: 24}"
+    },
+    "transcripts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/TeachingTranscript"
+      },
+      "description": "{maxItems: 24}\n\n{minItems: 1}"
+    },
+    "new_gaps": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "{minLength: 1}"
+      },
+      "description": "{default: []}"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "input_digest",
+    "units",
+    "explanations",
+    "comparisons",
+    "peers",
+    "transcripts",
+    "new_gaps"
+  ]
+}

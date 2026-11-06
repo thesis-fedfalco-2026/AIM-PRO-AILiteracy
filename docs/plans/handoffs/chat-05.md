@@ -346,3 +346,19 @@ private review: `.cache/aimpro-examples/teacher/scn01-teacher-5-compact-schema/R
 Next action: the owner reviews the packet and explicitly authorizes this exact
 manifest/request/scope, or requests offline changes. No fifth transmission is
 authorized yet. Chat 06 remains blocked.
+
+## Fifth attempt failure and compilation probes
+
+The owner authorized the fifth packet exactly. One HTTP request was rejected
+with HTTP 400 (compiled grammar too large), with no output, no Lead, no retry
+and unknown cost ([attempt-05](../../aimpro/evidence/scn01-teacher/attempt-05/README.md)).
+All ten terminal results replay exactly. Counts are 164 entities, thirteen
+requests, five HumanDecisions and three StateChanges.
+
+The owner then authorized eleven `max_tokens: 1` compilation probes
+([schema-probes-01](../../aimpro/evidence/scn01-teacher/schema-probes-01/README.md)).
+Controls behaved as expected. Each asset group compiles alone; the full schema
+fails with or without descriptions, union or citations. Combined size is
+decisive, so the structured Teacher cannot use one constrained schema. The owner
+must choose the redesign: per-group constrained calls or an unconstrained Teacher
+call with local validation. Chat 06 remains blocked.
