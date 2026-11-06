@@ -7,6 +7,9 @@ proposal. No Teacher is approved/applied/selected. This records actual failures,
 not successful Teacher acceptance. **Do not start Chat 06.** No agents were spawned.
 
 [Fourth rejection evidence](../../aimpro/evidence/scn01-teacher/attempt-04/README.md).
+[Explicit fourth #10 observation](https://github.com/thesis-fedfalco-2026/py-prototype/issues/10#issuecomment-6687757230).
+Result evidence is published in [PR #60](https://github.com/thesis-fedfalco-2026/py-prototype/pull/60),
+initial result commit `b1ffce3`; publication is not integration or content approval.
 The observations below retain earlier checkpoints and their separate authorizations.
 
 ## Exact approved project, authority and receipts
