@@ -1,0 +1,38 @@
+{
+  "request_id": "scn01-teacher-05-compact-schema",
+  "manifest_sha256": "c24a0a1f61d10e3353bd62791e4ea09fa0467002afd133d813dd9bb3f5e94888",
+  "result": "FAILURE",
+  "http_status": 400,
+  "provider_request_id": "req_011Cgn3GnzdDnWVn7mnhhcQx",
+  "provider_message": "The compiled grammar is too large, which would cause performance issues. Simplify your tool schemas or reduce the number of strict tools.",
+  "http_requests": 1,
+  "lead_invoked": false,
+  "submitted_schema_equals_reviewed": true,
+  "tools_in_request": false,
+  "usage_returned": false,
+  "cost": "unknown, not zero",
+  "counts": {
+    "entities": 164,
+    "requests": 13
+  },
+  "human_decisions": 5,
+  "state_changes": 3,
+  "historical_replays_without_models": {
+    "scn01-evaluator-assessments-01": "FAILURE",
+    "scn01-evaluator-assessments-02": "FAILURE",
+    "scn01-evaluator-assessments-03-claude": "FAILURE",
+    "scn01-evaluator-assessments-04-native-json": "PROPOSAL",
+    "scn01-evaluator-assessments-05-revision": "PROPOSAL",
+    "scn01-teacher-01": "PROPOSAL",
+    "scn01-teacher-02-revision": "FAILURE",
+    "scn01-teacher-03-complete-peer": "FAILURE",
+    "scn01-teacher-04-structured": "FAILURE",
+    "scn01-teacher-05-compact-schema": "FAILURE"
+  },
+  "database_unchanged_by_replay": true,
+  "previous_archive_unchanged": true,
+  "packet_files_unchanged": true,
+  "permissions_receipts_freshness_valid": true,
+  "teacher_selected": false,
+  "launch_error_before_python": "First launch exited 127 in the shell before Python started; no run-started marker, no HTTP request."
+}

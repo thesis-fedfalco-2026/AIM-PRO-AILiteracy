@@ -1,0 +1,189 @@
+[
+  {
+    "id": "C01",
+    "name": "legacy-accepted",
+    "hypothesis": "Exact TeacherDraft schema accepted in attempts 01-03 (positive control).",
+    "expected": "ACCEPT",
+    "file": "schemas/C01-legacy-accepted.json",
+    "schema_sha256": "efc18cc6dcddb9b507b0cef70a8c46616d0d29595b4bddf27459334a1966b701",
+    "metrics": {
+      "objects": 6,
+      "arrays": 10,
+      "string_fields": 19,
+      "any_of": 0,
+      "definitions": 5,
+      "default_json_bytes": 3720,
+      "inlined_bytes_without_descriptions": 2348
+    }
+  },
+  {
+    "id": "C02",
+    "name": "compact-full",
+    "hypothesis": "Exact compact schema rejected in attempt 05 (negative control).",
+    "expected": "REJECT",
+    "file": "schemas/C02-compact-full.json",
+    "schema_sha256": "f63e7d06838f49c0130765c29a1bf952d58fda8f63019393dc1ce917e4d66705",
+    "metrics": {
+      "objects": 14,
+      "arrays": 19,
+      "string_fields": 49,
+      "any_of": 1,
+      "definitions": 13,
+      "default_json_bytes": 7750,
+      "inlined_bytes_without_descriptions": 5530
+    }
+  },
+  {
+    "id": "C03",
+    "name": "compact-no-descriptions",
+    "hypothesis": "C02 without descriptions: do descriptions count toward the grammar?",
+    "expected": null,
+    "file": "schemas/C03-compact-no-descriptions.json",
+    "schema_sha256": "6eb170118358d454dad3dd1c9d5818b4d56971b1eb8ab600cd09173bf2131225",
+    "metrics": {
+      "objects": 14,
+      "arrays": 19,
+      "string_fields": 49,
+      "any_of": 1,
+      "definitions": 13,
+      "default_json_bytes": 5060,
+      "inlined_bytes_without_descriptions": 5530
+    }
+  },
+  {
+    "id": "C04",
+    "name": "compact-no-union",
+    "hypothesis": "C02 with transcript parts limited to Speech: is the three-branch anyOf decisive?",
+    "expected": null,
+    "file": "schemas/C04-compact-no-union.json",
+    "schema_sha256": "6df6f17f8b24ff5a264be079762fd6e4f16436d5cf31a50ffd9e2627c0eda6a0",
+    "metrics": {
+      "objects": 12,
+      "arrays": 19,
+      "string_fields": 44,
+      "any_of": 0,
+      "definitions": 11,
+      "default_json_bytes": 6844,
+      "inlined_bytes_without_descriptions": 5141
+    }
+  },
+  {
+    "id": "C05",
+    "name": "compact-no-citations",
+    "hypothesis": "C02 without citation arrays: does repeated CorpusCitation dominate?",
+    "expected": null,
+    "file": "schemas/C05-compact-no-citations.json",
+    "schema_sha256": "e9200124062873cd835a4d9a7bee62c97f798f3ab3d3a7a36ad266eba0e30094",
+    "metrics": {
+      "objects": 13,
+      "arrays": 13,
+      "string_fields": 45,
+      "any_of": 1,
+      "definitions": 12,
+      "default_json_bytes": 6629,
+      "inlined_bytes_without_descriptions": 3615
+    }
+  },
+  {
+    "id": "C06",
+    "name": "subset-explanations",
+    "hypothesis": "Root with units, explanations and new_gaps only.",
+    "expected": null,
+    "file": "schemas/C06-subset-explanations.json",
+    "schema_sha256": "82b3cb6db159059db85f47e18dcf51f314a37559c182abf16cc05cdb083a435c",
+    "metrics": {
+      "objects": 6,
+      "arrays": 9,
+      "string_fields": 18,
+      "any_of": 0,
+      "definitions": 5,
+      "default_json_bytes": 2993,
+      "inlined_bytes_without_descriptions": 1968
+    }
+  },
+  {
+    "id": "C07",
+    "name": "subset-comparisons",
+    "hypothesis": "Root with units, comparisons and new_gaps only.",
+    "expected": null,
+    "file": "schemas/C07-subset-comparisons.json",
+    "schema_sha256": "0f3169bd6b81d4c159a8b67fc44405fa21ebf9e0244e7bf032f241053576933c",
+    "metrics": {
+      "objects": 7,
+      "arrays": 10,
+      "string_fields": 24,
+      "any_of": 0,
+      "definitions": 6,
+      "default_json_bytes": 3679,
+      "inlined_bytes_without_descriptions": 2375
+    }
+  },
+  {
+    "id": "C08",
+    "name": "subset-peers",
+    "hypothesis": "Root with units, peers and new_gaps only.",
+    "expected": null,
+    "file": "schemas/C08-subset-peers.json",
+    "schema_sha256": "f8c12be1df78eb2cbbc91087c1392c1b43f942af24c8a00785af85d34b9b69d8",
+    "metrics": {
+      "objects": 8,
+      "arrays": 11,
+      "string_fields": 29,
+      "any_of": 0,
+      "definitions": 7,
+      "default_json_bytes": 4279,
+      "inlined_bytes_without_descriptions": 2710
+    }
+  },
+  {
+    "id": "C09",
+    "name": "subset-transcripts",
+    "hypothesis": "Root with units, transcripts and new_gaps only.",
+    "expected": null,
+    "file": "schemas/C09-subset-transcripts.json",
+    "schema_sha256": "12a930aeb2ede8a77ccfe00489717fc8e4b80846766b56a136348507c79cf3b6",
+    "metrics": {
+      "objects": 9,
+      "arrays": 10,
+      "string_fields": 25,
+      "any_of": 1,
+      "definitions": 8,
+      "default_json_bytes": 4279,
+      "inlined_bytes_without_descriptions": 2554
+    }
+  },
+  {
+    "id": "C10",
+    "name": "subset-no-transcripts",
+    "hypothesis": "Root with units, explanations, comparisons, peers and new_gaps.",
+    "expected": null,
+    "file": "schemas/C10-subset-no-transcripts.json",
+    "schema_sha256": "bab89af30c4d248a1ad9f67148f1b838255906f2574c0c5916916236f73b4b96",
+    "metrics": {
+      "objects": 10,
+      "arrays": 16,
+      "string_fields": 39,
+      "any_of": 0,
+      "definitions": 9,
+      "default_json_bytes": 5886,
+      "inlined_bytes_without_descriptions": 4335
+    }
+  },
+  {
+    "id": "C11",
+    "name": "compact-no-union-no-citations",
+    "hypothesis": "C04 and C05 combined.",
+    "expected": null,
+    "file": "schemas/C11-compact-no-union-no-citations.json",
+    "schema_sha256": "df1a6c2a3a7bd3c834108a83b2a7923ac5293a5144e5b4f7340f33f667e3581b",
+    "metrics": {
+      "objects": 11,
+      "arrays": 13,
+      "string_fields": 40,
+      "any_of": 0,
+      "definitions": 10,
+      "default_json_bytes": 5723,
+      "inlined_bytes_without_descriptions": 3226
+    }
+  }
+]

@@ -330,3 +330,47 @@ The remote grammar compiler was not exercised; acceptance remains unproven. No
 fifth packet exists or is authorized. Next action: owner reviews this diff; if
 accepted, prepare a new exact packet for separate live authorization. Chat 06
 remains blocked until a Teacher is generated, owner-approved and applied.
+
+## Fifth packet prepared offline — no live authorization
+
+PRs #60 and #61 merged into main (`2ccc648`). Request
+`scn01-teacher-05-compact-schema`, manifest SHA-256
+`c24a0a1f61d10e3353bd62791e4ea09fa0467002afd133d813dd9bb3f5e94888`, has the
+same input digest `fa23b436…6fc2`, command, provider, settings and USD 5 budget
+as the fourth packet. Only the compact native schema and one prompt sentence
+differ. The driver now refuses any schema other than the reviewed one. Fourteen
+offline packet tests and nine exact historical replays pass.
+[Preparation evidence](../../aimpro/evidence/scn01-teacher/preparation-05/README.md);
+private review: `.cache/aimpro-examples/teacher/scn01-teacher-5-compact-schema/RUN_REVIEW.md`.
+
+Next action: the owner reviews the packet and explicitly authorizes this exact
+manifest/request/scope, or requests offline changes. No fifth transmission is
+authorized yet. Chat 06 remains blocked.
+
+## Fifth attempt failure and compilation probes
+
+The owner authorized the fifth packet exactly. One HTTP request was rejected
+with HTTP 400 (compiled grammar too large), with no output, no Lead, no retry
+and unknown cost ([attempt-05](../../aimpro/evidence/scn01-teacher/attempt-05/README.md)).
+All ten terminal results replay exactly. Counts are 164 entities, thirteen
+requests, five HumanDecisions and three StateChanges.
+
+The owner then authorized eleven `max_tokens: 1` compilation probes
+([schema-probes-01](../../aimpro/evidence/scn01-teacher/schema-probes-01/README.md)).
+Controls behaved as expected. Each asset group compiles alone; the full schema
+fails with or without descriptions, union or citations. Combined size is
+decisive, so the structured Teacher cannot use one constrained schema. The owner
+must choose the redesign: per-group constrained calls or an unconstrained Teacher
+call with local validation. Chat 06 remains blocked.
+
+## Provider-neutral Teacher transport (owner option 2)
+
+The owner chose option 2 and asked whether the network is Claude-only. It is not:
+each agent selects a `model.properties` profile. The structured Teacher now sends its
+Pydantic schema in the prompt and the host validates the text response for any
+provider. Lead keeps native JSON. Offline: 553 tests passed (four WP3 skips), all
+CI checks passed, and ten historical results replay exactly; the archive check
+covered 1,043 files. See the
+[architecture note](../../architecture/authoring-generators.md#provider-neutral-teacher-transport-after-grammar-rejections-6-november-2026).
+Next: review/merge, then a new packet for separate live authorization. Chat 06
+remains blocked.

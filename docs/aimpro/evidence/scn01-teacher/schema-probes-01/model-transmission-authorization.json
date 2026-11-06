@@ -1,0 +1,17 @@
+{
+  "manifest_sha256": "8f1d49267920a148a1dffdd20dfba82c8f4685999cae665336716fec84706337",
+  "request_id": "scn01-schema-probes-01",
+  "provider": "Anthropic",
+  "model": "claude-sonnet-4-6",
+  "max_http_transmissions": 11,
+  "max_tokens": 1,
+  "allow_paid": true,
+  "budget_usd": 0.5,
+  "explicit_owner_instruction": "I authorize the live transmission of request scn01-schema-probes-01, manifest 8f1d49267920a148a1dffdd20dfba82c8f4685999cae665336716fec84706337, Anthropic direct claude-sonnet-4-6, at most 11 single-shot probes with max_tokens 1, no retry, USD 0.50 budget.",
+  "owner_instruction_original": "Autorizzo la trasmissione live della request scn01-schema-probes-01, manifest 8f1d49267920a148a1dffdd20dfba82c8f4685999cae665336716fec84706337, Anthropic diretto claude-sonnet-4-6, al massimo 11 sonde single-shot con max_tokens 1, nessun retry, budget USD 0,50.",
+  "owner_instruction_language": "Italian; English translation retained here",
+  "authorization_context": "Owner sent the exact authorization text after the probe packet was presented in this conversation.",
+  "recorded_at_utc": "2026-11-06T17:18:08.974951+00:00",
+  "client_date": "2026-11-06",
+  "scope": "Schema compilation probes only. No Teacher generation, content approval, application, learner activation or release authorized."
+}

@@ -1,7 +1,16 @@
 """Explicit registry dispatch for typed preparation tasks, separate from workers."""
 
+import re
+
 from agent_system import telemetry
 from agent_system.config import ConfigurationError
+
+
+def json_text(text):
+    """Return a whole-response JSON document, optionally in one fenced block; never repair."""
+    text = text.strip()
+    match = re.fullmatch(r'```(?:json)?\n(.*)\n```', text, re.DOTALL)
+    return match.group(1) if match else text
 
 
 class AuthoringDispatcher:
@@ -45,6 +54,12 @@ class AuthoringDispatcher:
             tools=[], skills=[self.skills[name] for name in config.skills] or None,
             allow_delegation=False,
         )
+        if getattr(output_type, 'prompt_json_schema', False):
+            # Provider-neutral: no constrained grammar; the prompt states the schema.
+            raw = getattr(agent.kickoff(prompt), 'raw', None)
+            if not isinstance(raw, str):
+                raise ValueError('Invalid structured authoring output')
+            return output_type.model_validate_json(json_text(raw))
         result = getattr(agent.kickoff(prompt, response_format=output_type), 'pydantic', None)
         if type(result) is not output_type:
             raise ValueError('Invalid structured authoring output')

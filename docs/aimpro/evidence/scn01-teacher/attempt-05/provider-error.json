@@ -1,0 +1,7 @@
+{
+  "status_code": 400,
+  "type": "invalid_request_error",
+  "message": "The compiled grammar is too large, which would cause performance issues. Simplify your tool schemas or reduce the number of strict tools.",
+  "provider_request_id": "req_011Cgn3GnzdDnWVn7mnhhcQx",
+  "tools_in_request": false
+}

@@ -1,0 +1,20 @@
+{
+  "manifest_sha256": "c24a0a1f61d10e3353bd62791e4ea09fa0467002afd133d813dd9bb3f5e94888",
+  "request_id": "scn01-teacher-05-compact-schema",
+  "provider": "Anthropic",
+  "model": "claude-sonnet-4-6",
+  "phases": [
+    "TEACHER",
+    "LEAD_REVIEW"
+  ],
+  "max_http_transmissions_per_phase": 1,
+  "allow_paid": true,
+  "budget_usd": 5,
+  "explicit_owner_instruction": "I authorize the live transmission of request scn01-teacher-05-compact-schema, manifest c24a0a1f61d10e3353bd62791e4ea09fa0467002afd133d813dd9bb3f5e94888, Anthropic direct claude-sonnet-4-6, one Teacher plus a conditional Lead, no retry, USD 5 budget.",
+  "owner_instruction_original": "Autorizzo la trasmissione live della request scn01-teacher-05-compact-schema, manifest c24a0a1f61d10e3353bd62791e4ea09fa0467002afd133d813dd9bb3f5e94888, Anthropic diretto claude-sonnet-4-6, un Teacher più un Lead condizionale, nessun retry, budget USD 5.",
+  "owner_instruction_language": "Italian; English translation retained here",
+  "authorization_context": "Owner sent the exact authorization text after the packet was presented in this conversation.",
+  "recorded_at_utc": "2026-11-06T17:05:49.699468+00:00",
+  "client_date": "2026-11-06",
+  "scope": "Generation and conditional separate Lead review only. No content approval, application, learner activation or release authorized."
+}

@@ -1,0 +1,245 @@
+{
+  "$defs": {
+    "CorpusCitation": {
+      "type": "object",
+      "title": "CorpusCitation",
+      "properties": {
+        "resource_id": {
+          "type": "string",
+          "title": "Resource Id",
+          "description": "{minLength: 1}"
+        },
+        "resource_version": {
+          "type": "string",
+          "title": "Resource Version",
+          "description": "{minLength: 1}"
+        },
+        "document_ids": {
+          "type": "array",
+          "title": "Document Ids",
+          "items": {
+            "type": "string",
+            "description": "{minLength: 1}"
+          },
+          "minItems": 1
+        },
+        "supported_claim": {
+          "type": "string",
+          "title": "Supported Claim",
+          "description": "{minLength: 1}"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "resource_id",
+        "resource_version",
+        "document_ids",
+        "supported_claim"
+      ]
+    },
+    "EntityRef": {
+      "type": "object",
+      "title": "EntityRef",
+      "properties": {
+        "type": {
+          "type": "string",
+          "title": "Type",
+          "description": "{minLength: 1}"
+        },
+        "id": {
+          "type": "string",
+          "title": "Id",
+          "description": "{minLength: 1}"
+        },
+        "version": {
+          "type": "string",
+          "title": "Version",
+          "description": "{minLength: 1}"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "id",
+        "version"
+      ]
+    },
+    "Material": {
+      "type": "object",
+      "title": "Material",
+      "properties": {
+        "key": {
+          "type": "string",
+          "title": "Key",
+          "description": "{minLength: 1}"
+        },
+        "kind": {
+          "type": "string",
+          "title": "Kind",
+          "description": "{enum: ['EXPLANATION', 'TRANSCRIPT', 'EXAMPLE', 'WORKSHEET', 'OTHER']}"
+        },
+        "title": {
+          "type": "string",
+          "title": "Title",
+          "description": "{minLength: 1}"
+        },
+        "content": {
+          "type": "string",
+          "title": "Content",
+          "description": "{minLength: 1}"
+        },
+        "citations": {
+          "type": "array",
+          "title": "Citations",
+          "items": {
+            "$ref": "#/$defs/CorpusCitation"
+          },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "kind",
+        "title",
+        "content",
+        "citations"
+      ]
+    },
+    "TeacherItem": {
+      "type": "object",
+      "title": "TeacherItem",
+      "properties": {
+        "key": {
+          "type": "string",
+          "title": "Key",
+          "description": "{minLength: 1}"
+        },
+        "instruction": {
+          "type": "string",
+          "title": "Instruction",
+          "description": "{minLength: 1}"
+        },
+        "outcomes": {
+          "type": "array",
+          "title": "Outcomes",
+          "items": {
+            "$ref": "#/$defs/EntityRef"
+          },
+          "minItems": 1
+        },
+        "material_keys": {
+          "type": "array",
+          "title": "Material Keys",
+          "items": {
+            "type": "string",
+            "description": "{minLength: 1}"
+          },
+          "minItems": 1
+        },
+        "shared_materials": {
+          "type": "array",
+          "title": "Shared Materials",
+          "items": {
+            "$ref": "#/$defs/EntityRef"
+          },
+          "description": "{default: []}"
+        },
+        "citations": {
+          "type": "array",
+          "title": "Citations",
+          "items": {
+            "$ref": "#/$defs/CorpusCitation"
+          },
+          "minItems": 1
+        },
+        "intent": {
+          "type": "string",
+          "title": "Intent",
+          "description": "{const: EXPLAIN}"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "instruction",
+        "outcomes",
+        "material_keys",
+        "citations",
+        "intent"
+      ]
+    },
+    "TeacherUnit": {
+      "type": "object",
+      "title": "TeacherUnit",
+      "properties": {
+        "key": {
+          "type": "string",
+          "title": "Key",
+          "description": "{minLength: 1}"
+        },
+        "items": {
+          "type": "array",
+          "title": "Items",
+          "items": {
+            "$ref": "#/$defs/TeacherItem"
+          },
+          "minItems": 1,
+          "description": "{maxItems: 24}"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "items"
+      ]
+    }
+  },
+  "type": "object",
+  "title": "TeacherDraft",
+  "properties": {
+    "kind": {
+      "type": "string",
+      "title": "Kind",
+      "description": "{const: TEACHER_DRAFT, default: TEACHER_DRAFT}"
+    },
+    "input_digest": {
+      "type": "string",
+      "title": "Input Digest",
+      "description": "{minLength: 1}"
+    },
+    "units": {
+      "type": "array",
+      "title": "Units",
+      "items": {
+        "$ref": "#/$defs/TeacherUnit"
+      },
+      "minItems": 1,
+      "description": "{maxItems: 24}"
+    },
+    "materials": {
+      "type": "array",
+      "title": "Materials",
+      "items": {
+        "$ref": "#/$defs/Material"
+      },
+      "minItems": 1,
+      "description": "{maxItems: 96}"
+    },
+    "gaps": {
+      "type": "array",
+      "title": "Gaps",
+      "items": {
+        "type": "string",
+        "description": "{minLength: 1}"
+      },
+      "description": "{default: []}"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "input_digest",
+    "units",
+    "materials"
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "status": "AWAITING_EXPLICIT_MODEL_TRANSMISSION_AUTHORIZATION",
+  "request_id": "scn01-schema-probes-01",
+  "provider": "Anthropic",
+  "model": "claude-sonnet-4-6",
+  "max_http_transmissions": 11,
+  "max_tokens": 1,
+  "budget_usd": 0.5,
+  "stop_estimated_cost_usd": 0.4,
+  "allow_paid": true,
+  "source_commit": "22b79a69c7e53b7794cf39031073987091d79300",
+  "files_sha256": {
+    "candidates.json": "c5eb62b3f9f25a6efe01c927f4129d3ea93bc91589986462e68020990218ae45",
+    "RUN_REVIEW.md": "8a4220080e16b2aff129707e521ea8e0d8938f87f15d068cd815703b6a14a676",
+    "pricing-and-budget.json": "dba8742a8396ffb5e783e55d434a55b30d154cc26d4b549dd19ed832cbf44914",
+    "probe.py": "d31e95c0cf82baa57cd7689bfe6af857d0ffc3cf275cabd7ae6d96a739074e0e",
+    "command.txt": "815d8eb776224b02f489183f26c7800c73d39e448c8c7488c227cdd091dbe45b",
+    "schemas/C11-compact-no-union-no-citations.json": "0021cf11649cec7e607e9d0d4eda57b1172aad339191bb6ad9c3c991fe056cd2",
+    "schemas/C08-subset-peers.json": "2cae538cac6e094c81beb3de9bcc0a4d6ae9b8ab1e3c8df0120a2a853d747aca",
+    "schemas/C04-compact-no-union.json": "b73d3220c1cc656f5549fca84e2f1ab2f5a3165710a4b832f1dede5e9d45e748",
+    "schemas/C03-compact-no-descriptions.json": "7734647f23656961cc12f0d339c711ff6b50b14c9b1cb1facc54971d55177e10",
+    "schemas/C05-compact-no-citations.json": "8bec5c68e13bf42816f3ed0845386e708da763f6cc53a1cc7291d47664935fcc",
+    "schemas/C07-subset-comparisons.json": "e3cc90162a4836a920e9ee82a31af7a96fe042ecad68b1eda1824ff6ad0f1641",
+    "schemas/C06-subset-explanations.json": "ba12c273b23929842d18e17bdcf8e4c5b3e4443cf2b15d591eff4548caf21b73",
+    "schemas/C10-subset-no-transcripts.json": "649d2e6ff46627094b7f2b559e8dfeebda7cbe40587901e1d27854ca0222a6e9",
+    "schemas/C01-legacy-accepted.json": "9fdd99a1ac4aa60d64f4395b37d5947b6289c0c1d6d5f0a46d366f23195a94a3",
+    "schemas/C02-compact-full.json": "953f5318ed3e3aab0012554c001a8b4f047bc17ca8202e55b11534e25d4ed15f",
+    "schemas/C09-subset-transcripts.json": "86435269011c84d3ca28ff17bd109c510faaa724a10073fe5119408920d9c521"
+  },
+  "package_versions": {
+    "anthropic": "0.73.0",
+    "httpx": "0.28.1"
+  },
+  "candidates": [
+    {
+      "id": "C01",
+      "name": "legacy-accepted",
+      "schema_sha256": "efc18cc6dcddb9b507b0cef70a8c46616d0d29595b4bddf27459334a1966b701"
+    },
+    {
+      "id": "C02",
+      "name": "compact-full",
+      "schema_sha256": "f63e7d06838f49c0130765c29a1bf952d58fda8f63019393dc1ce917e4d66705"
+    },
+    {
+      "id": "C03",
+      "name": "compact-no-descriptions",
+      "schema_sha256": "6eb170118358d454dad3dd1c9d5818b4d56971b1eb8ab600cd09173bf2131225"
+    },
+    {
+      "id": "C04",
+      "name": "compact-no-union",
+      "schema_sha256": "6df6f17f8b24ff5a264be079762fd6e4f16436d5cf31a50ffd9e2627c0eda6a0"
+    },
+    {
+      "id": "C05",
+      "name": "compact-no-citations",
+      "schema_sha256": "e9200124062873cd835a4d9a7bee62c97f798f3ab3d3a7a36ad266eba0e30094"
+    },
+    {
+      "id": "C06",
+      "name": "subset-explanations",
+      "schema_sha256": "82b3cb6db159059db85f47e18dcf51f314a37559c182abf16cc05cdb083a435c"
+    },
+    {
+      "id": "C07",
+      "name": "subset-comparisons",
+      "schema_sha256": "0f3169bd6b81d4c159a8b67fc44405fa21ebf9e0244e7bf032f241053576933c"
+    },
+    {
+      "id": "C08",
+      "name": "subset-peers",
+      "schema_sha256": "f8c12be1df78eb2cbbc91087c1392c1b43f942af24c8a00785af85d34b9b69d8"
+    },
+    {
+      "id": "C09",
+      "name": "subset-transcripts",
+      "schema_sha256": "12a930aeb2ede8a77ccfe00489717fc8e4b80846766b56a136348507c79cf3b6"
+    },
+    {
+      "id": "C10",
+      "name": "subset-no-transcripts",
+      "schema_sha256": "bab89af30c4d248a1ad9f67148f1b838255906f2574c0c5916916236f73b4b96"
+    },
+    {
+      "id": "C11",
+      "name": "compact-no-union-no-citations",
+      "schema_sha256": "df1a6c2a3a7bd3c834108a83b2a7923ac5293a5144e5b4f7340f33f667e3581b"
+    }
+  ],
+  "course_content_sent": false,
+  "authoring_database_used": false,
+  "model_transmissions": 0
+}

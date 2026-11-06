@@ -156,8 +156,9 @@ class StructuredTeacherUnit(Record):
 
 
 class StructuredTeacherDraft(Record):
-    # Transport-only opt-in: domain schemas, stored packages and validators stay unchanged.
-    compact_native_json_schema: ClassVar[bool] = True
+    # Provider grammar compilers reject this contract's combined size (probes, 6 November 2026).
+    # The prompt carries the schema; the host validates the returned text unchanged.
+    prompt_json_schema: ClassVar[bool] = True
 
     kind: Literal['STRUCTURED_TEACHER_DRAFT'] = 'STRUCTURED_TEACHER_DRAFT'
     input_digest: Text

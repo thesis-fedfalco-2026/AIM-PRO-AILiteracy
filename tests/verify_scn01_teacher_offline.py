@@ -15,7 +15,7 @@ from unittest.mock import patch
 
 from aimpro.generation_state import GeneratedArtifact
 from aimpro.generators import GenerationCommand, GenerationInput
-from aimpro.teacher_contracts import StructuredTeacherDraft, TeacherPlan
+from aimpro.teacher_contracts import TeacherPlan
 from learning.decisions import proposal_candidates
 from learning.generation import resolve_inputs
 from learning.metamodel import load_contract
@@ -29,7 +29,7 @@ CONTEXT, SUBJECT = 'scn01-selected-syllabus-2', 'syllabus-author'
 NAMES = ('scn01-assessments-1', 'scn01-assessments-2', 'scn01-assessments-3-claude',
          'scn01-assessments-4-native-json', 'scn01-assessments-5-revision',
          'scn01-teacher-1', 'scn01-teacher-2-revision', 'scn01-teacher-3-complete-peer',
-         'scn01-teacher-4-structured')
+         'scn01-teacher-4-structured', 'scn01-teacher-5-compact-schema')
 
 
 def forbidden(*args, **kwargs):
@@ -41,53 +41,12 @@ def inventory(root):
             for p in root.rglob('*') if p.is_file()}
 
 
-def schema_evidence():
-    from anthropic import transform_schema
-    from agent_system.anthropic import native_json_schema, typed_schema
-    old = transform_schema(typed_schema(StructuredTeacherDraft.model_json_schema()))
-    submitted = Path(__file__).resolve().parents[1] / 'docs/aimpro/evidence/scn01-teacher/attempt-04/submitted-native-schema.json'
-    assert old == json.loads(submitted.read_text())
-    new = native_json_schema(StructuredTeacherDraft)
-
-    def metrics(schema):
-        counts = {'object_schemas': 0, 'optional_properties': 0, 'min_items_rules': 0,
-                  'union_branches': 0}
-        def walk(node):
-            if node.get('type') == 'object':
-                counts['object_schemas'] += 1
-                counts['optional_properties'] += len(set(node['properties']) - set(node['required']))
-                assert node['additionalProperties'] is False
-            counts['min_items_rules'] += int('minItems' in node)
-            for key in ('$defs', 'properties'):
-                for child in node.get(key, {}).values():
-                    walk(child)
-            if 'items' in node:
-                walk(node['items'])
-            for key in ('anyOf', 'oneOf', 'allOf'):
-                counts['union_branches'] += len(node.get(key, []))
-                for child in node.get(key, []):
-                    walk(child)
-        walk(schema)
-        return dict(counts, definitions=len(schema.get('$defs', {})),
-            default_json_bytes=len(json.dumps(schema).encode()))
-
-    encoded = json.dumps(new, indent=2) + '\n'
-    report = {'previous': metrics(old), 'compact': metrics(new),
-        'compact_schema_file_sha256': sha256(encoded.encode()).hexdigest(),
-        'domain_schema_matches_fourth_attempt': True, 'all_fields_and_union_variants_retained': True,
-        'local_validation_unchanged': True, 'remote_compiler_tested': False,
-        'live_model_calls': 0, 'new_transmission_authorized': False}
-    assert report['compact']['min_items_rules'] == report['compact']['optional_properties'] == 0
-    return encoded, report
-
-
 def verify(root):
     before = inventory(root)
     latest = root / 'teacher' / NAMES[-1]
     results = {}
     with TemporaryDirectory() as directory, patch.object(socket, 'create_connection', forbidden), \
             patch.object(socket, 'getaddrinfo', forbidden), patch.object(socket.socket, 'connect', forbidden):
-        _, schema = schema_evidence()
         database = Path(directory) / 'copy.sqlite'
         with sqlite3.connect(f'file:{latest / "state.sqlite"}?mode=ro', uri=True) as source, \
                 sqlite3.connect(database) as destination:
@@ -142,7 +101,7 @@ def verify(root):
             assert all(a.receipt and not a.approval_error for a in view.artifacts)
             assert not any(a.kind == 'TEACHER_CONTENT' for a in view.manifest.artifacts)
             report = {'historical_results': results, 'historical_input_digest_unchanged': legacy.digest,
-                'fourth_input_digest_unchanged': current.digest, 'native_schema': schema,
+                'fourth_input_digest_unchanged': current.digest,
                 'exact_project': view.project.model_dump(), 'exact_assessment': command.assessments[0].model_dump(),
                 'historical_approval_decision': decision.ref.model_dump(),
                 'verbatim_reason_sha256': sha256(decision.fields['reason'].encode()).hexdigest(),
@@ -160,15 +119,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--archives', type=Path, default=Path('.cache/aimpro-examples'))
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--native-schema-output', type=Path)
     args = parser.parse_args()
-    for path in (args.output, args.native_schema_output):
-        if path is not None and path.resolve().is_relative_to(args.archives.resolve()):
-            parser.error('Outputs must be outside the preserved archives')
-    if args.native_schema_output and args.native_schema_output.resolve() == args.output.resolve():
-        parser.error('Report and schema output paths must differ')
+    if args.output.resolve().is_relative_to(args.archives.resolve()):
+        parser.error('--output must be outside the preserved archives')
     args.output.write_text(json.dumps(verify(args.archives.resolve()), indent=2) + '\n')
-    if args.native_schema_output:
-        encoded, _ = schema_evidence()
-        args.native_schema_output.write_text(encoded)
     print(args.output)
