@@ -1,13 +1,13 @@
-# Chat 05 — Teacher observations through the third authorized failure
+# Chat 05 — Teacher observations through the fourth authorized failure
 
-Updated on 6 November 2026: **attempt 03 is terminal FAILURE before Lead; no
-Teacher is approved/applied/selected**. Attempt 01 remains DRAFT after the
-owner's actual REQUEST_REVISION; attempts 02/03 produced no accepted proposal.
-This records Chat 05's actual-failure branch, not successful #10 acceptance.
-[Explicit third observation](https://github.com/thesis-fedfalco-2026/py-prototype/issues/10#issuecomment-6680877244).
-**Do not start Chat 06.** No agents were spawned. The paid observations used the
-historical runtime; a subsequent offline production-flow correction is described
-below and does not change those observations.
+Updated on 6 November 2026: **attempt 04 is terminal FAILURE at the provider's
+native JSON grammar compiler, before Teacher output or Lead**. Attempt 01 remains
+DRAFT after the owner's REQUEST_REVISION; attempts 02/03/04 produced no accepted
+proposal. No Teacher is approved/applied/selected. This records actual failures,
+not successful Teacher acceptance. **Do not start Chat 06.** No agents were spawned.
+
+[Fourth rejection evidence](../../aimpro/evidence/scn01-teacher/attempt-04/README.md).
+The observations below retain earlier checkpoints and their separate authorizations.
 
 ## Exact approved project, authority and receipts
 
@@ -37,7 +37,7 @@ Source remains the **2 November export**, SHA-256
 2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c.
 The newer consumer input was not substituted. Seven exact retained excerpts
 from three resource versions match the portable Evaluator ledger; no new corpus
-retrieval/source reload occurred. Historical paid-run runtime code matches baseline
+retrieval/source reload occurred. Attempts 01–03 used runtime code matching baseline
 4bd2ca071ed49664ddbfbc74ba4c2d54a8a49f5d. The third manifest's preparation source
 commit is b1834210b60dc925d570cf46094716b4482d74cf; code/configuration hashes match.
 
@@ -48,11 +48,12 @@ commit is b1834210b60dc925d570cf46094716b4482d74cf; code/configuration hashes ma
 | 01 | PROPOSAL; 214.197 s; estimated $0.901799 | ACCEPT | REQUEST_REVISION | None |
 | 02 | FAILURE; 167.353 s; estimated $0.505561 | Not invoked | No new proposal/decision | None |
 | 03 | FAILURE; 162.907 s; estimated $0.495275 | Not invoked | No new proposal/decision | None |
+| 04 | HTTP 400 schema rejection; 0.909 s; cost unknown | Not invoked | No new proposal/decision | None |
 
-All three exact packets were separately authorized for Anthropic direct
+The first three exact packets were separately authorized for Anthropic direct
 claude-sonnet-4-6, one Teacher plus conditional Lead, $5 operational budget each,
 16,000/2,000 output tokens, 600-second phase timeouts, native JSON, thinking off,
-streaming, 600,000 body bytes/phase, no tools/delegation/retry/fallback. Total:
+streaming, 600,000 body bytes/phase, no tools/delegation/retry/fallback. Their subtotal:
 four HTTP/model calls and estimated $1.902635, not verified provider invoices.
 The third rate basis was checked unchanged against official pricing on 6 November.
 
@@ -117,7 +118,7 @@ exists.** No content decision is requested for a nonexistent proposal.
 ## Verification, limitations and Trainer prerequisites
 
 Every new authoring copy used complete SQLite backup; original Curator, Evaluator
-and previous Teacher archives/rows remain preserved. Current counts: 164 entity
+and previous Teacher archives/rows remain preserved. After attempt 03, counts were 164 entity
 rows, eleven requests, five HumanDecisions and three StateChanges. Context and
 operations, current project and applied input receipts remain unchanged/fresh.
 No Teacher application receipt/selection, learner-runtime entity, binding,
@@ -258,3 +259,50 @@ assets/support/intent/assessment compatibility, and present an exact proposal fo
 the owner's content decision. Do not infer approval or application. Trainer inputs
 remain unchanged and lack the required approved/applied Teacher. Chat 06 must not
 start yet.
+
+
+## Fourth authorization and actual provider rejection
+
+The owner explicitly authorized the exact fourth manifest/request/scope and USD 5
+budget after the packet was presented. That authorization was recorded before
+execution in `model-transmission-authorization.json`; it covers generation and
+conditional separate review only. The actual request used the approved native
+StructuredTeacherDraft schema, no tools, and unchanged production code/input.
+
+Observed result: one HTTP request, HTTP 400 `invalid_request_error` with provider
+request id `req_011CgmXn3gFHC4qY6P4swTak`. The provider reports that the compiled
+grammar is too large. Total service 0.909 s, Teacher wrapper 0.727 s. No output
+was returned and no Lead was invoked. There is no fourth proposal/package ref,
+candidate, review payload or new HumanDecision/StateChange. Complete explanations,
+examples, transcript, source support and unit/assessment compatibility therefore
+cannot be reviewed for this attempt. Do not ask a human content decision on a
+nonexistent proposal. No retry/fallback occurred.
+
+The raw provider error, reviewed request/schema, frozen packet, original DB
+checkpoint and failed terminal request are retained. Portable evidence:
+[attempt-04](../../aimpro/evidence/scn01-teacher/attempt-04/README.md).
+The exact submitted schema matches the reviewed transformed schema; it has 13
+definitions and 9,265 default-JSON bytes. This does not prove a numeric grammar
+limit or a particular offending construct. Synthetic HTTP tests/local transforms
+passed but did not exercise the provider's remote compiler. A narrower schema
+must be investigated offline before proposing any new separately authorized run.
+
+No usage was returned/finalized, so total cost is unknown, not zero. The original
+run summary's zero known subtotal includes no known usage entries; it is not a
+billing receipt. Earlier attempts' estimated subtotal remains USD 1.902635,
+excluding the unknown fourth-run charge and without invoice verification.
+
+Post-run production checks confirm exact refs/accepted assessment reason,
+current permissions, receipts and freshness unchanged. All original archive
+files and previous DB rows remain; only the failed request row is new. Counts:
+164 entity rows, twelve requests, five HumanDecisions, three StateChanges.
+All **nine** terminal generation results replay exactly with network/models
+forbidden and unchanged inspection/replay DB bytes. Verification command:
+
+    LANGFUSE_ENABLED=false .venv/bin/python .cache/chat05/verify_fourth_result.py
+
+Actual human decisions remain unchanged: first Teacher REQUEST_REVISION, no
+Teacher approval/application. Accepted Evaluator limitations and original source
+lineage remain in force. No fifth transmission is authorized. Trainer still lacks
+approved/applied Teacher shared_content; Chat 06 must not start. No learning
+activation, learner bindings, runtime evaluation or release was created.

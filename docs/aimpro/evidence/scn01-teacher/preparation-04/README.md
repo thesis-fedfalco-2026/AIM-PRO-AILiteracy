@@ -1,4 +1,9 @@
-# Fourth Teacher packet — offline preparation only
+# Fourth Teacher packet — historical offline preparation
+
+This is the preparation checkpoint. The owner subsequently authorized the exact
+manifest; the actual fourth-run provider schema rejection is recorded in
+[attempt-04](../attempt-04/README.md). Preparation-time zero-call/no-authorization
+fields below remain unchanged. No fifth transmission is authorized.
 
 Request `scn01-teacher-04-structured` is prepared, not authorized or executed.
 Manifest SHA-256:

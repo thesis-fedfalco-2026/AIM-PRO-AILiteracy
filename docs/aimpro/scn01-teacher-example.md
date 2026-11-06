@@ -1,15 +1,18 @@
 # SCN01 dedicated Teacher — revision request and failed correction
 
-**Latest outcome on 6 November 2026:** the third exact packet was separately
-authorized and returned terminal FAILURE before Lead. The first stop is lexical
-matches inside a negative disclaimer; independent inspection also finds an exact
-assessed weak prompt, malformed email closing markers and inaccurate descriptions
-of accepted assessment findings. The full peer scene now exists. No new proposal,
-human decision or application exists. The first human REQUEST_REVISION and second
-FAILURE remain unchanged. No Teacher is approved/applied/selected; #10 remains open
-and Chat 06 must not start.
+**Latest outcome on 6 November 2026:** the fourth exact packet was explicitly
+authorized, then Anthropic returned HTTP 400 because the native JSON grammar was
+too large. One request, 0.909 seconds total service, no Teacher output, no Lead,
+no proposal or human content decision/application. Usage was unavailable; total
+cost is unknown, not zero. No retry occurred and no fifth call is authorized.
 
-[Third original draft, precise failure and full review](evidence/scn01-teacher/attempt-03/README.md).
+[Fourth original provider rejection and production verification](evidence/scn01-teacher/attempt-04/README.md).
+All nine terminal requests replay identically without clients or DB writes.
+The first REQUEST_REVISION and failures 02/03 remain unchanged. No Teacher is
+approved/applied/selected; #10 remains open and Chat 06 must not start. Complete
+content review is impossible for a run that returned no draft. Next technical
+work is offline schema simplification/verification before any newly authorized
+packet, preserving exact approved lineage and accepted Evaluator limitations.
 
 The separately authorized production Teacher + Lead run completed on 5 November
 2026. It produced an unchanged, human-reviewable proposal with separate Lead
@@ -26,7 +29,9 @@ HTTP/SSE remain under `.cache/aimpro-examples/teacher/scn01-teacher-1/`.
 
 ## Exact prerequisites and authorization
 
-The production baseline is `4bd2ca071ed49664ddbfbc74ba4c2d54a8a49f5d`.
+Attempts 01–03 used production baseline `4bd2ca071ed49664ddbfbc74ba4c2d54a8a49f5d`.
+Attempt 04 used the structured correction integrated in main at
+`26857f125e8eb2ece9d30c5b85bb076adcb5d596`; its full code hashes matched the reviewed packet.
 Production inspection and input resolution verify exact fresh approved/applied
 project, source, syllabus and assessment receipts. The current subject
 `syllabus-author` has read/propose authority and ADMINISTRATOR/CONTENT_RESPONSIBLE
