@@ -312,3 +312,63 @@ the protected AIM-PRO export and ALM metamodel matched that checkpoint byte for
 byte. These are historical local results; the later published CI result is given
 above. No existing demo database, real pending syllabus or external model was
 used to obtain those local test results.
+
+## Offline correction after the third Teacher failure (6 November 2026)
+
+New Teacher requests can opt into `GenerationCommand.teacher_plan`. The production
+resolver obtains the full historical HumanDecision reason from each selected
+assessment's validated approval/application receipt, with exact artifact,
+decision, reviewed-target and payload-key references in `approved_review`. The
+reason is retained verbatim, including whitespace, rather than asking a model
+to reconstruct accepted findings. It remains historical review evidence, not
+fresh transmission consent or Teacher approval. Existing freshness, capability
+and receipt checks also run again before persistence.
+
+The new `teaching-designer-structured` contract separates explanations, comparison
+prompts, fictional case facts, complete email fields and referenced transcript
+parts. The host renders balanced prompt/email delimiters and expands peer scenes
+from the same prompt/email components used in examples. Every generated peer
+must appear in a transcript; `teacher_plan.transcript_peers` can additionally pin
+required transcript/peer pairs. Missing fields, references, scenes and forged
+marker lines fail before Lead. Existing checks still enforce unit order,
+outcomes, citations, EXPLAIN intent and material usage.
+
+Assessment compatibility checks compare actual structured prompt fields against
+approved PROMPT_VARIANT bodies, using whitespace/case normalization for comparison
+only. Optional `protected_case_facts` quote exact selected assessment stimuli
+(Resource/unit/stimulus/quote); invalid anchors fail before reservation or model
+construction. These anchors are compared against actual case-fact values.
+Mentions in a negative disclaimer are not case reuse. Exact comparisons do not
+detect paraphrases, embedded facts or semantic answer leakage. Source support,
+realism, complete reasoning, length requirements and contradictions still need
+the separate Lead and human review. Structured fields establish presence, not
+pedagogical adequacy.
+
+New packages use `project-authoring-output` format 2 and renderer version 1. They
+retain the original `StructuredTeacherDraft`, rendered materials and host-owned
+`approved_review_notes` separately. `new_gaps` is for new findings, not replacement
+descriptions of accepted limitations. Re-rendering must exactly match the saved
+projection and notes. Existing format-1 packages, commands without a Teacher plan,
+input digests and terminal request replays retain their historical behavior.
+No archived draft is converted or repaired automatically. Trainer can consume a
+format-2 Teacher only after its separate human approval/application.
+
+Old live packets and their code hashes remain historical. Their frozen guards
+are not patched. A future structured SCN01 run needs a fresh isolated copy,
+exact production-generated transmission packet, explicit provider/model,
+requirements, protected anchors, limits and budget, and new owner authorization.
+No fourth call is authorized by this offline correction. The registry profile
+default is configuration, not permission to transmit data.
+
+```bash
+LANGFUSE_ENABLED=false .venv/bin/python -m unittest tests.test_structured_teacher -v
+# Requires local archives; copies the DB and discards synthetic candidates.
+LANGFUSE_ENABLED=false .venv/bin/python -m tests.verify_scn01_teacher_offline \
+  --output /tmp/teacher-offline.json
+```
+
+The archive regression forbids network access, replays eight historical results
+without factories or writes, validates the legacy input digest, resolves the
+actual accepted assessment review, and exercises format 2 through synthetic
+production dispatch in a temporary copy. Its synthetic proposal is never approved
+or applied. The original archive inventory must remain byte-identical.

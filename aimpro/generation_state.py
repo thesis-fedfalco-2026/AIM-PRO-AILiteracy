@@ -4,10 +4,10 @@ import hashlib
 from typing import Literal
 from uuid import uuid4
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from aimpro.generators import (AssessmentDraft, AssessmentItem, GenerationInput,
-    GenerationVerdict, TeacherDraft, TrainerDraft, checked_draft, checked_verdict)
+    GenerationVerdict, RenderedTeacherDraft, TeacherDraft, TrainerDraft, checked_draft, checked_verdict)
 from learning.authoring import ArtifactSelection, dependency_findings
 from learning.contracts import EntityRef, Provenance, Record, Text, entity_data, make_entity
 from learning.metamodel import validate_entity
@@ -24,11 +24,17 @@ class ItemLink(Record):
 
 class GeneratedArtifact(Record):
     format: Literal['project-authoring-output'] = 'project-authoring-output'
-    format_version: Literal[1] = 1
+    format_version: Literal[1, 2] = 1
     inputs: GenerationInput
-    draft: AssessmentDraft | TeacherDraft | TrainerDraft = Field(discriminator='kind')
+    draft: AssessmentDraft | TeacherDraft | RenderedTeacherDraft | TrainerDraft = Field(discriminator='kind')
     review: GenerationVerdict
     items: tuple[ItemLink, ...] = Field(min_length=1)
+
+    @model_validator(mode='after')
+    def versioned_rendering(self):
+        if (self.format_version == 2) != isinstance(self.draft, RenderedTeacherDraft):
+            raise ValueError('Structured Teacher rendering requires authoring output format 2')
+        return self
 
 
 def revision(context, manifest, data, draft, verdict):
@@ -133,7 +139,8 @@ def revision(context, manifest, data, draft, verdict):
                 fields['assessmentSpec'] = ref(assessment)
             activity = make('ActivityDefinition', key + ':activity', fields)
             links.append(ItemLink(unit_key=unit.key, activity=activity.ref, materials=mappings))
-    package = GeneratedArtifact(inputs=data, draft=draft, review=verdict, items=tuple(links))
+    package = GeneratedArtifact(format_version=2 if isinstance(draft, RenderedTeacherDraft) else 1,
+        inputs=data, draft=draft, review=verdict, items=tuple(links))
     artifact = make_entity('Resource', identity, {
         'title': 'Proposed ' + data.role + ' package', 'topics': [r.model_dump() for r in topics],
         'outcomes': [r.model_dump() for r in outcomes], 'contentOrLocator': package.model_dump_json(),
