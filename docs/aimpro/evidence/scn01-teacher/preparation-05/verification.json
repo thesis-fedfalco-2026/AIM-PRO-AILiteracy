@@ -1,0 +1,55 @@
+{
+  "request_id": "scn01-teacher-05-compact-schema",
+  "manifest_sha256": "c24a0a1f61d10e3353bd62791e4ea09fa0467002afd133d813dd9bb3f5e94888",
+  "source_commit": "2ccc648b7d4919eedc76c65b95fb7bbca001c578",
+  "input_digest": "fa23b4364924278acb6fa29a12f76f50d0fe344e8ae174aab210d249bbe06fc2",
+  "project": {
+    "type": "Resource",
+    "id": "authoring-project:072a25dbf8a5773756a614ff6af5f82fa6894e9c0017999c75ab7ec50944dbac",
+    "version": "d28d7145852b428aa1e4a7cdf76ec358"
+  },
+  "assessment": {
+    "type": "Resource",
+    "id": "authoring-output:3d13c6e5aa4e6fa11af6f967e7c48b4b874b4595eb8da3a45447f36c47a8d2ce",
+    "version": "b1de953080b54c4fac42c1ad5cd3b9fc"
+  },
+  "assessment_approval": {
+    "type": "HumanDecision",
+    "id": "decision-65c412b2d1f74c7f8b9a08fcb24853fc",
+    "version": "1"
+  },
+  "accepted_review_reason_verbatim": true,
+  "current_permissions_receipts_and_freshness_valid": true,
+  "source_sha256": "2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c",
+  "source_unchanged": true,
+  "source_resources": 3,
+  "retained_excerpts": 7,
+  "teacher_plan_exact": true,
+  "input_identical_to_fourth_packet": true,
+  "requests_before_run": 12,
+  "original_prior_archive_unchanged": true,
+  "new_database_unchanged": true,
+  "historical_replays_without_models": {
+    "scn01-evaluator-assessments-01": "FAILURE",
+    "scn01-evaluator-assessments-02": "FAILURE",
+    "scn01-evaluator-assessments-03-claude": "FAILURE",
+    "scn01-evaluator-assessments-04-native-json": "PROPOSAL",
+    "scn01-evaluator-assessments-05-revision": "PROPOSAL",
+    "scn01-teacher-01": "PROPOSAL",
+    "scn01-teacher-02-revision": "FAILURE",
+    "scn01-teacher-03-complete-peer": "FAILURE",
+    "scn01-teacher-04-structured": "FAILURE"
+  },
+  "new_requests": 0,
+  "new_human_decisions": 0,
+  "new_applications": 0,
+  "model_transmissions": 0,
+  "live_authorization_present": false,
+  "teacher_selected": false,
+  "release_or_learning_activation": false,
+  "offline_packet_tests": {
+    "passed": 14,
+    "network_forbidden": true,
+    "http_responses_synthetic": true
+  }
+}

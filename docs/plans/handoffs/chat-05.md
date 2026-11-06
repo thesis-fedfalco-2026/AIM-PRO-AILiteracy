@@ -330,3 +330,19 @@ The remote grammar compiler was not exercised; acceptance remains unproven. No
 fifth packet exists or is authorized. Next action: owner reviews this diff; if
 accepted, prepare a new exact packet for separate live authorization. Chat 06
 remains blocked until a Teacher is generated, owner-approved and applied.
+
+## Fifth packet prepared offline — no live authorization
+
+PRs #60 and #61 merged into main (`2ccc648`). Request
+`scn01-teacher-05-compact-schema`, manifest SHA-256
+`c24a0a1f61d10e3353bd62791e4ea09fa0467002afd133d813dd9bb3f5e94888`, has the
+same input digest `fa23b436…6fc2`, command, provider, settings and USD 5 budget
+as the fourth packet. Only the compact native schema and one prompt sentence
+differ. The driver now refuses any schema other than the reviewed one. Fourteen
+offline packet tests and nine exact historical replays pass.
+[Preparation evidence](../../aimpro/evidence/scn01-teacher/preparation-05/README.md);
+private review: `.cache/aimpro-examples/teacher/scn01-teacher-5-compact-schema/RUN_REVIEW.md`.
+
+Next action: the owner reviews the packet and explicitly authorizes this exact
+manifest/request/scope, or requests offline changes. No fifth transmission is
+authorized yet. Chat 06 remains blocked.
