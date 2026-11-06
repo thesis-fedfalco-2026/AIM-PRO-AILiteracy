@@ -1,0 +1,7 @@
+{
+  "estimated_total_cost_usd": null,
+  "provider_usage_returned": false,
+  "provider_billing_verified": false,
+  "driver_known_cost_subtotal_usd": 0,
+  "interpretation": "The known subtotal contains no known usage entries. It does not establish zero charge. No finalized usage, invoice or billing record was available."
+}

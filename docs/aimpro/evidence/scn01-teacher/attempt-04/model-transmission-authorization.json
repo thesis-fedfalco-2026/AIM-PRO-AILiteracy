@@ -1,0 +1,19 @@
+{
+  "manifest_sha256": "e62c78d31f79208cfc075ee6dbbbca67314f8308a907228a41bb39e0bc551ad6",
+  "request_id": "scn01-teacher-04-structured",
+  "provider": "Anthropic",
+  "model": "claude-sonnet-4-6",
+  "phases": [
+    "TEACHER",
+    "LEAD_REVIEW"
+  ],
+  "max_http_transmissions_per_phase": 1,
+  "allow_paid": true,
+  "budget_usd": 5,
+  "explicit_owner_instruction": "I authorize this package and the USD 5 budget.",
+  "owner_instruction_language": "Italian; English translation retained here",
+  "authorization_context": "Owner answered the exact manifest/request/provider/scope question in this conversation.",
+  "recorded_at_utc": "2026-11-06T10:39:29.031397+00:00",
+  "client_date": "2026-11-06",
+  "scope": "Generation and conditional separate Lead review only. No content approval, application, learner activation or release authorized."
+}

@@ -1,16 +1,17 @@
 # Portable SCN01 Teacher evidence
 
 **Current disposition on 6 November 2026:** first proposal has actual human
-REQUEST_REVISION and remains DRAFT/unapplied. Both separately authorized
-corrections returned terminal FAILURE before Lead. No Teacher package is
-approved or selected. [Third-run evidence](attempt-03/README.md) distinguishes the
-first lexical stop from independent output defects and packet-input limitations.
+REQUEST_REVISION and remains DRAFT/unapplied. Attempts 02/03 failed before Lead;
+[attempt 04](attempt-04/README.md) was rejected by the provider's native JSON
+schema compiler before any Teacher output. No Teacher is approved/applied/selected.
+Chat 06 must not start. No fifth transmission is authorized.
 
 | Attempt | Generation / Lead | Human decision | Application |
 | --- | --- | --- | --- |
 | 01 | PROPOSAL / ACCEPT | REQUEST_REVISION, DRAFT | None |
 | 02 correction | FAILURE before Lead | No new proposal or decision | None |
 | 03 complete peer | FAILURE before Lead | No new proposal or decision | None |
+| 04 structured | HTTP 400 schema rejection; no output/Lead | No new proposal or decision | None |
 
 The sections below preserve the first observation and second packet's historical
 preparation boundary. The later authorization and result are in `revision-02/`.
@@ -131,3 +132,12 @@ The owner then requested an offline production-flow correction. See
 [implementation evidence and limits](offline-flow-fix/README.md). No new live
 attempt, human content decision or application is implied; the three observed
 results above remain unchanged.
+
+The [fourth packet preparation](preparation-04/README.md) now uses the structured
+flow integrated into main. It remains offline and awaits a new exact live
+transmission authorization; no fourth attempt is implied.
+
+The fourth packet was subsequently explicitly authorized and actually failed at
+the provider schema boundary. See [actual rejection, cost uncertainty and nine
+exact replays](attempt-04/README.md). The preparation-time absence of authorization
+in earlier evidence is historical and is not the current execution state.
