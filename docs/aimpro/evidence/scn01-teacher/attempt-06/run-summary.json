@@ -1,0 +1,24 @@
+{
+  "kind": "FAILURE",
+  "seconds": 155.147,
+  "phases": [
+    "TEACHER",
+    "LEAD_REVIEW"
+  ],
+  "llm_call_count": 2,
+  "provider": "Anthropic",
+  "model": "claude-sonnet-4-6",
+  "estimated_list_price_usd": 0.9043,
+  "known_cost_estimate_usd": 0.9043,
+  "usage_cost_complete": true,
+  "cost_is_usage_estimate_not_provider_invoice": true,
+  "replay_exact_without_models": true,
+  "context_unchanged": true,
+  "human_decisions": 5,
+  "state_changes": 3,
+  "new_human_decisions": 0,
+  "original_curator_files_unchanged": true,
+  "fresh_retrieval": 0,
+  "sqlite_integrity": "ok",
+  "teacher_approval_or_application_performed": false
+}

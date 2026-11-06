@@ -386,3 +386,16 @@ historical replays pass.
 private review: `.cache/aimpro-examples/teacher/scn01-teacher-6-prompt-schema/RUN_REVIEW.md`.
 Next: owner review and explicit authorization of this exact manifest. Chat 06
 remains blocked.
+
+## Sixth attempt: valid Teacher JSON, separate Lead REJECT
+
+The owner authorized the sixth packet exactly. The Teacher returned valid
+prompt-schema JSON (108 s, `end_turn`) that passed all host checks. The Lead
+REJECTed it on accepted assessment limitations and the empty `new_gaps`, both
+outside the Teacher's scope. The run is a FAILURE: no proposal exists and the
+estimated cost is USD 0.9043. All eleven terminal results replay exactly
+([attempt-06](../../aimpro/evidence/scn01-teacher/attempt-06/README.md)).
+
+The owner chose option 1: the structured review prompt now states the Lead's
+scope, and requirements stay unchanged. Offline checks pass. Next: merge, then a
+seventh packet for separate authorization. Chat 06 remains blocked.

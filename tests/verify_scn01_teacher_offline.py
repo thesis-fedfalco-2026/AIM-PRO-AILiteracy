@@ -29,7 +29,8 @@ CONTEXT, SUBJECT = 'scn01-selected-syllabus-2', 'syllabus-author'
 NAMES = ('scn01-assessments-1', 'scn01-assessments-2', 'scn01-assessments-3-claude',
          'scn01-assessments-4-native-json', 'scn01-assessments-5-revision',
          'scn01-teacher-1', 'scn01-teacher-2-revision', 'scn01-teacher-3-complete-peer',
-         'scn01-teacher-4-structured', 'scn01-teacher-5-compact-schema')
+         'scn01-teacher-4-structured', 'scn01-teacher-5-compact-schema',
+         'scn01-teacher-6-prompt-schema')
 
 
 def forbidden(*args, **kwargs):

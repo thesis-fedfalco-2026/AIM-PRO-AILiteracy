@@ -398,3 +398,19 @@ The schema adds 7,512 characters to the Teacher prompt; input digests are
 unchanged. Output conformance is no longer guaranteed by a grammar, so a malformed
 response is a paid failure that host checks stop. A new SCN01 run still needs its
 own packet and owner authorization.
+
+The first prompt-schema run (attempt 06) produced valid Teacher JSON that passed
+all host checks. The separate Lead nevertheless rejected it, because accepted
+assessment limitations remained in `approved_review_notes` and `new_gaps` was
+empty, as the contract requires. The structured review prompt now states the
+Lead's scope:
+
+- accepted assessment/source limitations and `approved_review_notes` are
+  host-retained inputs that do not by themselves fail the draft;
+- rendered gaps contain only `new_gaps`, so empty `new_gaps` is valid when no new
+  issue exists;
+- for this route, preserving source gaps means the materials must not reproduce,
+  contradict, misrepresent or claim to repair them.
+
+The Teacher contract, host checks and Lead flags are unchanged
+([attempt-06](../aimpro/evidence/scn01-teacher/attempt-06/README.md)).
