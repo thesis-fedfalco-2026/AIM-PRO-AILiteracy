@@ -4,6 +4,8 @@ This follow-up fixes the production authoring contract after the third recorded
 failure. It does not revise historical outputs or change an owner's decision.
 No fourth model call, Teacher approval/application, learning activation or release
 occurred. The original accepted Evaluator limitations remain in force.
+Implementation is [PR #58](https://github.com/thesis-fedfalco-2026/py-prototype/pull/58),
+code commit `b78d8c8`, stacked on evidence PR #57.
 
 [Verification](verification.json) was produced with:
 

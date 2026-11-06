@@ -175,6 +175,10 @@ learners or create a release. #10 remains open.
 On 6 November the owner requested correction of the flow offline. The isolated
 branch `fix/structured-teacher-authoring` builds on evidence PR #57. It changes
 production authoring only; no new model transmission or content decision occurs.
+Implementation: [PR #58](https://github.com/thesis-fedfalco-2026/py-prototype/pull/58),
+code commit `b78d8c8`, stacked on PR #57. Both remain separate review steps;
+publication does not imply integration or content acceptance.
+[Explicit offline #10 observation](https://github.com/thesis-fedfalco-2026/py-prototype/issues/10#issuecomment-6682258679).
 
 An explicit Teacher plan selects a structured wire contract. Complete email
 fields and prompt/peer references are rendered by the host, including balanced
