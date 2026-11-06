@@ -43,6 +43,41 @@ def typed_schema(schema):
     return schema | {'$defs': defs} if defs else schema
 
 
+def native_json_schema(response_model):
+    """Build the exact wire schema; opt-in compaction never changes local validation.
+
+    Nested nonempty arrays and optional object fields add grammar alternatives.
+    Compact contracts require every property explicitly and leave array lower
+    bounds to Pydantic. Keep descriptions (including bounds moved there by the
+    SDK), typed fields, closed objects, references and union branches intact.
+    This is an offline simplification, not a remote compiler acceptance check.
+    """
+    schema = transform_schema(typed_schema(response_model.model_json_schema()))
+    if not getattr(response_model, 'compact_native_json_schema', False):
+        return schema
+
+    def compact(node):
+        node.pop('title', None)
+        minimum = node.pop('minItems', None)
+        if minimum is not None:
+            description = node.get('description', '')
+            node['description'] = (description + '\n\n' if description else '') + '{minItems: ' + str(minimum) + '}'
+        if node.get('type') == 'object':
+            node['required'] = list(node['properties'])
+        # Walk schema nodes only: property/definition names are arbitrary data.
+        for key in ('$defs', 'properties'):
+            for child in node.get(key, {}).values():
+                compact(child)
+        if 'items' in node:
+            compact(node['items'])
+        for key in ('anyOf', 'oneOf', 'allOf'):
+            for child in node.get(key, []):
+                compact(child)
+
+    compact(schema)
+    return schema
+
+
 class AnthropicJSONCompletion(AnthropicCompletion):
     """Retain CrewAI dispatch/hooks, replacing its legacy tool-envelope JSON path."""
 
@@ -78,7 +113,7 @@ class AnthropicJSONCompletion(AnthropicCompletion):
         result.pop('tool_choice', None)
         # Extra body supports the current API field without upgrading the installed SDK.
         result['extra_body'] = {'output_config': {'format': {
-            'type': 'json_schema', 'schema': transform_schema(typed_schema(response_model.model_json_schema()))}}}
+            'type': 'json_schema', 'schema': native_json_schema(response_model)}}}
         return result
 
     def _start_record(self):

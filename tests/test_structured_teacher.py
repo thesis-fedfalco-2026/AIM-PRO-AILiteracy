@@ -2,13 +2,14 @@
 
 import json
 import re
+from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock
 
 from pydantic import ValidationError
 
 from aimpro.generation_state import GeneratedArtifact
-from aimpro.generators import GenerationCommand, checked_draft
+from aimpro.generators import GenerationCommand, GenerationInput, checked_draft
 from aimpro.lead import ReviewError
 from aimpro.teacher import render_teacher
 from aimpro.teacher_contracts import (IllustrativeEmail, ProtectedCaseFact, TeacherPlan,
@@ -119,6 +120,70 @@ class StructuredTeacherTest(unittest.TestCase):
                 result = self.run_generator('TEACHER_CONTENT', command=self.teacher_command(), request_id=case)
                 self.assertEqual(result.kind, 'FAILURE')
                 self.assertEqual(self.models.calls, ['teaching-designer-structured'])
+
+    def test_native_transport_validates_before_lead_and_replays_without_http(self):
+        import httpx
+        from anthropic import Anthropic
+        from agent_system.anthropic import AnthropicJSONCompletion, native_json_schema
+        from aimpro.teacher_contracts import StructuredTeacherDraft
+        from tests.teacher_fixtures import structured_draft
+
+        requests, originals, records = [], [], []
+        case = 'valid'
+        def respond(request):
+            requests.append(json.loads(request.content))
+            return httpx.Response(200, json={'id': 'synthetic', 'type': 'message', 'role': 'assistant',
+                'model': 'claude-sonnet-4-6', 'stop_reason': 'end_turn', 'stop_sequence': None,
+                'content': [{'type': 'text', 'text': json.dumps(originals[-1])}],
+                'usage': {'input_tokens': 10, 'output_tokens': 20}})
+        http = httpx.Client(transport=httpx.MockTransport(respond))
+        self.addCleanup(http.close)
+        client = Anthropic(api_key='synthetic', http_client=http, max_retries=0)
+        self.addCleanup(client.close)
+        llm = AnthropicJSONCompletion(model='anthropic/claude-sonnet-4-6', api_key='synthetic',
+            max_tokens=16000, stream=False, thinking={'type': 'disabled'})
+        llm._client = client
+
+        def agent(**kwargs):
+            def kickoff(prompt, response_format):
+                data = GenerationInput.model_validate(json.loads(prompt.split('\nDATA\n')[1])['input'])
+                raw = structured_draft(data).model_dump(mode='json')
+                if case == 'empty-citations':
+                    raw['explanations'][0]['citations'] = []
+                elif case == 'missing-email-field':
+                    del raw['peers'][0]['email']['closing']
+                elif case == 'invalid-part-kind':
+                    raw['transcripts'][0]['parts'][0]['kind'] = 'APPROVED'
+                originals.append(raw)
+                try:
+                    return SimpleNamespace(pydantic=llm.call(prompt, response_model=response_format))
+                finally:
+                    records.append(llm.completion_record())
+            return SimpleNamespace(kickoff=kickoff)
+        self.models.agent = agent
+
+        for case in ('valid', 'empty-citations', 'missing-email-field', 'invalid-part-kind'):
+            with self.subTest(case=case):
+                self.models.calls.clear()
+                result = self.run_generator('TEACHER_CONTENT', command=self.teacher_command(), request_id=case)
+                self.assertEqual(result.kind, 'PROPOSAL' if case == 'valid' else 'FAILURE')
+                self.assertEqual(self.models.calls, ['LEAD_REVIEW'] if case == 'valid' else [])
+                self.assertEqual(requests[-1]['output_config']['format']['schema'],
+                    native_json_schema(StructuredTeacherDraft))
+                self.assertNotIn('tools', requests[-1])
+                self.assertEqual(json.loads(records[-1]['raw_output']), originals[-1])
+                if case == 'valid':
+                    package = self.package(result)
+                    self.assertEqual(package.draft.original.model_dump(mode='json'), originals[-1])
+                    self.assertEqual(render_teacher(package.inputs, package.draft.original), package.draft)
+                self.factory.reset_mock()
+                changes, calls = self.store.db.total_changes, len(requests)
+                self.assertEqual(self.run_generator('TEACHER_CONTENT', command=self.teacher_command(),
+                    request_id=case), result)
+                self.factory.assert_not_called()
+                self.assertEqual(self.store.db.total_changes, changes)
+                self.assertEqual(len(requests), calls)
+        self.assertEqual(len(requests), 4)
 
     def test_negative_case_disclaimer_is_allowed_and_rendered_metadata_cannot_be_forged(self):
         def transform(data, draft):

@@ -393,6 +393,8 @@ def generate(data, *, dispatcher, lead, max_context_chars=None):
         name = STRUCTURED_TEACHER
         prompt = (
             'STRUCTURED_TEACHER_AUTHORING: return StructuredTeacherDraft only. '
+            'Supply every schema property explicitly, including kind on transcript parts '
+            'and new_gaps (use an empty array when there are no new findings). '
             'Echo input_digest and preserve host target units, outcomes and EXPLAIN intent. '
             'Supply complete explanation, comparison, peer email and transcript components. '
             'Do not write protocol delimiters or duplicate prompt/email bodies in speech. '

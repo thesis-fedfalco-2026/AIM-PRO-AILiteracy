@@ -1,6 +1,7 @@
 """Offline native authoring JSON transport and failure-usage regression checks."""
 
 import json
+from pathlib import Path
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
@@ -9,7 +10,11 @@ import httpx
 import main  # Configure vendor privacy before loading the provider.
 from anthropic import Anthropic
 
-from agent_system.anthropic import AnthropicJSONCompletion, IncompleteAnthropicOutput, usage_cost_usd
+from agent_system.anthropic import (AnthropicJSONCompletion, IncompleteAnthropicOutput,
+                                    native_json_schema, typed_schema, usage_cost_usd)
+from anthropic import transform_schema
+from aimpro.generators import GenerationVerdict, TeacherDraft
+from aimpro.teacher_contracts import StructuredTeacherDraft
 from agent_system.config import load_model_catalog
 from agent_system.runtime import LLMFactory
 from learning.contracts import Record
@@ -96,6 +101,42 @@ class AnthropicJSONTest(unittest.TestCase):
         schema = requests[0]['output_config']['format']['schema']
         self.assertNotIn({}, schema['$defs'].values())
         self.assertNotIn('#/$defs/JsonValue', json.dumps(schema['$defs'].get('JsonValue', {})))
+
+    def test_compact_teacher_schema_preserves_fields_and_domain_contract(self):
+        domain = StructuredTeacherDraft.model_json_schema()
+        previous = transform_schema(typed_schema(domain))
+        archived = Path(__file__).resolve().parents[1] / 'docs/aimpro/evidence/scn01-teacher/attempt-04/submitted-native-schema.json'
+        self.assertEqual(previous, json.loads(archived.read_text()))
+        compact = native_json_schema(StructuredTeacherDraft)
+
+        def compare(old, new):
+            self.assertNotIn('title', new)
+            self.assertNotIn('minItems', new)
+            if old.get('type') == 'object':
+                self.assertEqual(new['required'], list(old['properties']))
+                self.assertIs(new['additionalProperties'], False)
+            for key in ('$defs', 'properties'):
+                self.assertEqual(set(old.get(key, {})), set(new.get(key, {})))
+                for name, child in old.get(key, {}).items():
+                    compare(child, new[key][name])
+            if 'items' in old:
+                compare(old['items'], new['items'])
+            for key in ('anyOf', 'oneOf', 'allOf'):
+                self.assertEqual(len(old.get(key, [])), len(new.get(key, [])))
+                for a, b in zip(old.get(key, []), new.get(key, [])):
+                    compare(a, b)
+            for key in ('type', '$ref'):
+                self.assertEqual(old.get(key), new.get(key))
+        compare(previous, compact)
+        self.assertLess(len(json.dumps(compact)), len(json.dumps(previous)))
+        self.assertEqual(StructuredTeacherDraft.model_json_schema(), domain)
+        self.assertEqual(native_json_schema(StructuredTeacherDraft), compact)
+
+    def test_compaction_is_scoped_to_the_structured_teacher(self):
+        for model in (TypedResult, WorkerOutput, TeacherDraft, GenerationVerdict):
+            with self.subTest(model=model.__name__):
+                self.assertEqual(native_json_schema(model),
+                    transform_schema(typed_schema(model.model_json_schema())))
 
     def test_max_tokens_is_detected_before_parse_and_retains_cost(self):
         calls = []
