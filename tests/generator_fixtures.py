@@ -83,7 +83,7 @@ class SyntheticModels:
     def agent(self, **kwargs):
         self.agent_configs.append(kwargs)
         name = kwargs['role']
-        def kickoff(prompt, response_format):
+        def kickoff(prompt, response_format=None):
             payload = json.loads(prompt.split('\nDATA\n')[1])
             data = GenerationInput.model_validate(payload['input'])
             self.calls.append(name)
@@ -93,6 +93,8 @@ class SyntheticModels:
             result = synthetic_draft(data)
             if self.transform:
                 result = self.transform(data, result)
+            if response_format is None:  # Prompt-schema contracts return text.
+                return SimpleNamespace(raw=result.model_dump_json())
             return SimpleNamespace(pydantic=result)
         return SimpleNamespace(kickoff=kickoff)
 

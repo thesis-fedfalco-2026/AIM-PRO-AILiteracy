@@ -362,3 +362,15 @@ fails with or without descriptions, union or citations. Combined size is
 decisive, so the structured Teacher cannot use one constrained schema. The owner
 must choose the redesign: per-group constrained calls or an unconstrained Teacher
 call with local validation. Chat 06 remains blocked.
+
+## Provider-neutral Teacher transport (owner option 2)
+
+The owner chose option 2 and asked whether the network is Claude-only. It is not:
+each agent selects a `model.properties` profile. The structured Teacher now sends its
+Pydantic schema in the prompt and the host validates the text response for any
+provider. Lead keeps native JSON. Offline: 553 tests passed (four WP3 skips), all
+CI checks passed, and ten historical results replay exactly; the archive check
+covered 1,043 files. See the
+[architecture note](../../architecture/authoring-generators.md#provider-neutral-teacher-transport-after-grammar-rejections-6-november-2026).
+Next: review/merge, then a new packet for separate live authorization. Chat 06
+remains blocked.

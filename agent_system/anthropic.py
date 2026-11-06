@@ -44,42 +44,16 @@ def typed_schema(schema):
 
 
 def native_json_schema(response_model):
-    """Build the exact wire schema; opt-in compaction never changes local validation.
-
-    Nested nonempty arrays and optional object fields add grammar alternatives.
-    Compact contracts require every property explicitly and leave array lower
-    bounds to Pydantic. Keep descriptions (including bounds moved there by the
-    SDK), typed fields, closed objects, references and union branches intact.
-    This is an offline simplification, not a remote compiler acceptance check.
-    """
-    schema = transform_schema(typed_schema(response_model.model_json_schema()))
-    if not getattr(response_model, 'compact_native_json_schema', False):
-        return schema
-
-    def compact(node):
-        node.pop('title', None)
-        minimum = node.pop('minItems', None)
-        if minimum is not None:
-            description = node.get('description', '')
-            node['description'] = (description + '\n\n' if description else '') + '{minItems: ' + str(minimum) + '}'
-        if node.get('type') == 'object':
-            node['required'] = list(node['properties'])
-        # Walk schema nodes only: property/definition names are arbitrary data.
-        for key in ('$defs', 'properties'):
-            for child in node.get(key, {}).values():
-                compact(child)
-        if 'items' in node:
-            compact(node['items'])
-        for key in ('anyOf', 'oneOf', 'allOf'):
-            for child in node.get(key, []):
-                compact(child)
-
-    compact(schema)
-    return schema
+    """Build the exact wire schema sent as output_config.format."""
+    return transform_schema(typed_schema(response_model.model_json_schema()))
 
 
 class AnthropicJSONCompletion(AnthropicCompletion):
-    """Retain CrewAI dispatch/hooks, replacing its legacy tool-envelope JSON path."""
+    """Retain CrewAI dispatch/hooks, replacing its legacy tool-envelope JSON path.
+
+    Calls without a response model (prompt-schema contracts) send no output_config
+    but keep the same usage, stop-reason and completeness record, returning raw text.
+    """
 
     max_retries: int = 0
     _completion_record: dict = PrivateAttr(default_factory=dict)
@@ -111,13 +85,18 @@ class AnthropicJSONCompletion(AnthropicCompletion):
         result = dict(params)
         result.pop('stream', None)
         result.pop('tool_choice', None)
-        # Extra body supports the current API field without upgrading the installed SDK.
-        result['extra_body'] = {'output_config': {'format': {
-            'type': 'json_schema', 'schema': native_json_schema(response_model)}}}
+        if response_model is not None:
+            # Extra body supports the current API field without upgrading the installed SDK.
+            result['extra_body'] = {'output_config': {'format': {
+                'type': 'json_schema', 'schema': native_json_schema(response_model)}}}
         return result
 
-    def _start_record(self):
-        self._completion_record = {'format': 'native_json', 'raw_output': '',
+    @staticmethod
+    def _recorded(response_model):
+        return response_model is None or isinstance(response_model, type) and issubclass(response_model, BaseModel)
+
+    def _start_record(self, response_model):
+        self._completion_record = {'format': 'text' if response_model is None else 'native_json', 'raw_output': '',
             'usage': {}, 'stop_reason': None, 'stream_complete': False, 'usage_finalized': False}
 
     def _save_usage(self, usage):
@@ -137,17 +116,18 @@ class AnthropicJSONCompletion(AnthropicCompletion):
         self._track_token_usage_internal(metrics)
         if not record['stream_complete'] or record['stop_reason'] != 'end_turn':
             raise IncompleteAnthropicOutput(record['stop_reason'])
-        result = response_model.model_validate_json(record['raw_output'])
-        self._emit_call_completed_event(response=result.model_dump_json(), call_type=LLMCallType.LLM_CALL,
+        result = record['raw_output'] if response_model is None else response_model.model_validate_json(record['raw_output'])
+        self._emit_call_completed_event(response=result if response_model is None else result.model_dump_json(),
+            call_type=LLMCallType.LLM_CALL,
             from_task=from_task, from_agent=from_agent, messages=params['messages'], usage=metrics,
             finish_reason=record['stop_reason'], response_id=record.get('response_id'))
         return result
 
     def _handle_streaming_completion(self, params, available_functions=None,
                                      from_task=None, from_agent=None, response_model=None):
-        if not isinstance(response_model, type) or not issubclass(response_model, BaseModel):
+        if not self._recorded(response_model):
             return super()._handle_streaming_completion(params, available_functions, from_task, from_agent, response_model)
-        self._start_record()
+        self._start_record(response_model)
         request = self._json_params(params, response_model, available_functions)
         with self._get_sync_client().messages.stream(**request) as stream:
             for event in stream:
@@ -169,9 +149,9 @@ class AnthropicJSONCompletion(AnthropicCompletion):
 
     def _handle_completion(self, params, available_functions=None,
                            from_task=None, from_agent=None, response_model=None):
-        if not isinstance(response_model, type) or not issubclass(response_model, BaseModel):
+        if not self._recorded(response_model):
             return super()._handle_completion(params, available_functions, from_task, from_agent, response_model)
-        self._start_record()
+        self._start_record(response_model)
         response = self._get_sync_client().messages.create(**self._json_params(params, response_model, available_functions))
         self._save_usage(response.usage)
         self._completion_record.update({'response_id': response.id, 'stop_reason': response.stop_reason,

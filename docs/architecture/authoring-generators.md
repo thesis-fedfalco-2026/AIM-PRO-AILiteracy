@@ -372,3 +372,29 @@ without factories or writes, validates the legacy input digest, resolves the
 actual accepted assessment review, and exercises format 2 through synthetic
 production dispatch in a temporary copy. Its synthetic proposal is never approved
 or applied. The original archive inventory must remain byte-identical.
+
+## Provider-neutral Teacher transport after grammar rejections (6 November 2026)
+
+Attempts 04 and 05 sent `StructuredTeacherDraft` as an Anthropic native JSON
+schema; the provider rejected both before any output because the compiled
+grammar was too large. The compact schema of attempt 05 (all properties
+required, no `minItems`) did not help. Eleven `max_tokens: 1` compilation
+probes showed that each asset group compiles alone, while the full schema fails
+with or without descriptions, the transcript-part union or citations: combined
+size decides ([probe evidence](../aimpro/evidence/scn01-teacher/schema-probes-01/README.md)).
+
+`StructuredTeacherDraft` therefore declares `prompt_json_schema`. The Teacher
+prompt carries its full Pydantic JSON Schema under `SCHEMA`, before `DATA`. The
+`AuthoringDispatcher` calls the agent without a response format, accepts only a
+whole-response JSON object (optionally in one fenced block), and validates it
+with the unchanged Pydantic contract. Prose around the JSON, truncation and schema
+violations fail before Lead, without repair or retry. The same path works for every
+model profile because no provider-specific constrained decoding is involved.
+`AnthropicJSONCompletion` sends such calls without `output_config` and keeps the
+usage, stop-reason and completeness record. Lead and other contracts keep native
+JSON. Compaction was removed; its evidence stays archived.
+
+The schema adds 7,512 characters to the Teacher prompt; input digests are
+unchanged. Output conformance is no longer guaranteed by a grammar, so a malformed
+response is a paid failure that host checks stop. A new SCN01 run still needs its
+own packet and owner authorization.
