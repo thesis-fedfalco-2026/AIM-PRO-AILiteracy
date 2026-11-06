@@ -131,3 +131,7 @@ The owner then requested an offline production-flow correction. See
 [implementation evidence and limits](offline-flow-fix/README.md). No new live
 attempt, human content decision or application is implied; the three observed
 results above remain unchanged.
+
+The [fourth packet preparation](preparation-04/README.md) now uses the structured
+flow integrated into main. It remains offline and awaits a new exact live
+transmission authorization; no fourth attempt is implied.

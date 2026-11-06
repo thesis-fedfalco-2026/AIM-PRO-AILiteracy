@@ -218,3 +218,43 @@ prerequisite is still missing. **Chat 06 remains blocked.** The next paid step,
 if requested, must prepare a new complete packet with exact requirements,
 protected anchors, excerpts, provider/model, limits and budget for new live
 transmission authorization. Do not reuse prior consent or activate learning.
+
+## Fourth packet prepared after integration — no live authorization
+
+The owner reported step 1 complete. PR #57 was MERGED as
+`5aff351e222f889de286719c12bc5cf1475d2065`, but PR #58 had merged into its
+original stacked base, not main. Follow-up [PR #59](https://github.com/thesis-fedfalco-2026/py-prototype/pull/59)
+integrated the exact reviewed diff after byte-identical comparison and all six
+checks. Current preparation baseline is main
+`26857f125e8eb2ece9d30c5b85bb076adcb5d596`. Earlier open-PR statements above
+refer to their publication checkpoint.
+
+Fresh isolated copy: `.cache/aimpro-examples/teacher/scn01-teacher-4-structured/`.
+Request `scn01-teacher-04-structured`; manifest SHA-256
+`e62c78d31f79208cfc075ee6dbbbca67314f8308a907228a41bb39e0bc551ad6`;
+input digest `fa23b4364924278acb6fa29a12f76f50d0fe344e8ae174aab210d249bbe06fc2`.
+Exact project/source/syllabus/assessment refs and accepted decisions above remain
+unchanged. The complete database history was backed up; no original archive was
+edited. Current capabilities, receipts and freshness were re-resolved through
+production services. The actual accepted reason is supplied verbatim.
+
+The [portable preparation record](../../aimpro/evidence/scn01-teacher/preparation-04/README.md)
+includes the exact command/requirements, proposed budget and verification. Full
+private review is `RUN_REVIEW.md` in that directory, with all seven exact excerpts,
+assessment inputs, native schema, structured Teacher task and conditional Lead
+contract. Proposed Anthropic direct `claude-sonnet-4-6`, maximum one Teacher and
+one conditional Lead, no retry, USD 5 budget; no old consent is reused.
+
+Twelve offline driver tests pass with synthetic HTTP/SSE and blocked network,
+plus seven production structured-Teacher tests. Eight historical terminal results
+replay exactly without clients or DB writes. No fourth request reservation,
+model authorization, output, HumanDecision or StateChange exists. No Teacher
+selection/application receipt, learner activation or release exists.
+
+Next action: owner reviews this exact packet and explicitly authorizes its live
+transmission, or requests changes while still offline. Only after authorization
+may the one-shot driver run; preserve raw output and separate Lead, inspect all
+assets/support/intent/assessment compatibility, and present an exact proposal for
+the owner's content decision. Do not infer approval or application. Trainer inputs
+remain unchanged and lack the required approved/applied Teacher. Chat 06 must not
+start yet.
