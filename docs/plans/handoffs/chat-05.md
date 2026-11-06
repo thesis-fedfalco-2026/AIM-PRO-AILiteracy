@@ -5,7 +5,9 @@ Teacher is approved/applied/selected**. Attempt 01 remains DRAFT after the
 owner's actual REQUEST_REVISION; attempts 02/03 produced no accepted proposal.
 This records Chat 05's actual-failure branch, not successful #10 acceptance.
 [Explicit third observation](https://github.com/thesis-fedfalco-2026/py-prototype/issues/10#issuecomment-6680877244).
-**Do not start Chat 06.** No agents were spawned or runtime code changed.
+**Do not start Chat 06.** No agents were spawned. The paid observations used the
+historical runtime; a subsequent offline production-flow correction is described
+below and does not change those observations.
 
 ## Exact approved project, authority and receipts
 
@@ -35,7 +37,7 @@ Source remains the **2 November export**, SHA-256
 2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c.
 The newer consumer input was not substituted. Seven exact retained excerpts
 from three resource versions match the portable Evaluator ledger; no new corpus
-retrieval/source reload occurred. Production runtime code matches baseline
+retrieval/source reload occurred. Historical paid-run runtime code matches baseline
 4bd2ca071ed49664ddbfbc74ba4c2d54a8a49f5d. The third manifest's preparation source
 commit is b1834210b60dc925d570cf46094716b4482d74cf; code/configuration hashes match.
 
@@ -167,3 +169,48 @@ Any fourth packet/model call needs a separately reviewed/authorized scope.
 Do not patch this historical output, infer approval from the first Lead ACCEPT,
 consume failed output as approved Trainer material, bind resources, activate
 learners or create a release. #10 remains open.
+
+## Subsequent owner-requested offline flow correction
+
+On 6 November the owner requested correction of the flow offline. The isolated
+branch `fix/structured-teacher-authoring` builds on evidence PR #57. It changes
+production authoring only; no new model transmission or content decision occurs.
+
+An explicit Teacher plan selects a structured wire contract. Complete email
+fields and prompt/peer references are rendered by the host, including balanced
+markers and identical peer prompt/email bodies in examples and transcripts.
+Assessment comparison operates on actual structured prompt/case fields, so a
+negative disclaimer does not trigger a case-name ban. Exact protected-fact
+anchors are checked against selected approved assessment stimuli before work.
+The resolver supplies the original accepted HumanDecision reason verbatim; new
+format-2 packages retain it in authoring metadata alongside the original typed
+components and deterministic projection. Existing legacy packages and request
+identities are preserved. See [architecture](../../architecture/authoring-generators.md#offline-correction-after-the-third-teacher-failure-6-november-2026).
+
+Offline validation: 550 regression tests passed with four existing unavailable
+WP3 tests skipped, generated contracts for both exports and whitespace checks
+passed. Seven focused structured-Teacher tests use blocked sockets/DNS, including
+rejection before Lead, exact reason retention, replay and synthetic application/
+Trainer consumption. Synthetic test decisions are confined to temporary fixtures.
+
+The [archive verification](../../aimpro/evidence/scn01-teacher/offline-flow-fix/verification.json)
+re-resolves the exact project, assessment, approval/application receipts and
+freshness above. All eight historical terminal results replay identically with
+no clients/writes, and the third legacy input digest is unchanged. In a temporary
+DB copy, the new route produces/replays a format-2 synthetic pending proposal,
+then discards it without a decision/application. All 880 original archive files
+remain byte-identical. No Teacher is selected in the real authoring context.
+
+Limitations: exact comparisons do not detect paraphrased leakage or prove
+citation support, reasoning quality, suitable length or assessment validity.
+Separate Lead and owner review remain necessary. Historical paid packets/code
+hashes are not current implementation manifests. Their outputs and guards stay
+untouched. This correction does not resolve the source/Evaluator limitations,
+make a failed Teacher acceptable, or authorize a fourth paid run.
+
+Trainer inputs remain the exact approved syllabus/assessment/project above and
+an actually human-approved/applied fresh Teacher package if used. That Teacher
+prerequisite is still missing. **Chat 06 remains blocked.** The next paid step,
+if requested, must prepare a new complete packet with exact requirements,
+protected anchors, excerpts, provider/model, limits and budget for new live
+transmission authorization. Do not reuse prior consent or activate learning.

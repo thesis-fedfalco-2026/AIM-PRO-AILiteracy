@@ -25,7 +25,8 @@ class AimproRuntimeTest(unittest.TestCase):
                 agent_factory=factory)
         self.assertEqual([c['role'] for c in calls], ['lead'])
         self.assertEqual([s.name for s in dispatcher.registry.summaries()],
-                         ['assessment-designer', 'practice-designer', 'syllabus-designer', 'teaching-designer'])
+                         ['assessment-designer', 'practice-designer', 'syllabus-designer',
+                          'teaching-designer-structured', 'teaching-designer'])
         result = dispatcher.run('syllabus-designer', 'Assigned source and evidence')
         self.assertIs(type(result), SyllabusDraft)
         self.assertEqual([c['role'] for c in calls], ['lead', 'syllabus-designer'])
