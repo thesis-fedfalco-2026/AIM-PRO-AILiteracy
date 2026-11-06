@@ -309,3 +309,24 @@ Teacher approval/application. Accepted Evaluator limitations and original source
 lineage remain in force. No fifth transmission is authorized. Trainer still lacks
 approved/applied Teacher shared_content; Chat 06 must not start. No learning
 activation, learner bindings, runtime evaluation or release was created.
+
+## Offline native schema simplification after the fourth rejection
+
+On 6 November the owner requested an offline schema correction with no live
+calls. The transport for `StructuredTeacherDraft` alone now requires every
+property and moves `minItems` into descriptions; local Pydantic validation,
+domain schema, rendering and stored packages are unchanged. Optional properties
+fall from 5 to 0 and `minItems` rules from 16 to 0, following Anthropic's
+documented guidance; all fields, definitions and the three-branch union remain.
+The prompt now asks for explicit `kind` and an empty `new_gaps` when applicable.
+
+Synthetic HTTP tests show valid drafts reaching Lead and replaying without HTTP,
+while incomplete/invalid drafts fail before Lead. Full regression: 553 passed,
+four existing WP3 skips. All nine historical terminal results replay exactly
+with network/models forbidden; 946 archive files and the fourth input digest are
+unchanged. [Evidence](../../aimpro/evidence/scn01-teacher/offline-schema-fix/README.md).
+
+The remote grammar compiler was not exercised; acceptance remains unproven. No
+fifth packet exists or is authorized. Next action: owner reviews this diff; if
+accepted, prepare a new exact packet for separate live authorization. Chat 06
+remains blocked until a Teacher is generated, owner-approved and applied.

@@ -1,6 +1,6 @@
 """Structured Teacher wire data; authority and rendering remain host controlled."""
 
-from typing import Annotated, Literal
+from typing import Annotated, ClassVar, Literal
 
 from pydantic import Field, StringConstraints, field_validator, model_validator
 
@@ -156,6 +156,9 @@ class StructuredTeacherUnit(Record):
 
 
 class StructuredTeacherDraft(Record):
+    # Transport-only opt-in: domain schemas, stored packages and validators stay unchanged.
+    compact_native_json_schema: ClassVar[bool] = True
+
     kind: Literal['STRUCTURED_TEACHER_DRAFT'] = 'STRUCTURED_TEACHER_DRAFT'
     input_digest: Text
     units: tuple[StructuredTeacherUnit, ...] = Field(min_length=1, max_length=24)

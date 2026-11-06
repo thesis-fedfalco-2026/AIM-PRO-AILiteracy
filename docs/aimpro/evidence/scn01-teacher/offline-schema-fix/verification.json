@@ -1,0 +1,73 @@
+{
+  "historical_results": {
+    "scn01-evaluator-assessments-01": "FAILURE",
+    "scn01-evaluator-assessments-02": "FAILURE",
+    "scn01-evaluator-assessments-03-claude": "FAILURE",
+    "scn01-evaluator-assessments-04-native-json": "PROPOSAL",
+    "scn01-evaluator-assessments-05-revision": "PROPOSAL",
+    "scn01-teacher-01": "PROPOSAL",
+    "scn01-teacher-02-revision": "FAILURE",
+    "scn01-teacher-03-complete-peer": "FAILURE",
+    "scn01-teacher-04-structured": "FAILURE"
+  },
+  "historical_input_digest_unchanged": "7319be2df59a68cf01d9886ecb56931b4177691e1b03e3ce638b8d070abb7c5d",
+  "fourth_input_digest_unchanged": "fa23b4364924278acb6fa29a12f76f50d0fe344e8ae174aab210d249bbe06fc2",
+  "native_schema": {
+    "previous": {
+      "object_schemas": 14,
+      "optional_properties": 5,
+      "min_items_rules": 16,
+      "union_branches": 3,
+      "definitions": 13,
+      "default_json_bytes": 9265
+    },
+    "compact": {
+      "object_schemas": 14,
+      "optional_properties": 0,
+      "min_items_rules": 0,
+      "union_branches": 3,
+      "definitions": 13,
+      "default_json_bytes": 7750
+    },
+    "compact_schema_file_sha256": "953f5318ed3e3aab0012554c001a8b4f047bc17ca8202e55b11534e25d4ed15f",
+    "domain_schema_matches_fourth_attempt": true,
+    "all_fields_and_union_variants_retained": true,
+    "local_validation_unchanged": true,
+    "remote_compiler_tested": false,
+    "live_model_calls": 0,
+    "new_transmission_authorized": false
+  },
+  "exact_project": {
+    "type": "Resource",
+    "id": "authoring-project:072a25dbf8a5773756a614ff6af5f82fa6894e9c0017999c75ab7ec50944dbac",
+    "version": "d28d7145852b428aa1e4a7cdf76ec358"
+  },
+  "exact_assessment": {
+    "type": "Resource",
+    "id": "authoring-output:3d13c6e5aa4e6fa11af6f967e7c48b4b874b4595eb8da3a45447f36c47a8d2ce",
+    "version": "b1de953080b54c4fac42c1ad5cd3b9fc"
+  },
+  "historical_approval_decision": {
+    "type": "HumanDecision",
+    "id": "decision-65c412b2d1f74c7f8b9a08fcb24853fc",
+    "version": "1"
+  },
+  "verbatim_reason_sha256": "9745770240a7fe7ca78c83b041cc263ca1a70a1d98078b8a8071140756674810",
+  "receipts_and_freshness_valid": true,
+  "historical_replay_writes": 0,
+  "new_format_version": 2,
+  "renderer_version": 1,
+  "synthetic_only_calls": [
+    "teaching-designer-structured",
+    "LEAD_REVIEW"
+  ],
+  "synthetic_proposal_pending_and_discarded": true,
+  "synthetic_exact_replay_without_factory": true,
+  "new_human_decisions": 0,
+  "new_applications": 0,
+  "live_model_calls": 0,
+  "network_forbidden": true,
+  "teacher_selected": false,
+  "source_sha256": "2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c",
+  "original_archive_files_unchanged": 946
+}
