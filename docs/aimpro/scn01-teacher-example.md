@@ -1,13 +1,15 @@
 # SCN01 dedicated Teacher — revision request and failed correction
 
-**Latest outcome:** after the first proposal's actual human REQUEST_REVISION, the
-owner separately authorized the corrected packet. That second attempt returned
-terminal FAILURE before Lead because the required peer scene/email is missing
-from its transcript. There is no new proposal or content decision. No Teacher is
-approved, applied or selected. The actual failure is recorded for Chat 05; #10
-remains open and Chat 06 must not start.
+**Latest outcome on 6 November 2026:** the third exact packet was separately
+authorized and returned terminal FAILURE before Lead. The first stop is lexical
+matches inside a negative disclaimer; independent inspection also finds an exact
+assessed weak prompt, malformed email closing markers and inaccurate descriptions
+of accepted assessment findings. The full peer scene now exists. No new proposal,
+human decision or application exists. The first human REQUEST_REVISION and second
+FAILURE remain unchanged. No Teacher is approved/applied/selected; #10 remains open
+and Chat 06 must not start.
 
-[Second-attempt original output, failure and replay evidence](evidence/scn01-teacher/revision-02/README.md).
+[Third original draft, precise failure and full review](evidence/scn01-teacher/attempt-03/README.md).
 
 The separately authorized production Teacher + Lead run completed on 5 November
 2026. It produced an unchanged, human-reviewable proposal with separate Lead
@@ -241,9 +243,10 @@ $0.505561 at the authorized dated rates, not an invoice. No Lead HTTP call or
 verdict exists. Across the two Teacher attempts the estimated total is $1.407360,
 with three HTTP transmissions and no automatic retries.
 
-Production `checked_draft` accepts the exact input digest, unit/outcome/intent,
-four required material keys/kinds and citation membership. The frozen pre-Lead
-packet guard then raises ReviewError: “The peer result needs the complete
+Offline reproduction with production `checked_draft` accepts the input digest,
+unit/outcome/intent, four material keys/kinds and citation membership. In the live
+path the frozen wrapper packet guard raises before the dispatcher returns to the
+core checker or Lead. Its ReviewError is: “The peer result needs the complete
 delimited fictional email, not a summary.” Offline inspection reproduces it:
 
 - `mat-example-peer-failure` has one complete delimited 101-word fictional email.
@@ -328,3 +331,71 @@ published. [Safe preparation evidence](evidence/scn01-teacher/preparation-03/REA
 is separate from the real-run observations. A later live execution would require
 its own explicit exact authorization; none is requested or inferred by this
 offline preparation. #10 remains open and Chat 06 remains blocked.
+
+## Third authorized observation — exact FAILURE and input/guard limitations
+
+The owner explicitly authorized final manifest
+`869b64fe8664b34944c88fd09608318040445b6b752d95f0ff19d8ab925a8247`,
+request `scn01-teacher-03-complete-peer`, direct Anthropic `claude-sonnet-4-6`,
+one Teacher plus conditional Lead, no retry and $5 operational budget. Input
+digest remains `7319be2df59a68cf01d9886ecb56931b4177691e1b03e3ce638b8d070abb7c5d`.
+No frozen input, packet, guard or output was changed after consent.
+
+Teacher returned complete native JSON/end_turn in 162.693 seconds; total service
+time was 162.907 seconds. One HTTP/model call occurred, with no Lead call, retry,
+fallback or corpus retrieval. Finalized usage supports an estimated $0.495275,
+not an invoice; the listed rate basis was rechecked against official pricing on
+6 November and was unchanged. Across all three Teacher attempts: four HTTP/model
+calls and estimated $1.902635, including the first attempt's separate Lead.
+
+The actual first stop is the frozen lexical guard matching old-case tokens in a
+note that says they are not reused. They are a negative disclaimer, not the
+actual demonstration case; token matches alone do not establish reuse of old
+business facts or all assessment answers. This context-insensitive rejection
+must be recorded separately from these independent findings:
+
+1. The weak prompt body exactly reproduces the selected assessment weak_prompt
+   in both transcript and worked comparison, contrary to the distinct-body
+   requirement. The improved/worse bodies use new fictional details and differ
+   from their assessed counterparts.
+2. The full peer scene now exists with six spoken turns, prompt, email text and
+   diagnosis. Both email bodies close with another ILLUSTRATIVE EMAIL instead
+   of END ILLUSTRATIVE EMAIL. They have two start markers and zero end markers,
+   so the approved literal-block contract is not met. This is a format defect,
+   not attempt 02's missing peer scene. No delimiter was repaired.
+3. The accepted-limit gap mislocates the classification hint in the rubric
+   rather than annotation-transcript line 21; puts the incomplete EXAMPLE issue
+   in peer_failure rather than the card recognition placeholder; generalizes
+   specific missing-reasoning/partial-declaration descriptor gaps; and substitutes
+   the separate school/adult transfer limitation for the operator-taxonomy
+   attribution finding. The original approved assessment/decision are unchanged.
+4. The packet itself summarized accepted review findings using labels without
+   exact transcript/card/criterion anchors. Production receipt objects expose
+   decision refs, not the human decision reason. This is a preparation limitation
+   to address before another attempt; a causal explanation for model behaviour
+   is not established.
+5. The explanation promises a length constraint absent from the improved prompt.
+   The peer dialogue also narrates causal/observed-result wording despite the
+   surrounding authored-fictional and non-guarantee caveats.
+
+The original full assets/citations/gaps and local review are published unchanged
+in [attempt-03](evidence/scn01-teacher/attempt-03/README.md). The offline production
+structural checker passes. In the actual live sequence, the wrapper guard raises
+before the dispatcher returns; the core checker and Lead are not reached. No
+new accepted proposal, package ref, candidate, HumanDecision or StateChange exists.
+
+Production verification proves valid fresh exact source/syllabus/assessment/
+project receipts, unchanged authority/input, every previous row and archive, and
+no learner-runtime entities. There are 164 entity rows, eleven requests, five
+HumanDecisions and three StateChanges. All eight historical generation requests
+replay exactly with model construction/network forbidden and unchanged DB bytes.
+The first REQUEST_REVISION remains DRAFT and the second FAILURE is intact.
+
+This is another explicit actual-failure observation in
+[#10](https://github.com/thesis-fedfalco-2026/py-prototype/issues/10), not a human
+REJECT or Teacher approval. No content decision is requested for a nonexistent
+third proposal. Do not start Chat 06, use failed drafts as approved Trainer input,
+activate learning, bind resources or create a release. No fourth call is
+authorized. Before further paid work, review the lexical guard contract offline
+and supply the exact accepted human-review findings with anchors, then prepare
+a separately reviewed/authorized scope. The original outputs remain immutable.

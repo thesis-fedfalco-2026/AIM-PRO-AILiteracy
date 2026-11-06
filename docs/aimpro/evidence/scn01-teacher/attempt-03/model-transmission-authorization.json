@@ -1,0 +1,17 @@
+{
+  "manifest_sha256": "869b64fe8664b34944c88fd09608318040445b6b752d95f0ff19d8ab925a8247",
+  "request_id": "scn01-teacher-03-complete-peer",
+  "provider": "Anthropic",
+  "model": "claude-sonnet-4-6",
+  "phases": [
+    "TEACHER",
+    "LEAD_REVIEW"
+  ],
+  "max_http_transmissions_per_phase": 1,
+  "allow_paid": true,
+  "budget_usd": 5,
+  "recorded_at_utc": "2026-11-06T08:32:10.088978+00:00",
+  "client_date": "2026-11-06",
+  "scope": "Generation and conditional separate Lead review only. No human content decision or application inferred.",
+  "owner_instruction_english": "I authorize the third Teacher packet scn01-teacher-03-complete-peer on Anthropic claude-sonnet-4-6, one Teacher and conditional Lead call, without retry and with a USD 5 budget."
+}

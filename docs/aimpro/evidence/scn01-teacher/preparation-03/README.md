@@ -1,4 +1,9 @@
-# Third Teacher packet — offline preparation only
+# Third Teacher packet — historical offline preparation
+
+This is the preparation-time record. The owner later authorized the final
+manifest, and the actual third-run FAILURE is recorded in
+[attempt-03](../attempt-03/README.md). Earlier preparation-time zero-call and
+no-authorization fields remain unchanged.
 
 The owner requested preparation without executing models. This folder contains
 only safe packet metadata, the exact production command/requirements and offline

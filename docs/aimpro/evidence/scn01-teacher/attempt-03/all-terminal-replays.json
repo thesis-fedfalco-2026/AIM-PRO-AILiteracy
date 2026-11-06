@@ -1,0 +1,16 @@
+{
+  "results": {
+    "scn01-evaluator-assessments-01": "FAILURE",
+    "scn01-evaluator-assessments-02": "FAILURE",
+    "scn01-evaluator-assessments-03-claude": "FAILURE",
+    "scn01-evaluator-assessments-04-native-json": "PROPOSAL",
+    "scn01-evaluator-assessments-05-revision": "PROPOSAL",
+    "scn01-teacher-01": "PROPOSAL",
+    "scn01-teacher-02-revision": "FAILURE",
+    "scn01-teacher-03-complete-peer": "FAILURE"
+  },
+  "model_construction_forbidden": true,
+  "network_forbidden": true,
+  "database_bytes_unchanged": true,
+  "new_applications": 0
+}

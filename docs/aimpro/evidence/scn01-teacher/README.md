@@ -1,15 +1,16 @@
 # Portable SCN01 Teacher evidence
 
-**Current disposition:** first proposal has actual human REQUEST_REVISION and
-remains DRAFT/unapplied; the separately authorized corrected attempt returned
-**terminal FAILURE before Lead**. No Teacher package is approved or selected.
-[Complete second-attempt failure evidence](revision-02/README.md) records the
-actual failure without relabelling it a human rejection. No retry was made.
+**Current disposition on 6 November 2026:** first proposal has actual human
+REQUEST_REVISION and remains DRAFT/unapplied. Both separately authorized
+corrections returned terminal FAILURE before Lead. No Teacher package is
+approved or selected. [Third-run evidence](attempt-03/README.md) distinguishes the
+first lexical stop from independent output defects and packet-input limitations.
 
 | Attempt | Generation / Lead | Human decision | Application |
 | --- | --- | --- | --- |
 | 01 | PROPOSAL / ACCEPT | REQUEST_REVISION, DRAFT | None |
 | 02 correction | FAILURE before Lead | No new proposal or decision | None |
+| 03 complete peer | FAILURE before Lead | No new proposal or decision | None |
 
 The sections below preserve the first observation and second packet's historical
 preparation boundary. The later authorization and result are in `revision-02/`.
@@ -79,8 +80,8 @@ and terminal failure are recorded separately in revision-02/.
 
 The owner explicitly authorized manifest
 `803dbe29b7a89f2b0080d53af3a9c9babbc4b0cd26488dff888f1e3525f8ae08`.
-The complete typed draft passed production structure checks, but the reviewed
-packet guard stopped it: the peer EXAMPLE contains the full fictional email
+Offline production structure checks pass for the complete typed draft; the live
+wrapper packet guard stopped it before the core checker or Lead: the peer EXAMPLE contains the full fictional email
 while the nineteen-turn adviser-only transcript omits the entire peer scene and
 email required by requirements 11/12. This is missing content, not a delimiter
 formatting mismatch. No separate Lead call/verdict or accepted proposal exists.
@@ -105,3 +106,21 @@ prompt/email present in the separate example; residual tone guidance, real-data
 substitution and gap-provenance issues are also addressed by the brief/guards.
 No third request or transmission is authorized, reserved or run. The actual
 first REQUEST_REVISION and second FAILURE remain the only Teacher observations.
+
+## Third authorized attempt — actual FAILURE, no fourth run
+
+The owner later authorized the final third manifest. Its original typed draft,
+exact authority receipt, 162.907-second operation, $0.495275 estimate and eight
+no-model historical replays are in [attempt-03](attempt-03/README.md). The first
+stop matches old-case tokens in a negative disclaimer; those tokens alone do not
+prove actual old-case reuse. Separate inspection finds the exact assessed weak
+prompt, missing END email markers and incorrect accepted-limit descriptions.
+The complete peer scene now exists.
+
+No new accepted proposal, package, decision or application exists. Current counts
+are 164 entity rows, eleven requests, five HumanDecisions and three StateChanges.
+The historical preparation-03 records are unchanged preparation-time evidence;
+their zero-call/no-authorization status preceded the separately recorded live
+consent and execution. No fourth run is authorized or started. Review the lexical
+guard and provide anchored accepted human-review findings before any further paid
+scope. #10 remains open and Chat 06 must not start.

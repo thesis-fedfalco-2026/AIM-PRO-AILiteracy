@@ -38,3 +38,9 @@ Teacher prerequisites remain unresolved and Chat 06 must not start. #10 stays op
 Full prompts, source excerpt texts, raw HTTP/SSE and the private database remain
 in the local archive named in provenance.json. This portable extract preserves
 all generated text without publishing those private inputs.
+
+Verification precision recorded during the third-run review: the production
+structural-check pass is an offline reproduction. In the live path the wrapper
+packet guard raised before the dispatcher returned to the core checker. Lead
+was not invoked. This clarifies control flow without changing any original
+packet, model output, database row or failure.

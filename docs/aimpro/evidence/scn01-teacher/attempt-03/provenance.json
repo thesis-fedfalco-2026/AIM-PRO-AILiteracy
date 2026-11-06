@@ -1,0 +1,55 @@
+{
+  "source_commit": "b1834210b60dc925d570cf46094716b4482d74cf",
+  "context": {
+    "type": "ExecutionContext",
+    "id": "scn01-selected-syllabus-2",
+    "version": "d28d7145852b428aa1e4a7cdf76ec358"
+  },
+  "project": {
+    "type": "Resource",
+    "id": "authoring-project:072a25dbf8a5773756a614ff6af5f82fa6894e9c0017999c75ab7ec50944dbac",
+    "version": "d28d7145852b428aa1e4a7cdf76ec358"
+  },
+  "syllabus": {
+    "type": "Resource",
+    "id": "aimpro-syllabus-926d751475204cd29c0e3a9f6033ef5f:syllabus",
+    "version": "1"
+  },
+  "assessments": [
+    {
+      "type": "Resource",
+      "id": "authoring-output:3d13c6e5aa4e6fa11af6f967e7c48b4b874b4595eb8da3a45447f36c47a8d2ce",
+      "version": "b1de953080b54c4fac42c1ad5cd3b9fc"
+    }
+  ],
+  "request_id": "scn01-teacher-03-complete-peer",
+  "subject": "syllabus-author",
+  "input_digest": "7319be2df59a68cf01d9886ecb56931b4177691e1b03e3ce638b8d070abb7c5d",
+  "provider": "Anthropic",
+  "model": "claude-sonnet-4-6",
+  "budget_usd": 5,
+  "teacher_prompt_utf8_bytes": 368398,
+  "ordered_units": [
+    "unit-1-adviser-peer-demonstration"
+  ],
+  "source_resources": 3,
+  "retained_excerpts": 7,
+  "prepared_database_sha256": "6e23dceb361ec91283c8b6b8b4d822ab944cfd2043e8b7410d8155dfbd09b869",
+  "human_decisions_before_run": 5,
+  "state_changes_before_run": 3,
+  "previous_owner_decision": "REQUEST_REVISION",
+  "prior_generated_draft_sent_to_models": false,
+  "manifest_sha256": "869b64fe8664b34944c88fd09608318040445b6b752d95f0ff19d8ab925a8247",
+  "client_date": "2026-11-06",
+  "full_local_archive": ".cache/aimpro-examples/teacher/scn01-teacher-3-complete-peer",
+  "source_ledger": "../source-ledger.json",
+  "original_packet_and_draft_unchanged": true,
+  "no_new_proposal_or_package": true,
+  "publication_omits": [
+    "credentials",
+    "private databases",
+    "source excerpt text",
+    "full prompts and input",
+    "raw HTTP/SSE"
+  ]
+}
