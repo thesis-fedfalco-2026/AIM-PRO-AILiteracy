@@ -1,0 +1,60 @@
+{
+  "production_checked_draft": {
+    "passed": true
+  },
+  "packet_regression_guards": {
+    "passed": false,
+    "error_type": "ReviewError",
+    "message": "Teacher revision repeats an assessed case/answer or superseded taxonomy"
+  },
+  "assessed_prompt_body_reproduction": {
+    "weak_prompt": true,
+    "improved_prompt": false,
+    "worse_prompt": false
+  },
+  "materials": [
+    {
+      "key": "mat-explanation-prompt-structure",
+      "kind": "EXPLANATION",
+      "content_characters": 4598,
+      "citation_documents": [
+        "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3",
+        "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:4",
+        "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:6",
+        "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:7"
+      ]
+    },
+    {
+      "key": "mat-transcript-adviser-demo",
+      "kind": "TRANSCRIPT",
+      "content_characters": 7708,
+      "citation_documents": [
+        "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3",
+        "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:4",
+        "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:6",
+        "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:7"
+      ]
+    },
+    {
+      "key": "mat-example-weak-improved-worse",
+      "kind": "EXAMPLE",
+      "content_characters": 4588,
+      "citation_documents": [
+        "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3",
+        "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:4",
+        "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:7"
+      ]
+    },
+    {
+      "key": "mat-example-peer-failure",
+      "kind": "EXAMPLE",
+      "content_characters": 3649,
+      "citation_documents": [
+        "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3",
+        "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:4",
+        "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:6"
+      ]
+    }
+  ],
+  "semantic_pedagogical_validation": false
+}

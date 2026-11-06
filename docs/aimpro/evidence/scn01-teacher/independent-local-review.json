@@ -1,0 +1,84 @@
+{
+  "recorded_at_utc": "2026-11-05T19:23:18.616242+00:00",
+  "reviewer": "assistant local inspection, not a human decision",
+  "separate_lead_verdict_read_before_findings": false,
+  "recommendation": "REJECT this unchanged package and prepare a separately reviewed Teacher revision if requested. No application recommended.",
+  "findings": [
+    {
+      "id": "T01",
+      "severity": "REVISION_REQUIRED",
+      "topic": "Assessment exposure",
+      "finding": "All three Teacher worked prompt bodies are byte-identical to the selected assessment weak_prompt, improved_prompt and worse_prompt. Teacher gives the exact removed length sentence and its effect, and repeats the same Sunrise Bakery Supplies/Moorfield peer prompt and diagnosis. Teaching commentary supplies the assessed Part A/B/C answers rather than a distinct fictional demonstration.",
+      "evidence": {
+        "exact_prompt_body_matches": {
+          "weak_prompt": true,
+          "improved_prompt": true,
+          "worse_prompt": true
+        },
+        "teacher_materials": [
+          "mat-example-weak-improved-worse",
+          "mat-example-peer-failure"
+        ],
+        "assessment_unit": "unit-1-adviser-peer-demonstration"
+      },
+      "requirement": 7
+    },
+    {
+      "id": "T02",
+      "severity": "REVISION_REQUIRED",
+      "topic": "Contradictory taxonomy in transmitted packet and generated gaps",
+      "finding": "The packet requirement 8 incorrectly labels the approved assessment taxonomy as INSTRUCTION, CONTEXT, CONSTRAINT, EXAMPLE, OUTPUT CUE. The approved assessment actually uses INSTRUCTION, PRIMARY CONTENT, EXAMPLE, CUE, TEMPLATE. The Teacher explanation uses the correct labels, but generated gap 10 copies the incorrect assertion. This is an assistant packet-preparation error that propagated; the authorized packet and original output remain unchanged.",
+      "requirement": 8
+    },
+    {
+      "id": "T03",
+      "severity": "REVISION_REQUIRED",
+      "topic": "Unsupported categorical model-behaviour claims",
+      "finding": "Explanation section 1 says the prompt is the AI's only guide and vague input will produce vague output. The source discusses context/system messages, stochastic models, iteration and validation. The worked and peer materials repeatedly claim absent content necessarily produces generic output or additional details would have allowed a usable result, beyond what fictional illustrations or retained excerpts establish. General non-guarantee language elsewhere does not resolve these local categorical claims.",
+      "locations": [
+        "mat-explanation-prompt-structure sections 1, 5",
+        "mat-example-weak-improved-worse Variant A",
+        "mat-example-peer-failure teaching commentary",
+        "mat-transcript-adviser-demo lines 19, 27"
+      ],
+      "requirements": [
+        5,
+        10
+      ]
+    },
+    {
+      "id": "T04",
+      "severity": "REVISION_REQUIRED",
+      "topic": "Claim-specific excerpt attribution",
+      "finding": "The explanation explicitly attributes reusable prompt libraries to excerpt 6 but its citation document_ids list only 3,4,7. The variant material explicitly attributes domain-specific personalities to excerpt 6 but lists only 3,7. Exact membership checks passed; they do not verify that each claimed supporting excerpt is actually cited or supports the claim.",
+      "locations": [
+        "mat-explanation-prompt-structure section 3",
+        "mat-example-weak-improved-worse Variant B addition 1"
+      ],
+      "requirement": 10
+    },
+    {
+      "id": "T05",
+      "severity": "REVISION_REQUIRED_IF_REUSED_FOR_UNANNOTATED_TRAINER_WORK",
+      "topic": "Transcript reuse and commentary",
+      "finding": "The transcript is line-numbered and complete as a demonstration, but it labels primary content at line 5 and supplies diagnoses and the detrimental-change explanation at lines 16–20 and 25–27. Its declaration that teaching commentary appears only elsewhere and no classification answers are embedded is inaccurate. It must not be handed to Trainer as an answer-free annotation exercise without an explicit compatible material decision.",
+      "requirement": 12
+    },
+    {
+      "id": "T06",
+      "severity": "LIMITATION",
+      "topic": "Displayed peer result completeness",
+      "finding": "The peer failure asset supplies a narrative summary of an unsatisfactory fictional result, not the complete message. This is visible in the original content; no observed model output or actual tool use is claimed. A future activity requiring the complete output would need an actual asset, not this summary.",
+      "requirement": 3
+    }
+  ],
+  "positive_checks": [
+    "One EXPLAIN item covers the only host target unit and exact outcome.",
+    "All four generated materials are used; explanation/transcript/example kinds are complete text.",
+    "Worse prompt removes only the length sentence and preserves the payment deadline.",
+    "All customer/business details are explicitly fictional; no actual learner/model results claimed.",
+    "No new timing, score, passing rule, learner submission or future Trainer id.",
+    "Correct five-move labels appear in explanation; accepted Evaluator limitations remain visible."
+  ],
+  "original_output_unchanged": true
+}

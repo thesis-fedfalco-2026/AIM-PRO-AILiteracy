@@ -1,0 +1,15 @@
+{
+  "checked_at_utc": "2026-11-06T08:32:10.089339+00:00",
+  "client_date": "2026-11-06",
+  "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+  "model": "claude-sonnet-4-6",
+  "rates_usd_per_million": {
+    "input": 3,
+    "output": 15,
+    "cache_write_5m": 3.75,
+    "cache_write_1h": 6,
+    "cache_read": 0.3
+  },
+  "unchanged_from_authorized_packet": true,
+  "provider_invoice_or_billing_cap_verified": false
+}

@@ -1,0 +1,40 @@
+{
+  "request_id": "scn01-teacher-03-complete-peer",
+  "result_kind": "FAILURE",
+  "stage": "CapturedAgent post-response packet guard, before dispatcher returns or separate Lead",
+  "actual_first_error": "Teacher revision repeats an assessed case/answer or superseded taxonomy",
+  "actual_first_matches_are_negative_disclaimer_tokens": true,
+  "production_structural_check_passed_offline": true,
+  "production_structural_checker_reached_in_live_path": false,
+  "separate_observed_violations": [
+    "exact assessed weak prompt body",
+    "malformed email end markers",
+    "misdescribed accepted assessment limitations"
+  ],
+  "assessed_prompt_body_matches": {
+    "weak_prompt": true,
+    "improved_prompt": false,
+    "worse_prompt": false
+  },
+  "peer_scene_present": true,
+  "peer_owner_spoken_turns": 6,
+  "email_marker_observations": {
+    "mat-transcript-adviser-demo": {
+      "start_markers": 2,
+      "end_markers": 0,
+      "valid_blocks": 0
+    },
+    "mat-example-peer-failure": {
+      "start_markers": 2,
+      "end_markers": 0,
+      "valid_blocks": 0
+    }
+  },
+  "lead_http_calls": 0,
+  "new_proposals": 0,
+  "new_candidates": 0,
+  "new_human_decisions": 0,
+  "new_applications": 0,
+  "automatic_retry": false,
+  "original_output_unchanged": true
+}

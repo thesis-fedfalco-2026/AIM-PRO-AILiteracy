@@ -1,0 +1,94 @@
+{
+  "recorded_at_utc": "2026-11-06T08:40:57.184672+00:00",
+  "client_date": "2026-11-06",
+  "reviewer": "assistant local inspection, not a human content decision",
+  "separate_lead": "NOT_INVOKED; no verdict exists",
+  "findings": [
+    {
+      "id": "R03-F01",
+      "severity": "ACTUAL_FIRST_STOP_LEXICAL_GUARD",
+      "scope": "mat-example-weak-improved-worse, introductory note",
+      "finding": "The first guard rejects Greenleaf/Hartwell/Sunrise Bakery/Moorfield/#4021/B-077 in a note claiming those cases are not reused. The tokens occur in a negative disclaimer, not as the actual demonstration case. This shows a context-insensitive lexical rejection; those token matches alone do not prove reuse of the old business case or all assessed answers. The original guard and authorized packet remain unchanged.",
+      "matched_tokens": {
+        "greenleaf": [
+          "mat-example-weak-improved-worse"
+        ],
+        "hartwell": [
+          "mat-example-weak-improved-worse"
+        ],
+        "sunrise bakery": [
+          "mat-example-weak-improved-worse"
+        ],
+        "moorfield": [
+          "mat-example-weak-improved-worse"
+        ],
+        "#4021": [
+          "mat-example-weak-improved-worse"
+        ],
+        "b-077": [
+          "mat-example-weak-improved-worse"
+        ]
+      }
+    },
+    {
+      "id": "R03-F02",
+      "severity": "INDEPENDENT_REQUIREMENT_VIOLATION",
+      "scope": "weak prompt in transcript and worked example; requirements 4/5",
+      "finding": "The complete weak prompt body is exactly the selected assessment weak_prompt: Write an email to our customer about their invoice. It appears in both transcript and worked comparison despite the explicit distinct-body requirement. The improved/worse bodies use different fictional facts and a tone-only change; they are not identical to the assessed improved/worse bodies. This is a separate observable violation from the negative-disclaimer token matches."
+    },
+    {
+      "id": "R03-F03",
+      "severity": "INDEPENDENT_LITERAL_CONTRACT_FAILURE",
+      "scope": "peer email blocks in transcript and separate EXAMPLE; requirement 12",
+      "finding": "The actual peer scene and full email text now exist, but each email closes with a second ILLUSTRATIVE EMAIL start marker, not END ILLUSTRATIVE EMAIL. Both assets have two start lines and zero end lines, so neither has the required valid literal block. This is a delimiter-format failure, not the second attempt's absent peer scene. No marker was corrected or bypassed.",
+      "email_marker_observations": {
+        "mat-transcript-adviser-demo": {
+          "start_markers": 2,
+          "end_markers": 0,
+          "valid_blocks": 0
+        },
+        "mat-example-peer-failure": {
+          "start_markers": 2,
+          "end_markers": 0,
+          "valid_blocks": 0
+        }
+      }
+    },
+    {
+      "id": "R03-F04",
+      "severity": "SUBSTANTIVE_LIMITATION_PROPAGATION_FAILURE",
+      "scope": "ACCEPTED_ASSESSMENT_LIMITATIONS gap",
+      "finding": "The generated gap changes the meaning/location of accepted Evaluator findings: it describes a rubric-scale classification hint instead of annotation-transcript line 21; puts the incomplete EXAMPLE issue in peer_failure instead of the prompt-move-card recognition placeholder; reduces specific missing-reasoning/partial-declaration descriptor gaps to generic intermediate-response coverage; and replaces the operator-taxonomy attribution issue with the separate school/adult-transfer limitation. The actual approved assessment and its owner decision remain unchanged; the new draft misdescribes them."
+    },
+    {
+      "id": "R03-F05",
+      "severity": "PACKET_INPUT_LIMITATION",
+      "scope": "requirement 14 and production ArtifactInput receipt",
+      "finding": "The packet summarized the accepted review limitations with short labels, without their exact transcript/card/criterion anchors. Production receipts supply decision refs, not the human decision reason text. The model was not given the full anchored human-review findings as a separate instruction. This is a preparation limitation to address before any further attempt; it is not evidence that it caused the model's misdescription."
+    },
+    {
+      "id": "R03-F06",
+      "severity": "CONTENT_INCONSISTENCY",
+      "scope": "explanation final section vs actual improved prompt",
+      "finding": "The explanation promises a length constraint in the improved demonstration prompt, but the supplied improved prompt has no length constraint. Its requested tone/deadline details exist. The inconsistency does not alter the selected assessment."
+    },
+    {
+      "id": "R03-F07",
+      "severity": "MODEL_BEHAVIOUR_CLAIM_LIMITATION",
+      "scope": "peer transcript turns 14/15",
+      "finding": "The fictional peer narrative says lack of content produced a generic output and adding details made it usable, although the email is expressly authored and not observed model output. The surrounding caveats limit the claim, but the spoken causal/observed-result wording should remain distinct from actual evidence."
+    }
+  ],
+  "confirmed_progress": [
+    "Full peer scene with six spoken peer turns, prompt, email text and diagnosis is present.",
+    "New demonstration/peer cases use the requested distinct fictional facts; prohibited old names occur in a negative note.",
+    "Improved/worse prompt bodies differ only by the final tone sentence; the worse body retains no explicit tone wording.",
+    "Source diagnostics and accepted assessment limitations have separate gap prefixes, though the latter's content is inaccurate.",
+    "Fictional-only framing is retained and the recorded real-use substitution sentence is absent.",
+    "The item is observation-only EXPLAIN with four referenced typed materials; no learner submission, tool execution or evaluation request."
+  ],
+  "original_draft_unchanged": true,
+  "no_new_proposal_or_human_decision": true,
+  "further_model_run_authorized": false,
+  "next_action": "Record this exact failure and guard/input limitations in #10. Do not patch/retry this output or start Chat 06. Before further paid work, review the packet/guard contract offline and supply exact accepted-review evidence; no fourth model run is authorized."
+}

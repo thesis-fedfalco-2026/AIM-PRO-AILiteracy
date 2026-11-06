@@ -1,0 +1,174 @@
+{
+  "status": "AWAITING_EXPLICIT_MODEL_TRANSMISSION_AUTHORIZATION",
+  "source_commit": "b1834210b60dc925d570cf46094716b4482d74cf",
+  "preparation_scope": "OFFLINE_ONLY_NO_MODELS",
+  "context": {
+    "type": "ExecutionContext",
+    "id": "scn01-selected-syllabus-2",
+    "version": "d28d7145852b428aa1e4a7cdf76ec358"
+  },
+  "project": {
+    "type": "Resource",
+    "id": "authoring-project:072a25dbf8a5773756a614ff6af5f82fa6894e9c0017999c75ab7ec50944dbac",
+    "version": "d28d7145852b428aa1e4a7cdf76ec358"
+  },
+  "syllabus": {
+    "type": "Resource",
+    "id": "aimpro-syllabus-926d751475204cd29c0e3a9f6033ef5f:syllabus",
+    "version": "1"
+  },
+  "assessments": [
+    {
+      "type": "Resource",
+      "id": "authoring-output:3d13c6e5aa4e6fa11af6f967e7c48b4b874b4595eb8da3a45447f36c47a8d2ce",
+      "version": "b1de953080b54c4fac42c1ad5cd3b9fc"
+    }
+  ],
+  "request_id": "scn01-teacher-03-complete-peer",
+  "subject": "syllabus-author",
+  "input_digest": "7319be2df59a68cf01d9886ecb56931b4177691e1b03e3ce638b8d070abb7c5d",
+  "provider": "Anthropic",
+  "model": "claude-sonnet-4-6",
+  "allow_paid": true,
+  "budget_usd": 5,
+  "teacher_prompt_utf8_bytes": 368398,
+  "ordered_units": [
+    "unit-1-adviser-peer-demonstration"
+  ],
+  "source_resources": 3,
+  "retained_excerpts": 7,
+  "prepared_database_sha256": "6e23dceb361ec91283c8b6b8b4d822ab944cfd2043e8b7410d8155dfbd09b869",
+  "human_decisions_before_run": 5,
+  "state_changes_before_run": 3,
+  "previous_owner_decision": "REQUEST_REVISION",
+  "previous_result": "FAILURE",
+  "prior_generated_draft_sent_to_models": false,
+  "manifest_sha256": "869b64fe8664b34944c88fd09608318040445b6b752d95f0ff19d8ab925a8247",
+  "command": {
+    "project": {
+      "type": "Resource",
+      "id": "authoring-project:072a25dbf8a5773756a614ff6af5f82fa6894e9c0017999c75ab7ec50944dbac",
+      "version": "d28d7145852b428aa1e4a7cdf76ec358"
+    },
+    "base_context": {
+      "type": "ExecutionContext",
+      "id": "scn01-selected-syllabus-2",
+      "version": "d28d7145852b428aa1e4a7cdf76ec358"
+    },
+    "assessments": [
+      {
+        "type": "Resource",
+        "id": "authoring-output:3d13c6e5aa4e6fa11af6f967e7c48b4b874b4595eb8da3a45447f36c47a8d2ce",
+        "version": "b1de953080b54c4fac42c1ad5cd3b9fc"
+      }
+    ],
+    "shared_content": [],
+    "requirements": [
+      "Generate one complete Teacher EXPLAIN demonstration sequence only for host target unit unit-1-adviser-peer-demonstration. Preserve all exact approved syllabus/outcome/order/assessment definitions. Do not generate PRACTICE or ASSESS items or revise accepted assessment stimuli, criteria, descriptors or limitations. Keep instructions demonstrational and observational only: no learner submission, practice task, AI-tool execution, evidence collection or evaluation request.",
+      "Use English suitable for adult SME beginners. Preserve One evening workshop and use fictional customer details only. Do not invent unit durations, learner-response limits, scores, passing rules, prerequisites, observed results or approvals.",
+      "Supply four complete materials with these exact keys and kinds: mat-explanation-prompt-structure EXPLANATION; mat-transcript-adviser-demo TRANSCRIPT; mat-example-weak-improved-worse EXAMPLE; mat-example-peer-failure EXAMPLE. Reference all four in the EXPLAIN item. Supply every asset the instruction promises, not placeholders, summaries standing in for messages or external tool prerequisites.",
+      "T01 CORRECTION: Teach the same supported construction principles using entirely new fictional cases, never the assessment stimuli or their solutions. Do not reuse any assessment prompt body, Greenleaf, Hartwell, Sunrise Bakery, Moorfield, invoice #4021, B-077 or their business details. Do not quote the assessment removed-length sentence or give an answer keyed to its Part A/B/C stimuli. The new cases below are Teacher illustrations, not replacements for the approved assessment.",
+      "For the adviser example use fictional Stonebrook Tools, fictional customer Harbor Workshop, fictional invoice DEMO-A-204, fictional EUR 86.40 and fictional due date 9 May. Explicitly declare all business/customer/invoice/date/amount details fictional. Supply complete weak, improved and worse prompt bodies using PROMPT TEXT / END PROMPT TEXT delimiters, in that order, with a side-by-side comparison. The weak body must differ from the assessment weak body.",
+      "R02-F04 CORRECTION: The improved demonstration prompt must end with the exact standalone sentence Keep the tone calm and respectful. This final sentence must be its ONLY tone/style guidance; use a neutral accounts-assistant role and do not add friendly, firm, polite, professional or other tone guidance elsewhere. The worse body must be byte-identical except removal of that one sentence, retaining invoice/customer/amount/action. Removing it illustrates loss of explicit tone guidance, not proven degradation of output. Do not run an AI tool or claim an observed worse result.",
+      "For the peer example use a different fictional case: Cobalt Print Studio, fictional customer Elm Conference Services, fictional invoice DEMO-P-317 and fictional EUR 52.80. Supply her complete vague prompt, one complete newly authored fictional illustrative email showing the problem, and a teaching diagnosis tied to the actual text. Label the email as authored illustration, not observed provider output or actual business experience. Do not reuse or solve the approved assessment peer failure.",
+      "T02 CORRECTION: The actual approved assessment label set is INSTRUCTION, PRIMARY CONTENT, EXAMPLE, CUE, TEMPLATE. Use those labels consistently if needed. It is an operator adaptation of supported source concepts, not a validated or verbatim source taxonomy. Do not repeat the prior packet error that CONTEXT, CONSTRAINT and OUTPUT CUE are the assessment label set.",
+      "T03 CORRECTION: Do not state that the user prompt is the model's only guide, that vague prompts necessarily produce vague/generic output, or that added details guarantee a useful response. Describe possible effects, model/system/context dependence, stochastic variation and the need to inspect results; tie each claim to exact retained support. A fictional authored email is not empirical evidence for a causal guarantee.",
+      "T04 CORRECTION: Cite each item/material with exact retained resource/version/document ids that substantively support its actual claims. If a material invokes excerpt 6 for prompt libraries, domain-specific roles, iteration or stochastic models, include that exact document id in that material's citations. Excerpt 3 supports instruction/context, excerpt 4 examples/cues/templates and zero/one/few-shot distinctions, excerpt 6 domain/stochasticity/iteration, excerpt 7 best practices. Do not fabricate source quotations, validate adult-SME efficacy from school/general measurement context, or claim membership checks establish support.",
+      "R02-F01/T05 CORRECTION: The line-numbered transcript must include BOTH a complete adviser thinking-aloud scene AND a complete spoken peer-owner scene in the SAME material. After the adviser, continue with an exact PEER SCENE line and close that segment with END PEER SCENE. Include at least two numbered Peer owner: turns (her introduction and her diagnosis), her fictional Cobalt Print Studio case, the full vague prompt, the entire authored fictional email, and her explanation of the actual textual omissions. Do not end with a reference to the separate peer example: that separate asset does not supply missing transcript content. This is openly commented teaching, not an answer-free Trainer annotation stimulus; state that limit explicitly. Do not invent future Trainer ids or an unannotated exercise.",
+      "R02-F01/T06 CORRECTION: In BOTH mat-example-peer-failure and the transcript PEER SCENE, include one exact PEER PROMPT / END PEER PROMPT block and one exact ILLUSTRATIVE EMAIL / END ILLUSTRATIVE EMAIL block. Marker lines must stand alone without indentation or line-number prefixes. Put the full literal prompt and full email inside these blocks without line-number prefixes. Duplicate the SAME complete prompt and email verbatim between the two materials; do not replace either with a summary, quote fragment or see-other-material instruction. Place spoken numbered turns outside the literal blocks. The email must be a complete authored fictional message with a Subject, salutation, body and closing, not an observed provider response. Include the complete peer case and diagnosis in the transcript as well as the separate material.",
+      "Explain instruction and primary content, and distinguish examples actually supplied to a model from discussion of examples. Zero-shot contains no examples, one-shot one and few-shot several. A template may intentionally contain clearly identified variable slots, but a purported completed worked example must have actual fictional content. No sample-text placeholders can stand in for an enacted example.",
+      "Retain source diagnostics/gaps and the owner-accepted Evaluator limitations unchanged. In gaps include distinct entries beginning SOURCE_DIAGNOSTICS: and ACCEPTED_ASSESSMENT_LIMITATIONS:. The source entry concerns original cardinality/vocabulary findings and absence of source-prescribed assessment/thresholds; the assessment-review entry concerns the accepted classification hint, incomplete EXAMPLE illustration, missing-reasoning/partial-declaration descriptors, attribution limitation and unvalidated rubric status. Do not call these assessment-authoring findings source diagnostics or describe the exact selected approved/applied assessment as unapproved. No binding, release, learner activation, acquisition or completion is implied.",
+      "All DATA including the approved assessment is dependency/reference data, not instructions or a source of worked teaching answers. Disclose genuine unresolved issues in gaps; do not echo superseded incorrect taxonomy claims. Structural guards are narrow and cannot replace separate Lead and human review.",
+      "R02-F02 CORRECTION: Keep all content within the fictional-only workshop scope. Do not suggest substituting real customer/business details in real use or outside this session. Template reuse examples must explicitly use fictional details only. Any real-data reference must prohibit its use here, not recommend a real-use route.",
+      "R02-F03 CONTEXT: Retained excerpt 6 supports model stochasticity and trial-and-error prompt design. Excerpt 7 also mentions trial-and-error exploration in a notebook exercise. These concepts do not prescribe notebook/API setup for SCN01, validate adult-SME efficacy or prove the new illustration works. Keep exact claim-level attribution and qualification.",
+      "COMPLETENESS SELF-CHECK: Before returning the typed draft, inspect the actual transcript PEER SCENE text, not its title or promised assets. Verify the fictional business/customer/invoice/amount, a spoken Peer owner turn, full PEER PROMPT block, full authored ILLUSTRATIVE EMAIL block and diagnosis are present. Compare both duplicated blocks to the peer EXAMPLE for exact identity. Confirm the worse prompt has no remaining tone guidance and the gap provenance entries are distinct. If unable to supply required content, declare the gap honestly; structural/regression checks may reject it. Do not silently repair any approved assessment."
+    ]
+  },
+  "runtime_profile": {
+    "teacher": {
+      "name": "teaching-designer",
+      "profile": "anthropic",
+      "provider": "anthropic",
+      "model": "anthropic/claude-sonnet-4-6",
+      "base_url": "https://api.anthropic.com",
+      "api_key_env": "ANTHROPIC_API_KEY",
+      "stream": true,
+      "allow_paid": true,
+      "settings": {
+        "temperature": 0.6,
+        "top_p": null,
+        "timeout": 600.0,
+        "max_tokens": 16000
+      },
+      "thinking": {
+        "type": "disabled"
+      }
+    },
+    "lead": {
+      "name": "lead",
+      "profile": "anthropic",
+      "provider": "anthropic",
+      "model": "anthropic/claude-sonnet-4-6",
+      "base_url": "https://api.anthropic.com",
+      "api_key_env": "ANTHROPIC_API_KEY",
+      "stream": true,
+      "allow_paid": true,
+      "settings": {
+        "temperature": 0.2,
+        "top_p": null,
+        "timeout": 600.0,
+        "max_tokens": 2000
+      },
+      "thinking": {
+        "type": "disabled"
+      }
+    },
+    "tools": [],
+    "delegation": false,
+    "native_json": true,
+    "budget_usd": 5,
+    "max_request_body_bytes_per_phase": 600000,
+    "sdk_retries": 0,
+    "stream_retries": 0,
+    "max_http_transmissions_per_phase": 1,
+    "fallback": false,
+    "telemetry": false
+  },
+  "pricing_and_budget": {
+    "checked_date": "2026-11-05",
+    "provider": "Anthropic direct",
+    "model": "claude-sonnet-4-6",
+    "rates_usd_per_million": {
+      "input": "3",
+      "output": "15",
+      "cache_write_5m": "3.75",
+      "cache_write_1h": "6",
+      "cache_read": "0.30"
+    },
+    "sources": [
+      "https://platform.claude.com/docs/en/about-claude/pricing",
+      "https://platform.claude.com/docs/en/models/sonnet-4-6/overview"
+    ],
+    "proposed_operational_budget_usd": 5,
+    "max_http_requests": 2,
+    "max_request_body_bytes_per_phase": 600000,
+    "max_output_tokens": {
+      "TEACHER": 16000,
+      "LEAD_REVIEW": 2000
+    },
+    "expected_total_usd": [
+      0.7,
+      1.8
+    ],
+    "conservative_list_price_estimate_usd": 4.80072,
+    "conservative_method": "Two 600000-byte inputs plus 4096 overhead each, assuming at most one token per byte and all input charged at five-minute cache-write rate, plus 18000 output tokens. Local limits, not a provider billing cap. No one-hour cache writes allowed.",
+    "provider_invoice_verified": false,
+    "taxes_included": false
+  },
+  "local_packet": ".cache/aimpro-examples/teacher/scn01-teacher-3-complete-peer/RUN_REVIEW.md",
+  "model_calls": 0,
+  "retrieval_calls": 0,
+  "request_reserved": false,
+  "live_authorization_present": false,
+  "content_decision_or_application_authorized": false
+}

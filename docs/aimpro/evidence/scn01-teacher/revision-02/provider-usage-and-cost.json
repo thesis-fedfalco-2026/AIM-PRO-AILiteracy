@@ -1,0 +1,38 @@
+{
+  "calls": [
+    {
+      "phase": "TEACHER",
+      "seconds": 167.101,
+      "model": "claude-sonnet-4-6",
+      "completion_record": {
+        "format": "native_json",
+        "usage": {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 100718
+          },
+          "cache_creation_input_tokens": 100718,
+          "cache_read_input_tokens": 0,
+          "input_tokens": 3,
+          "output_tokens": 8524,
+          "service_tier": "standard",
+          "inference_geo": "global",
+          "speed": "standard"
+        },
+        "stop_reason": "end_turn",
+        "stream_complete": true,
+        "usage_finalized": true,
+        "response_id": "msg_011CgkMz34CwfkVm3QzCtLaC"
+      }
+    }
+  ],
+  "rates_usd_per_million": {
+    "input": "3",
+    "output": "15",
+    "cache_write_5m": "3.75",
+    "cache_write_1h": "6",
+    "cache_read": "0.30"
+  },
+  "estimated_list_price_usd": 0.505561,
+  "provider_invoice_verified": false
+}

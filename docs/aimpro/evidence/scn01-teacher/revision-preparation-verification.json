@@ -1,0 +1,27 @@
+{
+  "status": "PASS",
+  "manifest_sha256": "803dbe29b7a89f2b0080d53af3a9c9babbc4b0cd26488dff888f1e3525f8ae08",
+  "production_input_digest": "c58bcc659971be84eafb2510798a7afd61580c2bbac4efc4cf24cfba0ae2b02b",
+  "production_receipts_valid": true,
+  "fresh": true,
+  "complete_database_copy_equal": true,
+  "original_archive_inventory_unchanged": true,
+  "portable_evaluator_hashes_and_source_texts_match": true,
+  "model_calls": 0,
+  "retrieval_calls": 0,
+  "new_request_unreserved": true,
+  "authorization_absent": true,
+  "previous_owner_revision_verified": true,
+  "only_explicit_requirements_change_in_generation_input": true,
+  "previous_exact_replays_without_models": {
+    "scn01-evaluator-assessments-01": "FAILURE",
+    "scn01-evaluator-assessments-02": "FAILURE",
+    "scn01-evaluator-assessments-03-claude": "FAILURE",
+    "scn01-evaluator-assessments-04-native-json": "PROPOSAL",
+    "scn01-evaluator-assessments-05-revision": "PROPOSAL",
+    "scn01-teacher-01": "PROPOSAL"
+  },
+  "human_decisions": 5,
+  "state_changes": 3,
+  "database_unchanged": true
+}

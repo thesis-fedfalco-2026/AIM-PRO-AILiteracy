@@ -1,0 +1,30 @@
+{
+  "kind": "PROPOSAL",
+  "proposal": {
+    "type": "ChangeProposal",
+    "id": "proposal-269745fc7eb140bbaa72a42bf6dd1d2a",
+    "version": "1"
+  },
+  "review_payload_key": "5e1c62ad695210f52ee4862b3f7fe28827b010fbb350a983f1fdf04af8b7870c",
+  "package": {
+    "type": "Resource",
+    "id": "authoring-output:0550349a953f4fee5c161eb8fcbf1023759589d79c752fdeb99191c4f0713b83",
+    "version": "a733301db6b549b2a10051475a2cf6ab"
+  },
+  "candidate_count": 20,
+  "exact_replay_without_models": true,
+  "production_input_still_exact": true,
+  "receipts_valid": true,
+  "no_stale_dependencies": true,
+  "all_previous_rows_retained": true,
+  "context_and_operations_unchanged": true,
+  "new_requests": 1,
+  "human_decisions": 4,
+  "state_changes": 3,
+  "new_human_decisions": 0,
+  "new_applications": 0,
+  "original_archive_inventory_unchanged": true,
+  "sqlite_integrity": "ok",
+  "inspection_did_not_change_db": true,
+  "packet_and_code_hashes_valid": true
+}

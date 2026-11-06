@@ -1,0 +1,31 @@
+{
+  "status": "PASS",
+  "manifest_sha256": "869b64fe8664b34944c88fd09608318040445b6b752d95f0ff19d8ab925a8247",
+  "production_input_digest": "7319be2df59a68cf01d9886ecb56931b4177691e1b03e3ce638b8d070abb7c5d",
+  "production_receipts_valid": true,
+  "fresh": true,
+  "complete_database_copy_equal": true,
+  "original_archive_inventory_unchanged": true,
+  "portable_evaluator_hashes_and_source_texts_match": true,
+  "model_calls": 0,
+  "retrieval_calls": 0,
+  "new_request_unreserved": true,
+  "authorization_absent": true,
+  "execution_artifacts_absent": true,
+  "previous_owner_revision_verified": true,
+  "only_explicit_requirements_change_in_generation_input": true,
+  "preparation_scope": "OFFLINE_ONLY_NO_MODELS",
+  "prior_second_Teacher_terminal_failure_retained": true,
+  "previous_exact_replays_without_models": {
+    "scn01-evaluator-assessments-01": "FAILURE",
+    "scn01-evaluator-assessments-02": "FAILURE",
+    "scn01-evaluator-assessments-03-claude": "FAILURE",
+    "scn01-evaluator-assessments-04-native-json": "PROPOSAL",
+    "scn01-evaluator-assessments-05-revision": "PROPOSAL",
+    "scn01-teacher-01": "PROPOSAL",
+    "scn01-teacher-02-revision": "FAILURE"
+  },
+  "human_decisions": 5,
+  "state_changes": 3,
+  "database_unchanged": true
+}
