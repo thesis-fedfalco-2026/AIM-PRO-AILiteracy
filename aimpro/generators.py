@@ -454,7 +454,14 @@ def generate(data, *, dispatcher, lead, max_context_chars=None):
             'Host rendering establishes structure, not completeness of reasoning or source support. '
             'The approved_review_notes preserve exact historical human findings; inspect new_gaps '
             'and teaching claims for contradictions, misleading paraphrases or claims of repair. '
-            'Those notes are authoring metadata, never learner text or new approval.\n' + review_prompt)
+            'Those notes are authoring metadata, never learner text or new approval. '
+            'Scope: judge the Teacher components and their rendering. Accepted limitations of the '
+            'approved assessment or source, and approved_review_notes, are host-retained inputs '
+            'outside this draft; by themselves they never make it incomplete or misaligned. '
+            'Rendered gaps contain only new_gaps; inherited source diagnostics and syllabus gaps '
+            'stay in the host input, so empty new_gaps is valid when no new issue exists. For this '
+            'route, preserving source gaps means the materials do not reproduce, contradict, '
+            'misrepresent or claim to repair them.\n' + review_prompt)
     if max_context_chars is not None and len(review_prompt) > max_context_chars:
         raise ReviewError('Required authoring review context exceeds configured budget')
     with telemetry.observation('authoring.project.review', 'evaluator', input=review_prompt) as span:

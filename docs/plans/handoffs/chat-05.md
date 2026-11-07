@@ -374,3 +374,28 @@ covered 1,043 files. See the
 [architecture note](../../architecture/authoring-generators.md#provider-neutral-teacher-transport-after-grammar-rejections-6-november-2026).
 Next: review/merge, then a new packet for separate live authorization. Chat 06
 remains blocked.
+
+## Sixth packet prepared offline — no live authorization
+
+PR #62 merged into main (`c7e626d`). Request `scn01-teacher-06-prompt-schema`,
+manifest SHA-256 `5d11aba1b2015a507eed13e92fa3aadbcd6c28bfde779eb72d9cf536584b86d1`,
+uses the prompt-schema Teacher transport with the same input digest, command,
+provider, settings and USD 5 budget. Sixteen offline packet tests and ten exact
+historical replays pass.
+[Preparation evidence](../../aimpro/evidence/scn01-teacher/preparation-06/README.md);
+private review: `.cache/aimpro-examples/teacher/scn01-teacher-6-prompt-schema/RUN_REVIEW.md`.
+Next: owner review and explicit authorization of this exact manifest. Chat 06
+remains blocked.
+
+## Sixth attempt: valid Teacher JSON, separate Lead REJECT
+
+The owner authorized the sixth packet exactly. The Teacher returned valid
+prompt-schema JSON (108 s, `end_turn`) that passed all host checks. The Lead
+REJECTed it on accepted assessment limitations and the empty `new_gaps`, both
+outside the Teacher's scope. The run is a FAILURE: no proposal exists and the
+estimated cost is USD 0.9043. All eleven terminal results replay exactly
+([attempt-06](../../aimpro/evidence/scn01-teacher/attempt-06/README.md)).
+
+The owner chose option 1: the structured review prompt now states the Lead's
+scope, and requirements stay unchanged. Offline checks pass. Next: merge, then a
+seventh packet for separate authorization. Chat 06 remains blocked.

@@ -1,0 +1,606 @@
+{
+  "$defs": {
+    "CaseFact": {
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "value": {
+          "minLength": 1,
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "label",
+        "value"
+      ],
+      "title": "CaseFact",
+      "type": "object"
+    },
+    "CorpusCitation": {
+      "additionalProperties": false,
+      "properties": {
+        "resource_id": {
+          "minLength": 1,
+          "title": "Resource Id",
+          "type": "string"
+        },
+        "resource_version": {
+          "minLength": 1,
+          "title": "Resource Version",
+          "type": "string"
+        },
+        "document_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Document Ids",
+          "type": "array"
+        },
+        "supported_claim": {
+          "minLength": 1,
+          "title": "Supported Claim",
+          "type": "string"
+        }
+      },
+      "required": [
+        "resource_id",
+        "resource_version",
+        "document_ids",
+        "supported_claim"
+      ],
+      "title": "CorpusCitation",
+      "type": "object"
+    },
+    "EntityRef": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "minLength": 1,
+          "title": "Type",
+          "type": "string"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "version": {
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "version"
+      ],
+      "title": "EntityRef",
+      "type": "object"
+    },
+    "IllustrativeEmail": {
+      "additionalProperties": false,
+      "properties": {
+        "subject": {
+          "minLength": 1,
+          "title": "Subject",
+          "type": "string"
+        },
+        "salutation": {
+          "minLength": 1,
+          "title": "Salutation",
+          "type": "string"
+        },
+        "paragraphs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 64,
+          "minItems": 1,
+          "title": "Paragraphs",
+          "type": "array"
+        },
+        "closing": {
+          "minLength": 1,
+          "title": "Closing",
+          "type": "string"
+        },
+        "signature": {
+          "minLength": 1,
+          "title": "Signature",
+          "type": "string"
+        }
+      },
+      "required": [
+        "subject",
+        "salutation",
+        "paragraphs",
+        "closing",
+        "signature"
+      ],
+      "title": "IllustrativeEmail",
+      "type": "object"
+    },
+    "PeerExample": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "minLength": 1,
+          "title": "Key",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "notice": {
+          "minLength": 1,
+          "title": "Notice",
+          "type": "string"
+        },
+        "facts": {
+          "items": {
+            "$ref": "#/$defs/CaseFact"
+          },
+          "maxItems": 32,
+          "minItems": 1,
+          "title": "Facts",
+          "type": "array"
+        },
+        "introduction": {
+          "minLength": 1,
+          "title": "Introduction",
+          "type": "string"
+        },
+        "email_introduction": {
+          "minLength": 1,
+          "title": "Email Introduction",
+          "type": "string"
+        },
+        "prompt": {
+          "minLength": 1,
+          "title": "Prompt",
+          "type": "string"
+        },
+        "email": {
+          "$ref": "#/$defs/IllustrativeEmail"
+        },
+        "diagnosis": {
+          "minLength": 1,
+          "title": "Diagnosis",
+          "type": "string"
+        },
+        "citations": {
+          "items": {
+            "$ref": "#/$defs/CorpusCitation"
+          },
+          "minItems": 1,
+          "title": "Citations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "key",
+        "title",
+        "notice",
+        "facts",
+        "introduction",
+        "email_introduction",
+        "prompt",
+        "email",
+        "diagnosis",
+        "citations"
+      ],
+      "title": "PeerExample",
+      "type": "object"
+    },
+    "PeerReference": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "PEER_SCENE",
+          "default": "PEER_SCENE",
+          "title": "Kind",
+          "type": "string"
+        },
+        "peer_key": {
+          "minLength": 1,
+          "title": "Peer Key",
+          "type": "string"
+        }
+      },
+      "required": [
+        "peer_key"
+      ],
+      "title": "PeerReference",
+      "type": "object"
+    },
+    "PromptComparison": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "minLength": 1,
+          "title": "Key",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "notice": {
+          "minLength": 1,
+          "title": "Notice",
+          "type": "string"
+        },
+        "facts": {
+          "items": {
+            "$ref": "#/$defs/CaseFact"
+          },
+          "maxItems": 32,
+          "minItems": 1,
+          "title": "Facts",
+          "type": "array"
+        },
+        "weak_prompt": {
+          "minLength": 1,
+          "title": "Weak Prompt",
+          "type": "string"
+        },
+        "improved_prompt": {
+          "minLength": 1,
+          "title": "Improved Prompt",
+          "type": "string"
+        },
+        "worse_prompt": {
+          "minLength": 1,
+          "title": "Worse Prompt",
+          "type": "string"
+        },
+        "commentary": {
+          "minLength": 1,
+          "title": "Commentary",
+          "type": "string"
+        },
+        "citations": {
+          "items": {
+            "$ref": "#/$defs/CorpusCitation"
+          },
+          "minItems": 1,
+          "title": "Citations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "key",
+        "title",
+        "notice",
+        "facts",
+        "weak_prompt",
+        "improved_prompt",
+        "worse_prompt",
+        "commentary",
+        "citations"
+      ],
+      "title": "PromptComparison",
+      "type": "object"
+    },
+    "PromptReference": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "PROMPT",
+          "default": "PROMPT",
+          "title": "Kind",
+          "type": "string"
+        },
+        "comparison_key": {
+          "minLength": 1,
+          "title": "Comparison Key",
+          "type": "string"
+        },
+        "variant": {
+          "enum": [
+            "WEAK",
+            "IMPROVED",
+            "WORSE"
+          ],
+          "title": "Variant",
+          "type": "string"
+        }
+      },
+      "required": [
+        "comparison_key",
+        "variant"
+      ],
+      "title": "PromptReference",
+      "type": "object"
+    },
+    "ProseMaterial": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "minLength": 1,
+          "title": "Key",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "content": {
+          "minLength": 1,
+          "title": "Content",
+          "type": "string"
+        },
+        "citations": {
+          "items": {
+            "$ref": "#/$defs/CorpusCitation"
+          },
+          "minItems": 1,
+          "title": "Citations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "key",
+        "title",
+        "content",
+        "citations"
+      ],
+      "title": "ProseMaterial",
+      "type": "object"
+    },
+    "Speech": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "SPEECH",
+          "default": "SPEECH",
+          "title": "Kind",
+          "type": "string"
+        },
+        "speaker": {
+          "minLength": 1,
+          "title": "Speaker",
+          "type": "string"
+        },
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "speaker",
+        "text"
+      ],
+      "title": "Speech",
+      "type": "object"
+    },
+    "StructuredTeacherItem": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "minLength": 1,
+          "title": "Key",
+          "type": "string"
+        },
+        "intent": {
+          "const": "EXPLAIN",
+          "title": "Intent",
+          "type": "string"
+        },
+        "instruction": {
+          "minLength": 1,
+          "title": "Instruction",
+          "type": "string"
+        },
+        "outcomes": {
+          "items": {
+            "$ref": "#/$defs/EntityRef"
+          },
+          "minItems": 1,
+          "title": "Outcomes",
+          "type": "array"
+        },
+        "material_keys": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Material Keys",
+          "type": "array"
+        },
+        "citations": {
+          "items": {
+            "$ref": "#/$defs/CorpusCitation"
+          },
+          "minItems": 1,
+          "title": "Citations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "key",
+        "intent",
+        "instruction",
+        "outcomes",
+        "material_keys",
+        "citations"
+      ],
+      "title": "StructuredTeacherItem",
+      "type": "object"
+    },
+    "StructuredTeacherUnit": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "minLength": 1,
+          "title": "Key",
+          "type": "string"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/StructuredTeacherItem"
+          },
+          "maxItems": 24,
+          "minItems": 1,
+          "title": "Items",
+          "type": "array"
+        }
+      },
+      "required": [
+        "key",
+        "items"
+      ],
+      "title": "StructuredTeacherUnit",
+      "type": "object"
+    },
+    "TeachingTranscript": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "minLength": 1,
+          "title": "Key",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "parts": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "PEER_SCENE": "#/$defs/PeerReference",
+                "PROMPT": "#/$defs/PromptReference",
+                "SPEECH": "#/$defs/Speech"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/Speech"
+              },
+              {
+                "$ref": "#/$defs/PromptReference"
+              },
+              {
+                "$ref": "#/$defs/PeerReference"
+              }
+            ]
+          },
+          "maxItems": 128,
+          "minItems": 1,
+          "title": "Parts",
+          "type": "array"
+        },
+        "citations": {
+          "items": {
+            "$ref": "#/$defs/CorpusCitation"
+          },
+          "minItems": 1,
+          "title": "Citations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "key",
+        "title",
+        "parts",
+        "citations"
+      ],
+      "title": "TeachingTranscript",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "const": "STRUCTURED_TEACHER_DRAFT",
+      "default": "STRUCTURED_TEACHER_DRAFT",
+      "title": "Kind",
+      "type": "string"
+    },
+    "input_digest": {
+      "minLength": 1,
+      "title": "Input Digest",
+      "type": "string"
+    },
+    "units": {
+      "items": {
+        "$ref": "#/$defs/StructuredTeacherUnit"
+      },
+      "maxItems": 24,
+      "minItems": 1,
+      "title": "Units",
+      "type": "array"
+    },
+    "explanations": {
+      "items": {
+        "$ref": "#/$defs/ProseMaterial"
+      },
+      "maxItems": 24,
+      "minItems": 1,
+      "title": "Explanations",
+      "type": "array"
+    },
+    "comparisons": {
+      "items": {
+        "$ref": "#/$defs/PromptComparison"
+      },
+      "maxItems": 24,
+      "title": "Comparisons",
+      "type": "array"
+    },
+    "peers": {
+      "items": {
+        "$ref": "#/$defs/PeerExample"
+      },
+      "maxItems": 24,
+      "title": "Peers",
+      "type": "array"
+    },
+    "transcripts": {
+      "items": {
+        "$ref": "#/$defs/TeachingTranscript"
+      },
+      "maxItems": 24,
+      "minItems": 1,
+      "title": "Transcripts",
+      "type": "array"
+    },
+    "new_gaps": {
+      "default": [],
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "New Gaps",
+      "type": "array"
+    }
+  },
+  "required": [
+    "input_digest",
+    "units",
+    "explanations",
+    "comparisons",
+    "peers",
+    "transcripts"
+  ],
+  "title": "StructuredTeacherDraft",
+  "type": "object"
+}

@@ -59,9 +59,11 @@ class StructuredTeacherTest(unittest.TestCase):
 
     def test_rendering_review_and_replay_keep_original_and_exact_human_reason(self):
         lead = self.models.review
-        reviews = []
+        reviews, prefixes = [], []
         def review(prompt, response_format):
-            reviews.append(json.loads(prompt.split('\nDATA\n')[1]))
+            prefix, payload = prompt.split('\nDATA\n')
+            prefixes.append(prefix)
+            reviews.append(json.loads(payload))
             return lead(prompt, response_format)
         self.models.review = review
         result = self.run_teacher()
@@ -77,6 +79,9 @@ class StructuredTeacherTest(unittest.TestCase):
         self.assertEqual(draft.approved_review_notes[0].reason, decision.fields['reason'])
         self.assertEqual(reviews[0]['draft']['original'], draft.original.model_dump(mode='json'))
         self.assertEqual(reviews[0]['draft']['approved_review_notes'][0]['reason'], decision.fields['reason'])
+        # Accepted input limitations are out of the Teacher's scope; empty new_gaps is valid.
+        self.assertIn('by themselves they never make it incomplete or misaligned', prefixes[0])
+        self.assertIn('empty new_gaps is valid when no new issue exists', prefixes[0])
         example = next(m.content for m in draft.materials if m.key.endswith(':peer'))
         transcript = next(m.content for m in draft.materials if m.kind == 'TRANSCRIPT')
         for label in ('PEER PROMPT', 'ILLUSTRATIVE EMAIL'):
