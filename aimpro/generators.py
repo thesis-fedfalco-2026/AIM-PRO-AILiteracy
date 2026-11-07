@@ -475,9 +475,9 @@ def generate(data, *, dispatcher, lead, max_context_chars=None, recorded_text=No
     elif data.role == 'TRAINER_CONTENT':
         review_prompt = (
             'TRAINER_REVIEW_SCOPE: judge the Trainer items, worksheets and practice assets. '
-            'Accepted limitations recorded in an input approved_review, of the approved assessment '
-            'or source, are host-retained inputs outside this draft; by themselves they never make '
-            'it incomplete or misaligned. Inherited source diagnostics and syllabus gaps stay in '
+            'Accepted limitations of the approved assessment or source, including any input '
+            'approved_review, are host-retained inputs outside this draft; by themselves they never '
+            'make it incomplete or misaligned. Inherited source diagnostics and syllabus gaps stay in '
             'the host input, so draft gaps need not repeat them and empty gaps is valid when no '
             'new issue exists. Preserving source gaps means the materials do not reproduce, '
             'contradict, misrepresent or claim to repair them. shared_materials lists only '

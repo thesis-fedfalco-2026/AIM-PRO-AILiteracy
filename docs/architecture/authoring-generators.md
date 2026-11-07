@@ -454,8 +454,9 @@ Before the first SCN01 Trainer packet, the generic review prompt for
 `TRAINER_CONTENT` gains a `TRAINER_REVIEW_SCOPE` paragraph. It carries over the
 two scope rules that resolved the Teacher Lead rejections of attempts 06 and 07:
 
-- accepted limitations in an input `approved_review` are host-retained inputs
-  outside the draft, and inherited source diagnostics and syllabus gaps stay in
+- accepted limitations of the approved assessment or source are host-retained
+  inputs outside the draft (Trainer inputs carry no `approved_review`, which only
+  structured Teacher plans receive), and inherited source diagnostics and syllabus gaps stay in
   the host input, so an empty `gaps` is valid when no new issue exists;
 - `shared_materials` is always empty without command `shared_content`, and
   `material_keys`, resolved by the host, attach the draft materials.
