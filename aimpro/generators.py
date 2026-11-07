@@ -472,6 +472,19 @@ def generate(data, *, dispatcher, lead, max_context_chars=None, recorded_text=No
             'Teacher Resources reused by a Trainer; Teacher commands never supply them, so it is '
             'always empty here. material_keys attach the draft materials, and the host has '
             'resolved each key to actual content.\n' + review_prompt)
+    elif data.role == 'TRAINER_CONTENT':
+        review_prompt = (
+            'TRAINER_REVIEW_SCOPE: judge the Trainer items, worksheets and practice assets. '
+            'Accepted limitations of the approved assessment or source, including any input '
+            'approved_review, are host-retained inputs outside this draft; by themselves they never '
+            'make it incomplete or misaligned. Inherited source diagnostics and syllabus gaps stay in '
+            'the host input, so draft gaps need not repeat them and empty gaps is valid when no '
+            'new issue exists. Preserving source gaps means the materials do not reproduce, '
+            'contradict, misrepresent or claim to repair them. shared_materials lists only '
+            'supplied approved Teacher Resources; without command shared_content it is always '
+            'empty. material_keys attach the draft materials, and the host has resolved each key '
+            'to actual content. Practice materials must not reuse approved assessment prompt '
+            'bodies, case facts or solved annotations.\n' + review_prompt)
     if max_context_chars is not None and len(review_prompt) > max_context_chars:
         raise ReviewError('Required authoring review context exceeds configured budget')
     with telemetry.observation('authoring.project.review', 'evaluator', input=review_prompt) as span:
