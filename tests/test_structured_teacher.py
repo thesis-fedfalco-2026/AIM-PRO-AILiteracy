@@ -82,6 +82,9 @@ class StructuredTeacherTest(unittest.TestCase):
         # Accepted input limitations are out of the Teacher's scope; empty new_gaps is valid.
         self.assertIn('by themselves they never make it incomplete or misaligned', prefixes[0])
         self.assertIn('empty new_gaps is valid when no new issue exists', prefixes[0])
+        # Teacher items never carry shared Teacher Resources; material_keys attach the materials.
+        self.assertIn('so it is always empty here', prefixes[0])
+        self.assertEqual({i.shared_materials for u in draft.units for i in u.items}, {()})
         example = next(m.content for m in draft.materials if m.key.endswith(':peer'))
         transcript = next(m.content for m in draft.materials if m.kind == 'TRANSCRIPT')
         for label in ('PEER PROMPT', 'ILLUSTRATIVE EMAIL'):

@@ -468,7 +468,10 @@ def generate(data, *, dispatcher, lead, max_context_chars=None, recorded_text=No
             'Rendered gaps contain only new_gaps; inherited source diagnostics and syllabus gaps '
             'stay in the host input, so empty new_gaps is valid when no new issue exists. For this '
             'route, preserving source gaps means the materials do not reproduce, contradict, '
-            'misrepresent or claim to repair them.\n' + review_prompt)
+            'misrepresent or claim to repair them. shared_materials lists only supplied approved '
+            'Teacher Resources reused by a Trainer; Teacher commands never supply them, so it is '
+            'always empty here. material_keys attach the draft materials, and the host has '
+            'resolved each key to actual content.\n' + review_prompt)
     if max_context_chars is not None and len(review_prompt) > max_context_chars:
         raise ReviewError('Required authoring review context exceeds configured budget')
     with telemetry.observation('authoring.project.review', 'evaluator', input=review_prompt) as span:
