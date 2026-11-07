@@ -1,0 +1,249 @@
+{
+  "kind": "STRUCTURED_TEACHER_DRAFT",
+  "input_digest": "a4b7c744aa77f9c7e864d5f3f49861f0aa915cf63de70a152a83b550cfa5db28",
+  "units": [
+    {
+      "key": "unit-1-adviser-peer-demonstration",
+      "items": [
+        {
+          "key": "unit-1-item-1",
+          "intent": "EXPLAIN",
+          "instruction": "Observe the adviser thinking aloud as she builds a fictional payment-reminder prompt from a weak starting point to an improved version, and then makes it worse by removing one element. Then observe a peer business owner share her own prompting attempt and its unsatisfactory result. Notice what choices the adviser makes visible at each step and what the peer's experience reveals about prompt construction. This is openly commented teaching, not an answer-free annotation stimulus.",
+          "outcomes": [
+            {
+              "type": "LearningOutcome",
+              "id": "aimpro-syllabus-926d751475204cd29c0e3a9f6033ef5f:outcome:Pointer1792169221668_USER_96",
+              "version": "1"
+            }
+          ],
+          "material_keys": [
+            "mat-explanation-prompt-structure",
+            "mat-transcript-adviser-demo",
+            "mat-example-weak-improved-worse",
+            "mat-example-peer-failure"
+          ],
+          "citations": [
+            {
+              "resource_id": "wp3:32c2119d5504",
+              "resource_version": "31057b5b35cfcfa5f31ee406f855477a",
+              "document_ids": [
+                "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3",
+                "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:4",
+                "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:6",
+                "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:7"
+              ],
+              "supported_claim": "The corpus presents prompt construction as instruction plus primary content, worked basic/complex/instruction prompt examples, examples/cues/templates as distinct moves, domain-specific iteration and best practices including being specific, clear and descriptive, supporting an adviser demonstration showing weak and improved variants and a peer failure illustration."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "explanations": [
+    {
+      "key": "mat-explanation-prompt-structure",
+      "title": "How a prompt is constructed: instruction, primary content and supporting moves",
+      "content": "This explanation covers how a prompt is built from its core parts. All business and customer details used as illustrations below are entirely fictional and are used only within this workshop.\n\nA prompt is the text you send to an AI tool to tell it what to do. The source material (Prompt Engineering Fundamentals, excerpt 3) describes the simplest form as a basic prompt: a text input sent to the model with no other context. Adding an instruction and relevant content makes it more useful.\n\nThe two foundational parts of a prompt are the INSTRUCTION and the PRIMARY CONTENT. The INSTRUCTION is a direct statement telling the AI what action to perform — for example, a directive sentence naming the task (write, summarise, list). The PRIMARY CONTENT is the specific information the AI needs to act on: the subject matter or data that the instruction applies to, such as a customer name, invoice number, amount or date. Excerpt 3 of the source illustrates how adding context and instructions to a basic prompt changes what the model can do with it.\n\nBeyond these two core parts, excerpt 4 describes three further moves that can be used to shape the output:\n\nEXAMPLE: You can supply one or more sample outputs to show the AI the pattern you want. Supplying one example is called one-shot prompting; supplying more than one is called few-shot prompting. Supplying no examples at all is called zero-shot prompting. The source (excerpt 4) notes that providing examples lets the model infer the desired pattern. A discussion of examples without actually including one in the prompt does not enact this move.\n\nCUE: A leading word, phrase or partial sentence placed at the end of the prompt to nudge the AI toward a desired response format or opening. The model then continues from that starting point.\n\nTEMPLATE: A reusable prompt structure containing placeholders — bracketed or labelled slots — that can be replaced with specific data for different uses. Excerpt 6 describes how templates with placeholders can be used to create libraries of reusable prompts for a domain.\n\nThe label set INSTRUCTION, PRIMARY CONTENT, EXAMPLE, CUE, TEMPLATE is an operator adaptation for this workshop, drawn from the prompt-construction concepts in the source material. It is not a verbatim source taxonomy or a validated instrument.\n\nExcerpt 7 of the source recommends being specific and clear, giving more details about the desired context, outcome, length, format and style, noting this can improve the quality and consistency of responses. It also recommends being descriptive and using examples, and suggests starting with a zero-shot approach and then trying few-shot as a refinement. These are described as best practices that may vary by model, task and domain; results should be inspected rather than assumed.\n\nExcerpt 6 notes that prompt engineering is a trial-and-error process and that models are stochastic by nature — meaning the same prompt can produce different outputs on different runs, and results depend on the model, its training data and the context. This means that adding detail to a prompt can change what the model produces, but the effect is not guaranteed and the output should always be inspected.\n\nNo notebook or API setup is required or implied for this workshop. The five-move label set, the fictional prompt variants and any numeric illustrations in this material are newly authored operator illustrations for this session, not validated source instruments or source-prescribed rules.",
+      "citations": [
+        {
+          "resource_id": "wp3:32c2119d5504",
+          "resource_version": "31057b5b35cfcfa5f31ee406f855477a",
+          "document_ids": [
+            "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3",
+            "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:4",
+            "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:6",
+            "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:7"
+          ],
+          "supported_claim": "Excerpt 3 supports instruction and primary content as prompt construction concepts; excerpt 4 supports examples (zero-shot, one-shot, few-shot), cues and templates as distinct moves; excerpt 6 supports domain-specific templates, reusable prompt libraries and model stochasticity; excerpt 7 supports best practices including specificity, clarity, descriptiveness and example use, with the caveat that results vary by model, task and domain."
+        }
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "key": "mat-example-weak-improved-worse",
+      "title": "Fictional prompt comparison: weak, improved and worse variants (Stonebrook Tools / Harbor Workshop)",
+      "notice": "All business names, customer names, invoice references, amounts and dates in this comparison are entirely fictional. Specific fictional values used: Stonebrook Tools (fictional supplier), Harbor Workshop (fictional customer), DEMO-A-204 (fictional invoice reference), EUR 86.40 (fictional amount), 9 May (fictional due date). None of these values refer to any real business, customer or transaction. This material is a newly authored teaching illustration for this workshop only.",
+      "facts": [
+        {
+          "label": "Fictional supplier",
+          "value": "Stonebrook Tools"
+        },
+        {
+          "label": "Fictional customer",
+          "value": "Harbor Workshop"
+        },
+        {
+          "label": "Fictional invoice reference",
+          "value": "DEMO-A-204"
+        },
+        {
+          "label": "Fictional amount",
+          "value": "EUR 86.40"
+        },
+        {
+          "label": "Fictional due date",
+          "value": "9 May"
+        }
+      ],
+      "weak_prompt": "You are an accounts assistant for Stonebrook Tools. Send a message to Harbor Workshop about their account.",
+      "improved_prompt": "You are an accounts assistant for Stonebrook Tools, a small tool and equipment supplier. Write a payment-reminder email to Harbor Workshop regarding invoice DEMO-A-204 for EUR 86.40, which was due on 9 May. Ask the customer to arrange payment within five business days and include the invoice reference and amount in the email body. Keep the tone calm and respectful.",
+      "worse_prompt": "You are an accounts assistant for Stonebrook Tools, a small tool and equipment supplier. Write a payment-reminder email to Harbor Workshop regarding invoice DEMO-A-204 for EUR 86.40, which was due on 9 May. Ask the customer to arrange payment within five business days and include the invoice reference and amount in the email body.",
+      "commentary": "The weak prompt gives the AI very little to work with. It names a role and a customer but does not specify what kind of message to write, what the invoice reference is, what amount is owed, when it was due, or what action the customer should take. Because models are stochastic and depend on the context and training data available to them (excerpt 6), the output from such a prompt may vary considerably across runs and may omit key details — but this is not guaranteed in every case. The output should always be inspected.\n\nThe improved prompt adds several elements that the source (excerpt 7) describes as best-practice specificity: the type of message (payment-reminder email), the specific invoice reference (DEMO-A-204), the amount (EUR 86.40), the due date (9 May), the required customer action (arrange payment within five business days), the content to include (invoice reference and amount in the body), and explicit tone guidance (Keep the tone calm and respectful). Excerpt 7 recommends giving more details about the desired context, outcome, length, format and style. The improved prompt acts on several of these dimensions. The final sentence 'Keep the tone calm and respectful.' is the only tone or style guidance in the prompt; no other tone words appear elsewhere in the body.\n\nThe worse prompt is identical to the improved prompt except that the final sentence 'Keep the tone calm and respectful.' has been removed. Every other character in the body is unchanged, including the invoice reference, the amount, the due date and the five-business-day payment deadline. Removing that sentence means the prompt no longer contains any explicit tone or style guidance. Whether and how this affects the output depends on the model, the system context and stochastic variation; the source (excerpt 6) notes that models are stochastic by nature. The removal illustrates the loss of explicit tone guidance, not a proven degradation of output in every case. Results must be inspected.\n\nThe five-move label set (INSTRUCTION, PRIMARY CONTENT, EXAMPLE, CUE, TEMPLATE) is an operator adaptation for this workshop. The weak, improved and worse prompt variants are newly authored fictional teaching illustrations, not validated instruments or source-prescribed examples.",
+      "citations": [
+        {
+          "resource_id": "wp3:32c2119d5504",
+          "resource_version": "31057b5b35cfcfa5f31ee406f855477a",
+          "document_ids": [
+            "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3",
+            "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:6",
+            "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:7"
+          ],
+          "supported_claim": "Excerpt 3 supports the weak prompt as a basic underspecified input; excerpt 7 supports the improved prompt's added specificity (context, outcome, style details) as best-practice recommendations; excerpt 6 supports the characterisation of models as stochastic and prompt engineering as trial-and-error, qualifying claims about output effects."
+        }
+      ]
+    }
+  ],
+  "peers": [
+    {
+      "key": "mat-example-peer-failure",
+      "title": "Fictional peer example: Cobalt Print Studio / Elm Conference Services (DEMO-P-317)",
+      "notice": "All business names, customer names, invoice references, amounts and details in this peer example are entirely fictional. Specific fictional values: Cobalt Print Studio (fictional business), Elm Conference Services (fictional customer), DEMO-P-317 (fictional invoice reference), EUR 52.80 (fictional amount). None of these values refer to any real business, customer or transaction. This is a newly authored teaching illustration for this workshop only. Fictional status is declared here; the peer's own speech below does not repeat this disclaimer.",
+      "facts": [
+        {
+          "label": "Fictional business",
+          "value": "Cobalt Print Studio"
+        },
+        {
+          "label": "Fictional customer",
+          "value": "Elm Conference Services"
+        },
+        {
+          "label": "Fictional invoice reference",
+          "value": "DEMO-P-317"
+        },
+        {
+          "label": "Fictional amount",
+          "value": "EUR 52.80"
+        }
+      ],
+      "introduction": "I needed to send a payment reminder to Elm Conference Services about invoice DEMO-P-317 for EUR 52.80. I thought the AI would just know what I meant, so I kept my prompt short.",
+      "email_introduction": "Here is what I typed into the tool — I asked it to chase the payment, and this is the email it came back with. I was hoping it would fill in the details automatically, but it did not.",
+      "prompt": "Send a payment reminder to our client.",
+      "email": {
+        "subject": "Payment Reminder",
+        "salutation": "Dear Valued Client,",
+        "paragraphs": [
+          "We are writing to remind you that a payment is currently outstanding on your account.",
+          "Please arrange payment at your earliest convenience.",
+          "If you have already made this payment, please disregard this notice."
+        ],
+        "closing": "Kind regards,",
+        "signature": "The Accounts Team"
+      },
+      "diagnosis": "When I read back what the tool produced, I could see straight away that it had not included the customer name, the invoice reference, the amount, or any deadline. The prompt I used — 'Send a payment reminder to our client.' — did not give the tool any of that information. I had not told it who the client was, which invoice I meant, how much was owed, or when I needed the money by. The email it wrote was so generic that I could not send it to Elm Conference Services without rewriting the whole thing. I think the problem was that my prompt contained no primary content at all — just a vague instruction with no specific data for the tool to work with.",
+      "citations": [
+        {
+          "resource_id": "wp3:32c2119d5504",
+          "resource_version": "31057b5b35cfcfa5f31ee406f855477a",
+          "document_ids": [
+            "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3",
+            "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:4"
+          ],
+          "supported_claim": "Excerpt 3 illustrates basic prompts as minimal inputs without context or instruction detail; excerpt 4 describes primary content as the specific information the AI needs to act on, supporting a peer-failure illustration where an underspecified prompt omits customer name, invoice reference, amount and deadline."
+        }
+      ]
+    }
+  ],
+  "transcripts": [
+    {
+      "key": "mat-transcript-adviser-demo",
+      "title": "Adviser demonstration transcript: building a fictional payment-reminder prompt (Stonebrook Tools)",
+      "parts": [
+        {
+          "kind": "SPEECH",
+          "speaker": "Adviser",
+          "text": "Good evening, everyone. Tonight I want to show you what actually happens when you build a prompt from scratch — not a polished finished version, but the real process, including where it goes wrong. We are going to use a completely fictional scenario throughout: a small tool supplier called Stonebrook Tools sending a payment reminder to a fictional customer called Harbor Workshop about a fictional invoice, reference DEMO-A-204, for EUR 86.40, due on 9 May. None of these details are real."
+        },
+        {
+          "kind": "SPEECH",
+          "speaker": "Adviser",
+          "text": "Let me start with the weakest possible prompt. I am going to think aloud as I go, so you can see exactly why I make each choice. Here is my first attempt at asking the AI to help."
+        },
+        {
+          "kind": "PROMPT",
+          "comparison_key": "mat-example-weak-improved-worse",
+          "variant": "WEAK"
+        },
+        {
+          "kind": "SPEECH",
+          "speaker": "Adviser",
+          "text": "That is it. I have given the AI a role — accounts assistant for Stonebrook Tools — and I have named the customer, Harbor Workshop. But look at what I have left out. There is no invoice reference, no amount, no due date, no instruction about what kind of message to write, and no guidance on what action I want the customer to take. The source material I am drawing on describes this kind of input as a basic prompt — a text input sent to the model with no other context. What might the AI do with this? It depends on the model, the system context and the run — models are stochastic by nature, meaning the same prompt can produce different outputs on different occasions. The output might be generic, or it might make assumptions. Either way, I would need to inspect whatever comes back before using it."
+        },
+        {
+          "kind": "SPEECH",
+          "speaker": "Adviser",
+          "text": "Now let me build the improved version. I am going to add the instruction — what kind of message to write — and the primary content — the specific data the AI needs. Watch what I include and why."
+        },
+        {
+          "kind": "PROMPT",
+          "comparison_key": "mat-example-weak-improved-worse",
+          "variant": "IMPROVED"
+        },
+        {
+          "kind": "SPEECH",
+          "speaker": "Adviser",
+          "text": "Let me walk through what changed. First, I specified the type of message: a payment-reminder email, not just 'a message'. That is the instruction becoming more precise. Second, I added the primary content: the invoice reference DEMO-A-204, the amount EUR 86.40, and the due date 9 May. Without those details, the AI has nothing specific to put in the email. Third, I told the AI what action to request from the customer: arrange payment within five business days. Fourth, I told it what to include in the body: the invoice reference and the amount. And fifth, I ended with the sentence 'Keep the tone calm and respectful.' — that is the only tone guidance in this prompt. The source recommends giving more details about the desired context, outcome, length, format and style, noting this can improve the quality and consistency of responses. That said, the effect depends on the model and the run, so I would still inspect the output."
+        },
+        {
+          "kind": "SPEECH",
+          "speaker": "Adviser",
+          "text": "Now I want to show you what happens when I take that improved prompt and remove just one element. I am going to remove the final tone sentence and nothing else. Every other word stays exactly the same."
+        },
+        {
+          "kind": "PROMPT",
+          "comparison_key": "mat-example-weak-improved-worse",
+          "variant": "WORSE"
+        },
+        {
+          "kind": "SPEECH",
+          "speaker": "Adviser",
+          "text": "The only difference between that prompt and the improved one is the absence of the sentence 'Keep the tone calm and respectful.' The invoice reference, the amount, the due date, the five-business-day deadline — all of that is still there. What does removing that sentence mean? It means the prompt no longer contains any explicit tone or style guidance. Whether the AI's output changes as a result depends on the model, the system context and stochastic variation. The source notes that models are stochastic by nature, so I cannot tell you with certainty what will happen. What I can say is that the prompt no longer tells the AI anything about the tone I want. If tone matters for this message — and for a payment reminder, it often does — then I have left that decision entirely to the model. That is the choice I have made visible by removing that one sentence."
+        },
+        {
+          "kind": "SPEECH",
+          "speaker": "Adviser",
+          "text": "Before we move on, I want to be clear about what this demonstration is. This is openly commented teaching — I am narrating my choices as I make them so you can see the reasoning. It is not a silent annotation exercise. Now I would like to hand over to a peer business owner who has been using AI tools in her own work. She is going to show you a prompt she tried and what happened. Her experience is a useful contrast to what we have just seen."
+        },
+        {
+          "kind": "PEER_SCENE",
+          "peer_key": "mat-example-peer-failure"
+        },
+        {
+          "kind": "SPEECH",
+          "speaker": "Adviser",
+          "text": "Thank you. What we just saw is a good illustration of what can happen when a prompt contains a vague instruction but no primary content — no customer name, no invoice reference, no amount, no deadline. The peer's prompt, 'Send a payment reminder to our client.', gave the AI nothing specific to work with. The email that came back was generic and could not be sent as written. Notice that I am describing what is observable in the prompt and the result — I am not claiming this is what always happens with short prompts, because models vary and results are stochastic. What the peer's experience shows is the value of including specific primary content alongside your instruction. That is the core of what we have been building towards in this demonstration."
+        },
+        {
+          "kind": "SPEECH",
+          "speaker": "Adviser",
+          "text": "To summarise what this demonstration has shown: a weak prompt with a vague instruction and no primary content leaves the AI without the specific information it needs, and the output may be generic or require significant rewriting — though this varies by model and run. An improved prompt adds a precise instruction, specific primary content, a required customer action and explicit tone guidance, giving the AI more to work with. Removing the tone guidance from the improved prompt means the prompt no longer contains any explicit style direction — whether and how that affects the output depends on the model and should be inspected. The peer example illustrates what can happen when primary content is absent entirely. Prompt engineering is described in the source as a trial-and-error process; results should always be inspected and iterated on."
+        }
+      ],
+      "citations": [
+        {
+          "resource_id": "wp3:32c2119d5504",
+          "resource_version": "31057b5b35cfcfa5f31ee406f855477a",
+          "document_ids": [
+            "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3",
+            "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:4",
+            "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:6",
+            "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:7"
+          ],
+          "supported_claim": "Excerpt 3 supports the weak prompt as a basic input without context; excerpt 4 supports primary content and examples/cues/templates as distinct prompt moves; excerpt 6 supports model stochasticity and trial-and-error prompt engineering; excerpt 7 supports best-practice recommendations for specificity, clarity and tone guidance, with the caveat that results vary by model, task and domain."
+        }
+      ]
+    }
+  ],
+  "new_gaps": []
+}

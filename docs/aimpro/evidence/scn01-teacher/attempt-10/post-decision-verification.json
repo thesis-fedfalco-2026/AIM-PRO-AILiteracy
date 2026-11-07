@@ -1,0 +1,93 @@
+{
+  "production_decision_recorded": "APPROVE",
+  "proposal_status": "APPLIED",
+  "review_payload_key_valid": true,
+  "candidates_unchanged": true,
+  "human_decisions": 6,
+  "state_changes": 4,
+  "new_decisions": 1,
+  "new_applications": 1,
+  "application_idempotent": true,
+  "project_receipts_valid": true,
+  "project_fresh": true,
+  "teacher_selected": true,
+  "teacher_selection": {
+    "key": "teacher_content",
+    "kind": "TEACHER_CONTENT",
+    "resource": {
+      "type": "Resource",
+      "id": "authoring-output:0550349a953f4fee5c161eb8fcbf1023759589d79c752fdeb99191c4f0713b83",
+      "version": "eb707876a6a047e78e705078dca5855b"
+    },
+    "depends_on": [
+      {
+        "type": "Resource",
+        "id": "aimpro-syllabus-926d751475204cd29c0e3a9f6033ef5f:syllabus",
+        "version": "1"
+      },
+      {
+        "type": "Resource",
+        "id": "authoring-output:3d13c6e5aa4e6fa11af6f967e7c48b4b874b4595eb8da3a45447f36c47a8d2ce",
+        "version": "b1de953080b54c4fac42c1ad5cd3b9fc"
+      }
+    ],
+    "definitions": [
+      {
+        "type": "Resource",
+        "id": "authoring-output:0550349a953f4fee5c161eb8fcbf1023759589d79c752fdeb99191c4f0713b83:9091f14307e9e237274ea7986bb338130942c18987bfebf6ce190c9a8ff6225f",
+        "version": "eb707876a6a047e78e705078dca5855b"
+      },
+      {
+        "type": "Resource",
+        "id": "authoring-output:0550349a953f4fee5c161eb8fcbf1023759589d79c752fdeb99191c4f0713b83:7408d18059061d069081f80b06965999d0fa08107b1909ec216197b48c59fcba",
+        "version": "eb707876a6a047e78e705078dca5855b"
+      },
+      {
+        "type": "Resource",
+        "id": "authoring-output:0550349a953f4fee5c161eb8fcbf1023759589d79c752fdeb99191c4f0713b83:4ce902dd38f52d51de34dcd82e65a170247060cd831fb3bfbc6152788d594a3a",
+        "version": "eb707876a6a047e78e705078dca5855b"
+      },
+      {
+        "type": "Resource",
+        "id": "authoring-output:0550349a953f4fee5c161eb8fcbf1023759589d79c752fdeb99191c4f0713b83:30f37a3fc7129fcbe5e74e8533ac637afe0e1bb9a20b2666ba2efbda4a659ad1",
+        "version": "eb707876a6a047e78e705078dca5855b"
+      },
+      {
+        "type": "ResourceRequirement",
+        "id": "authoring-output:0550349a953f4fee5c161eb8fcbf1023759589d79c752fdeb99191c4f0713b83:b571ddf3d170479ea5a747bb426a92103a5a90bf24fd625b7e9634daa4d2ce48",
+        "version": "eb707876a6a047e78e705078dca5855b"
+      },
+      {
+        "type": "ResourceRequirement",
+        "id": "authoring-output:0550349a953f4fee5c161eb8fcbf1023759589d79c752fdeb99191c4f0713b83:5c4850d56bb92bf3b7876b380f20977077aa756174225a3fe56d085e4d1c4d13",
+        "version": "eb707876a6a047e78e705078dca5855b"
+      },
+      {
+        "type": "ResourceRequirement",
+        "id": "authoring-output:0550349a953f4fee5c161eb8fcbf1023759589d79c752fdeb99191c4f0713b83:5e61bc7dfa627bee5512658e3c2e40bb3f892424dc5dac3267d0fa90c85a8234",
+        "version": "eb707876a6a047e78e705078dca5855b"
+      },
+      {
+        "type": "ResourceRequirement",
+        "id": "authoring-output:0550349a953f4fee5c161eb8fcbf1023759589d79c752fdeb99191c4f0713b83:31ce66f65a8b891d1cb0ce079113bc1e5421b74d82e908f85255617af2b5388c",
+        "version": "eb707876a6a047e78e705078dca5855b"
+      },
+      {
+        "type": "ResourceRequirement",
+        "id": "authoring-output:0550349a953f4fee5c161eb8fcbf1023759589d79c752fdeb99191c4f0713b83:c39b4072c0e7bd5fe94801f3466a879b326ccf8726eb5bff4b89ac4513d46f47",
+        "version": "eb707876a6a047e78e705078dca5855b"
+      },
+      {
+        "type": "ActivityDefinition",
+        "id": "authoring-output:0550349a953f4fee5c161eb8fcbf1023759589d79c752fdeb99191c4f0713b83:470dffbdb70ebd6da7ca205f22e09780dc44f3325952b87973d55c7f2d68ba13",
+        "version": "eb707876a6a047e78e705078dca5855b"
+      }
+    ]
+  },
+  "terminal_replay_exact_without_models": true,
+  "historical_replay_kind": "PROPOSAL",
+  "learner_state_or_release": false,
+  "model_calls": 0,
+  "retrieval_calls": 0,
+  "sqlite_integrity": "ok"
+}

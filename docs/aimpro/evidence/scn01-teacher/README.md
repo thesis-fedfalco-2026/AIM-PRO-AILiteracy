@@ -1,10 +1,10 @@
 # Portable SCN01 Teacher evidence
 
-**Current disposition on 6 November 2026:** first proposal has actual human
-REQUEST_REVISION and remains DRAFT/unapplied. Attempts 02/03 failed before Lead;
-[attempt 04](attempt-04/README.md) was rejected by the provider's native JSON
-schema compiler before any Teacher output. No Teacher is approved/applied/selected.
-Chat 06 must not start. No fifth transmission is authorized.
+**Current disposition on 7 November 2026:** the [attempt-10](attempt-10/README.md)
+proposal was accepted by the separate Lead, then explicitly approved by the owner
+with three accepted limitations, and applied. TEACHER_CONTENT is selected in the
+project, and Chat 06 can start. Attempts 02–09 produced no accepted proposal. The
+first proposal remains DRAFT after REQUEST_REVISION.
 
 | Attempt | Generation / Lead | Human decision | Application |
 | --- | --- | --- | --- |
@@ -12,6 +12,8 @@ Chat 06 must not start. No fifth transmission is authorized.
 | 02 correction | FAILURE before Lead | No new proposal or decision | None |
 | 03 complete peer | FAILURE before Lead | No new proposal or decision | None |
 | 04 structured | HTTP 400 schema rejection; no output/Lead | No new proposal or decision | None |
+| 05–09 | FAILURE (schema, Lead REJECT, Lead truncation, invalid JSON) | No new proposal or decision | None |
+| 10 regeneration | PROPOSAL / ACCEPT | APPROVE, with three accepted limitations | Applied |
 
 The sections below preserve the first observation and second packet's historical
 preparation boundary. The later authorization and result are in `revision-02/`.
