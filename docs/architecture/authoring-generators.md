@@ -414,3 +414,29 @@ Lead's scope:
 
 The Teacher contract, host checks and Lead flags are unchanged
 ([attempt-06](../aimpro/evidence/scn01-teacher/attempt-06/README.md)).
+
+## Separate Lead review of a recorded Teacher output (7 November 2026)
+
+A structured Teacher request may carry `recorded`: the exact response text of an
+earlier request, its request id and its SHA-256 (`RecordedTeacherOutput`). Within
+the reservation lock, `generate_project` accepts it only if:
+
+- the origin request belongs to the same context and has a confirmed FAILURE
+  result;
+- the origin identity equals the new one without the reuse field;
+- the stored input snapshot equals the current exact inputs.
+
+So a reused text can never shadow a proposal, come from different inputs, or come
+from another reuse. The origin and digest join the request identity, and the text
+is stored in the request payload. Replay is therefore exact, and a different text
+conflicts.
+
+`generate` then skips the Teacher dispatch, validates the text with the unchanged
+contract, and renders it and checks it exactly like a fresh response before the
+separate Lead reviews it. No Teacher agent or client is constructed. Reuse grants
+no approval: an ACCEPT still yields only a pending proposal for human review.
+
+The seventh SCN01 packet uses this path to have the scoped Lead re-review the
+attempt-06 text. Its Lead DATA section is byte-identical to that of attempt 06,
+so only the scope text differs
+([preparation-07](../aimpro/evidence/scn01-teacher/preparation-07/README.md)).

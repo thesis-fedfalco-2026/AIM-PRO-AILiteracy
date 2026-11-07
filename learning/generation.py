@@ -6,7 +6,7 @@ import logging
 from aimpro.generators import (ArtifactInput, GenerationCommand, GenerationInput,
     UnitInput, generate)
 from aimpro.syllabus_state import resolve_artifact
-from aimpro.teacher_contracts import ApprovedReview
+from aimpro.teacher_contracts import ApprovedReview, RecordedTeacherOutput
 from learning.authoring import dependency_findings, review_receipt
 from learning.context import LearningRequest
 from learning.outputs import LearningResponse
@@ -95,10 +95,26 @@ def _cached(store, request_id, context_id, identity):
     return LearningResponse.model_validate_json(row['result'])
 
 
-def generate_project(service, context_id, subject_key, role, command, *, request_id, authoring_factory):
+def _recorded_origin(store, context_id, recorded, identity, snapshot):
+    """Reused text must come from a failed request over the same command and exact inputs."""
+    row = store.db.execute('SELECT payload,result FROM requests WHERE id=? AND owner=?',
+                           (recorded.request_id, context_id)).fetchone()
+    saved = json.loads(row['payload']) if row is not None else {}
+    origin = {k: v for k, v in identity.items() if k != 'recorded_teacher'}
+    if (row is None or row['result'] is None or saved.get('identity') != origin or
+            canonical(saved.get('input_snapshot')) != canonical(snapshot) or
+            LearningResponse.model_validate_json(row['result']).kind != 'FAILURE'):
+        raise StateConflict('Recorded Teacher output has no matching failed origin request')
+
+
+def generate_project(service, context_id, subject_key, role, command, *, request_id, authoring_factory,
+                     recorded=None):
     command = GenerationCommand.model_validate(command)
     identity = {'operation': 'PROJECT_GENERATE_' + role, 'subject_key': subject_key,
                 'command': command.model_dump(mode='json')}
+    if recorded is not None:
+        recorded = RecordedTeacherOutput.model_validate(recorded)
+        identity['recorded_teacher'] = {'request_id': recorded.request_id, 'sha256': recorded.sha256}
     # Authorization, exact snapshot and reservation share one short write lock.
     with service.store.db:
         service.store.db.execute('BEGIN IMMEDIATE')
@@ -110,11 +126,16 @@ def generate_project(service, context_id, subject_key, role, command, *, request
         if cached is not None:
             return cached
         data, manifest = resolve_inputs(service, context, role, command)
-        payload = canonical({'identity': identity, 'input_snapshot': data.model_dump(mode='json')})
+        saved = {'identity': identity, 'input_snapshot': data.model_dump(mode='json')}
+        if recorded is not None:
+            _recorded_origin(service.store, context_id, recorded, identity, saved['input_snapshot'])
+            saved['recorded_teacher_text'] = recorded.text
+        payload = canonical(saved)
         service.store.db.execute('INSERT INTO requests VALUES (?,?,?,NULL)', (request_id, context_id, payload))
     try:
         dispatcher, lead, budget = authoring_factory()
-        draft, verdict = generate(data, dispatcher=dispatcher, lead=lead, max_context_chars=budget)
+        draft, verdict = generate(data, dispatcher=dispatcher, lead=lead, max_context_chars=budget,
+                                  recorded_text=None if recorded is None else recorded.text)
         from aimpro.generation_state import revision
         bundle = revision(context, manifest, data, draft, verdict)
         with service.store.db:

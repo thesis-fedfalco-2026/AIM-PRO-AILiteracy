@@ -1,0 +1,49 @@
+{
+  "origin_request": "scn01-teacher-06-prompt-schema",
+  "origin_directory": ".cache/aimpro-examples/teacher/scn01-teacher-6-prompt-schema",
+  "origin_manifest_sha256": "5d11aba1b2015a507eed13e92fa3aadbcd6c28bfde779eb72d9cf536584b86d1",
+  "origin_files_sha256": {
+    "teacher-http-response.bin": "5e1e9e9b2d0afc16f114a4994dea6e209c037dec9297abd259ab8414f3ef5c24",
+    "teacher-http-request.json": "5d280be39ec0627ead4dc8e5f88b5b110bbb6fd8e8f5d453fa7d4797d6e4347e",
+    "llm-calls.json": "b19e88f0ff09a630d6f9f50b1c04700470ce4f9d0fea686f1e4789c5be43b601",
+    "teacher-draft.json": "eb6a1042e924db9c6adc94d4c4a02021130d61b042afe4ab038865b76a1ff414",
+    "model-calls.json": "3e3f06d32489fcd3d7ff7ea367cc1021233f427e9120284113b97399008399dd",
+    "response.json": "d25650a6c5113d3430183a4fda3a00bd4e30c0950f1a0430344e004757357f1d",
+    "run-started.json": "75f75c757d043e01fc8470ec0154ef6b0f53b9b4206f5755e86f23d636cc06b8",
+    "model-transmission-authorization.json": "c55a2fabf153179deb1f5ee8aa5d4659c247377d1c46f58820f6a60c880b4ae1",
+    "transmission-manifest.json": "5d11aba1b2015a507eed13e92fa3aadbcd6c28bfde779eb72d9cf536584b86d1",
+    "lead-review.json": "9fa9abd96c3035151bb1aee285c9f8184a047b06a847b7b1c44003e89612e906"
+  },
+  "text_sha256": "722ea36505d4b93a961655745a7b5c575577e489fb7163b67e58368331060e01",
+  "text_characters": 21540,
+  "identical_in": [
+    "teacher-http-response.bin (decoded SSE text deltas)",
+    "llm-calls.json",
+    "teacher-draft.json",
+    "model-calls.json"
+  ],
+  "stop_reason": "end_turn",
+  "usage": {
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 0,
+      "ephemeral_5m_input_tokens": 102607
+    },
+    "cache_creation_input_tokens": 102607,
+    "cache_read_input_tokens": 0,
+    "input_tokens": 3,
+    "output_tokens": 5101,
+    "service_tier": "standard",
+    "inference_geo": "global",
+    "speed": "standard"
+  },
+  "origin_result": "FAILURE",
+  "origin_lead_verdict": {
+    "verdict": "REJECT",
+    "source_alignment": false,
+    "citation_support": true,
+    "intent_correct": true,
+    "content_complete": false,
+    "reason": "The rendered TEACHER draft (kind=RENDERED_TEACHER_DRAFT) is scoped to unit-1-adviser-peer-demonstration with intent EXPLAIN only, as required by the command. That scope is correctly observed and the four materials (mat-explanation-prompt-structure, mat-transcript-adviser-demo, mat-example-weak-improved-worse, mat-example-peer-failure) are present with complete content. Citations use exact retained document IDs from wp3:32c2119d5504 chunks 3,4,6,7 with substantive supported_claim text. The EXPLAIN item references all four material keys. The transcript contains PROMPT reference parts for all three variants in order and a PEER_SCENE reference to mat-example-peer-failure. Fictional declarations are present throughout. The taxonomy label set INSTRUCTION/PRIMARY CONTENT/EXAMPLE/CUE/TEMPLATE is used correctly and distinguished from the source. Stochastic qualifications and epistemic hedges are preserved. The approved_review_notes are reproduced verbatim and not paraphrased in new_gaps or learner materials. Source gaps are not claimed repaired. However, two material-level defects require REJECT. First, the EXAMPLE material mat-example-weak-improved-worse and the teaching demonstration use 'Keep the tone calm and respectful' as the sole tone instruction and the single change removed in the worse variant, while the approved assessment stimuli (improved_prompt / worse_prompt in the ASSESS package) use 'Keep the email under 150 words.' as the single detrimental change per REVISION 1. The teaching case and the assessment case use different fictional scenarios (Stonebrook Tools vs Greenleaf Office Supplies) as required by T01, so case-fact separation is correct. However, the teaching demonstration's worse variant removes a tone sentence while the assessment's worse variant removes a length sentence; this is a legitimate design difference between teaching and assessment cases and is not itself a defect. On closer inspection this is acceptable. Second and more critically: the rendered unit item (unit-1-item-1 in the rendered draft) carries intent EXPLAIN and lists shared_materials as an empty array, while the original structured draft unit item also has an empty shared_materials field. The command requires the host to append stimulus content verbatim; for an EXPLAIN item there are no assessment stimuli, so this is structurally correct. Third defect confirmed: the approved_review_notes record an unresolved finding that 'the card EXAMPLE illustration uses [sample text]'. Inspecting the rendered prompt-move card in the ASSESS package (which is included in the input as the approved assessment), the EXAMPLE recognition example reads 'Here is a sample reminder email for a different customer: [sample text]. Now write one for Hartwell Catering Ltd.' — the placeholder [sample text] is present and unresolved as noted in the approved_review_notes. The approved_review_notes explicitly state this finding is unresolved and preserved; the new draft does not claim to repair it, which is correct. However the EXPLAIN material mat-explanation-prompt-structure states 'a discussion of examples without actually providing one does not enact this move; the sample text must be present in the prompt itself' — this is accurate teaching content and does not itself use [sample text]. Fourth defect confirmed: source_alignment is false because the improved_prompt in the teaching EXAMPLE (mat-example-weak-improved-worse) contains multiple tone/style guidance elements beyond the required single standalone sentence. The improved prompt body reads: 'You are an accounts assistant for Stonebrook Tools... Keep the tone calm and respectful.' The role framing 'You are an accounts assistant' is a neutral role, not a tone instruction, so the single-tone-sentence requirement (R02-F04) is satisfied in the teaching case. However, the assessment improved_prompt contains 'You are a polite and professional accounts assistant' and 'The tone should be friendly but firm' as additional tone guidance beyond the single detrimental sentence 'Keep the email under 150 words.' — this means the assessment improved_prompt violates R02-F04 (the improved demonstration prompt must have its ONLY tone/style guidance as the single standalone sentence). The teaching case correctly isolates tone to one sentence; the assessment case does not. This is a pre-existing finding in the approved_review_notes scope (the assessment was approved with documented unresolved findings) and the rendered teacher draft does not introduce this defect — it is in the approved assessment input, not in the new EXPLAIN materials. The new EXPLAIN materials themselves satisfy R02-F04. Evaluating the rendered teacher draft specifically: the four EXPLAIN materials are complete and usable; the transcript is a full thinking-aloud sequence; the peer scene is fully expanded; all fictional declarations are present; no assessor notes or answer keys appear in learner-visible fields; the taxonomy disclaimer is present; stochastic qualifications are preserved; new_gaps is empty which is consistent with the original new_gaps being empty and no genuinely new gaps being introduced by the EXPLAIN rendering. The shared_materials field is empty in the rendered item, which means no shared materials are declared. The command requires 'exact shared-material references' — the item instruction references all four material keys by name in material_keys, and the host renders them; shared_materials being empty is structurally consistent with the original. No PRACTICE or ASSESS items are generated. No learner submission, practice task, AI-tool execution, evidence collection or evaluation request appears in the EXPLAIN instruction. The instruction is observational only. Content_complete is marked false because the approved_review_notes preserve the finding that the EXAMPLE illustration uses [sample text] as an unresolved gap, and while the new EXPLAIN materials do not themselves use [sample text], the overall package completeness cannot be affirmed when a documented unresolved gap in the approved assessment (which is part of the input) remains. Additionally, the rendered draft's new_gaps array is empty, but the approved_review_notes list five unresolved findings; the instruction requires that original source gaps be preserved and not claimed repaired. The gaps field in the rendered draft is also empty. The original structured draft's new_gaps is empty, so no new gaps were introduced, but the absence of any gap reporting in the rendered output while the approved_review_notes document five unresolved findings creates an incompleteness in the rendered package's gap accounting. Source_alignment is marked false because the rendered draft gaps array is empty while the approved_review_notes document unresolved findings that should be preserved in the rendered output's gap accounting per the instruction to preserve source gaps and not claim repair."
+  },
+  "committed_evidence": "docs/aimpro/evidence/scn01-teacher/attempt-06/teacher-original-output.json"
+}

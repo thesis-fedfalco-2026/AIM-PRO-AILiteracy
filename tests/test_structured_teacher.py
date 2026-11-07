@@ -198,6 +198,53 @@ class StructuredTeacherTest(unittest.TestCase):
                 self.assertEqual(len(requests), calls)
         self.assertEqual(len(requests), len(cases))
 
+    def test_recorded_failed_output_is_reviewed_again_without_teacher_call(self):
+        import hashlib
+        from tests.teacher_fixtures import structured_draft
+
+        def run(request_id, recorded, command=None):
+            return self.service.generate_project_teacher(AUTH, 'admin', command or self.teacher_command(),
+                request_id=request_id, authoring_factory=self.factory, recorded=recorded)
+        accepted = self.models.verdict
+        self.models.verdict = accepted.model_copy(update={'verdict': 'REJECT', 'content_complete': False})
+        self.assertEqual(self.run_generator('TEACHER_CONTENT', command=self.teacher_command(),
+                                            request_id='origin').kind, 'FAILURE')
+        text = '  ' + structured_draft(self.models.inputs[-1]).model_dump_json(indent=2) + '\n'
+        recorded = {'request_id': 'origin', 'sha256': hashlib.sha256(text.encode()).hexdigest(), 'text': text}
+        self.models.verdict = accepted
+        self.assertEqual(self.run_teacher().kind, 'PROPOSAL')
+        self.models.calls.clear()
+        self.factory.reset_mock()
+
+        changes = self.store.db.total_changes
+        with self.assertRaises(ValidationError):
+            run('reuse', dict(recorded, text=text + ' '))
+        for origin, command in (('unknown', None), ('structured', None),
+                                ('origin', self.teacher_command().model_copy(update={'teacher_plan': TeacherPlan()}))):
+            with self.subTest(origin=origin), self.assertRaises(StateConflict):
+                run('reuse', dict(recorded, request_id=origin), command)
+        self.assertEqual(self.store.db.total_changes, changes)
+        self.factory.assert_not_called()
+
+        result = run('reuse', recorded)
+        self.assertEqual(result.kind, 'PROPOSAL')
+        self.assertEqual(self.models.calls, ['LEAD_REVIEW'])
+        package = self.package(result)
+        self.assertEqual(package.draft.original.model_dump(mode='json'), json.loads(text))
+        self.assertEqual(render_teacher(package.inputs, package.draft.original), package.draft)
+        saved = json.loads(self.store.db.execute("SELECT payload FROM requests WHERE id='reuse'").fetchone()[0])
+        self.assertEqual(saved['identity']['recorded_teacher'], {'request_id': 'origin', 'sha256': recorded['sha256']})
+        self.assertEqual(saved['recorded_teacher_text'], text)
+        self.factory.side_effect = AssertionError('Replay must not construct clients')
+        changes = self.store.db.total_changes
+        self.assertEqual(run('reuse', recorded), result)
+        self.assertEqual(self.store.db.total_changes, changes)
+        with self.assertRaises(StateConflict):
+            run('reuse', None)
+        # A reused request is never itself an origin for further reuse.
+        with self.assertRaises(StateConflict):
+            run('reuse-again', dict(recorded, request_id='reuse'))
+
     def test_negative_case_disclaimer_is_allowed_and_rendered_metadata_cannot_be_forged(self):
         def transform(data, draft):
             peer = draft.peers[0].model_copy(update={'notice': 'Do not use EXAMPLE-01 or Alex from the assessment.'})

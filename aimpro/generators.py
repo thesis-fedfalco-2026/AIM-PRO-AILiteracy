@@ -11,6 +11,7 @@ from typing import Literal
 from pydantic import Field, StrictBool, model_serializer, model_validator
 
 from agent_system import telemetry
+from agent_system.authoring import json_text
 from aimpro.didactic import CorpusCitation
 from aimpro.lead import ReviewError
 from aimpro.syllabus_state import ApprovedSyllabus
@@ -358,8 +359,10 @@ def checked_verdict(verdict):
 
 @telemetry.traced('authoring.project', inputs=lambda data, **kwargs: {
     'role': data.role, 'input_digest': data.digest, 'project': data.command.project.model_dump()})
-def generate(data, *, dispatcher, lead, max_context_chars=None):
+def generate(data, *, dispatcher, lead, max_context_chars=None, recorded_text=None):
     data = GenerationInput.model_validate(data.model_dump(mode='json'))
+    if recorded_text is not None and data.command.teacher_plan is None:
+        raise ReviewError('Only structured Teacher output can be reused for review')
     name = DISPATCH[data.role]
     prompt = (
         'PROJECT_AUTHORING_GENERATION: produce only the assigned typed authoring draft. '
@@ -421,7 +424,11 @@ def generate(data, *, dispatcher, lead, max_context_chars=None):
         from aimpro.teacher import render_teacher
         if max_context_chars is not None and len(prompt) > max_context_chars:
             raise ReviewError('Required structured Teacher context exceeds configured budget')
-        original = dispatcher.run(name, prompt)
+        if recorded_text is None:
+            original = dispatcher.run(name, prompt)
+        else:
+            # Reuse an exact earlier response; it passes the same checks as fresh text.
+            original = StructuredTeacherDraft.model_validate_json(json_text(recorded_text))
         draft = checked_draft(data, render_teacher(data, original))
     else:
         draft = checked_draft(data, dispatcher.run(name, prompt))
