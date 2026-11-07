@@ -1,0 +1,5 @@
+--- ninth/teacher-requirements
++++ tenth/teacher-requirements
+@@ -5 +5 @@
+-Use comparison key mat-example-weak-improved-worse. Its facts must include separate exact values Stonebrook Tools, Harbor Workshop, DEMO-A-204, EUR 86.40 and 9 May. Declare every value fictional in notice. Provide full weak_prompt, improved_prompt and worse_prompt fields; the host adds markers.
++Use comparison key mat-example-weak-improved-worse. Its facts must include separate exact values Stonebrook Tools, Harbor Workshop, DEMO-A-204, EUR 86.40 and 9 May. Declare every value fictional in notice. Provide full weak_prompt, improved_prompt and worse_prompt fields; the host adds markers. The weak_prompt must differ from every approved assessment prompt body; in particular it must not be Write an email to our customer about their invoice. which is the approved assessment weak prompt. The host rejects exact reuse of an assessment prompt body.

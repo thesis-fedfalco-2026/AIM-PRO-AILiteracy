@@ -488,3 +488,36 @@ Private review: `.cache/aimpro-examples/teacher/scn01-teacher-9-regeneration/RUN
 Next: merge, then explicit owner authorization of this exact manifest. After a
 Lead ACCEPT, review the new content requirement by requirement. Chat 06 remains
 blocked.
+
+## Ninth attempt: invalid Teacher JSON before the Lead
+
+PR #66 is merged. The owner authorized the ninth packet exactly. The Teacher
+returned `end_turn` after 117 s, but its JSON has one extra closing brace after
+the units array. The run is a FAILURE before the Lead: no proposal exists, and the
+estimated cost is USD 0.4680
+([attempt-09](../../aimpro/evidence/scn01-teacher/attempt-09/README.md)).
+
+A local diagnostic on a copy without that brace, never used for state, showed:
+
+- requirements 7 and 9 took effect (first-person peer, qualified claims);
+- the `weak_prompt` equals the approved assessment weak prompt body, so the host
+  T01 check would have rejected it anyway.
+
+## Tenth packet prepared offline — no live authorization
+
+The owner approved one clarification of requirement 5: the `weak_prompt` must
+differ from every approved assessment prompt body.
+
+Request `scn01-teacher-10-regeneration`:
+
+- manifest SHA-256 `742f46699d554c10e4e551946416307750318c74fe761f697e4fe5fce51fe6d6`;
+- input digest `a4b7c744…db28`;
+- one Teacher call plus a conditional Lead, USD 5 budget.
+
+Sixteen offline packet tests and fourteen exact replays pass
+([preparation-10](../../aimpro/evidence/scn01-teacher/preparation-10/README.md)).
+Private review: `.cache/aimpro-examples/teacher/scn01-teacher-10-regeneration/RUN_REVIEW.md`.
+
+Next: merge, then explicit owner authorization of this exact manifest. After a
+Lead ACCEPT, review the new content requirement by requirement. Chat 06 remains
+blocked.
