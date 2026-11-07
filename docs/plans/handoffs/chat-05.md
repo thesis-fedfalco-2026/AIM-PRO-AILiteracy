@@ -453,3 +453,38 @@ Private review: `.cache/aimpro-examples/teacher/scn01-teacher-8-lead-shared-mate
 
 Next: merge, then explicit owner authorization of this exact manifest. Chat 06
 remains blocked.
+
+## Eighth attempt: Lead-only re-review truncated; regeneration approved
+
+PR #65 is merged. The owner authorized the eighth packet exactly. The single Lead
+request stopped at its 2,000-token cap, so no verdict was parsed. The run is a
+FAILURE: no proposal exists, and the estimated cost is USD 0.4510
+([attempt-08](../../aimpro/evidence/scn01-teacher/attempt-08/README.md)).
+
+The partial text was a REJECT whose two main grounds hold:
+
+- the transcript breaks T03 with general "produces generic output" claims;
+- the peer speaks third-person authoring disclaimers.
+
+My earlier local review had missed both, so the recorded sixth text is no longer
+reused.
+
+## Ninth packet prepared offline — no live authorization
+
+The owner approved regeneration with clarifications to requirements 7 (first-person
+peer speech, fiction stated in `notice`) and 9 (T03 covers all speech, including
+the closing summary). The Lead output cap is now 4,000 tokens.
+
+Request `scn01-teacher-09-regeneration`:
+
+- manifest SHA-256 `e3e2e1e8a1d565329a827c9ff2945fbe9294b50305ea338e82b842bae5525118`;
+- input digest `c1927674…2040`;
+- one Teacher call plus a conditional Lead, USD 5 budget.
+
+Sixteen offline packet tests and thirteen exact replays pass
+([preparation-09](../../aimpro/evidence/scn01-teacher/preparation-09/README.md)).
+Private review: `.cache/aimpro-examples/teacher/scn01-teacher-9-regeneration/RUN_REVIEW.md`.
+
+Next: merge, then explicit owner authorization of this exact manifest. After a
+Lead ACCEPT, review the new content requirement by requirement. Chat 06 remains
+blocked.

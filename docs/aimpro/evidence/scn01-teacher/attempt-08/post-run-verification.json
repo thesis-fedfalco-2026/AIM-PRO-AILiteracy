@@ -1,0 +1,47 @@
+{
+  "request_id": "scn01-teacher-08-lead-shared-materials",
+  "manifest_sha256": "b476981682d1e396269291bf3f0712b8cc4f5439a0d93d89cc4f9ff4c97f1783",
+  "result": "FAILURE",
+  "failure_stage": "SEPARATE_LEAD_TRUNCATED_AT_MAX_TOKENS",
+  "http_requests": 1,
+  "teacher_transmissions": 0,
+  "recorded_teacher": {
+    "request_id": "scn01-teacher-06-prompt-schema",
+    "sha256": "722ea36505d4b93a961655745a7b5c575577e489fb7163b67e58368331060e01"
+  },
+  "lead_stop_reason": "max_tokens",
+  "teacher_host_checks_passed": true,
+  "lead_invoked": true,
+  "lead_verdict": null,
+  "lead_output_tokens": 2000,
+  "partial_output_prefix": "{\"verdict\":\"REJECT\",\"source_alignment\":false,\"citation_support\":true,\"intent_correct\":true,\"content_complete\":false,\"rea",
+  "tools_in_request": false,
+  "estimated_cost_usd": 0.451003,
+  "cost_is_usage_estimate_not_provider_invoice": true,
+  "counts": {
+    "entities": 164,
+    "requests": 16
+  },
+  "human_decisions": 5,
+  "state_changes": 3,
+  "historical_replays_without_models": {
+    "scn01-evaluator-assessments-01": "FAILURE",
+    "scn01-evaluator-assessments-02": "FAILURE",
+    "scn01-evaluator-assessments-03-claude": "FAILURE",
+    "scn01-evaluator-assessments-04-native-json": "PROPOSAL",
+    "scn01-evaluator-assessments-05-revision": "PROPOSAL",
+    "scn01-teacher-01": "PROPOSAL",
+    "scn01-teacher-02-revision": "FAILURE",
+    "scn01-teacher-03-complete-peer": "FAILURE",
+    "scn01-teacher-04-structured": "FAILURE",
+    "scn01-teacher-05-compact-schema": "FAILURE",
+    "scn01-teacher-06-prompt-schema": "FAILURE",
+    "scn01-teacher-07-lead-rereview": "FAILURE",
+    "scn01-teacher-08-lead-shared-materials": "FAILURE"
+  },
+  "database_unchanged_by_replay": true,
+  "previous_archive_unchanged": true,
+  "packet_files_unchanged": true,
+  "permissions_receipts_freshness_valid": true,
+  "teacher_selected": false
+}

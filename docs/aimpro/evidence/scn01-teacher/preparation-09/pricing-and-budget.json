@@ -1,0 +1,30 @@
+{
+  "checked_date": "2026-11-06",
+  "provider": "Anthropic direct",
+  "model": "claude-sonnet-4-6",
+  "rates_usd_per_million": {
+    "input": "3",
+    "output": "15",
+    "cache_write_5m": "3.75",
+    "cache_write_1h": "6",
+    "cache_read": "0.30"
+  },
+  "sources": [
+    "https://platform.claude.com/docs/en/about-claude/pricing"
+  ],
+  "proposed_operational_budget_usd": 5,
+  "max_http_requests": 2,
+  "max_request_body_bytes_per_phase": 600000,
+  "max_output_tokens": {
+    "TEACHER": 16000,
+    "LEAD_REVIEW": 4000
+  },
+  "expected_total_usd": [
+    0.8,
+    1.2
+  ],
+  "conservative_list_price_estimate_usd": 4.83072,
+  "conservative_method": "Two 600000-byte inputs plus 4096 overhead each, assuming at most one token per byte and all input charged at five-minute cache-write rate, plus 20000 output tokens. Local limits, not a provider billing cap. No one-hour cache writes allowed.",
+  "provider_invoice_verified": false,
+  "taxes_included": false
+}
