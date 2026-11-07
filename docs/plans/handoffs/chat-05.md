@@ -399,3 +399,27 @@ estimated cost is USD 0.9043. All eleven terminal results replay exactly
 The owner chose option 1: the structured review prompt now states the Lead's
 scope, and requirements stay unchanged. Offline checks pass. Next: merge, then a
 seventh packet for separate authorization. Chat 06 remains blocked.
+
+## Seventh packet: Lead-only re-review of the recorded sixth output
+
+PR #63 is merged. The owner chose to reuse the valid attempt-06 Teacher text, not
+to regenerate it, and accepted my three minor findings in advance. The Lead stays
+independent.
+
+Production code now lets a structured Teacher request reuse the exact text of a
+failed request over the same command and inputs. The origin and digest are part
+of the request identity. The text passes the unchanged checks, and only the Lead
+is called.
+
+Request `scn01-teacher-07-lead-rereview`:
+
+- manifest SHA-256 `998774da97a2207b7899df41d93b7ebbee8af292c84e05a64e7fc105b570d11f`;
+- recorded text `722ea365…0e01`;
+- one Lead call, USD 2 budget.
+
+Sixteen offline packet tests and eleven exact historical replays pass
+([preparation-07](../../aimpro/evidence/scn01-teacher/preparation-07/README.md)).
+Private review: `.cache/aimpro-examples/teacher/scn01-teacher-7-lead-rereview/RUN_REVIEW.md`.
+
+Next: merge, then explicit owner authorization of this exact manifest. Chat 06
+remains blocked.
