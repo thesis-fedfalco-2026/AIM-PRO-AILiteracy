@@ -440,3 +440,10 @@ The seventh SCN01 packet uses this path to have the scoped Lead re-review the
 attempt-06 text. Its Lead DATA section is byte-identical to that of attempt 06,
 so only the scope text differs
 ([preparation-07](../aimpro/evidence/scn01-teacher/preparation-07/README.md)).
+
+Attempt 07 used this path. Its Lead rejected the draft mainly because the
+rendered item had an empty `shared_materials` while `material_keys` listed every
+material. `resolve_inputs` refuses `shared_content` on any Teacher command, so
+that field is always empty for a Teacher. The structured review prompt now says
+so, and states that `material_keys`, resolved by the host, attach the materials
+([attempt-07](../aimpro/evidence/scn01-teacher/attempt-07/README.md)).

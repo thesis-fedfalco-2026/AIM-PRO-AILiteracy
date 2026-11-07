@@ -1,0 +1,19 @@
+{
+  "manifest_sha256": "998774da97a2207b7899df41d93b7ebbee8af292c84e05a64e7fc105b570d11f",
+  "request_id": "scn01-teacher-07-lead-rereview",
+  "provider": "Anthropic",
+  "model": "claude-sonnet-4-6",
+  "phases": [
+    "LEAD_REVIEW"
+  ],
+  "max_http_transmissions_per_phase": 1,
+  "allow_paid": true,
+  "budget_usd": 2,
+  "explicit_owner_instruction": "I authorize the live transmission of request scn01-teacher-07-lead-rereview, manifest 998774da97a2207b7899df41d93b7ebbee8af292c84e05a64e7fc105b570d11f, Anthropic direct claude-sonnet-4-6, a single Lead call on the recorded sixth Teacher output, no retry, USD 2 budget.",
+  "owner_instruction_original": "Autorizzo la trasmissione live della request scn01-teacher-07-lead-rereview, manifest 998774da97a2207b7899df41d93b7ebbee8af292c84e05a64e7fc105b570d11f, Anthropic diretto claude-sonnet-4-6, una sola chiamata Lead sull'output registrato del sesto Teacher, nessun retry, budget USD 2.",
+  "owner_instruction_language": "Italian; English translation retained here",
+  "authorization_context": "Owner sent the exact authorization text after the packet was presented in this conversation and PR #64 was merged.",
+  "recorded_at_utc": "2026-11-07T06:54:35.790312+00:00",
+  "client_date": "2026-11-07",
+  "scope": "One separate Lead review of the recorded sixth Teacher output only. No Teacher call, content approval, application, learner activation or release authorized."
+}
