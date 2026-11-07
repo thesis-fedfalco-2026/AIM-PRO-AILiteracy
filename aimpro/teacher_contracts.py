@@ -1,5 +1,6 @@
 """Structured Teacher wire data; authority and rendering remain host controlled."""
 
+import hashlib
 from typing import Annotated, ClassVar, Literal
 
 from pydantic import Field, StringConstraints, field_validator, model_validator
@@ -175,3 +176,20 @@ class StructuredTeacherDraft(Record):
         if any(not text.strip() for text in value):
             raise ValueError('New gaps must not be blank')
         return value
+
+
+class RecordedTeacherOutput(Record):
+    """Exact Teacher response text of an earlier failed request, reused for a new Lead review.
+
+    Reuse never grants approval: the host re-validates and re-renders the text, and a
+    separate Lead and then a human still review it.
+    """
+    request_id: Text
+    sha256: Text
+    text: Verbatim
+
+    @model_validator(mode='after')
+    def exact(self):
+        if hashlib.sha256(self.text.encode()).hexdigest() != self.sha256:
+            raise ValueError('Recorded Teacher text does not match its digest')
+        return self
