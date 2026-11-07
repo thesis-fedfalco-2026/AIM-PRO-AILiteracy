@@ -423,3 +423,33 @@ Private review: `.cache/aimpro-examples/teacher/scn01-teacher-7-lead-rereview/RU
 
 Next: merge, then explicit owner authorization of this exact manifest. Chat 06
 remains blocked.
+
+## Seventh attempt: Lead-only re-review, separate Lead REJECT
+
+PR #64 is merged. The owner authorized the seventh packet exactly. The driver sent
+a single Lead request and no Teacher request. The Lead REJECTed the recorded
+sixth text, mainly because the rendered item has an empty `shared_materials`.
+That field is always empty for a Teacher, whose materials are attached through
+`material_keys`. The Lead itself called its other two grounds compliant.
+
+The run is a FAILURE: no proposal exists, and the estimated cost is USD 0.4359.
+Twelve terminal results replay exactly
+([attempt-07](../../aimpro/evidence/scn01-teacher/attempt-07/README.md)).
+
+## Eighth packet prepared offline — no live authorization
+
+The owner chose option 1: the structured review prompt now states that
+`shared_materials` is always empty for a Teacher.
+
+Request `scn01-teacher-08-lead-shared-materials`:
+
+- manifest SHA-256 `b476981682d1e396269291bf3f0712b8cc4f5439a0d93d89cc4f9ff4c97f1783`;
+- the same recorded sixth text;
+- one Lead call, USD 2 budget.
+
+Sixteen offline packet tests and twelve exact replays pass
+([preparation-08](../../aimpro/evidence/scn01-teacher/preparation-08/README.md)).
+Private review: `.cache/aimpro-examples/teacher/scn01-teacher-8-lead-shared-materials/RUN_REVIEW.md`.
+
+Next: merge, then explicit owner authorization of this exact manifest. Chat 06
+remains blocked.
