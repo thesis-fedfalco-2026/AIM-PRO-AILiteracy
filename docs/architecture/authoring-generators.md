@@ -447,3 +447,21 @@ material. `resolve_inputs` refuses `shared_content` on any Teacher command, so
 that field is always empty for a Teacher. The structured review prompt now says
 so, and states that `material_keys`, resolved by the host, attach the materials
 ([attempt-07](../aimpro/evidence/scn01-teacher/attempt-07/README.md)).
+
+## Scoped Lead review for Trainer content (7 November 2026)
+
+Before the first SCN01 Trainer packet, the generic review prompt for
+`TRAINER_CONTENT` gains a `TRAINER_REVIEW_SCOPE` paragraph. It carries over the
+two scope rules that resolved the Teacher Lead rejections of attempts 06 and 07:
+
+- accepted limitations in an input `approved_review` are host-retained inputs
+  outside the draft, and inherited source diagnostics and syllabus gaps stay in
+  the host input, so an empty `gaps` is valid when no new issue exists;
+- `shared_materials` is always empty without command `shared_content`, and
+  `material_keys`, resolved by the host, attach the draft materials.
+
+It also states that practice materials must not reuse approved assessment
+prompt bodies, case facts or solved annotations. Generation, deterministic
+checks, the Lead verdict contract and the legacy Teacher review prompt are
+unchanged, and no historical request identity changes. The Trainer output still
+needs separate human review before any decision.

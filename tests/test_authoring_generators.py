@@ -350,6 +350,25 @@ class AuthoringGeneratorTest(unittest.TestCase):
             self.assertEqual(package.inputs.dependencies, (self.author.syllabus.ref, *command.assessments, *command.shared_content))
         self.assertEqual(self.store.read_context(AUTH).fields['mode'], 'PREPARATION')
 
+    def test_trainer_review_scopes_accepted_limitations_gaps_and_shared_materials(self):
+        self.assessment()
+        lead, prefixes = self.models.review, {}
+        def review(prompt, response_format):
+            prefixes[self.models.calls[-1]] = prompt.split('\nDATA\n')[0]
+            return lead(prompt, response_format)
+        self.models.review = review
+        for role in ('TEACHER_CONTENT', 'TRAINER_CONTENT'):
+            self.accept(self.run_generator(role, request_id=role), operation=role)
+        trainer = prefixes['practice-designer']
+        # Accepted input limitations are out of the Trainer's scope; empty gaps is valid.
+        self.assertTrue(trainer.startswith('TRAINER_REVIEW_SCOPE: '))
+        self.assertIn('by themselves they never make it incomplete or misaligned', trainer)
+        self.assertIn('empty gaps is valid when no new issue exists', trainer)
+        self.assertIn('without command shared_content it is always empty', trainer)
+        self.assertIn('must not reuse approved assessment prompt bodies', trainer)
+        # The legacy Teacher route keeps the unchanged generic review prompt.
+        self.assertTrue(prefixes['teaching-designer'].startswith('PROJECT_AUTHORING_REVIEW: '))
+
     def test_content_rejects_unapproved_missing_stale_and_foreign_assessments_before_models(self):
         for role in ('TEACHER_CONTENT', 'TRAINER_CONTENT'):
             with self.assertRaises(ValueError):
