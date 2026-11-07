@@ -1,0 +1,43 @@
+{
+  "request_id": "scn01-teacher-09-regeneration",
+  "manifest_sha256": "e3e2e1e8a1d565329a827c9ff2945fbe9294b50305ea338e82b842bae5525118",
+  "result": "FAILURE",
+  "failure_stage": "TEACHER_JSON_INVALID_BEFORE_LEAD",
+  "http_requests": 1,
+  "teacher_output_format": "prompt-schema text, no output_config",
+  "teacher_stop_reason": "end_turn",
+  "teacher_json_error": "one extra closing brace after the units array (character 1840)",
+  "teacher_host_checks_passed": false,
+  "lead_invoked": false,
+  "lead_verdict": null,
+  "tools_in_request": false,
+  "estimated_cost_usd": 0.46802,
+  "cost_is_usage_estimate_not_provider_invoice": true,
+  "counts": {
+    "entities": 164,
+    "requests": 17
+  },
+  "human_decisions": 5,
+  "state_changes": 3,
+  "historical_replays_without_models": {
+    "scn01-evaluator-assessments-01": "FAILURE",
+    "scn01-evaluator-assessments-02": "FAILURE",
+    "scn01-evaluator-assessments-03-claude": "FAILURE",
+    "scn01-evaluator-assessments-04-native-json": "PROPOSAL",
+    "scn01-evaluator-assessments-05-revision": "PROPOSAL",
+    "scn01-teacher-01": "PROPOSAL",
+    "scn01-teacher-02-revision": "FAILURE",
+    "scn01-teacher-03-complete-peer": "FAILURE",
+    "scn01-teacher-04-structured": "FAILURE",
+    "scn01-teacher-05-compact-schema": "FAILURE",
+    "scn01-teacher-06-prompt-schema": "FAILURE",
+    "scn01-teacher-07-lead-rereview": "FAILURE",
+    "scn01-teacher-08-lead-shared-materials": "FAILURE",
+    "scn01-teacher-09-regeneration": "FAILURE"
+  },
+  "database_unchanged_by_replay": true,
+  "previous_archive_unchanged": true,
+  "packet_files_unchanged": true,
+  "permissions_receipts_freshness_valid": true,
+  "teacher_selected": false
+}

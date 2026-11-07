@@ -1,0 +1,16 @@
+{
+  "kind": "PROPOSAL",
+  "content": "Authoring output awaits explicit human review and application.",
+  "citations": [],
+  "coverage": [],
+  "findings": [],
+  "proposal_refs": [
+    {
+      "type": "ChangeProposal",
+      "id": "proposal-db534143fb8d4c40a73449af1adb2f7c",
+      "version": "1"
+    }
+  ],
+  "state_change_refs": [],
+  "application_status": "pending"
+}

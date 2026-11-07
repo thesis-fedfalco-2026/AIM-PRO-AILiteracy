@@ -1,0 +1,57 @@
+{
+  "request_id": "scn01-teacher-10-regeneration",
+  "manifest_sha256": "742f46699d554c10e4e551946416307750318c74fe761f697e4fe5fce51fe6d6",
+  "result": "PROPOSAL",
+  "http_requests": 2,
+  "teacher_output_format": "prompt-schema text, no output_config",
+  "teacher_stop_reason": "end_turn",
+  "teacher_host_checks_passed": true,
+  "lead_invoked": true,
+  "lead_stop_reason": "end_turn",
+  "lead_verdict": "ACCEPT",
+  "lead_flags": {
+    "source_alignment": true,
+    "citation_support": true,
+    "intent_correct": true,
+    "content_complete": true
+  },
+  "proposal": {
+    "type": "ChangeProposal",
+    "id": "proposal-db534143fb8d4c40a73449af1adb2f7c",
+    "version": "1"
+  },
+  "proposal_status": "AWAITING_DECISION",
+  "application_status": "pending",
+  "tools_in_request": false,
+  "estimated_cost_usd": 0.899782,
+  "cost_is_usage_estimate_not_provider_invoice": true,
+  "counts": {
+    "entities": 185,
+    "requests": 18
+  },
+  "human_decisions": 5,
+  "state_changes": 3,
+  "historical_replays_without_models": {
+    "scn01-evaluator-assessments-01": "FAILURE",
+    "scn01-evaluator-assessments-02": "FAILURE",
+    "scn01-evaluator-assessments-03-claude": "FAILURE",
+    "scn01-evaluator-assessments-04-native-json": "PROPOSAL",
+    "scn01-evaluator-assessments-05-revision": "PROPOSAL",
+    "scn01-teacher-01": "PROPOSAL",
+    "scn01-teacher-02-revision": "FAILURE",
+    "scn01-teacher-03-complete-peer": "FAILURE",
+    "scn01-teacher-04-structured": "FAILURE",
+    "scn01-teacher-05-compact-schema": "FAILURE",
+    "scn01-teacher-06-prompt-schema": "FAILURE",
+    "scn01-teacher-07-lead-rereview": "FAILURE",
+    "scn01-teacher-08-lead-shared-materials": "FAILURE",
+    "scn01-teacher-09-regeneration": "FAILURE",
+    "scn01-teacher-10-regeneration": "PROPOSAL"
+  },
+  "database_unchanged_by_replay": true,
+  "previous_archive_unchanged": true,
+  "packet_files_unchanged": true,
+  "permissions_receipts_freshness_valid": true,
+  "teacher_approved_or_applied": false,
+  "teacher_selected": false
+}

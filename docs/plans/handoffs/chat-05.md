@@ -1,16 +1,14 @@
-# Chat 05 — Teacher observations through the fourth authorized failure
+# Chat 05 — SCN01 Teacher content, approved and applied
 
-Updated on 6 November 2026: **attempt 04 is terminal FAILURE at the provider's
-native JSON grammar compiler, before Teacher output or Lead**. Attempt 01 remains
-DRAFT after the owner's REQUEST_REVISION; attempts 02/03/04 produced no accepted
-proposal. No Teacher is approved/applied/selected. This records actual failures,
-not successful Teacher acceptance. **Do not start Chat 06.** No agents were spawned.
+Updated on 7 November 2026: **attempt 10 produced a Teacher proposal; the separate
+Lead accepted it, and the owner explicitly approved it and authorized its
+application.** The proposal is APPLIED and TEACHER_CONTENT is selected in the
+project. **Chat 06 (Trainer) can start** from the receipts in the final section
+below. No agents were spawned.
 
-[Fourth rejection evidence](../../aimpro/evidence/scn01-teacher/attempt-04/README.md).
-[Explicit fourth #10 observation](https://github.com/thesis-fedfalco-2026/py-prototype/issues/10#issuecomment-6687757230).
-Result evidence is published in [PR #60](https://github.com/thesis-fedfalco-2026/py-prototype/pull/60),
-initial result commit `b1ffce3`; publication is not integration or content approval.
-The observations below retain earlier checkpoints and their separate authorizations.
+The earlier sections keep the history of attempts 01–09, each with its own
+authorization. Their "do not start Chat 06" notes are superseded by the final
+section.
 
 ## Exact approved project, authority and receipts
 
@@ -488,3 +486,95 @@ Private review: `.cache/aimpro-examples/teacher/scn01-teacher-9-regeneration/RUN
 Next: merge, then explicit owner authorization of this exact manifest. After a
 Lead ACCEPT, review the new content requirement by requirement. Chat 06 remains
 blocked.
+
+## Ninth attempt: invalid Teacher JSON before the Lead
+
+PR #66 is merged. The owner authorized the ninth packet exactly. The Teacher
+returned `end_turn` after 117 s, but its JSON has one extra closing brace after
+the units array. The run is a FAILURE before the Lead: no proposal exists, and the
+estimated cost is USD 0.4680
+([attempt-09](../../aimpro/evidence/scn01-teacher/attempt-09/README.md)).
+
+A local diagnostic on a copy without that brace, never used for state, showed:
+
+- requirements 7 and 9 took effect (first-person peer, qualified claims);
+- the `weak_prompt` equals the approved assessment weak prompt body, so the host
+  T01 check would have rejected it anyway.
+
+## Tenth packet prepared offline — no live authorization
+
+The owner approved one clarification of requirement 5: the `weak_prompt` must
+differ from every approved assessment prompt body.
+
+Request `scn01-teacher-10-regeneration`:
+
+- manifest SHA-256 `742f46699d554c10e4e551946416307750318c74fe761f697e4fe5fce51fe6d6`;
+- input digest `a4b7c744…db28`;
+- one Teacher call plus a conditional Lead, USD 5 budget.
+
+Sixteen offline packet tests and fourteen exact replays pass
+([preparation-10](../../aimpro/evidence/scn01-teacher/preparation-10/README.md)).
+Private review: `.cache/aimpro-examples/teacher/scn01-teacher-10-regeneration/RUN_REVIEW.md`.
+
+Next: merge, then explicit owner authorization of this exact manifest. After a
+Lead ACCEPT, review the new content requirement by requirement. Chat 06 remains
+blocked.
+
+## Tenth attempt: Lead ACCEPT, owner APPROVE, applied
+
+The owner authorized the tenth packet exactly. The Teacher JSON passed all host
+checks, including T01, and the separate Lead returned ACCEPT. The run is a
+PROPOSAL, at an estimated cost of USD 0.8998
+([attempt-10](../../aimpro/evidence/scn01-teacher/attempt-10/README.md)).
+
+A requirement-by-requirement local review was presented to the owner with three
+limitations:
+
+1. the improved prompt follows the Greenleaf assessment sentence frame;
+2. the peer presents the authored email in-fiction as tool output;
+3. two minor wording points.
+
+The owner approved and authorized application with those limitations accepted.
+Production services recorded:
+
+- HumanDecision `decision-ddf299556a93486eb7595a52ed8033b6@1` (APPROVE);
+- StateChange `change-8807603557ac4a029312979287315973@1`. The proposal
+  `proposal-db534143fb8d4c40a73449af1adb2f7c` is APPLIED.
+
+Fifteen terminal results replay exactly after application.
+
+## Handoff to Chat 06 (Trainer)
+
+Inputs:
+
+- Context `scn01-selected-syllabus-2@2d6f0be42c8b4f81b92873e3c33bf017`.
+- Project id `scn01-evaluator`, project
+  `Resource/authoring-project:072a25dbf8a5773756a614ff6af5f82fa6894e9c0017999c75ab7ec50944dbac@2d6f0be42c8b4f81b92873e3c33bf017`.
+- Approved Teacher content
+  `Resource/authoring-output:0550349a953f4fee5c161eb8fcbf1023759589d79c752fdeb99191c4f0713b83@eb707876a6a047e78e705078dca5855b`.
+  - Receipt: proposal `proposal-db534143fb8d4c40a73449af1adb2f7c@3b25a25b120345bd8d51c32410c8ae04`,
+    decision `decision-ddf299556a93486eb7595a52ed8033b6@1`, change
+    `change-8807603557ac4a029312979287315973@1`.
+- Source, syllabus and assessment receipts: unchanged from the section "Exact
+  approved project, authority and receipts" above.
+- Local state: `.cache/aimpro-examples/teacher/scn01-teacher-10-regeneration/state.sqlite`
+  (backup before the decision: `state-before-owner-decision.sqlite`).
+
+Carry forward unchanged:
+
+- the three accepted Teacher limitations;
+- the accepted Evaluator limitations and `approved_review_notes`;
+- the 2 November source lineage.
+
+Constraints for Chat 06:
+
+- every live model call still needs a prepared packet and explicit owner
+  authorization of its exact manifest;
+- a Lead ACCEPT never implies approval;
+- no learner state, binding, evaluation or release is authorized.
+
+Model-free verification:
+
+    .venv/bin/python .cache/chat05/verify_tenth_applied.py
+
+#10 can be closed once this handoff is merged.

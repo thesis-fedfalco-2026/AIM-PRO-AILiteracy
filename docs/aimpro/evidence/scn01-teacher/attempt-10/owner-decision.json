@@ -1,0 +1,99 @@
+{
+  "recorded_at_utc": "2026-11-07T10:39:39.734926+00:00",
+  "owner_instruction_original": "Approvo la proposal proposal-db534143fb8d4c40a73449af1adb2f7c della request scn01-teacher-10-regeneration e ne autorizzo l'applicazione, con i limiti accettati 1–3.",
+  "owner_instruction_english": "I approve proposal proposal-db534143fb8d4c40a73449af1adb2f7c of request scn01-teacher-10-regeneration and authorize its application, with accepted limitations 1–3.",
+  "owner_instruction_language": "Italian; English translation retained here",
+  "reviewed_target": {
+    "type": "ChangeProposal",
+    "id": "proposal-db534143fb8d4c40a73449af1adb2f7c",
+    "version": "1"
+  },
+  "review_payload_key": "5e8ec798b95373957d1d4ec10dfc83badb62c9db452e162110bb81b1d983f328",
+  "accepted_limitations": [
+    "The improved and worse comparison prompts follow the sentence frame of the approved Greenleaf assessment prompt with new fictional facts (about 63% word overlap, including the verbatim run \"Ask the customer to arrange payment within five business days and include the invoice ... and amount in the email body\"). No assessment prompt body or case fact is reused exactly, and the removed sentence differs (tone, not length), but the demonstration models the same pattern learners meet in the assessment.",
+    "The peer scene presents the authored illustrative email in-fiction as what the tool returned (\"this is the email it came back with\"). The notice declares the whole example a newly authored illustration but does not state explicitly that the email is not real AI output.",
+    "Minor: the improved prompt adds \"a small tool and equipment supplier\" and a five-business-day deadline that are not declared facts, and one transcript line (\"Without those details, the AI has nothing specific to put in the email\") is phrased more categorically than the surrounding qualified claims."
+  ],
+  "decision": {
+    "type": "HumanDecision",
+    "id": "decision-ddf299556a93486eb7595a52ed8033b6",
+    "version": "1",
+    "provenance": {
+      "origin": "HUMAN_DECISION",
+      "sources": [],
+      "responsible": "syllabus-author",
+      "rationale": null
+    },
+    "fields": {
+      "context": {
+        "type": "ExecutionContext",
+        "id": "scn01-selected-syllabus-2",
+        "version": "d28d7145852b428aa1e4a7cdf76ec358"
+      },
+      "decider": {
+        "type": "Participant",
+        "id": "scn01-selected-syllabus-2:participant:syllabus-author",
+        "version": "1"
+      },
+      "target": {
+        "type": "ChangeProposal",
+        "id": "proposal-db534143fb8d4c40a73449af1adb2f7c",
+        "version": "1"
+      },
+      "decision": "APPROVE",
+      "reason": "Recorded by the assistant on behalf of the repository owner after the attempt-10 result, the separate Lead ACCEPT and a requirement-by-requirement local review of the complete Teacher materials were presented. The owner explicitly instructed: \"I approve proposal proposal-db534143fb8d4c40a73449af1adb2f7c of request scn01-teacher-10-regeneration and authorize its application, with accepted limitations 1–3.\" This APPROVE decision covers proposal proposal-db534143fb8d4c40a73449af1adb2f7c@1 and its 20 candidates, reviewed payload key 5e8ec798b95373957d1d4ec10dfc83badb62c9db452e162110bb81b1d983f328. Accepted limitations, not fixed: (1) The improved and worse comparison prompts follow the sentence frame of the approved Greenleaf assessment prompt with new fictional facts (about 63% word overlap, including the verbatim run \"Ask the customer to arrange payment within five business days and include the invoice ... and amount in the email body\"). No assessment prompt body or case fact is reused exactly, and the removed sentence differs (tone, not length), but the demonstration models the same pattern learners meet in the assessment. (2) The peer scene presents the authored illustrative email in-fiction as what the tool returned (\"this is the email it came back with\"). The notice declares the whole example a newly authored illustration but does not state explicitly that the email is not real AI output. (3) Minor: the improved prompt adds \"a small tool and equipment supplier\" and a five-business-day deadline that are not declared facts, and one transcript line (\"Without those details, the AI has nothing specific to put in the email\") is phrased more categorically than the surrounding qualified claims. The Lead ACCEPT did not grant this approval. All original outputs, accepted Evaluator limitations and approved_review_notes remain unchanged. No new model run, source retrieval, release, delivery binding or learning activation is authorized.",
+      "decidedAt": "2026-11-07T10:39:39.565923+00:00",
+      "reviewedPayloadKey": "5e8ec798b95373957d1d4ec10dfc83badb62c9db452e162110bb81b1d983f328",
+      "coveredPayloadKeys": [
+        "5e8ec798b95373957d1d4ec10dfc83badb62c9db452e162110bb81b1d983f328"
+      ]
+    }
+  },
+  "approved_proposal": {
+    "type": "ChangeProposal",
+    "id": "proposal-db534143fb8d4c40a73449af1adb2f7c",
+    "version": "432868973b4e4dd0bad7b592ecf1ff4c"
+  },
+  "proposal_after_application": {
+    "type": "ChangeProposal",
+    "id": "proposal-db534143fb8d4c40a73449af1adb2f7c",
+    "version": "3b25a25b120345bd8d51c32410c8ae04"
+  },
+  "proposal_status": "APPLIED",
+  "application": {
+    "type": "StateChange",
+    "id": "change-8807603557ac4a029312979287315973",
+    "version": "1",
+    "provenance": {
+      "origin": "HUMAN_DECISION",
+      "sources": [],
+      "responsible": "syllabus-author",
+      "rationale": null
+    },
+    "fields": {
+      "context": {
+        "type": "ExecutionContext",
+        "id": "scn01-selected-syllabus-2",
+        "version": "d28d7145852b428aa1e4a7cdf76ec358"
+      },
+      "baseVersion": "d28d7145852b428aa1e4a7cdf76ec358",
+      "newVersion": "2d6f0be42c8b4f81b92873e3c33bf017",
+      "cause": {
+        "type": "ChangeProposal",
+        "id": "proposal-db534143fb8d4c40a73449af1adb2f7c",
+        "version": "432868973b4e4dd0bad7b592ecf1ff4c"
+      },
+      "authorizationBasis": "{\"id\":\"decision-ddf299556a93486eb7595a52ed8033b6\",\"type\":\"HumanDecision\",\"version\":\"1\"}",
+      "change": "Review the exact TEACHER_CONTENT output and host-composed project revision. {\"contract_findings\":[{\"code\":\"GENERATED_CONTRACT\",\"error\":\"missing\",\"location\":[\"resources\"],\"message\":\"Field required\",\"object_id\":\"Pointer1792169221668_USER_96\"},{\"code\":\"GENERATED_CONTRACT\",\"error\":\"literal_error\",\"location\":[\"category\"],\"message\":\"Input should be 'Digital', 'Green', 'Resilience' or 'Deep tech'\",\"object_id\":\"Pointer1792169354742_USER_109\"},{\"code\":\"GENERATED_CONTRACT\",\"error\":\"literal_error\",\"location\":[\"heRelevance\"],\"message\":\"Input should be 'Low', 'Medium' or 'High'\",\"object_id\":\"Pointer1792169354742_USER_109\"},{\"code\":\"GENERATED_CONTRACT\",\"error\":\"literal_error\",\"location\":[\"smeRelevance\"],\"message\":\"Input should be 'Low', 'Medium' or 'High'\",\"object_id\":\"Pointer1792169354742_USER_109\"},{\"code\":\"GENERATED_CONTRACT\",\"error\":\"literal_error\",\"location\":[\"vetRelevance\"],\"message\":\"Input should be 'Low', 'Medium' or 'High'\",\"object_id\":\"Pointer1792169354742_USER_109\"}],\"generator_gaps\":[],\"input_digest\":\"a4b7c744aa77f9c7e864d5f3f49861f0aa915cf63de70a152a83b550cfa5db28\",\"source_diagnostics\":[{\"code\":\"CARDINALITY\",\"count\":0,\"field\":\"resources\",\"lower\":1,\"model\":\"SCN01\",\"object_id\":\"Pointer1792169221668_USER_96\",\"object_name\":\"LearningTarget_0\",\"upper\":-1},{\"allowed\":[\"Deep tech\",\"Digital\",\"Green\",\"Resilience\"],\"code\":\"ENUM_VALUE\",\"field\":\"category\",\"model\":\"elena_usecase_competencies\",\"object_id\":\"Pointer1792169354742_USER_109\",\"object_name\":\"D04\",\"value\":\"DIGITAL\"},{\"allowed\":[\"High\",\"Low\",\"Medium\"],\"code\":\"ENUM_VALUE\",\"field\":\"heRelevance\",\"model\":\"elena_usecase_competencies\",\"object_id\":\"Pointer1792169354742_USER_109\",\"object_name\":\"D04\",\"value\":\"HIGH\"},{\"allowed\":[\"High\",\"Low\",\"Medium\"],\"code\":\"ENUM_VALUE\",\"field\":\"smeRelevance\",\"model\":\"elena_usecase_competencies\",\"object_id\":\"Pointer1792169354742_USER_109\",\"object_name\":\"D04\",\"value\":\"HIGH\"},{\"allowed\":[\"High\",\"Low\",\"Medium\"],\"code\":\"ENUM_VALUE\",\"field\":\"vetRelevance\",\"model\":\"elena_usecase_competencies\",\"object_id\":\"Pointer1792169354742_USER_109\",\"object_name\":\"D04\",\"value\":\"HIGH\"},{\"allowed\":[\"Attitude\",\"Knowledge\",\"Skill\"],\"code\":\"UNTYPED_VOCABULARY_VALUE\",\"field\":\"ksa\",\"model\":\"elena_usecase_competencies\",\"object_id\":\"Pointer1792169354742_USER_109\",\"object_name\":\"D04\",\"value\":\"SKILL\"},{\"allowed\":[\"Advanced\",\"Foundational\",\"Intermediate\"],\"code\":\"UNTYPED_VOCABULARY_VALUE\",\"field\":\"proficiency\",\"model\":\"elena_usecase_competencies\",\"object_id\":\"Pointer1792169354742_USER_109\",\"object_name\":\"D04\",\"value\":\"FOUNDATION\"}],\"syllabus_gaps\":[\"No formal assessment, rubric, or passing threshold is specified in the source; this is retained as a gap. No ASSESS unit, score, or acquisition rule is proposed.\",\"No workshop duration beyond the source constraint 'One evening workshop' is invented; no timing is added to units.\",\"Corpus resources wp3:12ce471a0269 (grades 6–12 critical AI literacy) and wp3:4868ba8731b3 (AI in educational measurement) are not used as unit citations because they do not validate transfer to adult SME business learners and do not supply a SCN01 rubric or thresholds.\",\"Notebook/API setup and illustrative lengths from corpus excerpts are not SCN01 requirements and are not imported.\",\"Source competency values are preserved without normalization: category DIGITAL, heRelevance HIGH, smeRelevance HIGH, vetRelevance HIGH, ksa SKILL, proficiency FOUNDATION are flagged in the source diagnostics as enum/untyped-vocabulary mismatches against the allowed vocabularies and are not changed.\"]}",
+      "recordedAt": "2026-11-07T10:39:39.586870+00:00"
+    }
+  },
+  "applied_project": {
+    "type": "Resource",
+    "id": "authoring-project:072a25dbf8a5773756a614ff6af5f82fa6894e9c0017999c75ab7ec50944dbac",
+    "version": "2d6f0be42c8b4f81b92873e3c33bf017"
+  },
+  "teacher_selected": true,
+  "original_candidates_unchanged": true,
+  "further_model_transmission_authorized": false
+}
