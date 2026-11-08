@@ -1,4 +1,10 @@
-"""Executable architecture acceptance: production services, simulated model outputs."""
+"""Executable architecture acceptance: production services, simulated model outputs.
+
+Release, delivery import and activation use the production commands. The only
+simulated boundary they add is the future runtime assessor role (G7): owner
+decision D4 keeps activation refused while an ASSESS activity has no such role,
+so the runtime scenarios patch one explicit EVALUATOR worker into the import.
+"""
 
 from dataclasses import replace
 from pathlib import Path
@@ -8,15 +14,18 @@ from unittest.mock import Mock, patch
 
 from learning.assessment import derive_activity_status, validate_evaluation
 from learning.authoring import (ArtifactSelection, ProjectManifest, dependency_findings,
-                               ReleaseManifest, prepare_release, released_entities, review_receipt)
-from learning.contracts import EntityRef
+                               prepare_release, released_entities, review_receipt)
+from learning.contracts import EntityRef, entity_data
 from learning.decisions import proposal_candidates
 from learning.metamodel import load_contract
+from learning.releases import ActivationRefused
 from learning.service import LearningService
 from learning.store import LearningStore
-from learning.validation import check_readiness
-from tests.authoring_cycle_fixtures import (AUTH, DELIVERY, ProductionAuthoring,
+from tests.authoring_cycle_fixtures import (AUTH, DELIVERY, DELIVERY_TWO, ProductionAuthoring,
     SimulatedRuntimeAgents, entity, ref, trusted_policy)
+
+
+SIMULATED_ASSESSOR = {'EVALUATOR': 'learner-response-evaluator'}
 
 
 class AuthoringCycleTest(unittest.TestCase):
@@ -31,10 +40,11 @@ class AuthoringCycleTest(unittest.TestCase):
         self.store = LearningStore(Path(self.temp.name) / 'architecture.sqlite')
         self.addCleanup(self.store.close)
         self.service = LearningService(self.store, load_contract(), trusted_policy(), Mock())
-        self.service.bootstrap(AUTH, 'admin')
-        self.service.bootstrap(DELIVERY, 'admin')
+        for context_id in (AUTH, DELIVERY, DELIVERY_TWO):
+            self.service.bootstrap(context_id, 'admin')
         self.authoring = ProductionAuthoring(self.service)
-        self.runtime = SimulatedRuntimeAgents(self.service, self.authoring)
+        self.delivery = None
+        self.runtime = None
 
     def build_project(self):
         author = self.authoring
@@ -49,36 +59,64 @@ class AuthoringCycleTest(unittest.TestCase):
             author.review_and_apply(AUTH, proposal, 'approve-' + kind)
             if kind != 'TRAINER_CONTENT':
                 with self.assertRaises(ValueError):
-                    prepare_release(self.store, author.context(), author.project, author.domain.ref)
+                    author.release('pending-' + kind)
+        author.configure_completion()
         return author
+
+    def import_and_activate(self, release, context_id=DELIVERY, request_id='import-1'):
+        """Production import, destination review, policy installation and activation."""
+        author = self.authoring
+        with patch.dict('learning.releases.RUNTIME_WORKERS', SIMULATED_ASSESSOR):
+            result = author.delivery_import(release, context_id, request_id)
+        self.assertEqual((result.preview.mode, result.preview.status), ('PREPARATION', 'DRAFT'))
+        self.assertNotEqual(result.policy_preview, self.service.policy)
+        self.assertEqual(self.store.read_context(context_id).fields['models'], [])
+        author.review_and_apply(context_id, self.store.read(result.proposal, owner=context_id), request_id)
+        root = self.store.read_context(context_id)
+        self.assertEqual((root.fields['mode'], root.fields['status']), ('PREPARATION', 'DRAFT'))
+        with self.assertRaises(ActivationRefused):
+            self.service.propose_activation(context_id, 'admin', {'base_context': root.ref},
+                                            request_id='activate-' + request_id)
+        # The operator installs the exact approved preview for this delivery only.
+        delivery = LearningService(self.store, load_contract(), result.policy_preview,
+            Mock(side_effect=AssertionError('Activation must not construct agents')))
+        activation = delivery.propose_activation(context_id, 'admin', {'base_context': root.ref},
+                                                 request_id='activate-' + request_id)
+        self.assertEqual(self.store.read_context(context_id), root)
+        author.review_and_apply(context_id, self.store.read(activation.proposal, owner=context_id),
+                                'activate-' + request_id, service=delivery)
+        return delivery
 
     def publish_and_activate(self):
         author = self.build_project()
         release_proposal, release = author.release()
         with self.assertRaises(ValueError):
-            released_entities(self.store, author.context(), release)
+            author.delivery_import(release)
         author.review_and_apply(AUTH, release_proposal, 'publish-1')
-        delivery = author.delivery_import(release)
-        before = self.store.read_context(DELIVERY)
-        self.assertEqual(before.fields['models'], [])
-        author.review_and_apply(DELIVERY, delivery, 'import-release-1')
-        context = self.service._context(DELIVERY, 'admin')
-        self.assertEqual(context.snapshot.context.fields['mode'], 'PREPARATION')
-        self.assertFalse(check_readiness(context.snapshot, context.snapshot.context.fields['learningDesign'], 'advance',
-            learner_ref=context.participant.ref, policy=context.policy, subject_key='admin'))
-        root = context.snapshot.context
-        active = entity('ExecutionContext', DELIVERY, {**root.fields, 'mode': 'LEARNING', 'status': 'ACTIVE'}, 'active-1')
-        activation = self.service.propose(DELIVERY, 'admin', (root.ref,), (active,), 'Explicit synthetic activation')
-        author.review_and_apply(DELIVERY, activation, 'activate-1')
+        self.delivery = self.import_and_activate(release)
+        context = self.delivery._context(DELIVERY, 'admin')
+        self.assertEqual((context.snapshot.context.fields['mode'], context.snapshot.context.fields['status']),
+                         ('LEARNING', 'ACTIVE'))
+        self.runtime = SimulatedRuntimeAgents(self.delivery, self.authoring)
         return release
 
     def submit(self, activity_id, request_id):
         activity_id = self.authoring.activities[activity_id].id
-        context = self.service._context(DELIVERY, 'learner')
+        context = self.delivery._context(DELIVERY, 'learner')
         activity = next(e for e in context.snapshot.active_domain() if e.id == activity_id)
-        return self.service.submit(DELIVERY, 'learner', activity.ref,
+        return self.delivery.submit(DELIVERY, 'learner', activity.ref,
             'Synthetic attempt: write a polite reminder to fictional Alex about EXAMPLE-01. '
             'The fictional audience supplies context; the polite tone constrains the response.', request_id)
+
+    def delivery_state(self, context_id):
+        """Every stored record a delivery owns, plus its pinned definitions."""
+        root = self.store.read_context(context_id)
+        owned = {kind: [entity_data(e) for e in self.store.owned(context_id, kind)] for kind in (
+            'ActivityOccurrence', 'LearningEvidence', 'LearningState', 'Evaluation', 'ResourceBinding',
+            'ChangeProposal', 'HumanDecision', 'StateChange')}
+        context = self.delivery._context(context_id, 'admin')
+        pinned = sorted((entity_data(e) for e in context.snapshot.active_domain()), key=lambda e: (e['type'], e['id']))
+        return entity_data(root), owned, pinned
 
     def test_full_authoring_release_delivery_and_reviewed_evaluation_cycle(self):
         release = self.publish_and_activate()
@@ -92,8 +130,8 @@ class AuthoringCycleTest(unittest.TestCase):
         teacher_request, teacher = self.runtime.request('course:explain', 'EXPLAIN', 'teacher-1')
         self.assertEqual(teacher.kind, 'ANSWER')
         self.assertEqual(self.store.read_context(DELIVERY), before)
-        self.service.orchestrator_factory = Mock(side_effect=AssertionError('Replay must not construct agents'))
-        self.assertEqual(self.service.request(teacher_request), teacher)
+        self.delivery.orchestrator_factory = Mock(side_effect=AssertionError('Replay must not construct agents'))
+        self.assertEqual(self.delivery.request(teacher_request), teacher)
         practice = self.submit('course:practice', 'practice-1')
         self.assertEqual(self.submit('course:practice', 'practice-1'), practice)
         _, feedback = self.runtime.request('course:practice', 'PRACTICE', 'trainer-1', practice)
@@ -104,11 +142,11 @@ class AuthoringCycleTest(unittest.TestCase):
         self.assertFalse(self.store.read_context(DELIVERY).fields['learningStates'])
         candidate = next(e for e in proposal_candidates(self.store, proposal) if e.type == 'Evaluation')
         self.assertEqual(candidate.fields['evidence'], [ref(observed)])
-        self.assertFalse(validate_evaluation(candidate, self.service._context(DELIVERY, 'admin').snapshot))
+        self.assertFalse(validate_evaluation(candidate, self.delivery._context(DELIVERY, 'admin').snapshot))
         with self.assertRaises(ValueError):
-            self.service.apply(DELIVERY, 'admin', proposal.ref, 'unapproved-evaluation')
-        author.review_and_apply(DELIVERY, proposal, 'review-evaluation')
-        context = self.service._context(DELIVERY, 'learner')
+            self.delivery.apply(DELIVERY, 'admin', proposal.ref, 'unapproved-evaluation')
+        author.review_and_apply(DELIVERY, proposal, 'review-evaluation', service=self.delivery)
+        context = self.delivery._context(DELIVERY, 'learner')
         state = context.snapshot.get(context.snapshot.context.fields['learningStates'][0])
         self.assertEqual((state.fields['progress'], state.fields['verification']), ('IN_PROGRESS', 'UNVERIFIED'))
         occurrences = [context.snapshot.get(r) for r in context.snapshot.context.fields['activityOccurrences']]
@@ -122,7 +160,7 @@ class AuthoringCycleTest(unittest.TestCase):
         self.assertEqual(self.store.read_context(AUTH).fields['mode'], 'PREPARATION')
         # Existing trace export also accepts the shared immutable release definitions.
         from aimpro.audit import DEFAULT_PROJECT
-        trace = self.service.export_aimpro_trace(DELIVERY, 'admin', DEFAULT_PROJECT)
+        trace = self.delivery.export_aimpro_trace(DELIVERY, 'admin', DEFAULT_PROJECT)
         self.assertFalse(trace['diagnostics'])
 
     def test_learner_request_cannot_persist_an_evaluator_change_proposal(self):
@@ -134,13 +172,16 @@ class AuthoringCycleTest(unittest.TestCase):
         self.assertEqual(self.store.owned(DELIVERY, 'ChangeProposal'), before)
         self.assertFalse(self.store.owned(DELIVERY, 'Evaluation'))
         self.assertFalse(self.store.read_context(DELIVERY).fields['learningStates'])
-        self.assertNotIn('propose', self.service.policy.subjects['learner'].actions[DELIVERY])
+        self.assertNotIn('propose', self.delivery.policy.subjects['learner'].actions[DELIVERY])
 
     def test_dependency_revision_rebuild_and_new_release_preserve_running_history(self):
         release_one = self.publish_and_activate()
         observed = self.submit('course:assess', 'old-attempt')
+        evaluation = self.runtime.assessor_proposal(observed, 'old-evaluation')
+        self.authoring.review_and_apply(DELIVERY, evaluation, 'old-evaluation', service=self.delivery)
         delivery_before = self.store.read_context(DELIVERY)
-        old_context = self.service._context(DELIVERY, 'admin')
+        history_before = self.delivery_state(DELIVERY)
+        old_context = self.delivery._context(DELIVERY, 'admin')
         old_activity = old_context.snapshot.get(observed.fields['activity'])
         old_spec = old_context.snapshot.get(old_activity.fields['assessmentSpec'])
         author = self.authoring
@@ -155,8 +196,14 @@ class AuthoringCycleTest(unittest.TestCase):
         for role in ('teacher', 'trainer'):
             revision = author.generate(role.upper() + '_CONTENT', '2')
             author.review_and_apply(AUTH, revision, 'revise-' + role)
+        author.configure_completion('2')
         _, release_two = author.release('2', approve=True)
+        # The running delivery cannot be switched to release 2 without a reviewed migration.
+        with self.assertRaisesRegex(ValueError, 'migration'):
+            author.delivery_import(release_two, DELIVERY, 'import-2', service=self.delivery)
+        self.import_and_activate(release_two, DELIVERY_TWO, 'import-2')
         self.assertEqual(self.store.read_context(DELIVERY), delivery_before)
+        self.assertEqual(self.delivery_state(DELIVERY), history_before)
         self.assertEqual(self.store.read(observed.ref, owner=DELIVERY), observed)
         with self.store.db:
             self.store.db.execute('BEGIN')
@@ -175,21 +222,6 @@ class AuthoringCycleTest(unittest.TestCase):
         snapshot = replace(old_context.snapshot, entities={**old_context.snapshot.entities, new_spec.ref: new_spec})
         self.assertTrue(validate_evaluation(changed, snapshot))
         self.assertEqual(self.submit('course:assess', 'old-attempt'), observed)
-
-    def test_release_cannot_substitute_a_domain_outside_its_reviewed_project(self):
-        author = self.build_project()
-        _, release = author.release(approve=True)
-        manifest = ReleaseManifest.model_validate_json(release.fields['contentOrLocator'])
-        unrelated = entity('DomainModel', 'course:unrelated-domain', author.domain.fields)
-        changed = manifest.model_copy(update={'domain': unrelated.ref})
-        substituted = release.model_copy(update={'id': 'course:substituted-release', 'fields': {
-            **release.fields, 'contentOrLocator': changed.model_dump_json()}})
-        context = author.context()
-        proposal = self.service.propose(AUTH, 'admin', (context.snapshot.context.ref,),
-            (unrelated, substituted), 'Synthetic incompatible manifest, reviewed only as generic Resource data')
-        author.review_and_apply(AUTH, proposal, 'approve-incompatible-resource')
-        with self.assertRaisesRegex(ValueError, 'not reviewed with this project'):
-            released_entities(self.store, author.context(), substituted)
 
 
 class ProjectDependencyContractTest(unittest.TestCase):

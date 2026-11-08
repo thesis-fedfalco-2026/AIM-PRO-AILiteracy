@@ -4,8 +4,8 @@ The local `learning` CLI now initializes, revises and inspects authoring project
 `learning/projects.py` implements these operations over existing ALM Resource,
 DomainModel and proposal/decision/application services. No schema or external
 AIM-PRO model changes are required. The [lifecycle architecture](authoring-lifecycle.md)
-also describes releases and delivery imports; those commands remain subsequent
-work. The [dedicated #9/#10 generators](authoring-generators.md) build pending
+also describes releases and delivery imports; those commands are in
+[the release guide](releases.md). The [dedicated #9/#10 generators](authoring-generators.md) build pending
 project revisions through this boundary. The [SCN01 Evaluator trial](../aimpro/scn01-evaluator-example.md)
 now records real source-backed generation, separate Lead review, explicit human
 approval and isolated application of the exact assessment package. Teacher/Trainer
@@ -157,9 +157,9 @@ Under the final write lock it also rechecks the proposal decision, selected base
 project, original artifact receipts and new dependency versions. A revoked input
 approval can therefore block application even without a context version change.
 Reserved project/catalogue identities receive the same checks through generic
-ALM proposals; a catalogue-only rollback/removal is rejected. Previously stored
-immutable project Resources can still be reused in separately reviewed delivery
-configuration; this does not introduce a production release/import command.
+ALM proposals; a catalogue-only rollback/removal is rejected. Adding another
+context's project domain to a context's models is reserved for the production
+`propose-delivery-import` command; see [the release guide](releases.md#reserved-rules).
 
 An updated input can make retained dependants stale; application permits that
 incomplete authoring state and inspection reports it. Newly updated outputs must
@@ -177,9 +177,8 @@ LANGFUSE_ENABLED=false .venv/bin/python -m unittest tests.test_authoring_project
 These tests block network access and use temporary databases and synthetic human
 decisions. The full cycle now uses production project initialization/revisions and
 stable syllabus resolution and the dedicated #9/#10 generator services/dispatch.
-Only model responses remain simulated for those generators. Release
-preparation/import adapters remain test fixtures over the
-read-only `learning/authoring.py` reference helpers and real generic ALM services.
+Only model responses remain simulated for those generators. Release, import and
+activation run through the production commands in `learning/releases.py`.
 
 Published baseline validation on 3 November 2026: all 409 regression tests passed with the
 existing read-only WP3 PostgreSQL reader and MCP enabled, including the fresh
@@ -192,7 +191,8 @@ Current publication and CI evidence for the generators is recorded in
 The real source-backed Evaluator run, human review and isolated application are
 complete, and #9 is closed following publication in PR #31. Still pending:
 the real Teacher/Trainer generation and human-review workflow (#10); an authorized
-assessor-facing runtime evaluation adapter; production release/import commands
-with frozen-domain validation; and delivery migration policy.
+assessor-facing runtime evaluation adapter; and delivery migration policy.
+Production release/import commands with frozen-domain validation are implemented
+(R1, #71).
 Existing learner permissions and WorkerOutput/R16 restrictions are unchanged.
 Issue #10 and the original scopes of #1/#4 remain open.

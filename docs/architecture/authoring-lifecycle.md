@@ -1,13 +1,14 @@
 # Versioned authoring projects and frozen learning releases
 
-Status: production authoring-project and dedicated-generator services/CLI with executable acceptance.
-Release/import operations remain reference-only. The repository owner requested
+Status: production authoring-project, dedicated-generator and release/import services/CLI with
+executable acceptance. Release, delivery import and activation are production
+commands since R1 (#71); see [the release guide](releases.md). The repository owner requested
 this design and a complete cycle using simulated agents before implementing the
 dedicated generators in #9 and #10. Those generators are now implemented locally
 and tested with synthetic model responses. Live SCN01 Teacher and Trainer content
 has since been generated, reviewed by the separate Lead, approved by the owner and
 applied ([Teacher](../aimpro/scn01-teacher-example.md),
-[Trainer](../aimpro/scn01-trainer-example.md)); no release has been proposed.
+[Trainer](../aimpro/scn01-trainer-example.md)); no SCN01 release has been proposed.
 See [the generator guide](authoring-generators.md),
 the [approved SCN01 Evaluator evidence](../aimpro/scn01-evaluator-example.md) and the
 [six-topic decision register](agentic-network-decisions.md).
@@ -19,8 +20,9 @@ The reference contracts are in [`learning/authoring.py`](../../learning/authorin
 The acceptance scenarios are in
 [`tests/test_authoring_cycle.py`](../../tests/test_authoring_cycle.py). Production
 project operations are implemented in `learning/projects.py`; see
-[the authoring-project CLI guide](authoring-projects.md). Release/import commands
-described below remain the target application interface.
+[the authoring-project CLI guide](authoring-projects.md). Release, delivery-import
+and activation commands are implemented in `learning/releases.py`; see
+[the release guide](releases.md).
 
 ## Problem and decision
 
@@ -138,7 +140,7 @@ stale even when its content remains useful; recovery is an explicit rebased
 proposal with fresh review, not silent replay of its old authorization.
 
 The read-only reference helpers do not implement job reservation or write
-commands. The production project service holds a SQLite write transaction through
+commands; the production project and release services do. The production project service holds a SQLite write transaction through
 input resolution, request reservation and atomic proposal/result persistence;
 inspection and syllabus resolution each use one read transaction. Application
 rechecks project and artifact approval/dependency conditions under its final write
@@ -191,21 +193,28 @@ an unrelated domain containing similar refs is not an interchangeable release.
 approve or activate anything. Semantic completeness and source support still
 require model and human review; typed refs alone cannot establish them.
 
-The host then proposes the ReleaseManifest as an existing Resource. After its
-explicit human decision/application, `released_entities` reads the frozen domain
-closure. It verifies the pinned project/artifacts and their receipts and rejects
+`propose-release` then proposes the ReleaseManifest as an existing Resource,
+with a release catalogue. After its explicit human decision/application,
+`released_entities` reads the frozen domain closure and `show-release` reports it
+with every receipt. It verifies the pinned project/artifacts and their receipts and rejects
 authoring execution-state entities in that closure. Reads need a single SQLite
 transaction. The selection is independent of subsequent authoring revisions.
 
-Import into a delivery context is another reviewed operation. It pins the frozen
-domain/design and proposes any destination-specific workers, policies and resource
-bindings. Authoring approval does not confer permission to use a resource with a
-new learner/audience. Activation is a separate proposal after existing readiness
-checks pass. Completion handlers must be explicitly configured and bound.
+Import into a delivery context is another reviewed operation
+(`propose-delivery-import`). It pins the frozen domain/design unchanged and
+proposes destination-specific workers, a policy preview and resource bindings.
+Authoring approval does not confer permission to use a resource with a
+new learner/audience. Activation is a separate proposal (`propose-activation`)
+after existing readiness checks pass. Completion rules must be authored in the
+reviewed design, and their handlers explicitly bound in the installed policy.
+Following owner decision D4, activation stays refused while an imported ASSESS
+activity has no configured runtime role.
 
 For the first slice, an active delivery remains on its imported release. A new
 release supports a new delivery; upgrading an existing one needs a separately
 specified reviewed migration. There is no automatic switch to the latest release.
+The production import and activation refuse a destination that already holds
+learner history or configuration.
 
 Submission uses the current delivery's exact ActivityDefinition version and
 records observed evidence with an IN_PROGRESS occurrence. Evaluation uses the
@@ -236,7 +245,9 @@ It does not touch the existing SCN01 demo or approve the real pending syllabus.
 | Real production mechanism exercised | Simulated boundary |
 | --- | --- |
 | AIM-PRO source preparation, typed Curator checks and candidate mapping | Curator output, Lead verdict and corpus search response |
-| Production project initialization/revisions, stable syllabus resolution, dedicated #9/#10 services, registry dispatch, candidate mapping, dependency contracts and receipts | Model responses; release/import command adapters |
+| Production project initialization/revisions, stable syllabus resolution, dedicated #9/#10 services, registry dispatch, candidate mapping, dependency contracts and receipts | Model responses |
+| Production `propose-release`, `show-release`, `propose-delivery-import` and `propose-activation`, with reserved rules rechecked at application | One EVALUATOR runtime worker patched into the import, standing in for the future assessor role (G7) that D4 requires |
+| Explicit completion rules authored through a reviewed project revision | The operator bundle that supplies them (generators never infer them) |
 | LearningService proposals, exact human-review payloads, decisions and application | Test operator explicitly records synthetic decisions |
 | CrewAI Flow, registry authorization, TaskDispatcher, output guards and SQLite request results | Lead plans/reviews/synthesis and Teacher/Trainer outputs; an Evaluator worker is also simulated for the learner-permission rejection case |
 | Evaluation validation and reviewed application under actual assessor permissions | Future assessor-facing adapter generates the typed formative Evaluation candidate |
@@ -248,27 +259,30 @@ The acceptance covers:
 1. Source-backed syllabus → explicit review/application → assessment and complete
    Teacher/Trainer content proposals → evolving project selection.
 2. Refusal to release pending or incomplete projects and refusal to import an
-   unapproved release; separate release review, delivery import and activation.
+   unapproved release; separate release review, delivery import, policy
+   installation and activation through the production commands.
 3. Real runtime delegation to simulated Teacher/Trainer outputs, exact scoped retrieval,
    explanation replay, observed practice/assessment submissions, feedback, pending
    assessor-requested evaluation and explicit evaluation review/application.
 4. No inferred acquisition, verification or activity completion, and no model
    construction on an identical replay.
 5. Assessment revision → transitive content staleness → release refusal → focused
-   rebuild → second release, with the original delivery and evidence unchanged.
+   rebuild → second release imported into a new delivery, with the original
+   delivery's occurrences, evidence, evaluations and pinned definitions unchanged,
+   and refusal to import release 2 into the running delivery.
 6. Valid evaluation against the historical specification and rejection of using a
    newly authored specification to reinterpret that evidence.
 7. Rejection of an Evaluator proposal produced under learner-only permissions,
    without granting that learner broader state-change authority.
 
-This exercises production project and generator operations with synthetic model
-responses and an executable architecture specification for subsequent stages.
-It does not establish a source-backed #9/#10 live run, a production release CLI,
-a semantic-quality benchmark or a complete observed activity-completion workflow.
-The existing ALM engine performs authoritative state transitions; release/import
-commands and an assessor-facing evaluation adapter remain to be implemented.
-Explicit synthetic completion rules are configured during the reference delivery
-import, separately from generation. No issue closure follows merely from tests.
+This exercises production project, generator and release/import operations with
+synthetic model responses. It does not establish a semantic-quality benchmark or a
+complete observed activity-completion workflow. The existing ALM engine performs
+authoritative state transitions; an assessor-facing evaluation adapter remains to
+be implemented. Explicit synthetic completion rules are authored in a reviewed
+project revision before release, separately from generation. The dedicated
+release acceptance is in `tests/test_releases.py`. No issue closure follows
+merely from tests.
 
 ## Implementation sequence after architecture review
 
@@ -281,11 +295,11 @@ import, separately from generation. No issue closure follows merely from tests.
    adapters replace generator fixtures while retaining synthetic model responses.
    Authorized real SCN01 runs, owner approvals and applications are documented;
    #9 and #10 are closed.
-4. Add production release/import commands and a guided review surface using the
-   same services, then exercise one explicitly authorized source-backed real run.
-   The proposed bounded release/import increment (R1) and its acceptance tests
-   are in [the Chat 07 packet](../plans/handoffs/chat-07.md#bounded-implementation-r1-production-release-and-delivery-import);
-   it awaits the owner's decision.
+4. Implemented locally: production release/import commands (R1, #71), scoped in
+   [the Chat 07 packet](../plans/handoffs/chat-07.md#bounded-implementation-r1-production-release-and-delivery-import)
+   and described in [the release guide](releases.md). Still open: a guided review
+   surface over the same services, and any real SCN01 release, import or
+   activation, each under its own owner decision (D7).
 5. Extend #25 with adversarial/relevance/completeness cases and measured latency.
    Broader digital twins, orchestration comparisons and runtime migrations retain
    their independent decisions and acceptance criteria.

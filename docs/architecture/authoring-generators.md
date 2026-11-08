@@ -295,7 +295,8 @@ git diff --check
 The generator/project/architecture tests block socket connections and DNS. They
 use temporary databases and explicit synthetic human decisions. The acceptance
 cycle exercises production generator services/typed dispatch with synthetic model
-responses; release/import and assessor-facing adapters remain fixtures. The
+responses and the production release/import commands; the assessor-facing
+adapter remains a fixture. The
 full local regression additionally enables the existing read-only PostgreSQL/MCP
 tests from the protected reader configuration. Remote CI has a narrower scope.
 On 5 November 2026, [run 42000601341](https://github.com/thesis-fedfalco-2026/py-prototype/actions/runs/42000601341)

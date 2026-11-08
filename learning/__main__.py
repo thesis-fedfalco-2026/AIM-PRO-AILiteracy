@@ -12,6 +12,7 @@ from learning.contracts import EntityRef, entity_data
 from learning.decisions import proposal_candidates
 from learning.metamodel import load_contract, validate_entity
 from learning.policies import TrustedPolicy, authorize
+from learning.releases import ActivationRefused
 from learning.service import LearningService
 from learning.store import LearningStore
 
@@ -37,6 +38,20 @@ def parse_args(argv=None):
     inspect.add_argument('project_id')
     pinned = commands.add_parser('show-project-syllabus', help='Resolve the approved syllabus through an exact current project revision')
     pinned.add_argument('project', help='Exact project Resource EntityRef JSON')
+    release = commands.add_parser('propose-release', help='Propose a frozen release of the exact current project selection')
+    release.add_argument('--project', required=True, help='Exact selected project Resource EntityRef JSON')
+    release.add_argument('--domain', required=True, help='Exact project DomainModel EntityRef JSON')
+    release.add_argument('--base-context', required=True, help='Exact base ExecutionContext EntityRef JSON')
+    release.add_argument('--request-id', required=True)
+    shown = commands.add_parser('show-release', help='Inspect release receipts, its exact frozen closure and findings')
+    shown.add_argument('release', help='Exact release Resource EntityRef JSON')
+    delivery = commands.add_parser('propose-delivery-import', help='Propose importing an applied release into this new delivery context')
+    delivery.add_argument('bundle', type=Path, help='DeliveryImport JSON: release, authoring_context, base_context, scope_name, bindings, completion_handlers')
+    delivery.add_argument('--request-id', required=True)
+    delivery.add_argument('--policy-preview', type=Path, required=True, help='New file for the proposed trusted policy; does not replace the current policy')
+    activation = commands.add_parser('propose-activation', help='Propose LEARNING/ACTIVE for an applied delivery import')
+    activation.add_argument('--base-context', required=True, help='Exact base ExecutionContext EntityRef JSON')
+    activation.add_argument('--request-id', required=True)
     for name in ('generate-project-assessments', 'generate-project-teacher', 'generate-project-trainer'):
         generator = commands.add_parser(name, help='Generate a typed pending authoring proposal from exact approved project inputs')
         generator.add_argument('bundle', type=Path, help='GenerationCommand JSON: project, base_context, assessments, shared_content, requirements')
@@ -172,6 +187,27 @@ def main(argv=None):
             elif command == 'show-project-syllabus':
                 result = service.approved_project_syllabus(args.context, args.subject,
                     EntityRef.model_validate_json(args.project)).model_dump(mode='json')
+            elif command == 'propose-release':
+                result = service.propose_release(args.context, args.subject, {
+                    'project': EntityRef.model_validate_json(args.project),
+                    'domain': EntityRef.model_validate_json(args.domain),
+                    'base_context': EntityRef.model_validate_json(args.base_context)},
+                    request_id=args.request_id).model_dump(mode='json')
+            elif command == 'show-release':
+                result = service.inspect_release(args.context, args.subject,
+                    EntityRef.model_validate_json(args.release)).model_dump(mode='json')
+            elif command == 'propose-delivery-import':
+                if args.policy_preview.exists() or not args.policy_preview.parent.is_dir():
+                    raise ValueError('Choose a new policy preview file in an existing directory')
+                result = service.propose_delivery_import(args.context, args.subject,
+                    json.loads(args.bundle.read_text()), request_id=args.request_id).model_dump(mode='json')
+                with args.policy_preview.open('x', encoding='utf-8') as preview:
+                    json.dump(result['policy_preview'], preview, ensure_ascii=False, indent=2)
+                    preview.write('\n')
+            elif command == 'propose-activation':
+                result = service.propose_activation(args.context, args.subject,
+                    {'base_context': EntityRef.model_validate_json(args.base_context)},
+                    request_id=args.request_id).model_dump(mode='json')
             elif command in ('generate-project-assessments', 'generate-project-teacher', 'generate-project-trainer'):
                 method = getattr(service, command.replace('-', '_'))
                 result = method(args.context, args.subject, json.loads(args.bundle.read_text()),
@@ -245,6 +281,10 @@ def main(argv=None):
                 result = service.request(request).model_dump(mode='json')
             print(json.dumps(result,ensure_ascii=False,indent=2))
             return 1 if command != 'abandon' and result.get('kind') == 'FAILURE' else 0
+    except ActivationRefused as error:
+        print(json.dumps({'refused': 'activation', 'findings': [f.model_dump() for f in error.findings]},
+                         ensure_ascii=False, indent=2), file=sys.stderr)
+        return 2
     except (ValueError, OSError, KeyError, EOFError, sqlite3.Error):
         print('Operation not performed: check the context, permissions, references and data format.',file=sys.stderr)
         return 2

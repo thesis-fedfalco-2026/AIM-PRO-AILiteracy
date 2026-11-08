@@ -62,7 +62,9 @@ class LearningService:
         return root
 
     def propose(self, context_id, subject_key, targets, candidates, explanation):
+        from learning.releases import refuse_generic
         context = self._context(context_id, subject_key)
+        refuse_generic(context, candidates)
         proposal = create_proposal(context, targets, candidates, explanation)
         save_proposal(self.store, context, proposal, candidates)
         return proposal
@@ -197,6 +199,22 @@ class LearningService:
     def approved_project_syllabus(self, context_id, subject_key, project):
         from learning.projects import approved_project_syllabus
         return approved_project_syllabus(self, context_id, subject_key, project)
+
+    def propose_release(self, context_id, subject_key, command, *, request_id):
+        from learning.releases import propose_release
+        return propose_release(self, context_id, subject_key, command, request_id)
+
+    def inspect_release(self, context_id, subject_key, release):
+        from learning.releases import inspect_release
+        return inspect_release(self, context_id, subject_key, release)
+
+    def propose_delivery_import(self, context_id, subject_key, command, *, request_id):
+        from learning.releases import propose_delivery_import
+        return propose_delivery_import(self, context_id, subject_key, command, request_id)
+
+    def propose_activation(self, context_id, subject_key, command, *, request_id):
+        from learning.releases import propose_activation
+        return propose_activation(self, context_id, subject_key, command, request_id)
 
     def generate_project_assessments(self, context_id, subject_key, command, **kwargs):
         from learning.generation import generate_project
