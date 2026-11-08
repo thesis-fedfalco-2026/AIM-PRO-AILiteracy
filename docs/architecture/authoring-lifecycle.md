@@ -93,8 +93,8 @@ source schemas, retrieved text and worker results remain untrusted data.
 | --- | --- | --- |
 | Curator | Scenario/competency closure, authorized excerpts, explicit local brief | SyllabusDraft with ordered units, purposes, intents, citations and gaps; implemented in #8. |
 | Evaluator authoring | Approved syllabus units/outcomes and authorized sources | Typed ASSESS items, criterion-specific rubric levels and evidence requirements; real SCN01 generation, owner approval and isolated application documented in #9. |
-| Teacher authoring | Approved syllabus, exact relevant approved assessments, source/material constraints | Complete explanations, examples and transcripts tied to planned EXPLAIN units; local implementation, #10 live evidence pending. |
-| Trainer authoring | The same approved syllabus, exact relevant approved assessments and optional approved shared Teacher assets | Complete practice instructions and worksheets tied to planned PRACTICE units; local implementation, #10 live evidence pending. |
+| Teacher authoring | Approved syllabus, exact relevant approved assessments, source/material constraints | Complete explanations, examples and transcripts tied to planned EXPLAIN units; real SCN01 generation, owner approval and application documented in #10. |
+| Trainer authoring | The same approved syllabus, exact relevant approved assessments and optional approved shared Teacher assets | Complete practice instructions and worksheets tied to planned PRACTICE units; real SCN01 generation, owner approval and application documented in #10. |
 | Runtime roles | Frozen definitions, context-authorized exact resources and actual learner evidence | Checked explanation, feedback or a proposed evaluation. No direct approval, activation or acquisition authority. |
 
 Application control allocates activity/asset identities and validates references.
@@ -279,9 +279,13 @@ import, separately from generation. No issue closure follows merely from tests.
    `tests/test_authoring_projects.py`; publication is a separate authorized step.
 3. Implemented locally: dedicated Evaluator (#9), then Teacher/Trainer (#10)
    adapters replace generator fixtures while retaining synthetic model responses.
-   Complete a newly authorized real generation/review run before closing them.
+   Authorized real SCN01 runs, owner approvals and applications are documented;
+   #9 and #10 are closed.
 4. Add production release/import commands and a guided review surface using the
    same services, then exercise one explicitly authorized source-backed real run.
+   The proposed bounded release/import increment (R1) and its acceptance tests
+   are in [the Chat 07 packet](../plans/handoffs/chat-07.md#bounded-implementation-r1-production-release-and-delivery-import);
+   it awaits the owner's decision.
 5. Extend #25 with adversarial/relevance/completeness cases and measured latency.
    Broader digital twins, orchestration comparisons and runtime migrations retain
    their independent decisions and acceptance criteria.
