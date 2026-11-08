@@ -1,0 +1,6 @@
+{
+  "request_id": "scn01-trainer-02",
+  "recomputed_offline": true,
+  "first_failing_check": "ReviewError: Practice transcript labels or hints at prompt moves",
+  "note": "The guard stops at its first failing check; later checks are not evaluated."
+}

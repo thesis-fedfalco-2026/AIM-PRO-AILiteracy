@@ -466,3 +466,12 @@ prompt bodies, case facts or solved annotations. Generation, deterministic
 checks, the Lead verdict contract and the legacy Teacher review prompt are
 unchanged, and no historical request identity changes. The Trainer output still
 needs separate human review before any decision.
+
+Observed use (8 November 2026): four authorized Trainer packets used this prompt
+unchanged at `f9be116`. Attempts 01–03 failed on the packet-level practice guard
+before the Lead. Attempt 04 reproduced an operator-authored transcript, and its
+Lead returned ACCEPT. The owner approved it with three accepted limitations, and
+TRAINER_CONTENT is applied. An offline exercise in a disposable copy confirmed
+the focused-regeneration rules above on the real project: an assessment revision
+makes Teacher and Trainer stale, and regenerating only the Trainer leaves only
+the Teacher stale ([Trainer evidence](../aimpro/evidence/scn01-trainer/README.md)).

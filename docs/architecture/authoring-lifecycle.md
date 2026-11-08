@@ -4,8 +4,11 @@ Status: production authoring-project and dedicated-generator services/CLI with e
 Release/import operations remain reference-only. The repository owner requested
 this design and a complete cycle using simulated agents before implementing the
 dedicated generators in #9 and #10. Those generators are now implemented locally
-and tested with synthetic model responses; their live generation/review evidence
-remains pending for Teacher/Trainer. See [the generator guide](authoring-generators.md),
+and tested with synthetic model responses. Live SCN01 Teacher and Trainer content
+has since been generated, reviewed by the separate Lead, approved by the owner and
+applied ([Teacher](../aimpro/scn01-teacher-example.md),
+[Trainer](../aimpro/scn01-trainer-example.md)); no release has been proposed.
+See [the generator guide](authoring-generators.md),
 the [approved SCN01 Evaluator evidence](../aimpro/scn01-evaluator-example.md) and the
 [six-topic decision register](agentic-network-decisions.md).
 

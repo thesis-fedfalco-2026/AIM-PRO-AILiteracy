@@ -1,0 +1,81 @@
+{
+  "disposable_copy": true,
+  "model_calls": 0,
+  "network": false,
+  "workers": "synthetic replay of approved drafts with one marked change",
+  "before": {
+    "stale": [],
+    "selected": {
+      "source": {
+        "type": "Resource",
+        "id": "aimpro-syllabus-926d751475204cd29c0e3a9f6033ef5f:source-snapshot",
+        "version": "1"
+      },
+      "syllabus": {
+        "type": "Resource",
+        "id": "aimpro-syllabus-926d751475204cd29c0e3a9f6033ef5f:syllabus",
+        "version": "1"
+      },
+      "assessment": {
+        "type": "Resource",
+        "id": "authoring-output:3d13c6e5aa4e6fa11af6f967e7c48b4b874b4595eb8da3a45447f36c47a8d2ce",
+        "version": "b1de953080b54c4fac42c1ad5cd3b9fc"
+      },
+      "teacher_content": {
+        "type": "Resource",
+        "id": "authoring-output:0550349a953f4fee5c161eb8fcbf1023759589d79c752fdeb99191c4f0713b83",
+        "version": "eb707876a6a047e78e705078dca5855b"
+      },
+      "trainer_content": {
+        "type": "Resource",
+        "id": "authoring-output:e74dc10caee08f294f409a7f662f5defedcd52fe12c784b99a5786551ef7ed18",
+        "version": "59b4b384379349398177bc9c29b21a77"
+      }
+    }
+  },
+  "after_assessment_revision": {
+    "stale": [
+      "teacher_content",
+      "trainer_content"
+    ],
+    "assessment": {
+      "type": "Resource",
+      "id": "authoring-output:3d13c6e5aa4e6fa11af6f967e7c48b4b874b4595eb8da3a45447f36c47a8d2ce",
+      "version": "6e2a3f6d8ae64cf4a90143e58ecd990e"
+    },
+    "unchanged": [
+      "source",
+      "syllabus",
+      "teacher_content",
+      "trainer_content"
+    ]
+  },
+  "trainer_with_superseded_assessment": "REFUSED: ValueError",
+  "after_focused_trainer_regeneration": {
+    "stale": [
+      "teacher_content"
+    ],
+    "trainer": {
+      "type": "Resource",
+      "id": "authoring-output:e74dc10caee08f294f409a7f662f5defedcd52fe12c784b99a5786551ef7ed18",
+      "version": "cfac3cab72e1445c94ee6c61baa4e79e"
+    },
+    "trainer_depends_on": [
+      {
+        "type": "Resource",
+        "id": "aimpro-syllabus-926d751475204cd29c0e3a9f6033ef5f:syllabus",
+        "version": "1"
+      },
+      {
+        "type": "Resource",
+        "id": "authoring-output:3d13c6e5aa4e6fa11af6f967e7c48b4b874b4595eb8da3a45447f36c47a8d2ce",
+        "version": "6e2a3f6d8ae64cf4a90143e58ecd990e"
+      }
+    ],
+    "teacher_unchanged_and_still_stale": true
+  },
+  "historical_trainer_readable": true,
+  "sqlite_integrity": "ok",
+  "real_packet_database_unchanged": true,
+  "disposable_copy_removed": true
+}

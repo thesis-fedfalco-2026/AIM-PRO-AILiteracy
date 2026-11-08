@@ -1,0 +1,129 @@
+{
+  "production_decision_recorded": "APPROVE",
+  "proposal_status": "APPLIED",
+  "review_payload_key_valid": true,
+  "candidates_unchanged": true,
+  "human_decision_rows": [
+    6,
+    7
+  ],
+  "state_change_rows": [
+    4,
+    5
+  ],
+  "new_decisions": 1,
+  "new_applications": 1,
+  "application_idempotent": true,
+  "project_receipts_valid": true,
+  "project_fresh": true,
+  "trainer_selected": true,
+  "trainer_selection": {
+    "key": "trainer_content",
+    "kind": "TRAINER_CONTENT",
+    "resource": {
+      "type": "Resource",
+      "id": "authoring-output:e74dc10caee08f294f409a7f662f5defedcd52fe12c784b99a5786551ef7ed18",
+      "version": "59b4b384379349398177bc9c29b21a77"
+    },
+    "depends_on": [
+      {
+        "type": "Resource",
+        "id": "aimpro-syllabus-926d751475204cd29c0e3a9f6033ef5f:syllabus",
+        "version": "1"
+      },
+      {
+        "type": "Resource",
+        "id": "authoring-output:3d13c6e5aa4e6fa11af6f967e7c48b4b874b4595eb8da3a45447f36c47a8d2ce",
+        "version": "b1de953080b54c4fac42c1ad5cd3b9fc"
+      }
+    ],
+    "definitions": [
+      {
+        "type": "Resource",
+        "id": "authoring-output:e74dc10caee08f294f409a7f662f5defedcd52fe12c784b99a5786551ef7ed18:dca4dcbc71130c4b6a57b35fae2e8edd40d1e8f6fc93315599607dc85bc50ed2",
+        "version": "59b4b384379349398177bc9c29b21a77"
+      },
+      {
+        "type": "Resource",
+        "id": "authoring-output:e74dc10caee08f294f409a7f662f5defedcd52fe12c784b99a5786551ef7ed18:e341ea7978d5aebb37b2e15e5f6dc581bf1a4c63b5adf262ad93b6308e09554b",
+        "version": "59b4b384379349398177bc9c29b21a77"
+      },
+      {
+        "type": "Resource",
+        "id": "authoring-output:e74dc10caee08f294f409a7f662f5defedcd52fe12c784b99a5786551ef7ed18:7229e88d0ff751e1a62fbc49f0d88e9bd3cfb1e21c0f40dfcb6819c06454fba4",
+        "version": "59b4b384379349398177bc9c29b21a77"
+      },
+      {
+        "type": "Resource",
+        "id": "authoring-output:e74dc10caee08f294f409a7f662f5defedcd52fe12c784b99a5786551ef7ed18:70dcb0aacda2a9e148e3f905a4bfb8bc3bbf8db1675bb3883a6f7f57e635ff00",
+        "version": "59b4b384379349398177bc9c29b21a77"
+      },
+      {
+        "type": "Resource",
+        "id": "authoring-output:e74dc10caee08f294f409a7f662f5defedcd52fe12c784b99a5786551ef7ed18:0c745700a881e8d1ce8e9820b2f408db7ad333208588795b468ad3cd0246b530",
+        "version": "59b4b384379349398177bc9c29b21a77"
+      },
+      {
+        "type": "ResourceRequirement",
+        "id": "authoring-output:e74dc10caee08f294f409a7f662f5defedcd52fe12c784b99a5786551ef7ed18:8f7ec874ac753a0b305ff66265fac684ee20a1b54eeb90fd7f715a3a3d4a4e88",
+        "version": "59b4b384379349398177bc9c29b21a77"
+      },
+      {
+        "type": "ResourceRequirement",
+        "id": "authoring-output:e74dc10caee08f294f409a7f662f5defedcd52fe12c784b99a5786551ef7ed18:0883a440d978ae72b2d20c49be6fe379e33649dcbb0c80506120e186cb32901d",
+        "version": "59b4b384379349398177bc9c29b21a77"
+      },
+      {
+        "type": "ResourceRequirement",
+        "id": "authoring-output:e74dc10caee08f294f409a7f662f5defedcd52fe12c784b99a5786551ef7ed18:5f76925f860cf9e70037dab40145085af617d211b1241b19aca2ba4e64b2b905",
+        "version": "59b4b384379349398177bc9c29b21a77"
+      },
+      {
+        "type": "ResourceRequirement",
+        "id": "authoring-output:e74dc10caee08f294f409a7f662f5defedcd52fe12c784b99a5786551ef7ed18:34849c280db3bec3c1e90d1359f83adaf4cefa47e5cbeeac2cc532aeb9200091",
+        "version": "59b4b384379349398177bc9c29b21a77"
+      },
+      {
+        "type": "ActivityDefinition",
+        "id": "authoring-output:e74dc10caee08f294f409a7f662f5defedcd52fe12c784b99a5786551ef7ed18:e5bfa9901f04fd5c9b6fb3c67723ddcc44f6926582d3ce8554d6ee1645031d65",
+        "version": "59b4b384379349398177bc9c29b21a77"
+      },
+      {
+        "type": "ResourceRequirement",
+        "id": "authoring-output:e74dc10caee08f294f409a7f662f5defedcd52fe12c784b99a5786551ef7ed18:83b926bb74bb3d830a09c26468ee53ebadacca3c3910a9eefd64e995ed86bca7",
+        "version": "59b4b384379349398177bc9c29b21a77"
+      },
+      {
+        "type": "ResourceRequirement",
+        "id": "authoring-output:e74dc10caee08f294f409a7f662f5defedcd52fe12c784b99a5786551ef7ed18:89f2e16ff246da1498be2cd10cfb6a9dee43a25584c980c4877005b3d140b600",
+        "version": "59b4b384379349398177bc9c29b21a77"
+      },
+      {
+        "type": "ActivityDefinition",
+        "id": "authoring-output:e74dc10caee08f294f409a7f662f5defedcd52fe12c784b99a5786551ef7ed18:69850b3794dea8febc80131632d056ce46995f960cdb1cab019e4fa117840e93",
+        "version": "59b4b384379349398177bc9c29b21a77"
+      },
+      {
+        "type": "ResourceRequirement",
+        "id": "authoring-output:e74dc10caee08f294f409a7f662f5defedcd52fe12c784b99a5786551ef7ed18:174c3fa6ba4b89518c3ecfa8b2a69c69261d2e118d31b30974797b09e67aa16e",
+        "version": "59b4b384379349398177bc9c29b21a77"
+      },
+      {
+        "type": "ResourceRequirement",
+        "id": "authoring-output:e74dc10caee08f294f409a7f662f5defedcd52fe12c784b99a5786551ef7ed18:317d9819b06b10094e202a8ccbc7c05fdb63d211639b0108f51dce210c24518d",
+        "version": "59b4b384379349398177bc9c29b21a77"
+      },
+      {
+        "type": "ActivityDefinition",
+        "id": "authoring-output:e74dc10caee08f294f409a7f662f5defedcd52fe12c784b99a5786551ef7ed18:5d9a14b117f969edf8ca6c9ffbbf03c261d1b9fc1b7ce15a38a674aaeed13a8b",
+        "version": "59b4b384379349398177bc9c29b21a77"
+      }
+    ]
+  },
+  "terminal_replay_exact_without_models": true,
+  "historical_replay_kind": "PROPOSAL",
+  "learner_state_or_release": false,
+  "model_calls": 0,
+  "retrieval_calls": 0,
+  "sqlite_integrity": "ok"
+}

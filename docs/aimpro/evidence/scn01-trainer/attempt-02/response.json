@@ -1,0 +1,10 @@
+{
+  "kind": "FAILURE",
+  "content": "Authoring generation did not complete; no accepted proposal was persisted.",
+  "citations": [],
+  "coverage": [],
+  "findings": [],
+  "proposal_refs": [],
+  "state_change_refs": [],
+  "application_status": "none"
+}

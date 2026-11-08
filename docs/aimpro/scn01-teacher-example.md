@@ -1,6 +1,15 @@
 # SCN01 dedicated Teacher — revision request and failed correction
 
-**Latest outcome on 6 November 2026:** the fourth exact packet was explicitly
+**Final outcome on 7 November 2026:** the tenth authorized attempt
+(`scn01-teacher-10-regeneration`) produced a PROPOSAL. The separate Lead returned
+ACCEPT. The owner approved it with three accepted limitations and authorized
+application. TEACHER_CONTENT is selected
+([attempt 10](evidence/scn01-teacher/attempt-10/README.md),
+[handoff](../plans/handoffs/chat-05.md)). The approved Trainer content followed on
+8 November ([Trainer report](scn01-trainer-example.md)). The rest of this page is
+the earlier history, kept unchanged.
+
+**Earlier outcome on 6 November 2026:** the fourth exact packet was explicitly
 authorized, then Anthropic returned HTTP 400 because the native JSON grammar was
 too large. One request, 0.909 seconds total service, no Teacher output, no Lead,
 no proposal or human content decision/application. Usage was unavailable; total

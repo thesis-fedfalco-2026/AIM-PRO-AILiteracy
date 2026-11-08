@@ -1,0 +1,24 @@
+PRACTICE ANNOTATION TRANSCRIPT
+
+Notice: This is a fictional practice transcript written for this workshop. Juniper Garden Centre, Northgate Dental Practice, quote PR-112, the amount EUR 128.50 and the date 21 June are all fictional. It does not record a real conversation, a real business or any use of an AI tool, and no tool output is shown.
+
+1. Participant: I started a prompt at home. Here it is: "Juniper Garden Centre needs to reply to Northgate Dental Practice about the plant-care visit they asked about."
+2. Adviser: Thanks. Who reads the message in the end?
+3. Participant: The office manager at Northgate Dental Practice. They asked us for a price last week.
+4. Adviser: What do they need to know from us?
+5. Participant: The quote number, PR-112, the price, EUR 128.50, and that the visit would be on 21 June.
+6. Adviser: Let's put that in. Try this: "Write a short email from Juniper Garden Centre to Northgate Dental Practice about quote PR-112: a plant-care visit on 21 June for EUR 128.50."
+7. Participant: Should it ask them to reply?
+8. Adviser: Yes, add that. "Write a short email from Juniper Garden Centre to Northgate Dental Practice about quote PR-112: a plant-care visit on 21 June for EUR 128.50. Ask them to reply to this email if they want to book the visit."
+9. Participant: Last month someone in the shop wrote a lovely reply to a different customer. Could we paste that in so the new email sounds similar?
+10. Adviser: We could look at that another day. It isn't in front of us now.
+11. Participant: All right. Can we put "Dear Northgate Dental Practice," at the very end of the prompt?
+12. Adviser: Let's try it. New version: "Write a short email from Juniper Garden Centre to Northgate Dental Practice about quote PR-112: a plant-care visit on 21 June for EUR 128.50. Ask them to reply to this email if they want to book the visit. Dear Northgate Dental Practice,"
+13. Participant: We send quotes like this every week. Could we keep a copy with blank spaces for the customer, the quote number, the price and the date?
+14. Adviser: We can set one up later. For today we'll stay with this customer.
+15. Participant: Should the email say that the visit is in the morning?
+16. Adviser: Do we know that it is?
+17. Participant: No, the quote doesn't say.
+18. Adviser: Then let's leave it out and keep only what the quote says.
+19. Participant: Shall I copy the prompt onto the worksheet?
+20. Adviser: Yes, please. Copy it exactly as it is.

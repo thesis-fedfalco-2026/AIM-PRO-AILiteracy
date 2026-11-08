@@ -1,0 +1,212 @@
+{
+  "raw_output_sha256": "87cf7878fe8d68c84dbda532ae9ddda0da64b0a2c297f5ef781c1659c020837e",
+  "raw_output_characters": 32733,
+  "typed_output": {
+    "kind": "TRAINER_DRAFT",
+    "input_digest": "e275ebab0d271b9794b690e014591ef11b38f708e5aeff1e956bdb3632a40a65",
+    "units": [
+      {
+        "key": "unit-2-prompt-move-annotation",
+        "items": [
+          {
+            "key": "unit-2-practice-item-1",
+            "instruction": "Work in pairs for this activity. You will use the Prompt-Move Practice Card (see \"Prompt-Move Practice Card – Five labels for recognising prompt parts\") and the Practice Annotation Transcript (see \"Practice Annotation Transcript – Juniper Garden Centre scenario\") provided with this packet.\n\nStep 1 – Read the Prompt-Move Practice Card carefully. It defines five labels: INSTRUCTION, PRIMARY CONTENT, EXAMPLE, CUE and TEMPLATE. For each label, read the plain definition, the guidance on telling enacted text from mentioned text, and the recognition illustration before you begin.\n\nStep 2 – Read the Practice Annotation Transcript. It is a fictional practice transcript written for this workshop. Read it all the way through before annotating.\n\nStep 3 – Together, work through the transcript line by line. For each line or group of lines, decide whether any of the five labels applies. Use the blank annotation table on the Annotation Practice Worksheet (see \"Annotation Practice Worksheet\") to record your work. For each row, fill in: the line number(s), the label you are applying (or MENTIONED or ABSENT), the exact words you are quoting from that line as your evidence, and whether the move is enacted in the text or only talked about.\n\nStep 4 – When you have finished the table, each partner writes their own brief note in the space provided on the Annotation Practice Worksheet: which lines they personally led on, and the reason they gave for each of those labels.\n\nStep 5 – Compare your notes. If you agreed throughout, write a sentence explaining how you checked your agreement against the transcript and card. If you disagreed on any line, write a sentence describing what you disagreed about and how you resolved it.\n\nStep 6 – Together, answer the question at the bottom of the Annotation Practice Worksheet: which of the five labels did your pair find absent or only mentioned (never enacted) in this transcript?\n\nThis is formative practice. No work is collected, scored or recorded. The goal is to rehearse the annotation skill before you use it in the assessment task.",
+            "outcomes": [
+              {
+                "type": "LearningOutcome",
+                "id": "aimpro-syllabus-926d751475204cd29c0e3a9f6033ef5f:outcome:Pointer1792169221668_USER_96",
+                "version": "1"
+              }
+            ],
+            "material_keys": [
+              "mat-practice-move-card",
+              "mat-practice-annotation-transcript",
+              "mat-worksheet-annotation"
+            ],
+            "shared_materials": [],
+            "citations": [
+              {
+                "resource_id": "wp3:32c2119d5504",
+                "resource_version": "31057b5b35cfcfa5f31ee406f855477a",
+                "document_ids": [
+                  "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3",
+                  "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:4"
+                ],
+                "supported_claim": "The corpus decomposes prompts into instruction, primary content, examples, cues and templates, providing the conceptual basis for a paired annotation activity in which learners identify and label these moves in a transcript."
+              }
+            ],
+            "intent": "PRACTICE"
+          }
+        ]
+      },
+      {
+        "key": "unit-3-first-prompt-construction",
+        "items": [
+          {
+            "key": "unit-3-practice-item-1",
+            "instruction": "Work through the Prompt Construction Worksheet (see \"Prompt Construction Worksheet – Willowmere Bike Repairs scenario\") on your own.\n\nThe worksheet gives you a fictional scenario and guides you step by step to draft a first prompt for a routine business message. Read the scenario details on the worksheet, then follow the guided steps to build your prompt in the drafting frame provided.\n\nRemember: you are writing the prompt only. You do not need to run it through any AI tool and you do not need to produce or imagine an AI-generated reply. The goal is to practise putting an INSTRUCTION and PRIMARY CONTENT together in a single prompt.\n\nWhen you have finished drafting, work through the short self-check list at the bottom of the worksheet before the group discussion.\n\nThis is formative practice. No work is collected, scored or recorded.",
+            "outcomes": [
+              {
+                "type": "LearningOutcome",
+                "id": "aimpro-syllabus-926d751475204cd29c0e3a9f6033ef5f:outcome:Pointer1792169221668_USER_96",
+                "version": "1"
+              }
+            ],
+            "material_keys": [
+              "mat-worksheet-construction"
+            ],
+            "shared_materials": [],
+            "citations": [
+              {
+                "resource_id": "wp3:32c2119d5504",
+                "resource_version": "31057b5b35cfcfa5f31ee406f855477a",
+                "document_ids": [
+                  "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3",
+                  "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:4",
+                  "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:6"
+                ],
+                "supported_claim": "The corpus describes prompt construction as instruction plus primary content, and describes templates with placeholders as reusable prompt structures, supporting a guided first-prompt drafting exercise using a fictional scenario."
+              }
+            ],
+            "intent": "PRACTICE"
+          }
+        ]
+      },
+      {
+        "key": "unit-4-prompt-choice-explanation",
+        "items": [
+          {
+            "key": "unit-4-practice-item-1",
+            "instruction": "Work through the Prompt Choice Explanation Worksheet (see \"Prompt Choice Explanation Worksheet\") using the prompt you drafted on the Prompt Construction Worksheet (see \"Prompt Construction Worksheet – Willowmere Bike Repairs scenario\").\n\nStep 1 – Copy your prompt: Write out the full text of the prompt you drafted on the Prompt Construction Worksheet into the space at the top of the Prompt Choice Explanation Worksheet.\n\nStep 2 – Pick two choices: Look back at your prompt and choose two distinct decisions you made when writing it. A choice might be a word or phrase you selected, a detail you included or left out, the order in which you put information, or the level of specificity you used.\n\nStep 3 – For each choice, complete the two boxes on the worksheet: (a) quote or point to the exact wording in your prompt where the choice appears, and (b) write a short explanation of what you were trying to achieve or avoid with that choice. Describe possible effects in qualified language — for example, \"this might help the AI…\" or \"I thought this could reduce the chance of…\" — rather than claiming that any choice guarantees a particular output. Results can vary depending on the model, the context and other factors, so inspect any output you receive.\n\nStep 4 – Swap worksheets with your partner. Read their prompt and their two explanations. Write one question about each of their choices in the space provided.\n\nStep 5 – Return the worksheets and discuss your partner's questions briefly.\n\nThis is formative practice. No work is collected, scored or recorded.",
+            "outcomes": [
+              {
+                "type": "LearningOutcome",
+                "id": "aimpro-syllabus-926d751475204cd29c0e3a9f6033ef5f:outcome:Pointer1792169221668_USER_96",
+                "version": "1"
+              }
+            ],
+            "material_keys": [
+              "mat-worksheet-choice-explanation"
+            ],
+            "shared_materials": [],
+            "citations": [
+              {
+                "resource_id": "wp3:32c2119d5504",
+                "resource_version": "31057b5b35cfcfa5f31ee406f855477a",
+                "document_ids": [
+                  "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:6",
+                  "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:7"
+                ],
+                "supported_claim": "The corpus frames prompt engineering as a trial-and-error process requiring iteration, validation and domain-specific customisation, and notes that model outputs are stochastic and vary by model and domain, supporting a reflective activity in which learners explain their own prompt choices in qualified language and inspect results rather than assuming guaranteed outputs."
+              }
+            ],
+            "intent": "PRACTICE"
+          }
+        ]
+      }
+    ],
+    "materials": [
+      {
+        "key": "mat-practice-move-card",
+        "kind": "OTHER",
+        "title": "Prompt-Move Practice Card – Five labels for recognising prompt parts",
+        "content": "PROMPT-MOVE PRACTICE CARD\n\nNote: The five labels below (INSTRUCTION, PRIMARY CONTENT, EXAMPLE, CUE and TEMPLATE) are an operator adaptation of prompt-construction concepts drawn from the source material used in this workshop. They are not a validated or verbatim source taxonomy.\n\nFor each label you will find: a plain definition, guidance on telling enacted text from mentioned text, and one complete recognition illustration using the fictional business Lark Hill Pottery (declared fictional). The illustrations are invented for this card only and do not appear in the practice transcript.\n\n─────────────────────────────────────\nLABEL 1 – INSTRUCTION\n\nDefinition: A direct statement that tells the AI what action to perform. It names the task.\n\nEnacted vs. mentioned:\n• Enacted: the prompt actually contains the directive — the AI receives it as a task to carry out.\n• Mentioned: someone talks about giving an instruction, or describes what an instruction would say, without the directive itself appearing in the prompt.\n\nRecognition illustration (fictional business: Lark Hill Pottery — fictional):\nEnacted example — a prompt that begins: \"Write a short email from Lark Hill Pottery to Ferndale Schools confirming that their order of twelve ceramic mugs is ready for collection.\" The opening clause \"Write a short email\" is the INSTRUCTION because it directly tells the AI what to do.\nMentioned example — a speaker says: \"We should probably add an instruction telling the AI to write an email.\" No instruction has been placed in a prompt; the speaker is only talking about adding one.\n\n─────────────────────────────────────\nLABEL 2 – PRIMARY CONTENT\n\nDefinition: The specific information the AI needs to act on — the subject matter or data that the instruction applies to.\n\nEnacted vs. mentioned:\n• Enacted: the details are actually supplied in the prompt (customer name, order reference, amount, date, etc.).\n• Mentioned: someone refers to the idea of supplying details without actually providing them in the prompt.\n\nRecognition illustration (fictional business: Lark Hill Pottery — fictional):\nEnacted example — continuing the prompt above: \"…confirming that their order of twelve ceramic mugs (order ref LHP-088, fictional) is ready for collection on 3 July (fictional).\" The order reference, quantity, and date are PRIMARY CONTENT because they are the specific data the AI needs.\nMentioned example — a speaker says: \"We'll need to put in the order number and the collection date.\" The details have not yet been placed in the prompt; they are being discussed, not enacted.\n\n─────────────────────────────────────\nLABEL 3 – EXAMPLE\n\nDefinition: One or more sample inputs and outputs (or sample outputs alone) included in the prompt to show the AI the desired pattern. Supplying one example is called one-shot prompting; supplying more than one is called few-shot prompting. Supplying no examples is called zero-shot prompting.\n\nEnacted vs. mentioned:\n• Enacted: an actual sample is placed inside the prompt for the AI to learn from.\n• Mentioned: someone talks about using an example or describes what an example might look like, without including one in the prompt.\n\nRecognition illustration (fictional business: Lark Hill Pottery — fictional):\nEnacted example — a prompt that includes: \"Here is a sample confirmation email we sent last month: 'Dear Ridgeway Café (fictional), your order of six espresso cups (ref LHP-071, fictional) is ready. Please collect by 10 June (fictional). Kind regards, Lark Hill Pottery (fictional).' Now write a similar email for Ferndale Schools (fictional) about order LHP-088 (fictional).\" The included sample email enacts EXAMPLE (one-shot). The prompt is zero-shot if no sample is included.\nMentioned example — a speaker says: \"We could paste in one of our old emails as an example.\" No sample has been added to the prompt; the idea is only being discussed.\n\n─────────────────────────────────────\nLABEL 4 – CUE\n\nDefinition: A leading word, phrase or partial sentence placed at the end of the prompt to nudge the AI toward a desired response format or opening.\n\nEnacted vs. mentioned:\n• Enacted: the opening fragment actually appears at the end of the prompt text, ready for the AI to continue from.\n• Mentioned: someone describes the idea of adding a cue without placing one in the prompt.\n\nRecognition illustration (fictional business: Lark Hill Pottery — fictional):\nEnacted example — a prompt that ends with: \"Dear Ferndale Schools (fictional),\" placed as the final line. This enacts a CUE because the AI is expected to continue from that opening.\nMentioned example — a speaker says: \"You could end the prompt with 'Dear Ferndale Schools,' to get it started.\" The phrase has not been placed in the prompt; it is being suggested, not enacted.\n\n─────────────────────────────────────\nLABEL 5 – TEMPLATE\n\nDefinition: A reusable prompt structure containing clearly identified variable slots (placeholders) that can be replaced with specific data for different uses.\n\nEnacted vs. mentioned:\n• Enacted: the prompt itself contains bracketed or labelled slots intended to be filled in.\n• Mentioned: someone talks about creating or using a template without the placeholder structure appearing in the prompt.\n\nA TEMPLATE illustration may contain clearly identified variable slots:\nEnacted example — a prompt that reads: \"Write a short collection-ready email from Lark Hill Pottery (fictional) to [CUSTOMER NAME] confirming that order [ORDER REF] for [ITEM DESCRIPTION] is ready for collection on [COLLECTION DATE]. Keep the tone friendly and professional.\" The bracketed slots [CUSTOMER NAME], [ORDER REF], [ITEM DESCRIPTION] and [COLLECTION DATE] enact a TEMPLATE because they are placeholders for variable data.\nMentioned example — a speaker says: \"It would be useful to have a template we could reuse for every collection notice.\" No placeholder structure has been created; the idea is only being discussed.\n\n─────────────────────────────────────\nRemember:\n• A label is ENACTED when the prompt actually performs it.\n• A label is MENTIONED when someone talks about it without performing it in the prompt.\n• A label is ABSENT if it does not appear at all — neither enacted nor mentioned.\n\nZero-shot means no examples are supplied. One-shot means one example is supplied. Few-shot means more than one example is supplied.",
+        "citations": [
+          {
+            "resource_id": "wp3:32c2119d5504",
+            "resource_version": "31057b5b35cfcfa5f31ee406f855477a",
+            "document_ids": [
+              "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3",
+              "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:4",
+              "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:7"
+            ],
+            "supported_claim": "The corpus defines prompt construction as instruction plus primary content, describes examples (zero-shot, one-shot, few-shot), cues and templates as distinct prompt-construction moves, and recommends being descriptive and using examples; these concepts underpin the five labels on this practice card. The zero-shot/one-shot/few-shot distinction is explicitly drawn in excerpt 4 and excerpt 7."
+          }
+        ]
+      },
+      {
+        "key": "mat-practice-annotation-transcript",
+        "kind": "TRANSCRIPT",
+        "title": "Practice Annotation Transcript – Juniper Garden Centre scenario",
+        "content": "PRACTICE ANNOTATION TRANSCRIPT\n\nNotice: This is a fictional practice transcript written for this workshop. Juniper Garden Centre, Northgate Dental Practice, quote PR-112, the amount EUR 128.50 and the date 21 June are all fictional. It does not record a real conversation, a real business or any use of an AI tool, and no tool output is shown.\n\n1. Participant: I started a prompt at home. Here it is: \"Juniper Garden Centre needs to reply to Northgate Dental Practice about the plant-care visit they asked about.\"\n2. Adviser: Thanks. Who reads the message in the end?\n3. Participant: The office manager at Northgate Dental Practice. They asked us for a price last week.\n4. Adviser: What do they need to know from us?\n5. Participant: The quote number, PR-112, the price, EUR 128.50, and that the visit would be on 21 June.\n6. Adviser: Let's put that in. Try this: \"Write a short email from Juniper Garden Centre to Northgate Dental Practice about quote PR-112: a plant-care visit on 21 June for EUR 128.50.\"\n7. Participant: Should it ask them to reply?\n8. Adviser: Yes, add that. \"Write a short email from Juniper Garden Centre to Northgate Dental Practice about quote PR-112: a plant-care visit on 21 June for EUR 128.50. Ask them to reply to this email if they want to book the visit.\"\n9. Participant: Last month someone in the shop wrote a lovely reply to a different customer. Could we paste that in so the new email sounds similar?\n10. Adviser: We could look at that another day. It isn't in front of us now.\n11. Participant: All right. Can we put \"Dear Northgate Dental Practice,\" at the very end of the prompt?\n12. Adviser: Let's try it. New version: \"Write a short email from Juniper Garden Centre to Northgate Dental Practice about quote PR-112: a plant-care visit on 21 June for EUR 128.50. Ask them to reply to this email if they want to book the visit. Dear Northgate Dental Practice,\"\n13. Participant: We send quotes like this every week. Could we keep a copy with blank spaces for the customer, the quote number, the price and the date?\n14. Adviser: We can set one up later. For today we'll stay with this customer.\n15. Participant: Should the email say that the visit is in the morning?\n16. Adviser: Do we know that it is?\n17. Participant: No, the quote doesn't say.\n18. Adviser: Then let's leave it out and keep only what the quote says.\n19. Participant: Shall I copy the prompt onto the worksheet?\n20. Adviser: Yes, please. Copy it exactly as it is.",
+        "citations": [
+          {
+            "resource_id": "wp3:32c2119d5504",
+            "resource_version": "31057b5b35cfcfa5f31ee406f855477a",
+            "document_ids": [
+              "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3",
+              "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:4"
+            ],
+            "supported_claim": "The corpus describes prompt construction as instruction plus primary content, and describes cues, examples and templates as distinct prompt moves; this operator-authored fictional transcript is supplied as a practice stimulus for learners to annotate those moves, and is cited here for the prompt-construction concepts it is designed to exercise."
+          }
+        ]
+      },
+      {
+        "key": "mat-worksheet-annotation",
+        "kind": "WORKSHEET",
+        "title": "Annotation Practice Worksheet",
+        "content": "ANNOTATION PRACTICE WORKSHEET\n\nThis worksheet is for use with the Prompt-Move Practice Card (\"Prompt-Move Practice Card – Five labels for recognising prompt parts\") and the Practice Annotation Transcript (\"Practice Annotation Transcript – Juniper Garden Centre scenario\").\n\nAll details in the transcript (Juniper Garden Centre, Northgate Dental Practice, quote PR-112, EUR 128.50, 21 June) are fictional.\n\n─────────────────────────────────────\nPART A – ANNOTATION TABLE\n\nWork through the transcript together. For each of the five labels on the card, find the line or lines where it is relevant and complete one row. Use the Label column to write ENACTED, MENTIONED or ABSENT. In the Quoted text column, copy the exact words from the transcript that support your decision. If a label is ABSENT, write ABSENT in the Label column and leave the Quoted text column blank.\n\n┌──────────────────┬─────────┬───────┬──────────────────────────────────────────┐\n│ Label            │ Line(s) │ Label │ Quoted text from transcript              │\n│                  │         │ (ENACTED /│                                     │\n│                  │         │ MENTIONED /│                                    │\n│                  │         │ ABSENT)│                                         │\n├──────────────────┼─────────┼───────┼──────────────────────────────────────────┤\n│ INSTRUCTION      │         │       │                                          │\n├──────────────────┼─────────┼───────┼──────────────────────────────────────────┤\n│ PRIMARY CONTENT  │         │       │                                          │\n├──────────────────┼─────────┼───────┼──────────────────────────────────────────┤\n│ EXAMPLE          │         │       │                                          │\n├──────────────────┼─────────┼───────┼──────────────────────────────────────────┤\n│ CUE              │         │       │                                          │\n├──────────────────┼─────────┼───────┼──────────────────────────────────────────┤\n│ TEMPLATE         │         │       │                                          │\n└──────────────────┴─────────┴───────┴──────────────────────────────────────────┘\n\n─────────────────────────────────────\nPART B – INDIVIDUAL CONTRIBUTION NOTES\n\nEach partner completes their own box below. Write your name, the line numbers you personally led on, and a brief reason for each label you proposed.\n\nPartner A – Name: ___________________________\n\nLines I led on and my reasoning:\n\n[Write here]\n\n─────────────────────────────────────\n\nPartner B – Name: ___________________________\n\nLines I led on and my reasoning:\n\n[Write here]\n\n─────────────────────────────────────\nPART C – AGREEMENT CHECK\n\nDid your pair agree on all labels throughout, or did a disagreement arise?\n\nIf you agreed throughout: Write one sentence explaining how you checked your agreement using the transcript and the card.\n\n[Write here]\n\nIf a disagreement arose: Describe what you disagreed about and how you resolved it.\n\n[Write here]\n\n─────────────────────────────────────\nPART D – ABSENT OR MENTIONED LABELS\n\nWhich of the five labels did your pair find absent or only mentioned (never enacted) in this transcript? List them and give a brief reason.\n\n[Write here]",
+        "citations": [
+          {
+            "resource_id": "wp3:32c2119d5504",
+            "resource_version": "31057b5b35cfcfa5f31ee406f855477a",
+            "document_ids": [
+              "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3",
+              "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:4"
+            ],
+            "supported_claim": "The corpus decomposes prompts into instruction, primary content, examples, cues and templates; this worksheet structures a paired annotation exercise around those five moves, requiring learners to quote transcript evidence and distinguish enacted from mentioned instances."
+          }
+        ]
+      },
+      {
+        "key": "mat-worksheet-construction",
+        "kind": "WORKSHEET",
+        "title": "Prompt Construction Worksheet – Willowmere Bike Repairs scenario",
+        "content": "PROMPT CONSTRUCTION WORKSHEET\n\nFictional scenario notice: All details below are fictional and invented for this workshop. Willowmere Bike Repairs, Ashby Florists, order ORD-305, the items, the dates and all other details are fictional. Do not use real customer names, real order numbers or real business details in this worksheet.\n\n─────────────────────────────────────\nSCENARIO (all details fictional)\n\nFictional business: Willowmere Bike Repairs — a small bicycle repair and parts shop.\nFictional customer: Ashby Florists — a local florist who ordered two cargo-bike tyres for their delivery bicycle.\nFictional order: ORD-305 — two cargo-bike tyres.\nOriginal agreed delivery date (fictional): 17 June.\nNew delivery date (fictional): 24 June — the tyres have been delayed by the supplier.\n\nYour task: Draft a prompt that would ask an AI tool to write a short message from Willowmere Bike Repairs to Ashby Florists letting them know about the delay.\n\n─────────────────────────────────────\nSTEP 1 – WRITE YOUR TASK DIRECTIVE (INSTRUCTION)\n\nWrite one sentence that tells the AI what to write. Start with a verb such as \"Write\" or \"Draft\".\n\nYour task directive:\n\n[Write here]\n\n─────────────────────────────────────\nSTEP 2 – LIST THE DETAILS THE AI NEEDS (PRIMARY CONTENT)\n\nLook at the scenario above. Which specific details does the AI need to write the message? List them here before you put them into the prompt.\n\nDetails to include:\n• Sender (fictional business name): ___________________________\n• Recipient (fictional customer name): ___________________________\n• Order reference (fictional): ___________________________\n• What was ordered (fictional): ___________________________\n• Original date (fictional): ___________________________\n• New date (fictional): ___________________________\n• Any other detail you want to include: ___________________________\n\n─────────────────────────────────────\nSTEP 3 – DRAFT YOUR PROMPT\n\nCombine your task directive and the details above into a single prompt in the drafting frame below. Write the prompt as you would give it to an AI tool.\n\nChoose one of the following two options for your fictional-data declaration and apply it consistently:\n\nOption A – Add one explicit statement at the start or end of your prompt: for example, \"All business and customer details in this prompt are fictional.\"\n\nOption B – Attach a visible fictional label to every individual detail as you write it: for example, \"Willowmere Bike Repairs (fictional)\" and \"Ashby Florists (fictional)\" and \"ORD-305 (fictional)\".\n\nYou must use Option A or Option B. Do not mix unlabelled details with a partial declaration.\n\nDRAFTING FRAME:\n\n[Write your complete prompt here]\n\n─────────────────────────────────────\nSTEP 4 – SELF-CHECK\n\nBefore you finish, tick each box:\n\n☐ My prompt contains a clear task directive (INSTRUCTION) — a sentence telling the AI what to write.\n☐ My prompt includes the specific fictional details the AI needs (PRIMARY CONTENT): sender, recipient, order reference, items, original date and new date.\n☐ I have used Option A or Option B for my fictional-data declaration, and it covers all details in my prompt.\n☐ I have not included any real customer names, real order numbers or real business details.\n☐ I have not tried to run the prompt through an AI tool — the prompt text itself is the output of this exercise.\n\n─────────────────────────────────────\nNote: You are writing the prompt only. No AI tool is run during this exercise and no generated output is required or expected. Results from AI tools can vary depending on the model, the context and other factors; any output would need to be inspected before use.",
+        "citations": [
+          {
+            "resource_id": "wp3:32c2119d5504",
+            "resource_version": "31057b5b35cfcfa5f31ee406f855477a",
+            "document_ids": [
+              "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:3",
+              "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:4",
+              "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:6"
+            ],
+            "supported_claim": "The corpus describes prompt construction as instruction plus primary content, and describes templates with placeholders as reusable prompt structures supporting consistent outputs; this worksheet guides learners to draft a first prompt by combining a task directive with specific fictional primary content, following those construction principles."
+          }
+        ]
+      },
+      {
+        "key": "mat-worksheet-choice-explanation",
+        "kind": "WORKSHEET",
+        "title": "Prompt Choice Explanation Worksheet",
+        "content": "PROMPT CHOICE EXPLANATION WORKSHEET\n\nThis worksheet asks you to look back at the prompt you drafted on the Prompt Construction Worksheet (\"Prompt Construction Worksheet – Willowmere Bike Repairs scenario\") and explain two choices you made when writing it.\n\nAll fictional details from the construction worksheet remain fictional here. Do not introduce real customer names, real order numbers or real business details.\n\n─────────────────────────────────────\nPART A – YOUR PROMPT\n\nCopy the full text of the prompt you drafted on the Prompt Construction Worksheet into the box below.\n\nYour prompt:\n\n[Copy your prompt here]\n\n─────────────────────────────────────\nPART B – TWO CHOICES\n\nLook at your prompt and pick two distinct decisions you made when writing it. A choice might be:\n• a word or phrase you selected\n• a detail you included or left out\n• the order in which you arranged information\n• the level of specificity you used\n• whether you added a tone instruction or left the tone open\n\nFor each choice, complete the two boxes below.\n\n─────────────────────────────────────\nCHOICE 1\n\n(a) What is the choice? Quote or point to the exact wording in your prompt where this choice appears.\n\n[Write here]\n\n(b) Why did you make it? What were you trying to achieve or avoid? Describe possible effects in qualified language — for example, \"I thought this might help the AI…\" or \"I wanted to reduce the chance of…\" — rather than claiming the choice guarantees a particular result. Outputs can vary depending on the model, the context and other factors, so any result would need to be inspected.\n\n[Write here]\n\n─────────────────────────────────────\nCHOICE 2\n\n(a) What is the choice? Quote or point to the exact wording in your prompt where this choice appears.\n\n[Write here]\n\n(b) Why did you make it? What were you trying to achieve or avoid? Use qualified language as above.\n\n[Write here]\n\n─────────────────────────────────────\nPART C – PARTNER QUESTIONS\n\nSwap worksheets with your partner. Read their prompt and their two explanations. Write one question about each of their choices in the spaces below. Return the worksheet so they can read your questions.\n\nQuestion about your partner's Choice 1:\n\n[Write here]\n\nQuestion about your partner's Choice 2:\n\n[Write here]\n\n─────────────────────────────────────\nNote: You are not required to run your prompt through any AI tool. This exercise is about reflecting on the decisions you made when writing the prompt. No output is required or expected. If you were to run the prompt, results could vary depending on the model, the context and other factors; any output would need to be inspected before use.",
+        "citations": [
+          {
+            "resource_id": "wp3:32c2119d5504",
+            "resource_version": "31057b5b35cfcfa5f31ee406f855477a",
+            "document_ids": [
+              "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:6",
+              "wp3:32c2119d5504:31057b5b35cfcfa5f31ee406f855477a:7"
+            ],
+            "supported_claim": "The corpus frames prompt engineering as a trial-and-error process requiring iteration and validation, notes that models are stochastic by nature and that outputs vary by model and domain, and recommends domain-specific customisation; this worksheet supports learners in reflecting on and explaining their own prompt choices in qualified language consistent with those principles."
+          }
+        ]
+      }
+    ],
+    "gaps": [
+      "No formal assessment, rubric or passing threshold is specified in the source; this trainer draft proposes unvalidated PRACTICE items for human review only. No score, acquisition rule or completion claim is made.",
+      "No workshop duration beyond the source constraint 'One evening workshop' is invented; no timing is added to units.",
+      "Corpus resources wp3:12ce471a0269 (grades 6–12 critical AI literacy) and wp3:4868ba8731b3 (AI in educational measurement) are not used as citations because they do not validate transfer to adult SME business learners and do not supply a SCN01 rubric or thresholds.",
+      "Notebook/API setup and illustrative lengths from corpus excerpts are not SCN01 requirements and are not imported into any item or material.",
+      "Source competency values are preserved without normalization: category DIGITAL, heRelevance HIGH, smeRelevance HIGH, vetRelevance HIGH are flagged as ENUM_VALUE mismatches; ksa SKILL and proficiency FOUNDATION are flagged as UNTYPED_VOCABULARY_VALUE mismatches. These are not repaired.",
+      "The GENERATED_CONTRACT missing-resources cardinality finding on LearningTarget_0 (Pointer1792169221668_USER_96) is left unrepaired.",
+      "The five-label taxonomy (INSTRUCTION, PRIMARY CONTENT, EXAMPLE, CUE, TEMPLATE) on the practice card is an operator adaptation of source concepts, not a validated or verbatim source taxonomy, as stated on the card itself.",
+      "All fictional details used in practice materials (Lark Hill Pottery, Willowmere Bike Repairs, Ashby Florists, ORD-305, Juniper Garden Centre, Northgate Dental Practice, PR-112, EUR 128.50, 21 June) are declared fictional within their respective materials. No approved assessment case facts (Greenleaf Office Supplies, Hartwell Catering Ltd, Invoice #4021, Sunrise Bakery Supplies, Moorfield Events Ltd, Invoice #B-077) or approved Teacher demonstration facts (Stonebrook Tools, Harbor Workshop, DEMO-A-204, Cobalt Print Studio, Elm Conference Services, DEMO-P-317) are used in any practice material.",
+      "Whether details in a learner's drafted prompt are genuinely fictional cannot be determined from appearance alone; only the presence and scope of a visible declaration or labelling is assessable. This limitation is retained explicitly.",
+      "The practice transcript (mat-practice-annotation-transcript) reproduces the operator-supplied text exactly as provided between the BEGIN SUPPLIED TRANSCRIPT and END SUPPLIED TRANSCRIPT markers, without annotation, hints or labels indicating which lines show which labels. No other material explains, hints at or summarises which transcript lines show which labels.",
+      "Shared_materials is empty for all items: no Teacher content was supplied or approved for sharing in this task.",
+      "Practice is formative rehearsal only. No scores, marks, passing rules, grading, evidence collection for evaluation or claims of acquisition, verification or completion are made or implied."
+    ]
+  }
+}

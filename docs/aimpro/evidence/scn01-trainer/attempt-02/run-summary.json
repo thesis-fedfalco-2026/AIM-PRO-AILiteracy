@@ -1,0 +1,23 @@
+{
+  "kind": "FAILURE",
+  "seconds": 169.517,
+  "phases": [
+    "TRAINER"
+  ],
+  "llm_call_count": 1,
+  "provider": "Anthropic",
+  "model": "claude-sonnet-4-6",
+  "estimated_list_price_usd": 0.512825,
+  "known_cost_estimate_usd": 0.512825,
+  "usage_cost_complete": true,
+  "cost_is_usage_estimate_not_provider_invoice": true,
+  "replay_exact_without_models": true,
+  "context_unchanged": true,
+  "human_decisions": 6,
+  "state_changes": 4,
+  "new_human_decisions": 0,
+  "original_curator_files_unchanged": true,
+  "fresh_retrieval": 0,
+  "sqlite_integrity": "ok",
+  "trainer_approval_or_application_performed": false
+}
