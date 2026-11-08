@@ -1,0 +1,20 @@
+--- second/packet_support.py
++++ third/packet_support.py
+@@ -5,7 +5,7 @@
+ DIRECTORY=Path(__file__).resolve().parent
+ CONTEXT='scn01-selected-syllabus-2'
+ SUBJECT='syllabus-author'
+-REQUEST='scn01-trainer-02'
++REQUEST='scn01-trainer-03'
+ MODEL='claude-sonnet-4-6'
+ CARD,TRANSCRIPT,ANNOTATION,CONSTRUCTION,CHOICE=('mat-practice-move-card','mat-practice-annotation-transcript','mat-worksheet-annotation','mat-worksheet-construction','mat-worksheet-choice-explanation')
+ MATERIALS={CARD:'OTHER',TRANSCRIPT:'TRANSCRIPT',ANNOTATION:'WORKSHEET',CONSTRUCTION:'WORKSHEET',CHOICE:'WORKSHEET'}
+@@ -13,7 +13,7 @@
+ FACTS={TRANSCRIPT:('Juniper Garden Centre','Northgate Dental Practice','PR-112','EUR 128.50','21 June'),CONSTRUCTION:('Willowmere Bike Repairs','Ashby Florists','ORD-305','17 June','24 June'),CARD:('Lark Hill Pottery',)}
+ # Approved assessment and applied Teacher case facts; practice uses distinct fictional cases.
+ EXCLUDED=('Greenleaf','Hartwell','4021','Sunrise Bakery','Moorfield','B-077','Stonebrook','Harbor Workshop','DEMO-A-204','Cobalt Print','Elm Conference','DEMO-P-317')
+-LABEL_TERMS=re.compile(r'\b(instructions?|primary content|examples?|cues?|templates?|zero-shot|one-shot|few-shot|enact\w*|mention\w*)\b',re.I)
++LABEL_TERMS=re.compile(r'\b(instructions?|primary content|examples?|cues?|templates?|directives?|case details|techniques?|[a-z]+-shot|enact\w*|mention\w*)\b',re.I)
+ KEY_IN_TEXT=re.compile(r'\bmat-[a-z]')
+ PLACEHOLDER=re.compile(r'sample text|lorem ipsum|\bTBD\b',re.I)
+ def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()

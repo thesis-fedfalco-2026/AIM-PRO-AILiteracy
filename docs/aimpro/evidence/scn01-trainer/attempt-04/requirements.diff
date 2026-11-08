@@ -1,0 +1,34 @@
+--- third/trainer-requirements
++++ fourth/trainer-requirements
+@@ -7 +7 @@
+-TRANSCRIPT: mat-practice-annotation-transcript is an unannotated practice stimulus: a fictional conversation of at least fourteen numbered lines (1., 2., ...) between an adviser and a participant who revise a prompt for fictional Juniper Garden Centre to send to fictional customer Northgate Dental Practice about quote PR-112 for EUR 128.50 for a plant-care visit on 21 June. Declare all these values fictional in an opening notice. Write it independently, never as a paraphrase or re-ordering of the approved assessment annotation transcript: do not start from a bare one-sentence request, do not follow its sequence of moves, and share no sequence of eight or more words with any approved assessment stimulus (the host rejects this). Begin from the participant's own partial draft that already contains some case details, then revise it in an order of your choosing. Quoted prompt text in some lines must actually supply a task directive, the specific case details and an output cue; other lines must only discuss adding a sample message or a reusable structure with slots, without supplying one, so learners can tell text given to the tool from talk about it. SPEECH RULES: speakers only propose a change, apply it in a quoted revised prompt, ask a question, or answer a factual question about the fictional case. Nobody explains what a part of the prompt does or is for, names a technique or a prompt part, compares versions, or recaps or summarises the prompt; learners must work out the moves themselves. The notice and speech must not use the words instruction, primary content, example (say "for instance" if needed), cue, template, directive, case details, technique, zero-shot, one-shot, few-shot or any other "-shot" term, enacted or mentioned, or give any label, classification, hint or commentary that tells learners which move a line shows. Avoid absolute claims such as "relies entirely" or "always". No AI tool is run and no tool output is shown.
++TRANSCRIPT: mat-practice-annotation-transcript is an operator-authored, unannotated practice stimulus supplied with this packet for owner approval. Its content must be exactly the text between the lines BEGIN SUPPLIED TRANSCRIPT and END SUPPLIED TRANSCRIPT below, without those two lines, reproduced character for character: do not add, remove, reword, renumber, annotate or comment on anything (the host compares the text after normalising whitespace and quotation marks). Give it a plain title and cite it with exact retained resource/version/document ids that support prompt construction. No other material may explain, hint at or summarise which transcript lines show which labels.
+BEGIN SUPPLIED TRANSCRIPT
+PRACTICE ANNOTATION TRANSCRIPT
+
+Notice: This is a fictional practice transcript written for this workshop. Juniper Garden Centre, Northgate Dental Practice, quote PR-112, the amount EUR 128.50 and the date 21 June are all fictional. It does not record a real conversation, a real business or any use of an AI tool, and no tool output is shown.
+
+1. Participant: I started a prompt at home. Here it is: "Juniper Garden Centre needs to reply to Northgate Dental Practice about the plant-care visit they asked about."
+2. Adviser: Thanks. Who reads the message in the end?
+3. Participant: The office manager at Northgate Dental Practice. They asked us for a price last week.
+4. Adviser: What do they need to know from us?
+5. Participant: The quote number, PR-112, the price, EUR 128.50, and that the visit would be on 21 June.
+6. Adviser: Let's put that in. Try this: "Write a short email from Juniper Garden Centre to Northgate Dental Practice about quote PR-112: a plant-care visit on 21 June for EUR 128.50."
+7. Participant: Should it ask them to reply?
+8. Adviser: Yes, add that. "Write a short email from Juniper Garden Centre to Northgate Dental Practice about quote PR-112: a plant-care visit on 21 June for EUR 128.50. Ask them to reply to this email if they want to book the visit."
+9. Participant: Last month someone in the shop wrote a lovely reply to a different customer. Could we paste that in so the new email sounds similar?
+10. Adviser: We could look at that another day. It isn't in front of us now.
+11. Participant: All right. Can we put "Dear Northgate Dental Practice," at the very end of the prompt?
+12. Adviser: Let's try it. New version: "Write a short email from Juniper Garden Centre to Northgate Dental Practice about quote PR-112: a plant-care visit on 21 June for EUR 128.50. Ask them to reply to this email if they want to book the visit. Dear Northgate Dental Practice,"
+13. Participant: We send quotes like this every week. Could we keep a copy with blank spaces for the customer, the quote number, the price and the date?
+14. Adviser: We can set one up later. For today we'll stay with this customer.
+15. Participant: Should the email say that the visit is in the morning?
+16. Adviser: Do we know that it is?
+17. Participant: No, the quote doesn't say.
+18. Adviser: Then let's leave it out and keep only what the quote says.
+19. Participant: Shall I copy the prompt onto the worksheet?
+20. Adviser: Yes, please. Copy it exactly as it is.
+END SUPPLIED TRANSCRIPT
+@@ -17 +17 @@
+-SELF-CHECK: supply all five exact assets and every approved outcome per unit; keep the transcript free of labels and hints; keep worksheets blank where learners write; use only the named fictional facts; preserve epistemic qualifications and fictional-only framing; never silently repair assessment/source content. Before answering, re-read every transcript line: none may contain instruction, primary content, example, cue, template, directive, case details, technique, any "-shot" term, enacted or mentioned, and no line may explain, compare or summarise prompt parts; the host rejects the whole draft otherwise.
++SELF-CHECK: supply all five exact assets and every approved outcome per unit; keep the transcript free of labels and hints; keep worksheets blank where learners write; use only the named fictional facts; preserve epistemic qualifications and fictional-only framing; never silently repair assessment/source content. Before answering, confirm that mat-practice-annotation-transcript reproduces the supplied text exactly and that no material explains, hints at or summarises which transcript lines show which labels.

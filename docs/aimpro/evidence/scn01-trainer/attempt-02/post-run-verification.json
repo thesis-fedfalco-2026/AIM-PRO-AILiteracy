@@ -1,0 +1,34 @@
+{
+  "request_id": "scn01-trainer-02",
+  "result": "FAILURE",
+  "historical_replays_without_models": {
+    "scn01-evaluator-assessments-01": "FAILURE",
+    "scn01-evaluator-assessments-02": "FAILURE",
+    "scn01-evaluator-assessments-03-claude": "FAILURE",
+    "scn01-evaluator-assessments-04-native-json": "PROPOSAL",
+    "scn01-evaluator-assessments-05-revision": "PROPOSAL",
+    "scn01-teacher-01": "PROPOSAL",
+    "scn01-teacher-02-revision": "FAILURE",
+    "scn01-teacher-03-complete-peer": "FAILURE",
+    "scn01-teacher-04-structured": "FAILURE",
+    "scn01-teacher-05-compact-schema": "FAILURE",
+    "scn01-teacher-06-prompt-schema": "FAILURE",
+    "scn01-teacher-07-lead-rereview": "FAILURE",
+    "scn01-teacher-08-lead-shared-materials": "FAILURE",
+    "scn01-teacher-09-regeneration": "FAILURE",
+    "scn01-teacher-10-regeneration": "PROPOSAL",
+    "scn01-trainer-01": "FAILURE",
+    "scn01-trainer-02": "FAILURE"
+  },
+  "counts": {
+    "entities": 209,
+    "requests": 20,
+    "operations": 4
+  },
+  "database_unchanged_by_replay": true,
+  "context_unchanged": true,
+  "new_proposals": 0,
+  "new_human_decisions": 0,
+  "new_state_changes": 0,
+  "trainer_selected": false
+}

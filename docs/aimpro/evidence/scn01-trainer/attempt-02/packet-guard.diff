@@ -1,0 +1,70 @@
+--- first/packet_support.py
++++ second/packet_support.py
+@@ -5,7 +5,7 @@
+ DIRECTORY=Path(__file__).resolve().parent
+ CONTEXT='scn01-selected-syllabus-2'
+ SUBJECT='syllabus-author'
+-REQUEST='scn01-trainer-01'
++REQUEST='scn01-trainer-02'
+ MODEL='claude-sonnet-4-6'
+ CARD,TRANSCRIPT,ANNOTATION,CONSTRUCTION,CHOICE=('mat-practice-move-card','mat-practice-annotation-transcript','mat-worksheet-annotation','mat-worksheet-construction','mat-worksheet-choice-explanation')
+ MATERIALS={CARD:'OTHER',TRANSCRIPT:'TRANSCRIPT',ANNOTATION:'WORKSHEET',CONSTRUCTION:'WORKSHEET',CHOICE:'WORKSHEET'}
+@@ -14,7 +14,7 @@
+ # Approved assessment and applied Teacher case facts; practice uses distinct fictional cases.
+ EXCLUDED=('Greenleaf','Hartwell','4021','Sunrise Bakery','Moorfield','B-077','Stonebrook','Harbor Workshop','DEMO-A-204','Cobalt Print','Elm Conference','DEMO-P-317')
+ LABEL_TERMS=re.compile(r'\b(instructions?|primary content|examples?|cues?|templates?|zero-shot|one-shot|few-shot|enact\w*|mention\w*)\b',re.I)
+-SCORING=re.compile(r'\b(scores?|scored|scoring|marks|marking|grades?|graded|grading|passing|pass mark|assessor)\b',re.I)
++KEY_IN_TEXT=re.compile(r'\bmat-[a-z]')
+ PLACEHOLDER=re.compile(r'sample text|lorem ipsum|\bTBD\b',re.I)
+ def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
+ def write(name,value):(DIRECTORY/name).write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n')
+@@ -33,21 +33,26 @@
+  except Captured:pass
+  assert len(result)==1
+  return result[0]
+-def assessment_lines(data):
+- """Every substantive line of the approved assessment stimuli and instructions."""
+- lines=set()
++def assessment_stimuli(data):
++ """Approved assessment stimulus texts; the prompt-move card may share label definitions."""
+  for a in data.inputs:
+   if a.selection.kind!='ASSESSMENT':continue
+   package=json.loads(a.resource.fields['contentOrLocator'])
+   for unit in package['draft']['units']:
+    for item in unit['items']:
+-    texts=[item['instruction'],*(s['content'] for s in item.get('stimuli',()))]
+-    for text in texts:
++    yield from (s['content'] for s in item.get('stimuli',()) if s['kind']!='PROMPT_MOVE_CARD')
++def assessment_lines(data):
++ """Every substantive line of the approved assessment stimuli other than the card."""
++ lines=set()
++ for text in assessment_stimuli(data):
+      for line in text.splitlines():
+       line=re.sub(r'^\s*\d+\.\s*','',line).strip()
+       line=re.sub(r'^(Adviser|Participant):\s*','',line).strip().strip('"')
+       if len(line)>=30 and not set(line)<=set('─-= '):lines.add(line)
+  return lines
++def grams(text,n=8):
++ words=re.findall(r"[a-z0-9£€#'-]+",text.lower())
++ return {' '.join(words[i:i+n]) for i in range(len(words)-n+1)}
+ def validate_practice_content(data,draft):
+  from aimpro.lead import ReviewError
+  materials={m.key:m for m in draft.materials}
+@@ -61,14 +66,15 @@
+  visible.update({'item:'+u.key:i.instruction for u in draft.units for i in u.items})
+  for name,text in visible.items():
+   if any(v in text for v in EXCLUDED):raise ReviewError('Assessment or Teacher case fact reused in '+name)
+-  if any(line in text for line in assessment_lines(data)):raise ReviewError('Approved assessment text reused in '+name)
++  if name!='material:'+CARD and any(line in text for line in assessment_lines(data)):raise ReviewError('Approved assessment text reused in '+name)
+   if PLACEHOLDER.search(text):raise ReviewError('Placeholder content in '+name)
+-  if SCORING.search(text):raise ReviewError('Scoring or assessor language in '+name)
++  if KEY_IN_TEXT.search(text):raise ReviewError('Material key shown to learners in '+name)
+  for key,facts in FACTS.items():
+   if not all(f in materials[key].content for f in facts):raise ReviewError('Exact fictional practice facts missing in '+key)
+  transcript=materials[TRANSCRIPT].content
+  if len(re.findall(r'^\s*\d+\.\s+\S',transcript,re.M))<14:raise ReviewError('Practice transcript needs at least fourteen numbered lines')
+  if LABEL_TERMS.search(transcript):raise ReviewError('Practice transcript labels or hints at prompt moves')
++ if grams(transcript)&set().union(*(grams(t) for t in assessment_stimuli(data))):raise ReviewError('Practice transcript shares an eight-word sequence with an approved assessment stimulus')
+  card=materials[CARD].content
+  if not all(label in card for label in ('INSTRUCTION','PRIMARY CONTENT','EXAMPLE','CUE','TEMPLATE')):raise ReviewError('Card lacks the approved label set')
+  if any(f in card for f in FACTS[TRANSCRIPT]+FACTS[CONSTRUCTION]):raise ReviewError('Card reuses practice transcript or scenario facts')

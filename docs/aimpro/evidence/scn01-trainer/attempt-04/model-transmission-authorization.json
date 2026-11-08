@@ -1,0 +1,21 @@
+{
+  "manifest_sha256": "a7863b357c06a7eaa1de7f7f2461c911e07a68e10a93815ab2c1311333ef51ee",
+  "request_id": "scn01-trainer-04",
+  "provider": "Anthropic",
+  "model": "claude-sonnet-4-6",
+  "phases": [
+    "TRAINER",
+    "LEAD_REVIEW"
+  ],
+  "max_http_transmissions_per_phase": 1,
+  "allow_paid": true,
+  "budget_usd": 5,
+  "approved_transcript_sha256": "d3b79ce8bcf8d65fcad3f61db14e61e04e2fa5613281b0e06e5fc31c766d6f38",
+  "explicit_owner_instruction": "I approve the practice transcript d3b79ce8bcf8d65fcad3f61db14e61e04e2fa5613281b0e06e5fc31c766d6f38 and authorize the live transmission of request scn01-trainer-04, manifest a7863b357c06a7eaa1de7f7f2461c911e07a68e10a93815ab2c1311333ef51ee, Anthropic direct claude-sonnet-4-6, one Trainer plus a conditional Lead, no retry, USD 5 budget.",
+  "owner_instruction_original": "Approvo la trascrizione di pratica d3b79ce8bcf8d65fcad3f61db14e61e04e2fa5613281b0e06e5fc31c766d6f38 e autorizzo la trasmissione live della request scn01-trainer-04, manifest a7863b357c06a7eaa1de7f7f2461c911e07a68e10a93815ab2c1311333ef51ee, Anthropic diretto claude-sonnet-4-6, un Trainer più un Lead condizionale, nessun retry, budget USD 5.",
+  "owner_instruction_language": "Italian; English translation retained here",
+  "authorization_context": "Owner sent the exact text after the fourth packet and the full operator-authored practice transcript were presented; the reviewed code equals main f9be116.",
+  "recorded_at_utc": "2026-11-08T11:30:23.079422+00:00",
+  "client_date": "2026-11-08",
+  "scope": "Generation and conditional separate Lead review only. The transcript approval covers the operator-authored practice transcript text supplied to the Trainer. No content approval, application, learner activation or release authorized."
+}

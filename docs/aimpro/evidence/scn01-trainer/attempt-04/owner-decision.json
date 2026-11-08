@@ -1,0 +1,99 @@
+{
+  "recorded_at_utc": "2026-11-08T18:25:22.976604+00:00",
+  "owner_instruction_original": "Approvo la proposal proposal-cbf5b13f7c0940d09930e721b82d158d della request scn01-trainer-04 e ne autorizzo l'applicazione, con i limiti accettati 1–3.",
+  "owner_instruction_english": "I approve proposal proposal-cbf5b13f7c0940d09930e721b82d158d of request scn01-trainer-04 and authorize its application, with accepted limitations 1–3.",
+  "owner_instruction_language": "Italian; English translation retained here",
+  "reviewed_target": {
+    "type": "ChangeProposal",
+    "id": "proposal-cbf5b13f7c0940d09930e721b82d158d",
+    "version": "1"
+  },
+  "review_payload_key": "9aea37f919d2050ae584d36cc43a75c551dd4954c58d66e174ca07db8fdf43ee",
+  "accepted_limitations": [
+    "The annotation worksheet table is malformed: the third header cell breaks the box borders, two columns are both headed \"Label\" (label name and ENACTED/MENTIONED/ABSENT status), and the unit-2 instruction describes rows \"for each line or group of lines\" while the worksheet has one fixed row per label.",
+    "The unit-2 instruction ends with \"before you use it in the assessment task\", explicitly linking the practice to the assessment (no scoring or evidence collection is stated).",
+    "Minor editorial points: the card introduces the TEMPLATE illustration with a different heading from the other labels; the construction worksheet names INSTRUCTION and PRIMARY CONTENT in its step headings (strong scaffolding); the reviewer-facing gaps list the excluded assessment and Teacher case facts by name; the reproduced transcript lacks the final newline of the approved text."
+  ],
+  "decision": {
+    "type": "HumanDecision",
+    "id": "decision-229e9013d84f450d9468d7bf81dd3739",
+    "version": "1",
+    "provenance": {
+      "origin": "HUMAN_DECISION",
+      "sources": [],
+      "responsible": "syllabus-author",
+      "rationale": null
+    },
+    "fields": {
+      "context": {
+        "type": "ExecutionContext",
+        "id": "scn01-selected-syllabus-2",
+        "version": "2d6f0be42c8b4f81b92873e3c33bf017"
+      },
+      "decider": {
+        "type": "Participant",
+        "id": "scn01-selected-syllabus-2:participant:syllabus-author",
+        "version": "1"
+      },
+      "target": {
+        "type": "ChangeProposal",
+        "id": "proposal-cbf5b13f7c0940d09930e721b82d158d",
+        "version": "1"
+      },
+      "decision": "APPROVE",
+      "reason": "Recorded by the assistant on behalf of the repository owner after the attempt-04 result, the separate Lead ACCEPT and a requirement-by-requirement local review of the complete Trainer materials were presented. The owner explicitly instructed: \"I approve proposal proposal-cbf5b13f7c0940d09930e721b82d158d of request scn01-trainer-04 and authorize its application, with accepted limitations 1–3.\" This APPROVE decision covers proposal proposal-cbf5b13f7c0940d09930e721b82d158d@1 and its 26 candidates, reviewed payload key 9aea37f919d2050ae584d36cc43a75c551dd4954c58d66e174ca07db8fdf43ee. Accepted limitations, not fixed: (1) The annotation worksheet table is malformed: the third header cell breaks the box borders, two columns are both headed \"Label\" (label name and ENACTED/MENTIONED/ABSENT status), and the unit-2 instruction describes rows \"for each line or group of lines\" while the worksheet has one fixed row per label. (2) The unit-2 instruction ends with \"before you use it in the assessment task\", explicitly linking the practice to the assessment (no scoring or evidence collection is stated). (3) Minor editorial points: the card introduces the TEMPLATE illustration with a different heading from the other labels; the construction worksheet names INSTRUCTION and PRIMARY CONTENT in its step headings (strong scaffolding); the reviewer-facing gaps list the excluded assessment and Teacher case facts by name; the reproduced transcript lacks the final newline of the approved text. The Lead ACCEPT did not grant this approval. The practice transcript is the operator-authored text the owner approved before transmission. All original outputs, the applied Teacher content and accepted Evaluator limitations remain unchanged. No new model run, source retrieval, release, delivery binding or learning activation is authorized.",
+      "decidedAt": "2026-11-08T18:25:22.751019+00:00",
+      "reviewedPayloadKey": "9aea37f919d2050ae584d36cc43a75c551dd4954c58d66e174ca07db8fdf43ee",
+      "coveredPayloadKeys": [
+        "9aea37f919d2050ae584d36cc43a75c551dd4954c58d66e174ca07db8fdf43ee"
+      ]
+    }
+  },
+  "approved_proposal": {
+    "type": "ChangeProposal",
+    "id": "proposal-cbf5b13f7c0940d09930e721b82d158d",
+    "version": "81d36b1d2a0b4fe096661c870d199dda"
+  },
+  "proposal_after_application": {
+    "type": "ChangeProposal",
+    "id": "proposal-cbf5b13f7c0940d09930e721b82d158d",
+    "version": "44385305f5d442ac802957cc60ed8bc7"
+  },
+  "proposal_status": "APPLIED",
+  "application": {
+    "type": "StateChange",
+    "id": "change-11511da9aa2747d1a1e37ed46d7f74a3",
+    "version": "1",
+    "provenance": {
+      "origin": "HUMAN_DECISION",
+      "sources": [],
+      "responsible": "syllabus-author",
+      "rationale": null
+    },
+    "fields": {
+      "context": {
+        "type": "ExecutionContext",
+        "id": "scn01-selected-syllabus-2",
+        "version": "2d6f0be42c8b4f81b92873e3c33bf017"
+      },
+      "baseVersion": "2d6f0be42c8b4f81b92873e3c33bf017",
+      "newVersion": "3a7c043b6a584bffaf9d87995e5fb92d",
+      "cause": {
+        "type": "ChangeProposal",
+        "id": "proposal-cbf5b13f7c0940d09930e721b82d158d",
+        "version": "81d36b1d2a0b4fe096661c870d199dda"
+      },
+      "authorizationBasis": "{\"id\":\"decision-229e9013d84f450d9468d7bf81dd3739\",\"type\":\"HumanDecision\",\"version\":\"1\"}",
+      "change": "Review the exact TRAINER_CONTENT output and host-composed project revision. {\"contract_findings\":[{\"code\":\"GENERATED_CONTRACT\",\"error\":\"missing\",\"location\":[\"resources\"],\"message\":\"Field required\",\"object_id\":\"Pointer1792169221668_USER_96\"},{\"code\":\"GENERATED_CONTRACT\",\"error\":\"literal_error\",\"location\":[\"category\"],\"message\":\"Input should be 'Digital', 'Green', 'Resilience' or 'Deep tech'\",\"object_id\":\"Pointer1792169354742_USER_109\"},{\"code\":\"GENERATED_CONTRACT\",\"error\":\"literal_error\",\"location\":[\"heRelevance\"],\"message\":\"Input should be 'Low', 'Medium' or 'High'\",\"object_id\":\"Pointer1792169354742_USER_109\"},{\"code\":\"GENERATED_CONTRACT\",\"error\":\"literal_error\",\"location\":[\"smeRelevance\"],\"message\":\"Input should be 'Low', 'Medium' or 'High'\",\"object_id\":\"Pointer1792169354742_USER_109\"},{\"code\":\"GENERATED_CONTRACT\",\"error\":\"literal_error\",\"location\":[\"vetRelevance\"],\"message\":\"Input should be 'Low', 'Medium' or 'High'\",\"object_id\":\"Pointer1792169354742_USER_109\"}],\"generator_gaps\":[\"No formal assessment, rubric or passing threshold is specified in the source; this trainer draft proposes unvalidated PRACTICE items for human review only. No score, acquisition rule or completion claim is made.\",\"No workshop duration beyond the source constraint 'One evening workshop' is invented; no timing is added to units.\",\"Corpus resources wp3:12ce471a0269 (grades 6–12 critical AI literacy) and wp3:4868ba8731b3 (AI in educational measurement) are not used as citations because they do not validate transfer to adult SME business learners and do not supply a SCN01 rubric or thresholds.\",\"Notebook/API setup and illustrative lengths from corpus excerpts are not SCN01 requirements and are not imported into any item or material.\",\"Source competency values are preserved without normalization: category DIGITAL, heRelevance HIGH, smeRelevance HIGH, vetRelevance HIGH are flagged as ENUM_VALUE mismatches; ksa SKILL and proficiency FOUNDATION are flagged as UNTYPED_VOCABULARY_VALUE mismatches. These are not repaired.\",\"The GENERATED_CONTRACT missing-resources cardinality finding on LearningTarget_0 (Pointer1792169221668_USER_96) is left unrepaired.\",\"The five-label taxonomy (INSTRUCTION, PRIMARY CONTENT, EXAMPLE, CUE, TEMPLATE) on the practice card is an operator adaptation of source concepts, not a validated or verbatim source taxonomy, as stated on the card itself.\",\"All fictional details used in practice materials (Lark Hill Pottery, Willowmere Bike Repairs, Ashby Florists, ORD-305, Juniper Garden Centre, Northgate Dental Practice, PR-112, EUR 128.50, 21 June) are declared fictional within their respective materials. No approved assessment case facts (Greenleaf Office Supplies, Hartwell Catering Ltd, Invoice #4021, Sunrise Bakery Supplies, Moorfield Events Ltd, Invoice #B-077) or approved Teacher demonstration facts (Stonebrook Tools, Harbor Workshop, DEMO-A-204, Cobalt Print Studio, Elm Conference Services, DEMO-P-317) are used in any practice material.\",\"Whether details in a learner's drafted prompt are genuinely fictional cannot be determined from appearance alone; only the presence and scope of a visible declaration or labelling is assessable. This limitation is retained explicitly.\",\"The practice transcript (mat-practice-annotation-transcript) reproduces the operator-supplied text exactly as provided between the BEGIN SUPPLIED TRANSCRIPT and END SUPPLIED TRANSCRIPT markers, without annotation, hints or labels indicating which lines show which labels. No other material explains, hints at or summarises which transcript lines show which labels.\",\"Shared_materials is empty for all items: no Teacher content was supplied or approved for sharing in this task.\",\"Practice is formative rehearsal only. No scores, marks, passing rules, grading, evidence collection for evaluation or claims of acquisition, verification or completion are made or implied.\"],\"input_digest\":\"e275ebab0d271b9794b690e014591ef11b38f708e5aeff1e956bdb3632a40a65\",\"source_diagnostics\":[{\"code\":\"CARDINALITY\",\"count\":0,\"field\":\"resources\",\"lower\":1,\"model\":\"SCN01\",\"object_id\":\"Pointer1792169221668_USER_96\",\"object_name\":\"LearningTarget_0\",\"upper\":-1},{\"allowed\":[\"Deep tech\",\"Digital\",\"Green\",\"Resilience\"],\"code\":\"ENUM_VALUE\",\"field\":\"category\",\"model\":\"elena_usecase_competencies\",\"object_id\":\"Pointer1792169354742_USER_109\",\"object_name\":\"D04\",\"value\":\"DIGITAL\"},{\"allowed\":[\"High\",\"Low\",\"Medium\"],\"code\":\"ENUM_VALUE\",\"field\":\"heRelevance\",\"model\":\"elena_usecase_competencies\",\"object_id\":\"Pointer1792169354742_USER_109\",\"object_name\":\"D04\",\"value\":\"HIGH\"},{\"allowed\":[\"High\",\"Low\",\"Medium\"],\"code\":\"ENUM_VALUE\",\"field\":\"smeRelevance\",\"model\":\"elena_usecase_competencies\",\"object_id\":\"Pointer1792169354742_USER_109\",\"object_name\":\"D04\",\"value\":\"HIGH\"},{\"allowed\":[\"High\",\"Low\",\"Medium\"],\"code\":\"ENUM_VALUE\",\"field\":\"vetRelevance\",\"model\":\"elena_usecase_competencies\",\"object_id\":\"Pointer1792169354742_USER_109\",\"object_name\":\"D04\",\"value\":\"HIGH\"},{\"allowed\":[\"Attitude\",\"Knowledge\",\"Skill\"],\"code\":\"UNTYPED_VOCABULARY_VALUE\",\"field\":\"ksa\",\"model\":\"elena_usecase_competencies\",\"object_id\":\"Pointer1792169354742_USER_109\",\"object_name\":\"D04\",\"value\":\"SKILL\"},{\"allowed\":[\"Advanced\",\"Foundational\",\"Intermediate\"],\"code\":\"UNTYPED_VOCABULARY_VALUE\",\"field\":\"proficiency\",\"model\":\"elena_usecase_competencies\",\"object_id\":\"Pointer1792169354742_USER_109\",\"object_name\":\"D04\",\"value\":\"FOUNDATION\"}],\"syllabus_gaps\":[\"No formal assessment, rubric, or passing threshold is specified in the source; this is retained as a gap. No ASSESS unit, score, or acquisition rule is proposed.\",\"No workshop duration beyond the source constraint 'One evening workshop' is invented; no timing is added to units.\",\"Corpus resources wp3:12ce471a0269 (grades 6–12 critical AI literacy) and wp3:4868ba8731b3 (AI in educational measurement) are not used as unit citations because they do not validate transfer to adult SME business learners and do not supply a SCN01 rubric or thresholds.\",\"Notebook/API setup and illustrative lengths from corpus excerpts are not SCN01 requirements and are not imported.\",\"Source competency values are preserved without normalization: category DIGITAL, heRelevance HIGH, smeRelevance HIGH, vetRelevance HIGH, ksa SKILL, proficiency FOUNDATION are flagged in the source diagnostics as enum/untyped-vocabulary mismatches against the allowed vocabularies and are not changed.\"]}",
+      "recordedAt": "2026-11-08T18:25:22.773626+00:00"
+    }
+  },
+  "applied_project": {
+    "type": "Resource",
+    "id": "authoring-project:072a25dbf8a5773756a614ff6af5f82fa6894e9c0017999c75ab7ec50944dbac",
+    "version": "3a7c043b6a584bffaf9d87995e5fb92d"
+  },
+  "trainer_selected": true,
+  "original_candidates_unchanged": true,
+  "further_model_transmission_authorized": false
+}

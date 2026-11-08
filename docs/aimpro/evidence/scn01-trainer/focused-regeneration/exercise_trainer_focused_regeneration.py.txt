@@ -1,0 +1,90 @@
+"""Exercise focused Trainer regeneration after an assessment revision, offline in a disposable copy.
+
+Synthetic workers replay the approved drafts with one marked change; synthetic decisions exist only in the
+copy. Models and network are forbidden and the real applied packet database must stay byte-identical.
+"""
+from pathlib import Path
+import sys,json,socket,shutil,sqlite3,tempfile
+from types import SimpleNamespace
+R=Path.cwd();P=R/'.cache/aimpro-examples/trainer/scn01-trainer-04';sys.path[:0]=[str(R),str(P)]
+from packet_support import CONTEXT,SUBJECT,sha
+def forbidden(*a,**k):raise AssertionError('No models or network during the offline exercise')
+socket.create_connection=forbidden;socket.getaddrinfo=forbidden;socket.socket.connect=forbidden
+from aimpro.generators import GenerationCommand,GenerationVerdict,AssessmentDraft,TrainerDraft
+from learning.generation import resolve_inputs
+from learning.store import LearningStore
+from learning.service import LearningService
+from learning.metamodel import load_contract
+from learning.policies import TrustedPolicy
+MARK=' [SYNTHETIC OFFLINE REVISION - not reviewed content]'
+original_sha=sha(P/'state.sqlite')
+work=Path(tempfile.mkdtemp(prefix='trainer-regeneration-'))
+with sqlite3.connect(P/'state.sqlite') as source,sqlite3.connect(work/'state.sqlite') as copy:source.backup(copy)
+
+def factory(draft):
+ class Dispatcher:
+  def run(self,name,prompt):return draft
+ class Lead:
+  def kickoff(self,prompt,response_format):
+   assert response_format is GenerationVerdict
+   return SimpleNamespace(pydantic=GenerationVerdict(verdict='ACCEPT',source_alignment=True,citation_support=True,intent_correct=True,content_complete=True,reason='Synthetic offline verdict, not a review.'))
+ return lambda:(Dispatcher(),Lead(),None)
+
+def package(store,ref):return json.loads(store.read(ref,owner=CONTEXT).fields['contentOrLocator'])
+def accept(service,store,result,operation):
+ assert result.kind=='PROPOSAL',result
+ ref=result.proposal_refs[0]
+ service.decide(CONTEXT,SUBJECT,ref,'APPROVE','Synthetic approval inside a disposable offline copy; not an owner decision.')
+ current=next(p for p in store.owned(CONTEXT,'ChangeProposal') if p.id==ref.id)
+ service.apply(CONTEXT,SUBJECT,current.ref,operation)
+def selected(view):return {a.key:a.resource for a in view.manifest.artifacts}
+def stale(view):return sorted(f.target for f in view.stale_dependencies)
+
+report={'disposable_copy':True,'model_calls':0,'network':False,'workers':'synthetic replay of approved drafts with one marked change'}
+with LearningStore(work/'state.sqlite') as store:
+ service=LearningService(store,load_contract(),TrustedPolicy.model_validate_json((P/'policy.json').read_text()),forbidden)
+ view=service.inspect_authoring_project(CONTEXT,SUBJECT,'scn01-evaluator')
+ assert not view.stale_dependencies;before=selected(view);report['before']={'stale':[],'selected':{k:v.model_dump() for k,v in before.items()}}
+ # 1. Revise only the assessment (new version of the same slot).
+ old=GenerationCommand.model_validate_json((R/'.cache/aimpro-examples/evaluator/scn01-assessments-5-revision/assessment-command.json').read_text())
+ command=old.model_copy(update={'base_context':store.read_context(CONTEXT).ref,'project':view.project})
+ data,_=resolve_inputs(service,service._context(CONTEXT,SUBJECT),'ASSESSMENT',command)
+ draft=AssessmentDraft.model_validate(package(store,before['assessment'])['draft'])
+ units=list(draft.units);items=list(units[0].items)
+ items[0]=items[0].model_copy(update={'instruction':items[0].instruction+MARK});units[0]=units[0].model_copy(update={'items':tuple(items)})
+ draft=draft.model_copy(update={'input_digest':data.digest,'units':tuple(units)})
+ accept(service,store,service.generate_project_assessments(CONTEXT,SUBJECT,command,request_id='offline-assessment-revision',authoring_factory=factory(draft)),'offline-assessment-revision-apply')
+ view=service.inspect_authoring_project(CONTEXT,SUBJECT,'scn01-evaluator');after=selected(view)
+ assert after['assessment'].id==before['assessment'].id and after['assessment']!=before['assessment']
+ assert {k:after[k] for k in ('source','syllabus','teacher_content','trainer_content')}=={k:before[k] for k in ('source','syllabus','teacher_content','trainer_content')}
+ assert stale(view)==['teacher_content','trainer_content'],stale(view)
+ report['after_assessment_revision']={'stale':stale(view),'assessment':after['assessment'].model_dump(),'unchanged':['source','syllabus','teacher_content','trainer_content']}
+ # 2. Regenerating against the superseded assessment is refused.
+ trainer=GenerationCommand.model_validate_json((P/'trainer-command.json').read_text())
+ stale_command=trainer.model_copy(update={'base_context':store.read_context(CONTEXT).ref,'project':view.project})
+ try:
+  outcome=service.generate_project_trainer(CONTEXT,SUBJECT,stale_command,request_id='offline-trainer-stale-input',authoring_factory=forbidden).kind
+ except ValueError as error:outcome='REFUSED: '+type(error).__name__
+ assert outcome!='PROPOSAL';report['trainer_with_superseded_assessment']=outcome
+ # 3. Focused Trainer regeneration from the new assessment only; Teacher is not touched.
+ command=trainer.model_copy(update={'base_context':store.read_context(CONTEXT).ref,'project':view.project,'assessments':(after['assessment'],)})
+ data,_=resolve_inputs(service,service._context(CONTEXT,SUBJECT),'TRAINER_CONTENT',command)
+ draft=TrainerDraft.model_validate(package(store,before['trainer_content'])['draft'])
+ draft=draft.model_copy(update={'input_digest':data.digest,'gaps':(*draft.gaps,'Synthetic offline regeneration marker.')})
+ accept(service,store,service.generate_project_trainer(CONTEXT,SUBJECT,command,request_id='offline-trainer-regeneration',authoring_factory=factory(draft)),'offline-trainer-regeneration-apply')
+ view=service.inspect_authoring_project(CONTEXT,SUBJECT,'scn01-evaluator');final=selected(view)
+ assert final['trainer_content'].id==before['trainer_content'].id and final['trainer_content']!=before['trainer_content']
+ assert final['teacher_content']==before['teacher_content'] and final['assessment']==after['assessment']
+ assert stale(view)==['teacher_content'],stale(view)
+ trainer_artifact=next(a for a in view.manifest.artifacts if a.key=='trainer_content')
+ assert after['assessment'] in trainer_artifact.depends_on and before['assessment'] not in trainer_artifact.depends_on
+ report['after_focused_trainer_regeneration']={'stale':stale(view),'trainer':final['trainer_content'].model_dump(),'trainer_depends_on':[d.model_dump() for d in trainer_artifact.depends_on],'teacher_unchanged_and_still_stale':True}
+ # Historical approvals stay inspectable; the old Trainer package still exists unchanged.
+ report['historical_trainer_readable']=package(store,before['trainer_content'])['draft']['input_digest']=='e275ebab0d271b9794b690e014591ef11b38f708e5aeff1e956bdb3632a40a65'
+ assert report['historical_trainer_readable']
+ assert all(not store.owned(CONTEXT,t) for t in ('Evaluation','LearningState','ResourceBinding','ActivityOccurrence','Evidence'))
+ report['sqlite_integrity']=store.db.execute('PRAGMA integrity_check').fetchone()[0]
+assert sha(P/'state.sqlite')==original_sha;report['real_packet_database_unchanged']=True
+shutil.rmtree(work);report['disposable_copy_removed']=True
+(R/'.cache/chat06/trainer-focused-regeneration-verification.json').write_text(json.dumps(report,indent=2)+'\n')
+print(json.dumps({k:report[k] for k in ('trainer_with_superseded_assessment','real_packet_database_unchanged')}|{'stale_after_assessment':report['after_assessment_revision']['stale'],'stale_after_trainer':report['after_focused_trainer_regeneration']['stale']},indent=1))

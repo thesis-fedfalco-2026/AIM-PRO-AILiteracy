@@ -1,0 +1,29 @@
+--- third/packet_support.py
++++ fourth/packet_support.py
+@@ -5,7 +5,7 @@
+ DIRECTORY=Path(__file__).resolve().parent
+ CONTEXT='scn01-selected-syllabus-2'
+ SUBJECT='syllabus-author'
+-REQUEST='scn01-trainer-03'
++REQUEST='scn01-trainer-04'
+ MODEL='claude-sonnet-4-6'
+ CARD,TRANSCRIPT,ANNOTATION,CONSTRUCTION,CHOICE=('mat-practice-move-card','mat-practice-annotation-transcript','mat-worksheet-annotation','mat-worksheet-construction','mat-worksheet-choice-explanation')
+ MATERIALS={CARD:'OTHER',TRANSCRIPT:'TRANSCRIPT',ANNOTATION:'WORKSHEET',CONSTRUCTION:'WORKSHEET',CHOICE:'WORKSHEET'}
+@@ -16,6 +16,9 @@
+ LABEL_TERMS=re.compile(r'\b(instructions?|primary content|examples?|cues?|templates?|directives?|case details|techniques?|[a-z]+-shot|enact\w*|mention\w*)\b',re.I)
+ KEY_IN_TEXT=re.compile(r'\bmat-[a-z]')
+ PLACEHOLDER=re.compile(r'sample text|lorem ipsum|\bTBD\b',re.I)
++def normal(text):
++ for a,b in (('\u2019',"'"),('\u2018',"'"),('\u201c','"'),('\u201d','"')):text=text.replace(a,b)
++ return ' '.join(text.split())
+ def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
+ def write(name,value):(DIRECTORY/name).write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n')
+ def render_prompt(variable,data,draft=None):
+@@ -72,6 +75,7 @@
+  for key,facts in FACTS.items():
+   if not all(f in materials[key].content for f in facts):raise ReviewError('Exact fictional practice facts missing in '+key)
+  transcript=materials[TRANSCRIPT].content
++ if normal(transcript)!=normal((DIRECTORY/'practice-transcript-approved.txt').read_text()):raise ReviewError('Practice transcript differs from the approved operator-authored text')
+  if len(re.findall(r'^\s*\d+\.\s+\S',transcript,re.M))<14:raise ReviewError('Practice transcript needs at least fourteen numbered lines')
+  if LABEL_TERMS.search(transcript):raise ReviewError('Practice transcript labels or hints at prompt moves')
+  if grams(transcript)&set().union(*(grams(t) for t in assessment_stimuli(data))):raise ReviewError('Practice transcript shares an eight-word sequence with an approved assessment stimulus')

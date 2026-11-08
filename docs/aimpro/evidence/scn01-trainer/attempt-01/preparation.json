@@ -1,0 +1,87 @@
+{
+  "request_id": "scn01-trainer-01",
+  "manifest_sha256": "838290e0b03b52797a3df3c72f108332e1e2e17ad16346fff09abd573ca8c860",
+  "source_commit": "8d34b09f671370a77417d035d3fd0202baeae97d",
+  "input_digest": "40fc8ee5d4444fd246edb46b334f82b230bec348ff94a3c5849222e7ab369a17",
+  "model": "claude-sonnet-4-6",
+  "provider": "Anthropic direct",
+  "phases": [
+    "TRAINER",
+    "LEAD_REVIEW"
+  ],
+  "max_tokens": {
+    "TRAINER": 16000,
+    "LEAD_REVIEW": 4000
+  },
+  "retry": false,
+  "budget_usd": 5,
+  "prepared_verification": {
+    "request_id": "scn01-trainer-01",
+    "manifest_sha256": "838290e0b03b52797a3df3c72f108332e1e2e17ad16346fff09abd573ca8c860",
+    "source_commit": "8d34b09f671370a77417d035d3fd0202baeae97d",
+    "input_digest": "40fc8ee5d4444fd246edb46b334f82b230bec348ff94a3c5849222e7ab369a17",
+    "context": {
+      "type": "ExecutionContext",
+      "id": "scn01-selected-syllabus-2",
+      "version": "2d6f0be42c8b4f81b92873e3c33bf017"
+    },
+    "project": {
+      "type": "Resource",
+      "id": "authoring-project:072a25dbf8a5773756a614ff6af5f82fa6894e9c0017999c75ab7ec50944dbac",
+      "version": "2d6f0be42c8b4f81b92873e3c33bf017"
+    },
+    "assessment": {
+      "type": "Resource",
+      "id": "authoring-output:3d13c6e5aa4e6fa11af6f967e7c48b4b874b4595eb8da3a45447f36c47a8d2ce",
+      "version": "b1de953080b54c4fac42c1ad5cd3b9fc"
+    },
+    "assessment_approval": {
+      "type": "HumanDecision",
+      "id": "decision-65c412b2d1f74c7f8b9a08fcb24853fc",
+      "version": "1"
+    },
+    "shared_content": [],
+    "approved_review_supplied_to_trainer": false,
+    "current_permissions_receipts_and_freshness_valid": true,
+    "source_sha256": "2c8d3943bcc31227f79bfeb41f84cc761555e36215280397e31a679d4fff2c4c",
+    "source_resources": 3,
+    "retained_excerpts": 7,
+    "target_units": [
+      "unit-2-prompt-move-annotation",
+      "unit-3-first-prompt-construction",
+      "unit-4-prompt-choice-explanation"
+    ],
+    "requests_before_run": 18,
+    "original_prior_archive_unchanged": true,
+    "new_database_unchanged": true,
+    "historical_replays_without_models": {
+      "scn01-evaluator-assessments-01": "FAILURE",
+      "scn01-evaluator-assessments-02": "FAILURE",
+      "scn01-evaluator-assessments-03-claude": "FAILURE",
+      "scn01-evaluator-assessments-04-native-json": "PROPOSAL",
+      "scn01-evaluator-assessments-05-revision": "PROPOSAL",
+      "scn01-teacher-01": "PROPOSAL",
+      "scn01-teacher-02-revision": "FAILURE",
+      "scn01-teacher-03-complete-peer": "FAILURE",
+      "scn01-teacher-04-structured": "FAILURE",
+      "scn01-teacher-05-compact-schema": "FAILURE",
+      "scn01-teacher-06-prompt-schema": "FAILURE",
+      "scn01-teacher-07-lead-rereview": "FAILURE",
+      "scn01-teacher-08-lead-shared-materials": "FAILURE",
+      "scn01-teacher-09-regeneration": "FAILURE",
+      "scn01-teacher-10-regeneration": "PROPOSAL"
+    },
+    "new_requests": 0,
+    "new_human_decisions": 0,
+    "new_applications": 0,
+    "model_transmissions": 0,
+    "live_authorization_present": false,
+    "trainer_selected": false,
+    "release_or_learning_activation": false,
+    "offline_packet_tests": {
+      "passed": 18,
+      "network_forbidden": true,
+      "http_responses_synthetic": true
+    }
+  }
+}

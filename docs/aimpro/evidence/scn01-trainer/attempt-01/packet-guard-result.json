@@ -1,0 +1,6 @@
+{
+  "request_id": "scn01-trainer-01",
+  "recomputed_offline": true,
+  "first_failing_check": "ReviewError: Approved assessment text reused in material:mat-practice-move-card",
+  "note": "The guard stops at its first failing check; later checks are not evaluated."
+}

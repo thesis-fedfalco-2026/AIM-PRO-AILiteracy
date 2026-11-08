@@ -1,0 +1,20 @@
+{
+  "manifest_sha256": "838290e0b03b52797a3df3c72f108332e1e2e17ad16346fff09abd573ca8c860",
+  "request_id": "scn01-trainer-01",
+  "provider": "Anthropic",
+  "model": "claude-sonnet-4-6",
+  "phases": [
+    "TRAINER",
+    "LEAD_REVIEW"
+  ],
+  "max_http_transmissions_per_phase": 1,
+  "allow_paid": true,
+  "budget_usd": 5,
+  "explicit_owner_instruction": "I authorize the live transmission of request scn01-trainer-01, manifest 838290e0b03b52797a3df3c72f108332e1e2e17ad16346fff09abd573ca8c860, Anthropic direct claude-sonnet-4-6, one Trainer plus a conditional Lead, no retry, USD 5 budget.",
+  "owner_instruction_original": "pacchetto ottimo Autorizzo la trasmissione live della request scn01-trainer-01, manifest 838290e0b03b52797a3df3c72f108332e1e2e17ad16346fff09abd573ca8c860, Anthropic diretto claude-sonnet-4-6, un Trainer più un Lead condizionale, nessun retry, budget USD 5.",
+  "owner_instruction_language": "Italian; English translation retained here",
+  "authorization_context": "Owner sent the exact authorization text after the packet was presented in this conversation; PR #68 is merged (f9be116) and the manifest code hashes match main.",
+  "recorded_at_utc": "2026-11-07T17:03:38.510956+00:00",
+  "client_date": "2026-11-07",
+  "scope": "Generation and conditional separate Lead review only. No content approval, application, learner activation or release authorized."
+}
