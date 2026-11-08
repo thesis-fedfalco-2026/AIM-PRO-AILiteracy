@@ -25,7 +25,7 @@ register names roles, not people.
 | 4. Teacher review surface | Owner direction: web app over ALM, pilot approval later | Prototype after R1 | Repository owner; teachers for the pilot |
 | 5. Learner model | Open | No learner state leaves ALM until WP2 agrees | WP2 validates; WP4 authorship assigned through `rik99` |
 | 6. Curated sources | Prototype baseline delivered (#11); maintenance ownership open | Keep the WP3/MCP handoff | Through `rik99` |
-| 7. Release and delivery import | Proposed (Chat 07) | R1: production release/import inside ALM, synthetic tests only | Repository owner (D1–D7) |
+| 7. Release and delivery import | D1–D5 decided (D4 = a); R1 implemented (#71) | Production release/import inside ALM, synthetic tests only | Repository owner (D6, D7 open) |
 
 ## 1. Delivery layer and Offering/AIM-PRO
 
@@ -179,10 +179,13 @@ artifacts, with valid receipts and no stale dependency.
   holds 69 entities.
 - No release has been proposed, and no delivery context, binding or learner
   state exists.
-- Release/import commands are reference-only; the gaps G1–G11 are listed in the
+- At that date release/import commands were reference-only; the gaps G1–G11
+  are listed in the
   [Chat 07 packet](../plans/handoffs/chat-07.md#what-production-releaseimport-still-lacks).
+- R1 (#71) has since closed G1–G6 and the refusal part of G9; see
+  [the release guide](releases.md).
 
-**Proposed choice (R1), for the repository owner.** Implement production
+**Decided choice (R1; D1, 8 November).** Implement production
 `propose-release`, `show-release`, `propose-delivery-import` and
 `propose-activation` inside the ALM service. They must enforce:
 
@@ -196,8 +199,9 @@ artifacts, with valid receipts and no stale dependency.
 R1 is tested on synthetic fixtures only. It needs no AIM-PRO mapping because it
 stays within the accepted #7 sidecar boundary. It does not export to AIM-PRO and
 does not touch SCN01. Real SCN01 release, import, binding and activation steps
-each need a separate owner decision (D7). R1's open sub-choices are D2–D4: the
-manifest format, the permission mechanism and ASSESS handling.
+each need a separate owner decision (D7). The owner decided D2 (manifest format 1),
+D3 (policy preview) and D4 = a (import ASSESS activities; refuse activation
+without a runtime role). R1 is implemented as in [the release guide](releases.md).
 
 ## Evidence limits and issue handling
 
@@ -210,8 +214,8 @@ Dedicated #9/#10 services and CLI are published with synthetic-response tests.
   runs, separate Lead reviews, owner approvals and isolated applications.
 - The approved content is unvalidated with learners, and its accepted
   limitations stand.
-- Production release/import, a runtime assessor adapter and migrations remain
-  pending.
+- Production release/import is implemented (R1, #71). A runtime assessor adapter
+  and migrations remain pending.
 - Existing demo databases and the real unapproved Curator trial are untouched.
 
 Do not tick #29's original checklist merely because the repository contains an

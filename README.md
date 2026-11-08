@@ -8,8 +8,9 @@ The [versioned authoring architecture](docs/architecture/authoring-lifecycle.md)
 defines independently reviewed artifacts, frozen releases and separate delivery
 contexts. Its executable acceptance test uses simulated agents and the existing
 ALM lifecycle. The dedicated Evaluator now has a real source-backed, human-approved
-SCN01 result; Teacher/Trainer live validation and production release/import remain
-separate work.
+SCN01 result. Production release, delivery-import and activation commands are
+described in [the release guide](docs/architecture/releases.md); no SCN01 release
+has been proposed.
 
 Local application for managing an ALM learning context with state and tracking in SQLite. A Lead agent plans tasks, specialized agents produce responses, and code checks permissions, sources and results. Generation uses OpenRouter by default; search uses the WP3 PostgreSQL corpus through MCP, with mock data for synthetic tests and optional Qdrant/TEI retrieval.
 
@@ -78,7 +79,8 @@ for exact input bundles, review and replay. The [SCN01 Evaluator report](docs/ai
 records real source-backed generation, separate Lead review, owner approval and
 isolated production application. Teacher/Trainer scaffolding is covered with
 synthetic responses; #10 still requires its own authorized real workflow.
-Production release/import commands and learner runtime evaluation remain separate.
+Production release/import commands are in [the release guide](docs/architecture/releases.md);
+learner runtime evaluation remains separate.
 
 ## Installation
 

@@ -1,8 +1,9 @@
 """Simulated role adapters for the executable architecture specification.
 
-Only model/retrieval outputs and release/import adapters are fixtures in the
-full cycle. ProductionAuthoring runs the actual dedicated generators. The older
-SimulatedAuthoring definition builders remain for isolated project-bundle tests.
+Only model/retrieval outputs are fixtures in the full cycle. ProductionAuthoring
+runs the actual dedicated generators and the production release, delivery-import
+and activation commands. The older SimulatedAuthoring definition builders remain
+for isolated project-bundle tests.
 """
 
 import json
@@ -11,16 +12,16 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from aimpro.audit import DEFAULT_PROJECT
-from learning.authoring import (ArtifactSelection, prepare_release,
-                                released_entities, review_receipt)
+from learning.authoring import ArtifactSelection, review_receipt
 from learning.projects import ProjectInitialization, ProjectRevision
+from learning.releases import BindingSelection, DeliveryImport, ReleaseCommand
 from learning.context import LearningRequest
 from learning.contracts import EntityRef, entity_data, make_entity
 from learning.decisions import proposal_candidates
 from learning.metamodel import load_contract, validate_entity
 from learning.outputs import Citation, LearningResponse, ProposedChange, SemanticReview, WorkerOutput
 from learning.planning import Capability, LearningPlanDraft, LearningStepDraft
-from learning.policies import TrustedPolicy
+from learning.policies import RuleBinding, TrustedPolicy
 from learning.store import canonical
 from tests.syllabus_fixtures import Curator, Reviewer
 from tests.test_aimpro_retrieval import KEY, response as corpus_response
@@ -29,6 +30,7 @@ from tests.test_aimpro_retrieval import KEY, response as corpus_response
 ROOT = Path(__file__).resolve().parents[1]
 AUTH = 'architecture-authoring'
 DELIVERY = 'architecture-delivery'
+DELIVERY_TWO = 'architecture-delivery-2'
 
 
 def ref(entity):
@@ -45,8 +47,8 @@ def trusted_policy():
         'policy_ref': {'type': 'PolicySet', 'id': 'architecture-policy', 'version': '1'},
         'subjects': {
             'admin': {'roles': ['ADMINISTRATOR', 'CONTENT_RESPONSIBLE', 'ASSESSOR'],
-                'actions': {key: ['read', 'bootstrap', 'propose', 'decide', 'apply', 'interact'] for key in (AUTH, DELIVERY)}},
-            'learner': {'roles': ['LEARNER'], 'actions': {DELIVERY: ['read', 'interact', 'submit']}}},
+                'actions': {key: ['read', 'bootstrap', 'propose', 'decide', 'apply', 'interact'] for key in (AUTH, DELIVERY, DELIVERY_TWO)}},
+            'learner': {'roles': ['LEARNER'], 'actions': {key: ['read', 'interact', 'submit'] for key in (DELIVERY, DELIVERY_TWO)}}},
         'scopes': {
             'wp3': {'contexts': [AUTH], 'subjects': ['admin'], 'sources': ['wp3']},
             'delivery': {'contexts': [DELIVERY], 'subjects': ['admin', 'learner'],
@@ -68,10 +70,11 @@ class SimulatedAuthoring:
     def context(self):
         return self.service._context(AUTH, 'admin')
 
-    def review_and_apply(self, context_id, proposal, operation):
-        self.service.decide(context_id, 'admin', proposal.ref, 'APPROVE',
+    def review_and_apply(self, context_id, proposal, operation, service=None):
+        service = service or self.service
+        service.decide(context_id, 'admin', proposal.ref, 'APPROVE',
             'Explicit synthetic test decision after inspecting the exact candidate payload')
-        return self.service.apply(context_id, 'admin', proposal.ref, operation)
+        return service.apply(context_id, 'admin', proposal.ref, operation)
 
     def curator(self):
         curator, reviewer = Curator(), Reviewer()
@@ -206,51 +209,15 @@ class SimulatedAuthoring:
         return proposal
 
     def release(self, version='1', approve=False):
-        manifest = prepare_release(self.service.store, self.context(), self.project, self.domain.ref)
-        release = entity('Resource', 'course:release', {'title': 'Frozen authoring release',
-            'contentOrLocator': manifest.model_dump_json(), 'topics': [ref(self.topic)],
-            'derivedFrom': [ref(self.project)], 'usageConditions': 'Requires a separate reviewed delivery configuration.'}, version)
-        catalog = entity('DomainModel', 'course:releases', {'name': 'Release catalogue',
-            'scope': 'Reviewed immutable releases.', 'topics': [ref(self.topic)], 'definitions': [ref(release)]}, version)
-        root = self.service.store.read_context(AUTH)
-        updated = entity('ExecutionContext', AUTH, {**root.fields, 'models': [
-            *[m for m in root.fields['models'] if m['id'] != catalog.id], ref(catalog)]}, 'release-' + version)
-        proposal = self.service.propose(AUTH, 'admin', (root.ref,), (release, catalog, updated), 'Publish exact frozen synthetic release')
+        """Propose through the production release command; approve only when asked."""
+        result = self.service.propose_release(AUTH, 'admin', ReleaseCommand(project=self.project.ref,
+            domain=self.domain.ref, base_context=self.service.store.read_context(AUTH).ref),
+            request_id='release-' + version)
+        proposal = self.service.store.read(result.proposal, owner=AUTH)
+        release = next(c for c in proposal_candidates(self.service.store, proposal) if c.ref == result.release)
         if approve:
             self.review_and_apply(AUTH, proposal, 'release-' + version)
         return proposal, release
-
-    def delivery_import(self, release):
-        with self.service.store.db:
-            self.service.store.db.execute('BEGIN')
-            manifest, definitions = released_entities(self.service.store, self.context(), release)
-        self.events.append('DELIVERY_IMPORT')
-        capability = Capability(capability='search_documents', accessPath='ORCHESTRATOR_RETRIEVAL',
-            operations=('read',), scope='delivery', purpose='Use only exact approved teaching resources.')
-        workers = [entity('AgentSpecialization', 'delivery:' + role.lower(), {
-            'registryName': name, 'category': 'TEACHER_TRAINER' if role != 'EVALUATOR' else role,
-            'role': role, 'skills': ['evidence-search'] if role != 'EVALUATOR' else [],
-            'topics': [ref(self.topic)], 'competenceScope': 'Synthetic prompting',
-            'capabilities': [capability.model_dump(mode='json')]})
-            for role, name in [('TEACHER', 'lesson-explainer'), ('TRAINER', 'guided-practice-coach'),
-                               ('EVALUATOR', 'learner-response-evaluator')]]
-        root = self.service.store.read_context(DELIVERY)
-        pinned = {e.id: e for e in definitions}
-        resources = {'course:teacher-source': pinned['course:teacher-text'],
-                     'course:trainer-source': pinned['course:trainer-text'], 'course:assess-source': self.corpus}
-        bindings = [entity('ResourceBinding', 'delivery:binding:' + key, {
-            'context': ref(root), 'resource': ref(resource), 'requirement': ref(pinned[key]),
-            'usageScope': 'delivery', 'valid': True, 'reviewPayloadKey': 'pending'}) for key, resource in resources.items()]
-        runtime_model = entity('DomainModel', 'delivery:configuration', {
-            'name': 'Reviewed delivery settings', 'scope': 'This delivery only.',
-            'topics': [ref(self.topic)], 'definitions': [ref(release), *[ref(w) for w in workers]]})
-        updated = entity('ExecutionContext', DELIVERY, {**root.fields,
-            'models': [manifest.domain.model_dump(), ref(runtime_model)], 'learningDesign': manifest.design.model_dump(),
-            'resourceBindings': [ref(b) for b in bindings]}, 'imported-release-1')
-        proposal = self.service.propose(DELIVERY, 'admin', (root.ref,),
-            (*definitions, release, *workers, *bindings, runtime_model, updated),
-            'Explicitly import frozen release and review new audience-specific bindings; remain PREPARATION/DRAFT')
-        return proposal
 
 
 class ProductionAuthoring(SimulatedAuthoring):
@@ -297,57 +264,74 @@ class ProductionAuthoring(SimulatedAuthoring):
         self.definitions.update({c.id: c for c in saved})
         return proposal
 
-    def delivery_import(self, release):
-        """Reference-only import plus explicit synthetic runtime configuration."""
-        with self.service.store.db:
-            self.service.store.db.execute('BEGIN')
-            manifest, definitions = released_entities(self.service.store, self.context(), release)
-        rules = [entity('RuleDefinition', 'course:' + key, {
-            'purpose': 'Require observed completion of every direct child.',
-            'inputs': ['Direct child statuses'], 'condition': 'all_completed', 'outcome': 'COMPLETED',
-            'unknownBehavior': 'UNKNOWN', 'approvalRequirement': 'Explicit human configuration'})
-            for key in ('phase-rule', 'unit-rule')]
-        pinned = {e.ref: e for e in definitions}
-        original = pinned[manifest.design]
-        phase = pinned[EntityRef.model_validate(original.fields['root'])]
-        units = [pinned[EntityRef.model_validate(r)] for r in phase.fields['children']]
-        configured = [entity('ProcessNode', u.id, {**u.fields, 'completionRule': ref(rules[1])}, 'delivery-1') for u in units]
-        configured_phase = entity('ProcessNode', phase.id, {**phase.fields,
-            'children': [ref(u) for u in configured], 'completionRule': ref(rules[0])}, 'delivery-1')
-        design = entity('LearningDesign', original.id, {**original.fields, 'root': ref(configured_phase)}, 'delivery-1')
-        workers = [entity('AgentSpecialization', 'delivery:' + role.lower(), {
-            'registryName': name, 'category': 'TEACHER_TRAINER' if role != 'EVALUATOR' else role,
-            'role': role, 'skills': ['evidence-search'] if role != 'EVALUATOR' else [],
-            'topics': [ref(self.topic)], 'competenceScope': 'Synthetic prompting',
-            'capabilities': [Capability(capability='search_documents', accessPath='ORCHESTRATOR_RETRIEVAL',
-                operations=('read',), scope='delivery', purpose='Use exact approved resources.').model_dump(mode='json')]})
-            for role, name in [('TEACHER', 'lesson-explainer'), ('TRAINER', 'guided-practice-coach'),
-                               ('EVALUATOR', 'learner-response-evaluator')]]
-        root = self.service.store.read_context(DELIVERY)
-        bindings = []
-        resources = set()
+    def configure_completion(self, version='1'):
+        """Author explicit completion rules in a reviewed project revision.
+
+        Generators never infer completion rules, so a frozen release can only carry
+        them through an explicit operator revision of the composite design.
+        """
+        view = self.service.inspect_authoring_project(AUTH, 'admin', 'synthetic-course')
+        trainer = next(a for a in view.manifest.artifacts if a.kind == 'TRAINER_CONTENT')
+        context = self.context()
+        tag = 'completion-' + version
+        artifact = context.snapshot.get(trainer.resource).model_copy(update={'version': tag})
+        definitions = [context.snapshot.get(r) for r in trainer.definitions]
+        design = context.snapshot.get(view.manifest.design)
+        phase = context.snapshot.get(design.fields['root'])
+        def rule(node, children):
+            return entity('RuleDefinition', 'course:completion:' + node.id, {
+                'purpose': 'Complete this process node only when every direct child is COMPLETED.',
+                'inputs': [r['id'] for r in children], 'condition': 'Every direct child status equals COMPLETED.',
+                'outcome': 'Process completion only; no acquisition, grade or verification.',
+                'unknownBehavior': 'Missing statuses remain UNKNOWN.',
+                'approvalRequirement': 'Explicit human-reviewed configuration'}, tag)
+        rules, units = [], []
+        for unit_ref in phase.fields['children']:
+            unit = context.snapshot.get(unit_ref)
+            rules.append(rule(unit, unit.fields['activities']))
+            units.append(entity('ProcessNode', unit.id, {**unit.fields, 'completionRule': ref(rules[-1])}, tag))
+        rules.append(rule(phase, phase.fields['children']))
+        phase = entity('ProcessNode', phase.id, {**phase.fields, 'children': [ref(u) for u in units],
+                                                  'completionRule': ref(rules[-1])}, tag)
+        design = entity('LearningDesign', design.id, {**design.fields, 'root': ref(phase)}, tag)
+        result = self.service.revise_authoring_project(AUTH, 'admin', ProjectRevision(
+            project=self.project.ref, base_context=self.service.store.read_context(AUTH).ref, design=design.ref,
+            artifacts=(trainer.model_copy(update={'resource': artifact.ref}),),
+            candidates=(artifact, *definitions, *rules, *units, phase, design),
+            explanation='Explicit reviewed completion rules for the composite design; generated content unchanged.'),
+            request_id='completion-' + version)
+        proposal = self.service.store.read(result.proposal, owner=AUTH)
+        saved = proposal_candidates(self.service.store, proposal)
+        self.review_and_apply(AUTH, proposal, 'completion-' + version)
+        self.project = next(c for c in saved if c.ref == result.project)
+        self.domain = next(c for c in saved if c.ref == result.domain)
+        self.design = design
+        self.rules = rules
+        return proposal
+
+    def selections(self, release, scope, omit=()):
+        """Explicit bindings for every pinned requirement, read from the frozen closure."""
+        view = self.service.inspect_release(AUTH, 'admin', release.ref)
+        requirements = {r.id: r for r in view.closure if r.type == 'ResourceRequirement'}
+        pins = {}
         for package in self.packages.values():
             for item in package.items:
-                for requirement_id, resource in item.materials.items():
-                    requirement = next(e for e in definitions if e.id == requirement_id)
-                    bindings.append(entity('ResourceBinding', 'delivery:binding:' + requirement_id, {
-                        'context': ref(root), 'resource': resource.model_dump(), 'requirement': ref(requirement),
-                        'usageScope': 'delivery', 'valid': True, 'reviewPayloadKey': 'pending'}))
-                    resources.add(canonical([resource.id, resource.version]))
-        runtime_model = entity('DomainModel', 'delivery:configuration', {
-            'name': 'Explicit synthetic runtime configuration', 'scope': 'This delivery only.',
-            'topics': [ref(self.topic)], 'definitions': [ref(release), *[ref(e) for e in (*rules, *configured, configured_phase, design, *workers)]]})
-        updated = entity('ExecutionContext', DELIVERY, {**root.fields,
-            'models': [manifest.domain.model_dump(), ref(runtime_model)], 'learningDesign': ref(design),
-            'resourceBindings': [ref(b) for b in bindings]}, 'imported-release-1')
-        # Explicit fixture policy grants for actual generated identities/versions.
-        policy = self.service.policy.model_dump()
-        policy['scopes']['delivery']['activities'] = [a.id for a in self.activities.values()]
-        policy['scopes']['delivery']['resources'] = sorted(resources)
-        self.service.policy = TrustedPolicy.model_validate(policy)
-        return self.service.propose(DELIVERY, 'admin', (root.ref,),
-            (*definitions, release, *rules, *configured, configured_phase, design, *workers, *bindings, runtime_model, updated),
-            'Explicit reference import of frozen release, new destination bindings and synthetic completion configuration; remain PREPARATION/DRAFT')
+                pins.update(item.materials)
+        return tuple(BindingSelection(requirement=requirements[key], resource=resource, usage_scope=scope)
+                     for key, resource in sorted(pins.items()) if key not in omit and key in requirements)
+
+    def delivery_import(self, release, context_id=DELIVERY, request_id='import-1', scope=None,
+                        omit=(), handlers=True, service=None):
+        """Propose the production delivery import with explicit bindings and handlers."""
+        service = service or self.service
+        scope = scope or context_id + ':' + request_id
+        view = self.service.inspect_release(AUTH, 'admin', release.ref)
+        rules = [r for r in view.closure if r.type == 'RuleDefinition' and r.id.startswith('course:completion:')]
+        command = DeliveryImport(release=release.ref, authoring_context=AUTH,
+            base_context=service.store.read_context(context_id).ref, scope_name=scope,
+            bindings=self.selections(release, scope, omit),
+            completion_handlers=tuple(RuleBinding(rule=r, handler='all_completed') for r in rules) if handlers else ())
+        return service.propose_delivery_import(context_id, 'admin', command, request_id=request_id)
 
 
 class SimulatedRuntimeAgents:
@@ -394,12 +378,15 @@ class SimulatedRuntimeAgents:
         outcome = EntityRef.model_validate(activity.fields['outcomes'][0])
         source = context.snapshot.get(EntityRef(type='Resource', id='wp3:test', version='v1'))
         citation = Citation(source=source.ref, supportedClaim='The synthetic example makes task, audience and tone explicit.')
+        specialization = next(e for e in context.snapshot.active_domain()
+                              if e.type == 'AgentSpecialization' and e.fields['registryName'] == name)
         capability = Capability(capability='search_documents', accessPath='ORCHESTRATOR_RETRIEVAL',
-            operations=('read',), scope='delivery', purpose='Use exact approved resources for the synthetic activity.')
+            operations=('read',), scope=specialization.fields['capabilities'][0]['scope'],
+            purpose='Use exact approved resources for the synthetic activity.')
         plan = LearningPlanDraft(steps=(LearningStepDraft(
             step=PlanStep(id='step', agent=name, task='Address the supplied synthetic activity and evidence.',
                 retrieval=RetrievalRequest(tool='search_documents', query='prompting', k=3)),
-            specialization=EntityRef(type='AgentSpecialization', id='delivery:' + role, version='1'),
+            specialization=specialization.ref,
             intent=request.intent, expected_output=kind, activities=(activity.ref,),
             coverage=(outcome,), required_capabilities=(capability,)),))
         events = self.events

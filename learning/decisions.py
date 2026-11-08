@@ -276,9 +276,11 @@ def apply_proposal(store: LearningStore, context: RunContext, proposal: EntityRe
     def project_precondition():
         from learning.context import load_context
         from learning.projects import validate_project_application
+        from learning.releases import validate_release_application
         if _latest(store, current, root.id) != current:
             raise StateConflict('Proposal decision changed before application')
         fresh = replace(context, snapshot=load_context(store, context.request, context.policy, context.contract))
         validate_project_application(store, fresh, candidates)
+        validate_release_application(store, fresh, current, candidates)
     return store.commit_change(change, (*applied, status), expected_version=root.version,
                                operation_id=operation_id, precondition=project_precondition)
