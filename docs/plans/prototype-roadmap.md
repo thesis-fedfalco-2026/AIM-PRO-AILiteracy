@@ -40,15 +40,15 @@ them and names what is new.
 
 | Vision | Step | Status after this revision |
 | --- | --- | --- |
-| Course in sections | S07b | done in PR #90 (read only) |
-| Review in plain words | S07 | teacher view done in PR #88; other proposal kinds in S09c |
+| Course in sections | S07b | done (read only): PR #90, reaching `main` through PR #92 |
+| Review in plain words | S07 | teacher view done for assessments (reaching `main` through PR #92); other proposal kinds in S09c |
 | AIM-PRO upload starts a build | S09a (new) | needs S08 |
-| Progressive refinement with agents | S09b (new) | needs S08 and D18 |
+| Progressive refinement with agents | S09b (new) | needs S08; D18 decided |
 | Rubrics, assessments, teacher and trainer content | S09c (was S09) | needs S08 |
 | Course validation | S10 | activation blocked by D4 until S11 |
-| Learner: my courses, material, syllabus | S12, S13 (extended) | needs S11, D19, D20 |
+| Learner: my courses, material, syllabus | S12, S13 (extended) | needs S11 and D19; D20 decided |
 | Learner: activities, exercises, assessments, Socratic agent | S13 | needs S11 |
-| Trainers using the validated course | open | D21 |
+| Trainers using the validated course | open | D21 (owner direction recorded, still open) |
 
 ## Verified baseline (8 November 2026)
 
@@ -76,6 +76,8 @@ Facts in this table are a snapshot. Every chat re-verifies the ones it uses.
 | Store | ALM store on PostgreSQL now (SQLite kept for tests and single-host use) | 8 Nov 2026 |
 | UI language | English first, externalised strings | 8 Nov 2026 |
 | D1–D5 | R1 scope, manifest format 1, policy preview, D4 = a, tracking in #71 | 8 Nov 2026 |
+| D18 | A teacher refines a proposal both ways: a conversation with the Design Agent, and manual edits of the proposed content. The agents' output and the teacher's edits stay proposals that a human decides and applies | 9 Nov 2026 |
+| D20 | A learner sees everything needed to follow and learn from the course: syllabus, material, activities, exercises and the rest of the learning content. What the learner sees comes from the validated course, never from drafts or other learners' records; the exact projection (for example rubrics and assessment criteria) is defined in S12 with the owner | 9 Nov 2026 |
 | Earlier | Socratic option b; live model runs only with owner authorization; never edit AIM-PRO/jjodel exports | see `docs/architecture/agentic-network-decisions.md` |
 
 ## Proposed defaults to confirm when this roadmap is reviewed
@@ -100,10 +102,8 @@ Open decisions that block later steps, not decided here:
 | --- | --- | --- |
 | G7 / D4 lift | Runtime assessor role and evaluation adapter, and the explicit decision that lets activation proceed when it exists | S11 and every learner step |
 | D16 | Scenario input independent of the AIM-PRO export (today the Curator reads the AIM-PRO project export) | nothing before S13; needed when scenarios change |
-| D18 | How a teacher refines a proposal with the agents: a revision request whose reason becomes input of a new generation job, and/or the Design Agent conversation (left out of S09 until now) | S09b |
-| D19 | How a learner's courses are listed: the contexts where the learner is a participant (needs an API that lists the subject's own contexts, a change from "responses never reveal which contexts exist", D10), or an enrolment record | S12 |
-| D20 | What a learner may see of the course: today LEARNING redaction shows a learner only the context, its participant record and its own learning records, so no syllabus or material | S12, S13 |
-| D21 | The trainer's role once a course is validated (delivering it, following learners), beyond authoring trainer content | after S13 |
+| D19 | How a learner's courses are listed: the contexts where the learner is a participant (needs an API that lists the subject's own contexts, a change from "responses never reveal which contexts exist", D10), or an enrolment record. The owner could not try the learner side yet (9 Nov 2026): no learner app exists before S13 | S12 |
+| D21 | The trainer's role once a course is validated, beyond authoring trainer content. Owner direction (9 Nov 2026), to be clarified: the trainer is used to give learners practice, a kind of Socratic agent that hands out exercises with a method. Open points: whether the trainer is a person, an agent or both, and how it relates to the Socratic coach of S13 | after S13 |
 | D17 | Deployment owner and shared environment | any shared deployment |
 | D6 | Sending the convergence draft to `rik99` | nothing in this roadmap |
 | Decision 6 details | Organisation documents and guidance | S15 |
@@ -384,10 +384,12 @@ Project initialization from the approved syllabus.
 **Goal.** A teacher refines the syllabus and the design step by step with the
 agents: lessons, activities, targets, competences.
 
-**Scope.** Defined with the owner from D18. At least: a revision request whose
-reason the next generation receives, the regenerated proposal compared with
-the previous one in the teacher view, and the course overview after each
-applied step.
+**Scope.** Defined with the owner from D18: a conversation with the Design
+Agent and manual edits of the proposed content, both producing proposals. At
+least: a revision request whose reason the next generation receives, a
+teacher's edit of a proposal recorded as a new proposal by that person, the
+regenerated or edited proposal compared with the previous one in the teacher
+view, and the course overview after each applied step.
 
 **Acceptance.** Defined with the owner when the step starts.
 
@@ -440,7 +442,8 @@ on how D4 is lifted before implementation.
 
 **Scope.** Learner request as a job, attempt submission, own progress
 (occurrences and approved states only); the learner's own courses (D19) and
-what of each course the learner may see (D20). No authoring code importable.
+the learner's view of the validated course (D20: syllabus, material,
+activities, exercises), which changes LEARNING redaction. No authoring code importable.
 
 **Acceptance.**
 
@@ -452,7 +455,8 @@ what of each course the learner may see (D20). No authoring code importable.
 
 **Goal.** A learner practises in the browser on an activated synthetic delivery.
 
-**Scope.** My courses; a course view with its syllabus and material (D20);
+**Scope.** My courses; a course view with its syllabus, material, activities
+and exercises (D20);
 practice screen with the Socratic coach (Socratic option b), exercises and
 assessments; progress view. Choosing between alternative next exercises waits
 for decision 1.
