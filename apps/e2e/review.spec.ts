@@ -1,7 +1,7 @@
 import { cli, en, expect, shown, test } from './support';
 import type { Entity, EntityRef, SeedManifest } from './support';
 
-const EVALUATOR_SUMMARY = 'Review the exact ASSESSMENT output and host-composed project revision.';
+const EVALUATOR_TITLE = 'Proposed assessment: Submit a fictional business reminder prompt and explain two choices.';
 const REASON = 'Checked in the browser test against the synthetic syllabus.';
 
 const evaluatorProposal = (seed: SeedManifest): EntityRef => {
@@ -23,17 +23,33 @@ test('a reviewer reviews and applies the Evaluator proposal of the seed', async 
   const proposal = evaluatorProposal(seed);
   await page.goto('/studio/');
   await page.getByLabel(en.home.contextLabel).fill(seed.authoring_context);
-  await page.getByRole('button', { name: en.home.open }).click();
+  await page.getByRole('button', { name: en.home.openReview }).click();
 
   const awaiting = page.getByRole('region', { name: en.review.inbox.pendingHeading });
-  await awaiting.getByRole('link', { name: EVALUATOR_SUMMARY }).click();
+  await expect(awaiting.getByText('Proposed by admin · Points to check: 12')).toBeVisible();
+  await awaiting.getByRole('link', { name: EVALUATOR_TITLE }).click();
   await expect(page).toHaveURL(proposalUrl(seed));
   await expect(page.getByTestId('proposal-status')).toHaveText(en.review.status.awaitingDecision);
 
-  // Diagnostics of the generator report and the comparison with the applied assessment.
-  const diagnostics = page.getByRole('region', { name: en.review.diagnostics.heading });
-  await expect(diagnostics.getByRole('heading', { name: 'Contract findings' })).toBeVisible();
-  await expect(diagnostics.getByRole('heading', { name: 'Source diagnostics' })).toBeVisible();
+  // The teacher view: the one real teaching change of the seed, the activity, the rubric, what to check.
+  await expect(page.getByRole('region', { name: en.review.teacher.changes.heading }).getByRole('listitem'))
+    .toHaveText(['Assessment condition added: “Explain two prompting choices.”']);
+  await expect(page.getByRole('region', { name: en.review.teacher.students.heading }))
+    .toContainText('Submit a fictional business reminder prompt and explain two choices.');
+  const assessed = page.getByRole('region', { name: en.review.teacher.assessed.heading });
+  await expect(assessed.getByRole('rowheader')).toHaveText(['The task and fictional audience are identifiable.']);
+  await expect(page.getByRole('region', { name: en.review.teacher.outcomes.heading })).toContainText(
+    'Identify relevant prompting choices and construct a first prompt for a task from one’s own business.');
+  const issues = page.getByRole('region', { name: en.review.teacher.issues.heading });
+  await expect(issues.getByRole('listitem')).toHaveCount(7); // 5 in the generated content, 2 notes; the source material is closed
+  await issues.getByText('In the course and its source material, not caused by this proposal (7)').click();
+  await expect(issues.getByText('“LearningTarget_0” has 0 resources; at least 1 is needed.')).toBeVisible();
+
+  // The technical details stay available, closed.
+  await expect(page.getByRole('region', { name: en.review.diagnostics.heading })).toHaveCount(0);
+  await page.getByText(en.review.teacher.technical.show).click();
+  await expect(page.getByRole('region', { name: en.review.diagnostics.heading })
+    .getByRole('heading', { name: 'Contract findings' })).toBeVisible();
   const changes = page.getByRole('region', { name: en.review.changes.heading });
   await expect(changes.locator('details[data-status="changed"]').first()).toBeVisible();
   await expect(changes.locator('details').filter({ hasText: /^AssessmentSpecification · / })).toHaveCount(1);

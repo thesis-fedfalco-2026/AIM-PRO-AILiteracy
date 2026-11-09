@@ -11,9 +11,11 @@ import { Diagnostics } from './Diagnostics';
 import { compareCandidates, latestProposals, proposalExplanation, proposalStatus, refOf } from './model';
 import { LoadFailure, useStatusLabel } from './parts';
 import { ReviewError } from './reviewApi';
-import type { DecisionKind, Entity, Finding, Inbox, PendingProposal, ReviewFailure } from './reviewApi';
+import type { DecisionKind, Entity, Finding, Inbox, JsonValue, PendingProposal, ReviewFailure } from './reviewApi';
 import { useCsrfToken, useReviewServices } from './ReviewServices';
 import { inboxPath } from './paths';
+import { plainIssues, teacherView } from './teacher';
+import { TeacherView } from './TeacherView';
 import { useInbox } from './useInbox';
 
 type Notice = { tone: 'info' | 'error'; text: string };
@@ -21,17 +23,13 @@ type Notice = { tone: 'info' | 'error'; text: string };
 const failureOf = (error: unknown): ReviewFailure => (error instanceof ReviewError ? error.reason : 'failed');
 const detailOf = (error: unknown) => (error instanceof ReviewError && error.detail ? error.detail : '');
 
+/** Identifiers and versions of the proposal, for administrators. */
 function Facts({ proposal, pending }: { proposal: Entity; pending: PendingProposal | undefined }) {
   const { t } = useTranslation();
-  const statusLabel = useStatusLabel();
   return (
     <section aria-labelledby="review-facts">
-      <h2 id="review-facts">{t('review.proposal.facts')}</h2>
+      <h3 id="review-facts">{t('review.proposal.facts')}</h3>
       <dl className="alm-facts">
-        <dt>{t('review.proposal.status')}</dt>
-        <dd data-testid="proposal-status">{statusLabel(proposalStatus(proposal))}</dd>
-        <dt>{t('review.proposal.proposedBy')}</dt>
-        <dd>{proposal.provenance.responsible}</dd>
         <dt>{t('review.proposal.id')}</dt>
         <dd><code>{proposal.id}</code></dd>
         <dt>{t('review.proposal.revision')}</dt>
@@ -53,13 +51,35 @@ function ExactPayload({ pending }: { pending: PendingProposal }) {
   const { t } = useTranslation();
   return (
     <section aria-labelledby="review-payload">
-      <h2 id="review-payload">{t('review.payload.heading')}</h2>
+      <h3 id="review-payload">{t('review.payload.heading')}</h3>
       <p>{t('review.payload.intro')}</p>
-      <details className="alm-disclosure">
-        <summary>{t('review.payload.show')}</summary>
-        <pre className="alm-code" data-testid="exact-payload">
-          {JSON.stringify({ proposal: pending.proposal, candidates: pending.candidates }, null, 2)}
-        </pre>
+      <pre className="alm-code" data-testid="exact-payload">
+        {JSON.stringify({ proposal: pending.proposal, candidates: pending.candidates }, null, 2)}
+      </pre>
+    </section>
+  );
+}
+
+/** Everything a teacher does not need, closed by default: identifiers, raw diagnostics, field diff, payload. */
+function TechnicalDetails({ proposal, pending, inbox, findings, report }: {
+  proposal: Entity; pending: PendingProposal | undefined; inbox: Inbox; findings: Finding[];
+  report: Record<string, JsonValue> | null;
+}) {
+  const { t } = useTranslation();
+  return (
+    <section aria-labelledby="review-technical">
+      <h2 id="review-technical">{t('review.teacher.technical.heading')}</h2>
+      <details className="alm-disclosure" data-testid="technical-details">
+        <summary>{t('review.teacher.technical.show')}</summary>
+        <p>{t('review.teacher.technical.intro')}</p>
+        <Facts proposal={proposal} pending={pending} />
+        <Diagnostics findings={findings} contextFindings={inbox.findings} report={report} />
+        {pending ? (
+          <>
+            <Changes comparisons={compareCandidates(pending.candidates, [inbox.context, ...inbox.entities])} />
+            <ExactPayload pending={pending} />
+          </>
+        ) : null}
       </details>
     </section>
   );
@@ -79,20 +99,24 @@ function ProposalContent({ inbox, proposalId, busy, onDecide, onApply }: {
   const explanation = proposalExplanation(proposal);
   const status = proposalStatus(proposal);
   const findings = (Array.isArray(proposal.fields.findings) ? proposal.fields.findings : []) as unknown as Finding[];
+  const issues = plainIssues(explanation.details, findings, inbox.findings);
+  const view = pending ? teacherView(pending.candidates, [inbox.context, ...inbox.entities]) : null;
   return (
     <>
-      <p className="alm-lead">{explanation.summary}</p>
-      <Facts proposal={proposal} pending={pending} />
+      <p className="alm-lead">
+        <strong>{view?.isAssessment ? t('review.teacher.titleAssessment') : t('review.teacher.titleOther')}</strong>
+      </p>
+      <p>
+        {t('review.teacher.byline', { responsible: proposal.provenance.responsible })}
+        {' · '}
+        <span data-testid="proposal-status">{statusLabel(status)}</span>
+      </p>
+      {view?.isAssessment ? null : <p>{explanation.summary}</p>}
       {pending || status === 'APPROVED' ? null : <p>{t('review.proposal.notPending', { status: statusLabel(status) })}</p>}
       {status === 'APPROVED' ? <ApplyStep busy={busy} onApply={() => onApply(proposal)} /> : null}
-      <Diagnostics findings={findings} contextFindings={inbox.findings} report={explanation.details} />
-      {pending ? (
-        <>
-          <Changes comparisons={compareCandidates(pending.candidates, [inbox.context, ...inbox.entities])} />
-          <ExactPayload pending={pending} />
-          <DecisionForm busy={busy} onDecide={(decision, reason) => onDecide(pending, decision, reason)} />
-        </>
-      ) : null}
+      {view ? <TeacherView view={view} issues={issues} /> : null}
+      {pending ? <DecisionForm busy={busy} onDecide={(decision, reason) => onDecide(pending, decision, reason)} /> : null}
+      <TechnicalDetails proposal={proposal} pending={pending} inbox={inbox} findings={findings} report={explanation.details} />
     </>
   );
 }

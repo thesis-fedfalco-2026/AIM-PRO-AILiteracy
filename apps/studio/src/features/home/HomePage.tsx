@@ -4,7 +4,7 @@ import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
-import { inboxPath } from '../review/paths';
+import { coursePath, inboxPath } from '../review/paths';
 
 export function HomePage() {
   const { t } = useTranslation();
@@ -13,11 +13,14 @@ export function HomePage() {
   const [contextId, setContextId] = useState('');
   const [missing, setMissing] = useState(false);
 
-  const open = (event: FormEvent) => {
-    event.preventDefault();
+  const go = (path: (contextId: string) => string) => {
     const value = contextId.trim();
     setMissing(value === '');
-    if (value) void navigate(inboxPath(value));
+    if (value) void navigate(path(value));
+  };
+  const open = (event: FormEvent) => {
+    event.preventDefault();
+    go(coursePath);
   };
 
   return (
@@ -43,7 +46,10 @@ export function HomePage() {
               onChange={(event) => setContextId(event.target.value)}
             />
           </div>
-          <Button type="submit">{t('home.open')}</Button>
+          <div className="alm-actions">
+            <Button type="submit">{t('home.open')}</Button>
+            <Button variant="secondary" onClick={() => go(inboxPath)}>{t('home.openReview')}</Button>
+          </div>
         </form>
       </section>
     </>

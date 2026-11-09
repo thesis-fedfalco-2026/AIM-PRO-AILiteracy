@@ -5,9 +5,11 @@ Date: 9 November 2026. Base: `main` at `3b16f21` (PR #85, S06, merged). Step:
 **milestone M1: first usable app**. Issue:
 [#86](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/issues/86).
 
-- Branch `feat/s07-studio-review-inbox`, commits: `8d3e4f0` (Chat 14 follow-up:
-  CLI `decide` passes its previewed review key), `5fe46c9` (S07), and the commit
-  that adds this file.
+- Branch `feat/s07-studio-review-inbox`, in
+  [PR #88](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/pull/88):
+  `8d3e4f0` (Chat 14 follow-up: CLI `decide` passes its previewed review key),
+  `5fe46c9` (S07), `e8acee2` (this handoff), `7a771fc` (teacher view, after
+  the owner's validation), and the commit that updates this file.
 - No model call, no live run, synthetic data only. Services used: the local
   Keycloak of `compose.identity.yml` (throwaway secrets, stopped afterwards),
   the API on `127.0.0.1:58001` and the studio preview on `127.0.0.1:58000`,
@@ -71,8 +73,17 @@ Front-end (`apps/studio`), using only the S05 and S06 endpoints:
 | `src/App.tsx`, `src/main.tsx`, `src/routes.tsx` | `StudioApp` takes `review` (and `operations` for tests); the review routes |
 | `src/i18n/en.json` | every new string; keys in camelCase (i18next reads `_SUFFIX` as a context or plural) |
 
-`packages/ui/src/styles.css`: form, table, disclosure, card, badge and code
-styles from the existing tokens (no new colour). The routes and behaviour are
+Teacher view (`7a771fc`, after the owner's validation, see below):
+`src/features/review/teacher.ts` (pure: `teacherView` gathers the teaching
+records and describes their changes in sentences; `plainIssues` turns the
+generator report and the findings into sentences grouped by where the problem
+is) and `TeacherView.tsx`; `ProposalPage.tsx` leads with it and moves the
+identifiers, raw diagnostics, field diff and exact payload into closed
+"Technical details"; inbox entries of assessments are named "Proposed
+assessment: …" with the number of points to check.
+
+`packages/ui/src/styles.css`: form, table, disclosure, card, badge, code,
+reading-text and before/after styles from the existing tokens (no new colour). The routes and behaviour are
 described in `docs/architecture/role-applications.md`, new section "Studio
 review inbox (S07)", and the manual studio check has a review step.
 
@@ -127,7 +138,42 @@ decision" sentence above the apply step.
 them "not verified"): every browser test decides or applies with the BFF
 session obtained through Keycloak and the CSRF token.
 
-CI on `5fe46c9`: reported in the PR (the handoff commit triggers another run).
+CI: push run [42608104325](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/actions/runs/42608104325)
+on `5fe46c9`; push run [42608348009](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/actions/runs/42608348009)
+and pull_request run [42608386250](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/actions/runs/42608386250)
+on `e8acee2`; push run on `7a771fc`: all jobs pass, including `browser`. The
+commit that updates this file triggers another run, reported in the PR.
+
+After the teacher view (`7a771fc`), local: `npm test` 90 tests OK (82 before;
+`teacher-view.test.ts` was written first and passed 7/7 once `teacher.ts`
+existed), `typecheck` and `build` OK, `npm run test:browser` 5 passed. The
+first browser run of the new assertions failed once on a wrong count in the
+test (7 visible list items, not 5: the generator notes), corrected in the test.
+
+## Owner validation (9 November 2026)
+
+The owner used the studio on a fresh seed (Keycloak, API on 58001, `npm run
+dev` on 58000).
+
+1. **The first proposal page was incomprehensible for a teacher.** It showed
+   the data model: field paths such as `models[1].id`, versions, hashes, the
+   `ExecutionContext` record, codes such as `GENERATED_CONTRACT`. The teaching
+   content was in the payload but not shown. On the seed the only teaching
+   change is one assessment condition; everything else is links and versions.
+   Answer, the owner choosing "continue S07" and "English stays": the teacher
+   view described in Changes and in the guide. The owner's verdict on it:
+   "better".
+2. **The owner's wider expectation.** A teacher or trainer structures a
+   course progressively (syllabus, lessons, activities, targets, competences,
+   then rubrics and assessments), with agents that help improve its quality;
+   can upload an AIM-PRO model to start the build; sees the whole course in
+   sections (syllabus, assessments, rubrics, the process behind them); then
+   validates the course so that it can be used. A learner signs in, sees the
+   courses they are enrolled in, opens one, sees the material and the
+   syllabus, takes part in activities, exercises and assessments, and talks to
+   the Socratic agent. The review inbox alone shows none of the whole course.
+   The owner decided: **a read-only course overview as a new step after #88,
+   and a roadmap revision proposal** written for the owner to approve.
 
 ## Acceptance items of #86
 
@@ -171,9 +217,9 @@ In a second terminal: `cd apps && npm ci --ignore-scripts && npm run dev --works
 | # | Do | Expect |
 | --- | --- | --- |
 | 1 | Open `http://127.0.0.1:58000/studio/`, press "Sign in", sign in as `dev-admin` with the printed password | "Signed in as admin"; the home page offers "Open a review inbox" |
-| 2 | Enter `architecture-authoring`, press "Open the inbox" | One proposal under "Awaiting a decision": "Review the exact ASSESSMENT output and host-composed project revision." (11 records); nothing under "Approved, not yet applied" |
-| 3 | Open the proposal; read "Diagnostics" | Tables "Contract findings" and "Source diagnostics", lists "Generator gaps" and "Syllabus gaps": the synthetic output's known problems |
-| 4 | Read "Changes against the applied version" | One block per record; changed ones open, with the field path, the applied and the proposed value; unchanged ones closed. Judge: can a teacher tell what the assessment changes? |
+| 2 | Enter `architecture-authoring`, press "Open the inbox" | One proposal under "Awaiting a decision": "Proposed assessment: Submit a fictional business reminder prompt and explain two choices.", "Points to check: 12"; nothing under "Approved, not yet applied" |
+| 3 | Open the proposal; read "What changes" | One sentence: "Assessment condition added: “Explain two prompting choices.”" Judge: is it clear that nothing else in the teaching content changes? |
+| 4 | Read the activity, the rubric (criteria and levels), the outcome, the resources and "To check before deciding"; open "Technical details" | Five problems of the generated content and two notes shown; the seven problems of the source material behind a closed "(7)"; the technical details hold ids, raw diagnostics, the field diff and the exact payload |
 | 5 | Press "Record the decision" without choosing | "Choose a decision."; nothing recorded |
 | 6 | Choose "Approve", write a reason, press "Record the decision" | "Decision recorded: Approve."; status "Approved, not applied"; an "Application" section with "Apply the change" |
 | 7 | Press "Apply the change" | "Change applied. The context is now at version …"; status "Applied" |
@@ -182,40 +228,52 @@ In a second terminal: `cd apps && npm ci --ignore-scripts && npm run dev --works
 | 10 | Keyboard only: reload the page, press Tab | "Skip to main content" first; every control reachable; focus always visible |
 
 Stop: Ctrl-C both servers, `docker compose -f compose.identity.yml down`.
-Questions to answer for the validation: is the summary sentence enough to pick a
-proposal? Are the diagnostics readable for a teacher, or only for a developer?
-Is the diff by field path understandable?
+Questions to answer for the validation: is the inbox title enough to pick a
+proposal? Is "What changes" enough to decide without the technical details? Are
+the sentences of "To check before deciding" readable for a teacher?
 
 ## Findings (not changed in this PR)
 
-1. **No list of contexts.** The home page asks for the context id because no
+1. **The studio shows no course as a whole** (owner validation, point 2). Planned
+   as a new read-only step after #88; the data is already in the S05 reads.
+   The other gaps the owner named are proposed in the roadmap revision: AIM-PRO
+   upload to start a build (today the Curator reads an export file; D16 open),
+   progressive refinement with agents (S09 leaves the Design Agent conversation
+   out), course validation (S10, activation blocked by D4 until S11/G7), and on
+   the learner side the course catalogue, enrolment and material views (S13
+   covers practice and progress only).
+2. **No list of contexts.** The home page asks for the context id because no
    endpoint lists the contexts a subject may review (by design a response never
    reveals which contexts exist, D10). A per-subject list would need an API
    decision.
-2. **Array diffs are positional.** A reordered array shows as changes at each
+3. **Array diffs are positional** (technical details only now). A reordered array shows as changes at each
    index. Seen on the seed: the proposed `ExecutionContext` swaps `models[1]` and
    `models[2]` (project model and release catalogue), shown as four changed
    leaves. A diff keyed by `EntityRef` would be clearer for reference lists.
-3. **The generator report is parsed from free text.** Diagnostics come from the
+4. **The generator report is parsed from free text.** Diagnostics come from the
    JSON object that follows the sentence in `proposedChange`, a convention of
    the generators, not a contract. A text without such an object is shown as it
    is. A structured field would need a core change.
-4. **Not in the browser:** revoking a decision (the API allows it on the current
+5. **Not in the browser:** revoking a decision (the API allows it on the current
    revision), decisions on `ResourceBinding` or `Evaluation` records, and the
    delivery import's policy installation. The CLI still does them.
-5. **Operation ids live in page memory.** A full page reload between a lost
+6. **Operation ids live in page memory.** A full page reload between a lost
    answer and the retry creates a new id. This cannot apply twice: after a
    reload the page shows the proposal as `APPLIED` and no apply step.
-6. **The "stale" reading of Chat 14 is still to be confirmed.** The conflict test
+7. **The "stale" reading of Chat 14 is still to be confirmed.** The conflict test
    relies on it (a new revision after loading is a 409).
-7. **Shared working tree.** Two Claude sessions worked in the same directory
+8. **Shared working tree.** Two Claude sessions worked in the same directory
    (see the baseline). Future chats should check `ListAgents` or use a git
    worktree when an earlier session may still be running.
-8. **CI cost.** The `browser` job installs the Python requirements, Chromium and
+9. **CI cost.** The `browser` job installs the Python requirements, Chromium and
    Keycloak: expect several minutes.
-9. **Accessibility scope.** axe covers the automatic WCAG 2.1 A/AA rules only. A
+10. **Accessibility scope.** axe covers the automatic WCAG 2.1 A/AA rules only. A
    screen-reader pass was not done.
-10. **Still open from earlier chats.** Chat 14 findings 3–6 (finding 3 is now
+11. **The teacher view covers assessments only.** Teacher and trainer content,
+    releases and imports show their summary sentence and the technical details.
+    Problems "in the generated content" still quote the validator's message
+    (for example "Input should be 'Low', 'Medium' or 'High'").
+12. **Still open from earlier chats.** Chat 14 findings 3–6 (finding 3 is now
     handled in the UI: a 422 on apply shows the core message and reloads; it is
     still 422, not 409), Chat 12 findings 2, 6, 7, 8; Chat 13 findings 1–6,
     8–10; the roadmap baseline row (Chat 13 finding 12) now covers S01–S07.
@@ -227,8 +285,94 @@ to do with PR #87 (merge it or close it; both are fine).
 
 ## Next step
 
-After the owner reviews and merges this PR (closes #86), M1 is reached. The next
-step is **S08 — Agent job worker and progress stream**, which depends on D14
-(jobs store). Use the "Prompt for later steps" of the roadmap with `chat-15.md`
-as the latest handoff, and check that D14 is recorded as confirmed before
-starting.
+After the owner merges PR #88 (closes #86), M1 is reached. By the owner's
+decision of 9 November 2026 the next work is, before S08:
+
+1. **A read-only course overview in the studio** (new step, its own issue and
+   PR): the course in sections (syllabus, outcomes and targets, competences,
+   lessons and activities, rubrics, assessments, the history of decisions),
+   from the S05 reads, with no API change.
+2. **A roadmap revision proposal** with the owner's vision (see "Owner
+   validation"), for the owner to approve in a PR.
+
+S08 (agent job worker, D14) follows the revised roadmap.
+
+---
+
+# Part 2 — S07b studio course overview (read-only)
+
+Same chat, after the owner's decision of 9 November 2026 (see "Owner
+validation"). Issue
+[#89](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/issues/89).
+Branch `feat/s07b-course-overview`, stacked on `feat/s07-studio-review-inbox`
+(PR #88 was not merged yet); its PR targets that branch and is retargeted to
+`main` once #88 is merged.
+
+## Objective
+
+A teacher or trainer sees the whole course of a context in sections, in plain
+words, read only.
+
+## Changes
+
+- `apps/studio/src/features/course/course.ts` (pure, `courseOverview`) and
+  `CoursePage.tsx`; route `/contexts/{context_id}/course`; the section rules are
+  in the guide, "Studio course overview (S07b)".
+- Home: "Open the course" (default) and "Open the review inbox"; the inbox links
+  to the course, the course to the inbox with the pending count; the history
+  links pending and approved proposals to their review page.
+- `review/RubricTable.tsx` extracted from the teacher view and reused.
+- Styles: course tree, actions row, definition-list rows.
+- Browser tests: `course.spec.ts`; the setup signs in `dev-learner` too.
+- No API route, OpenAPI snapshot, core module, store schema, metamodel or
+  AIM-PRO/jjodel export changed. No model call.
+
+## Verification
+
+Contract tests first: `studio/test/course-model.test.ts` (8 tests) was written
+before `course.ts` and passed once it existed; `studio/test/course.test.tsx`
+(page) and the updated home test followed. Local:
+
+| Check | Result |
+| --- | --- |
+| `npm run check:client`, `typecheck`, `test`, `build` | OK, OK, 101 tests OK (90 before), OK |
+| `npm run test:browser` | 8 passed (2 sign-ins + 6 tests) |
+| `git diff --check` | exit 0 |
+| `unittest discover -q`, telemetry off | 832 tests, OK, 142 skipped (no Python change) |
+
+The first page-test run failed once on the test (`findByRole('status')` found
+the session's loading message first), corrected in the test. A full-page
+screenshot of the seeded course was looked at.
+
+## Acceptance items of #89
+
+| Item | Status | Evidence |
+| --- | --- | --- |
+| Every section shows the seed's content | Done | `course.spec.ts` "the course page shows the whole seeded course and writes nothing" |
+| No write request; store unchanged | Done | same test: only `GET` requests; SHA-256 of `alm.sqlite` equal before and after |
+| A learner-only subject sees no authoring content | Done | `course.spec.ts` "as a learner" (`dev-learner`, `architecture-delivery-2`) |
+| axe passes | Done | both tests, every disclosure open |
+| Docs | Done | guide section; this part |
+
+## Findings (S07b)
+
+1. **History sentences are the generators' wording** ("Review the exact
+   ASSESSMENT output and host-composed project revision."). A teacher-facing
+   name per proposal kind would need either a studio mapping by kind or a
+   structured kind on the proposal.
+2. **Materials are not linked to activities by reference.** An activity names
+   its material only in the text of a resource requirement ("Use the complete
+   assigned material: Synthetic WORKSHEET"); the page lists materials apart
+   rather than guess links.
+3. **Course versus context.** The page shows one context's active learning
+   design. A context without one, or a learner, gets the not-visible message;
+   the delivery contexts show the imported release's design when their policy
+   is installed.
+4. **The owner's other expectations** (progressive refinement with agents,
+   AIM-PRO upload, course validation, the learner's catalogue and course
+   view) are for the roadmap revision proposal.
+
+## Next step (after Part 2)
+
+The owner merges #88, then this PR (retargeted to `main`). The roadmap revision
+proposal follows as its own PR; S08 waits for it.

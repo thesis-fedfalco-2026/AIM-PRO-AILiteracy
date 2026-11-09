@@ -96,4 +96,14 @@ export function recordLabel(entity: Entity): string {
   return typeof name === 'string' && name ? name : typeof title === 'string' && title ? title : entity.id;
 }
 
+/**
+ * A code or key in words: `contract_findings` → `Contract findings`,
+ * `CRITERIA_BASED_PRODUCT` → `Criteria based product`. Codes are data, not catalogue strings.
+ */
+export function readable(code: string): string {
+  const words = code.replace(/[_-]+/g, ' ').trim();
+  const lower = words === words.toUpperCase() ? words.toLowerCase() : words;
+  return lower.charAt(0).toUpperCase() + lower.slice(1);
+}
+
 export const refOf = ({ type, id, version }: Entity) => ({ type, id, version });

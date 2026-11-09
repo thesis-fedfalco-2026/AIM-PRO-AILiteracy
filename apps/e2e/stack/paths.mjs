@@ -12,6 +12,7 @@ export const DATABASE = `${SEED}alm.sqlite`;
 /** The seed database as built, copied back before each test. */
 export const PRISTINE = `${STATE}pristine.sqlite`;
 export const ADMIN_STATE = `${STATE}auth/admin.json`;
+export const LEARNER_STATE = `${STATE}auth/learner.json`;
 
 export const STUDIO_URL = 'http://127.0.0.1:58000';
 export const API_PORT = 58001;

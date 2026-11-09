@@ -10,7 +10,8 @@ with health and identity routes. S05 adds the first read-only modules (see
 [Read-only authoring endpoints](#read-only-authoring-endpoints-s05)); S06 adds
 decisions and application (see [Review endpoints](#review-endpoints-s06)). S04 adds the front-end workspace in `apps/` and a studio
 shell that signs in through the API (see [Front-end workspace](#front-end-workspace)); S07 adds the
-studio review inbox, milestone M1 (see [Studio review inbox](#studio-review-inbox-s07)). ALM remains the reference model. Nothing here changes
+studio review inbox, milestone M1 (see [Studio review inbox](#studio-review-inbox-s07)), and S07b a
+read-only course overview (see [Studio course overview](#studio-course-overview-s07b)). ALM remains the reference model. Nothing here changes
 the ALM metamodel, the store schema or an AIM-PRO/jjodel export.
 
 ## Processes
@@ -325,24 +326,39 @@ S05 and S06 endpoints only; nothing in the API, the core or the store changed.
 
 - **Inbox.** Two lists: proposals `AWAITING_DECISION` (from `pending-proposals`,
   newest first) and proposals `APPROVED` but not applied (from the context
-  summary, which holds the latest revision of each proposal). Each entry is the
-  first sentence of the proposal's `proposedChange`.
+  summary, which holds the latest revision of each proposal). A pending
+  assessment is named "Proposed assessment: " plus the first line of its
+  activity instruction, with the number of points to check; other entries show
+  the first sentence of the proposal's `proposedChange`.
 - **No context list.** The API does not list contexts (a response never reveals
   which contexts exist, D10), so the home page asks for the context id, as the
   CLI's `--context` does.
-- **Proposal page.** The summary sentence; facts (status, proposer, id,
-  revision, base context version, review payload key); diagnostics: the
-  proposal's `findings`, the context's snapshot findings, and the generator
-  report, which is the JSON object that follows the sentence in
-  `proposedChange` (`contract_findings`, `source_diagnostics`, `generator_gaps`,
-  …), shown as lists and tables; the changes; the exact payload (proposal and
-  candidates as JSON); the decision form.
-- **Diff against the applied version.** Each candidate is compared with the
-  record of the same type and id in the context summary, the version applied
-  now. The comparison covers `fields` and lists each differing leaf by path
-  (`criteria[1].description`) with the applied and the proposed value. A
-  candidate without an applied record is "New record"; identical fields are
-  "Unchanged" (collapsed).
+- **Teacher view first (owner validation, 9 November 2026).** The first version
+  showed the data model (field paths, versions, hashes, structure records); the
+  owner found it incomprehensible for a teacher. The proposal page now leads
+  with the teaching content of the candidates (`teacher.ts`, `TeacherView.tsx`):
+  - *What changes*: sentences computed from the teaching records only
+    (`ActivityDefinition` instruction and evidence, `Rubric` criteria by key,
+    `AssessmentSpecification` conditions and accepted evidence,
+    `ResourceRequirement` purpose, conditions and required/optional), compared
+    with the applied record of the same type and id; a change of links or
+    versions alone is "the teaching content is the same". On the seed the only
+    sentence is "Assessment condition added: “Explain two prompting choices.”";
+  - *What students would be asked to do*, *How it would be assessed* (rubric as
+    criteria and levels, conditions), *Learning outcomes covered* (statements,
+    not ids), *Resources the activity needs*;
+  - *To check before deciding*: the generator report and the findings as
+    sentences, grouped by where the problem is: the generated content (shown),
+    the course and its source material (closed, with a count: the proposal does
+    not cause them), and the generator's notes.
+  Proposals without teaching records (release, import, completion rules) show
+  their summary sentence instead.
+- **Technical details, closed.** Identifiers and versions, the review payload
+  key, the raw diagnostics (proposal findings, context findings, the generator
+  report as lists and tables), the field-by-field diff of every candidate
+  against the applied record (each differing leaf by path, for example
+  `criteria[1].description`) and the exact payload. The decision covers exactly
+  this payload.
 - **Decision.** Approve, reject or request a revision, with a reason (both
   required, checked before any request). The request carries the exact revision
   shown and its `review_payload_key`. After any answer the page reloads both
@@ -363,6 +379,32 @@ S05 and S06 endpoints only; nothing in the API, the core or the store changed.
   and decisions on `ResourceBinding` or `Evaluation` records are not part of
   S07; the CLI still does them.
 
+## Studio course overview (S07b)
+
+Added on the owner's request of 9 November 2026, after validating S07: the
+review inbox alone showed no picture of the course. A read-only page
+`/studio/contexts/{context_id}/course` built from the same two reads as the
+inbox (`GET /contexts/{context_id}` and `GET …/pending-proposals`); no API,
+core or store change. `src/features/course/course.ts` (pure) follows the
+references of the context summary by type and id (the summary holds the latest
+revision of each record):
+
+| Section | From |
+| --- | --- |
+| Name, status, mode | the context's `learningDesign` and its own `status` and `mode` |
+| Structure | the design's `root` `ProcessNode` tree: phases and units in order, each with its activities (intent, format, instruction, evidence), teaching strategies and completion rule condition; a node that refers back to an ancestor is not followed again |
+| Learning outcomes and competences | the design's `outcomes` and the `Topic`s they name |
+| Teaching strategies | the design's `strategies` |
+| Assessments | the design's `assessmentSpecs`: activity, rubric (criteria and levels), conditions, accepted evidence |
+| Materials | `Resource`s whose content is plain text (teaching material); a locator (`http(s)://…`) is a cited source; a JSON package or manifest is left out |
+| History | every `ChangeProposal`, newest first, with its `HumanDecision`s (when, who, verdict, reason) and its `StateChange`; pending and approved ones link to the proposal page |
+
+The home page opens the course ("Open the course") or the inbox; the course
+page links to the inbox with the number of pending proposals, and the inbox
+links back. A subject that cannot see the learning design (a learner, by the
+summary's redaction) gets "The course content of this context is not visible
+to you."
+
 ### Browser tests
 
 `apps/e2e/` holds Playwright tests (Chromium) with axe checks (`@axe-core/playwright`,
@@ -373,7 +415,7 @@ WCAG 2.1 A and AA rules). `npm run test:browser` in `apps/`:
    database, and runs `python -m services.authoring_api --port 58001` against the
    local realm; the Python is `ALM_PYTHON`, else `.venv/bin/python`, else `python3`;
 2. builds the studio and serves it with `vite preview` on `127.0.0.1:58000`;
-3. signs in once as `dev-admin` through Keycloak and keeps the session cookie;
+3. signs in once as `dev-admin` and once as `dev-learner` through Keycloak and keeps the session cookies;
 4. restores the seed database before each test; tests run one at a time.
 
 Ports already in use fail the run (no reuse of another process). The tests need
@@ -384,9 +426,11 @@ browser recorded.
 
 | Test | Checks |
 | --- | --- |
-| `review.spec.ts`: reviews and applies the Evaluator proposal | inbox → proposal; diagnostics and changes shown; approve, then apply; the CLI `show` lists one decision with the reviewed key and one `StateChange` whose `newVersion` is the context version |
+| `review.spec.ts`: reviews and applies the Evaluator proposal | inbox → proposal; the teacher view (one change, the activity, the rubric, the outcome, the points to check) and the technical details; approve, then apply; the CLI `show` lists one decision with the reviewed key and one `StateChange` whose `newVersion` is the context version |
 | `review.spec.ts`: decided by another reviewer after loading | the CLI rejects while the page is open; the browser's approval gets 409, the page reloads and shows "Rejected"; only the CLI decision exists |
 | `review.spec.ts`: lost application answer | the first application reaches the API but its answer is dropped; the retry sends the same operation id; one `StateChange` exists |
+| `course.spec.ts`: the whole seeded course | every section shows the seed's content (unit, three activities, completion, outcome and competence, strategy, rubric, four materials and the cited source, history with one pending proposal); no request other than `GET`; the SHA-256 of the database file is unchanged; axe; navigation to the inbox and back |
+| `course.spec.ts`: as a learner | `dev-learner` on `architecture-delivery-2` sees only the not-visible message; axe |
 | `accessibility.spec.ts` | axe on the home page (also with its validation error), the inbox with and without pending proposals, the proposal page with every disclosure open, its validation errors, the apply step, a refused application, and an unavailable context |
 
 ```sh
@@ -467,7 +511,9 @@ cd apps && npm ci --ignore-scripts && npm run dev --workspace @alm/studio   # ht
    inbox". Expected: one proposal under "Awaiting a decision"; open it, approve
    it with a reason, then press "Apply the change". Expected: "Decision
    recorded: Approve.", then "Change applied. The context is now at version …"
-   and the status "Applied"; the inbox is then empty. The handoff of S07
+   and the status "Applied"; the inbox is then empty. The proposal page opens
+   with the teacher view; identifiers and the field diff are under "Technical
+   details". The handoff of S07
    (`docs/plans/handoffs/chat-15.md`) has the full owner test script.
 
 Stop with `docker compose -f compose.identity.yml down`. The issuer contains the

@@ -10,14 +10,21 @@ const entity = (type: string, id: string, version: string, fields: Record<string
   ({ type, id, version, fields, provenance });
 
 const CONTEXT = entity('ExecutionContext', 'ctx', 'c1', { status: 'ACTIVE' });
-const RUBRIC = entity('Rubric', 'rubric-1', 'r1', { name: 'Essay rubric', criteria: ['clarity'] });
-const EXPLANATION = 'Review the exact ASSESSMENT output. '
-  + '{"generator_gaps":["Synthetic output"],"source_diagnostics":[{"code":"ENUM_VALUE","field":"category"}]}';
+const CLARITY = { key: 'clarity', description: 'The task is clear.',
+  levels: [{ key: 'unclear', descriptor: 'The task cannot be identified.' }, { key: 'clear', descriptor: 'The task is stated.' }] };
+const RUBRIC = entity('Rubric', 'rubric-1', 'r1', { name: 'Essay rubric', criteria: [CLARITY] });
+const EXPLANATION = 'Review the exact ASSESSMENT output. {"generator_gaps":["Synthetic output"],'
+  + '"source_diagnostics":[{"code":"ENUM_VALUE","field":"category","value":"DIGITAL","allowed":["Digital"],"object_name":"D04"}]}';
 const PENDING = entity('ChangeProposal', 'p-1', '1', {
   status: 'AWAITING_DECISION', proposedChange: EXPLANATION, findings: [], baseContextVersion: 'c1',
 });
 const CANDIDATES = [
-  entity('Rubric', 'rubric-1', 'r2', { name: 'Essay rubric', criteria: ['clarity', 'accuracy'] }),
+  entity('Rubric', 'rubric-1', 'r2', { name: 'Essay rubric',
+    criteria: [CLARITY, { key: 'accuracy', description: 'The answer is accurate.', levels: [] }] }),
+  entity('ActivityDefinition', 'activity-1', 'a1', { instruction: 'Write a prompt for a business task.\nHand in one page.',
+    expectedEvidence: ['CRITERIA_BASED_PRODUCT'] }),
+  entity('AssessmentSpecification', 'spec-1', 's1', { administrationConstraints: ['One evening workshop'],
+    allowedEvidence: ['CRITERIA_BASED_PRODUCT'] }),
   entity('Topic', 'topic-1', 't1', { name: 'Sources' }),
 ];
 const APPROVED = entity('ChangeProposal', 'p-2', '7', { status: 'APPROVED', proposedChange: 'Release the project', findings: [] });
@@ -46,15 +53,23 @@ const writes = (requests: Request[]) => requests.filter((request) => request.met
 afterEach(cleanup);
 
 describe('home', () => {
-  it('opens the review inbox of the context entered', async () => {
-    const { router } = await renderStudio({ 'GET /auth/session': [signedIn] });
+  it('opens the course or the review inbox of the context entered', async () => {
+    const { router } = await renderStudio({ 'GET /auth/session': [signedIn],
+      [SUMMARY]: [summary()], [PENDING_LIST]: [pending()] });
     const field = await screen.findByLabelText(en.home.contextLabel);
     fireEvent.click(screen.getByRole('button', { name: en.home.open }));
     expect(screen.getByText(en.home.contextRequired)).toBeTruthy();
     expect(field.getAttribute('aria-invalid')).toBe('true');
     fireEvent.change(field, { target: { value: ' my context ' } });
-    fireEvent.click(screen.getByRole('button', { name: en.home.open }));
+    fireEvent.click(screen.getByRole('button', { name: en.home.openReview }));
     await waitFor(() => expect(router.state.location.pathname).toBe('/studio/contexts/my%20context/review'));
+  });
+
+  it('opens the course by default', async () => {
+    const { router } = await renderStudio({ 'GET /auth/session': [signedIn] });
+    fireEvent.change(await screen.findByLabelText(en.home.contextLabel), { target: { value: 'ctx' } });
+    fireEvent.submit(screen.getByRole('button', { name: en.home.open }).closest('form')!);
+    await waitFor(() => expect(router.state.location.pathname).toBe('/studio/contexts/ctx/course'));
   });
 });
 
@@ -64,9 +79,9 @@ describe('review inbox', () => {
       'GET /auth/session': [signedIn], [SUMMARY]: [summary(PENDING, APPROVED, APPLIED)], [PENDING_LIST]: [pending(1)],
     }, '/studio/contexts/ctx/review');
     const awaiting = within((await screen.findByRole('heading', { name: en.review.inbox.pendingHeading })).closest('section')!);
-    const link = awaiting.getByRole('link', { name: 'Review the exact ASSESSMENT output.' });
+    const link = awaiting.getByRole('link', { name: 'Proposed assessment: Write a prompt for a business task.' });
     expect(link.getAttribute('href')).toBe('/studio/contexts/ctx/review/p-1');
-    expect(awaiting.getByText('2 records · proposed by admin')).toBeTruthy();
+    expect(awaiting.getByText('Proposed by admin · Points to check: 1')).toBeTruthy();
     const approved = within(screen.getByRole('heading', { name: en.review.inbox.approvedHeading }).closest('section')!);
     expect(approved.getAllByRole('link').map((item) => item.textContent)).toEqual(['Release the project']);
     expect(screen.queryByText('Initialize a project')).toBeNull();
@@ -102,29 +117,52 @@ describe('proposal review', () => {
   const open = (replies: Record<string, Reply[]>) =>
     renderStudio({ 'GET /auth/session': [signedIn], ...replies }, '/studio/contexts/ctx/review/p-1');
 
-  it('shows the summary, the diagnostics, the changes against the applied version and the exact payload', async () => {
+  it('shows the teaching content, its changes and what to check in plain words', async () => {
     await open({ [SUMMARY]: [summary(PENDING)], [PENDING_LIST]: [pending(1)] });
-    expect(await screen.findByText('Review the exact ASSESSMENT output.')).toBeTruthy();
+    expect(await screen.findByText(en.review.teacher.titleAssessment)).toBeTruthy();
     expect(screen.getByTestId('proposal-status').textContent).toBe(en.review.status.awaitingDecision);
-    const diagnostics = within(screen.getByRole('heading', { name: en.review.diagnostics.heading }).closest('section')!);
+    const section = (name: string) => within(screen.getByRole('heading', { name }).closest('section')!);
+
+    expect(section(en.review.teacher.changes.heading).getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+      'Assessment criterion added: The answer is accurate.',
+      'A new student activity is added.',
+      'A new assessment is added.',
+    ]);
+    const students = section(en.review.teacher.students.heading);
+    expect(students.getByText(/Write a prompt for a business task\.\s+Hand in one page\./)).toBeTruthy();
+    expect(students.getByText('What students hand in: Criteria based product')).toBeTruthy();
+    const assessed = section(en.review.teacher.assessed.heading);
+    expect(assessed.getAllByRole('rowheader').map((cell) => cell.textContent)).toEqual(['The task is clear.', 'The answer is accurate.']);
+    expect(assessed.getByText('The task cannot be identified.')).toBeTruthy();
+    expect(assessed.getByText('One evening workshop')).toBeTruthy();
+    const issues = section(en.review.teacher.issues.heading);
+    expect(issues.getByText('In the course and its source material, not caused by this proposal (1)').closest('details')!
+      .hasAttribute('open')).toBe(false);
+    expect(issues.getByText('“D04”: the category “DIGITAL” is not one of the allowed values (Digital).')).toBeTruthy();
+    expect(issues.getByText('Synthetic output')).toBeTruthy();
+  });
+
+  it('keeps identifiers, the raw diagnostics, the field diff and the exact payload in closed technical details', async () => {
+    await open({ [SUMMARY]: [summary(PENDING)], [PENDING_LIST]: [pending(1)] });
+    const details = await screen.findByTestId('technical-details');
+    expect(details.hasAttribute('open')).toBe(false);
+    const technical = within(details);
+    expect(technical.getByText(KEY)).toBeTruthy();
+    const diagnostics = within(technical.getByRole('heading', { name: en.review.diagnostics.heading }).closest('section')!);
     expect(diagnostics.getByRole('heading', { name: 'Generator gaps' })).toBeTruthy();
-    expect(diagnostics.getByText('Synthetic output')).toBeTruthy();
-    expect(diagnostics.getByRole('columnheader', { name: 'Code' })).toBeTruthy();
     expect(diagnostics.getByRole('cell', { name: 'ENUM_VALUE' })).toBeTruthy();
 
-    const changes = within(screen.getByRole('heading', { name: en.review.changes.heading }).closest('section')!);
+    const changes = within(technical.getByRole('heading', { name: en.review.changes.heading }).closest('section')!);
     const rubric = changes.getByText('Rubric · Essay rubric').closest('details')!;
     expect(within(rubric).getByText('1 change')).toBeTruthy();
     expect(within(rubric).getByRole('rowheader', { name: 'criteria[1]' })).toBeTruthy();
     expect(within(rubric).getByText(en.review.changes.absent)).toBeTruthy();
-    expect(within(rubric).getByText('accuracy')).toBeTruthy();
     const topic = changes.getByText('Topic · Sources').closest('details')!;
     expect(within(topic).getByText(en.review.changes.new)).toBeTruthy();
     expect(within(topic).getByText(en.review.changes.notApplied)).toBeTruthy();
 
-    const payload = JSON.parse(screen.getByTestId('exact-payload').textContent!) as { proposal: unknown; candidates: unknown };
+    const payload = JSON.parse(technical.getByTestId('exact-payload').textContent!) as { proposal: unknown; candidates: unknown };
     expect(payload).toEqual({ proposal: PENDING, candidates: CANDIDATES });
-    expect(screen.getByText(KEY)).toBeTruthy();
   });
 
   it('records the decision on the exact revision and key shown, then shows the separate apply step', async () => {

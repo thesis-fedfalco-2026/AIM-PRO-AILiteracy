@@ -23,12 +23,13 @@
   },
   "home": {
     "title": "Studio",
-    "intro": "Review the proposals that await a person: open the review inbox of a context, decide each proposal and apply the approved ones.",
-    "openHeading": "Open a review inbox",
+    "intro": "See a course as a whole, and review the proposals that await a person: enter the id of its context.",
+    "openHeading": "Open a course",
     "contextLabel": "Context id",
     "contextHint": "The id of the execution context, as given to the CLI with --context.",
     "contextRequired": "Enter the id of a context.",
-    "open": "Open the inbox"
+    "open": "Open the course",
+    "openReview": "Open the review inbox"
   },
   "notFound": {
     "title": "Page not found",
@@ -45,9 +46,9 @@
       "pendingEmpty": "No proposal awaits a decision.",
       "approvedHeading": "Approved, not yet applied",
       "approvedEmpty": "No approved proposal waits to be applied.",
-      "records_one": "{{count}} record · proposed by {{responsible}}",
-      "records_other": "{{count}} records · proposed by {{responsible}}",
-      "approvedMeta": "Proposed by {{responsible}}"
+      "approvedMeta": "Proposed by {{responsible}}",
+      "pendingMeta": "Proposed by {{responsible}} · Points to check: {{issues}}",
+      "course": "View the whole course"
     },
     "errors": {
       "unavailable": "This context is not available. Check its id, or ask an operator whether its policy is installed.",
@@ -134,6 +135,133 @@
       "conflict": "The proposal can no longer be applied as approved: {{detail}} The page now shows its current state.",
       "forbidden": "You are not allowed to apply this proposal. Nothing was changed.",
       "failed": "The application did not complete. Try again: the retry repeats the same operation, so the change is applied at most once."
+    },
+    "teacher": {
+      "titleAssessment": "Proposed assessment",
+      "titleOther": "Proposed change",
+      "byline": "Proposed by {{responsible}}",
+      "otherProposal": "This proposal has no student activity or assessment content. What it changes is listed in the technical details.",
+      "changes": {
+        "heading": "What changes",
+        "none": "The teaching content is the same as the version in use now. Only internal links and versions change; they are listed in the technical details.",
+        "now": "Now",
+        "proposed": "Proposed"
+      },
+      "change": {
+        "newActivity": "A new student activity is added.",
+        "instructions": "The instructions for students change.",
+        "evidenceAdded": "Evidence students hand in, added: {{value}}",
+        "evidenceRemoved": "Evidence students hand in, removed: {{value}}",
+        "newRubric": "A new rubric is added: {{value}}",
+        "criterionAdded": "Assessment criterion added: {{value}}",
+        "criterionRemoved": "Assessment criterion removed: {{value}}",
+        "criterionChanged": "The assessment criterion “{{value}}” changes.",
+        "newAssessment": "A new assessment is added.",
+        "conditionAdded": "Assessment condition added: “{{value}}”",
+        "conditionRemoved": "Assessment condition removed: “{{value}}”",
+        "acceptedAdded": "Accepted evidence added: {{value}}",
+        "acceptedRemoved": "Accepted evidence removed: {{value}}",
+        "newRequirement": "A new resource requirement is added: {{value}}",
+        "purpose": "The purpose of a resource requirement changes.",
+        "constraintAdded": "Resource condition added: “{{value}}”",
+        "constraintRemoved": "Resource condition removed: “{{value}}”",
+        "requirementRequired": "A resource becomes required.",
+        "requirementOptional": "A resource becomes optional."
+      },
+      "students": {
+        "heading": "What students would be asked to do",
+        "evidence": "What students hand in: {{evidence}}"
+      },
+      "assessed": {
+        "heading": "How it would be assessed",
+        "criterion": "Criterion",
+        "levels": "Levels",
+        "conditions": "Conditions",
+        "accepted": "Accepted evidence: {{evidence}}"
+      },
+      "outcomes": {
+        "heading": "Learning outcomes covered"
+      },
+      "resources": {
+        "heading": "Resources the activity needs",
+        "required": "Required",
+        "optional": "Optional"
+      },
+      "issues": {
+        "heading": "To check before deciding",
+        "none": "Nothing to check: no problem was reported.",
+        "generated": "In the generated content",
+        "source": "In the course and its source material, not caused by this proposal ({{found}})",
+        "notes": "Notes from the generator"
+      },
+      "issue": {
+        "generated": "“{{name}}” does not fit the course model ({{field}}): {{detail}}",
+        "tooFew": "“{{name}}” has {{found}} {{field}}; at least {{lower}} is needed.",
+        "notAllowed": "“{{name}}”: the {{field}} “{{value}}” is not one of the allowed values ({{allowed}}).",
+        "other": "“{{name}}”: {{field}} ({{code}}).",
+        "finding": "{{reason}} {{resolution}}"
+      },
+      "technical": {
+        "heading": "Technical details",
+        "show": "Show the technical details",
+        "intro": "The exact records, their identifiers and a field-by-field comparison, for administrators. The decision covers exactly this payload."
+      }
+    }
+  },
+  "course": {
+    "title": "Course",
+    "loading": "Loading the course…",
+    "notVisible": "The course content of this context is not visible to you.",
+    "state": "Status: {{status}} · Mode: {{mode}}",
+    "review_one": "Review inbox: {{count}} proposal awaits a decision",
+    "review_other": "Review inbox: {{count}} proposals await a decision",
+    "contents": "On this page",
+    "structure": {
+      "heading": "Structure",
+      "intro": "Phases and units in their order, with the activities of each.",
+      "completion": "Completed when: {{condition}}",
+      "strategies": "Teaching strategy: {{names}}",
+      "noActivities": "No activity yet.",
+      "evidence": "Students hand in: {{evidence}}",
+      "empty": "The learning design has no structure yet."
+    },
+    "outcomes": {
+      "heading": "Learning outcomes and competences",
+      "competences": "Competence: {{names}}",
+      "competencesHeading": "Competences",
+      "empty": "No learning outcome yet."
+    },
+    "strategies": {
+      "heading": "Teaching strategies",
+      "conditions": "Conditions: {{conditions}}",
+      "empty": "No teaching strategy yet."
+    },
+    "assessments": {
+      "heading": "Assessments",
+      "activity": "Students: {{activity}}",
+      "conditions": "Conditions",
+      "evidence": "Accepted evidence: {{evidence}}",
+      "noRubric": "No rubric.",
+      "empty": "No assessment yet."
+    },
+    "materials": {
+      "heading": "Materials",
+      "empty": "No material yet.",
+      "sources": "Cited sources"
+    },
+    "history": {
+      "heading": "History",
+      "intro": "Every proposal made for this course, newest first, with its decisions and its application.",
+      "decision": "{{at}}: {{verdict}} by {{by}}. Reason: {{reason}}",
+      "applied": "{{at}}: applied to the course.",
+      "noEvent": "No decision yet.",
+      "review": "Review this proposal",
+      "empty": "No proposal yet."
+    },
+    "verdict": {
+      "approve": "approved",
+      "reject": "rejected",
+      "requestRevision": "revision requested"
     }
   }
 }

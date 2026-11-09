@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { copyFileSync, readdirSync, readFileSync } from 'node:fs';
+import { copyFileSync, readdirSync, readFileSync, renameSync } from 'node:fs';
 
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test as base } from '@playwright/test';
@@ -17,6 +17,7 @@ export interface Entity extends EntityRef { fields: Record<string, unknown> }
 export interface SeedManifest {
   authoring_context: string;
   delivery_context: string;
+  pending_delivery_context: string;
   staff: string;
   pending_proposals: Record<string, EntityRef[]>;
 }
@@ -53,8 +54,11 @@ export function shown(context: string): Entity[] {
 
 export const test = base.extend<{ seed: SeedManifest }>({
   // Every test starts from the seed as built; the API opens the database per request.
+  // The copy is renamed into place: a request still running from the previous test
+  // would otherwise open a truncated file, which LearningStore initialises as new.
   seed: [async ({}, use) => {
-    copyFileSync(PRISTINE, DATABASE);
+    copyFileSync(PRISTINE, `${DATABASE}.restore`);
+    renameSync(`${DATABASE}.restore`, DATABASE);
     await use(JSON.parse(readFileSync(`${SEED}seed.json`, 'utf8')) as SeedManifest);
   }, { auto: true }],
 });
