@@ -178,7 +178,14 @@ def _latest(store: LearningStore, target: Entity, owner: str) -> Entity:
     return next((e for e in store.owned(owner, target.type) if e.id == target.id), target)
 
 
-def record_decision(store: LearningStore, context: RunContext, target: EntityRef, decision: str, reason: str) -> Entity:
+def record_decision(store: LearningStore, context: RunContext, target: EntityRef, decision: str, reason: str,
+                    *, expected_key: str | None = None) -> Entity:
+    """Record a human decision on ``target``.
+
+    With ``expected_key`` (the key the reviewer was shown) the decision also
+    requires ``target`` to be the current revision with exactly that payload
+    key; otherwise :class:`StateConflict`, before anything is written.
+    """
     reviewed = store.read(target, owner=context.snapshot.context.id)
     if reviewed.type not in {"ChangeProposal", "ResourceBinding", "Evaluation"} or decision not in {"APPROVE", "REJECT", "REQUEST_REVISION"}:
         raise ValueError("Invalid decision target or kind")
@@ -186,6 +193,8 @@ def record_decision(store: LearningStore, context: RunContext, target: EntityRef
     _reviewer_allowed(context.participant, context.policy, context.snapshot.context.ref, reviewed, candidates)
     key = review_payload_key(reviewed, candidates)
     current = _latest(store, reviewed, context.snapshot.context.id)
+    if expected_key is not None and (expected_key != key or current.ref != reviewed.ref):
+        raise StateConflict("Reviewed payload or revision is no longer current")
     if key != reviewed.fields["reviewPayloadKey"] or key != review_payload_key(current, candidates):
         raise ValueError("Reviewed content changed")
     if reviewed.type == "ChangeProposal":
@@ -201,7 +210,7 @@ def record_decision(store: LearningStore, context: RunContext, target: EntityRef
     if reviewed.type == "ChangeProposal":
         fields["status"] = {"APPROVE": "APPROVED", "REJECT": "REJECTED", "REQUEST_REVISION": "DRAFT"}[decision]
     revision = current.model_copy(update={"version": uuid4().hex, "fields": fields})
-    with store.atomic():
+    with (nullcontext() if store.in_transaction else store.atomic()):
         store._put(result, context.snapshot.context.id)
         store._put(revision, context.snapshot.context.id)
     return result

@@ -7,7 +7,8 @@ D8–D10, approved with the roadmap (PR #73) and confirmed on 9 November 2026.
 
 S03 builds the shared skeleton: `services/api_common` and an Authoring API
 with health and identity routes. S05 adds the first read-only modules (see
-[Read-only authoring endpoints](#read-only-authoring-endpoints-s05)). S04 adds the front-end workspace in `apps/` and a studio
+[Read-only authoring endpoints](#read-only-authoring-endpoints-s05)); S06 adds
+decisions and application (see [Review endpoints](#review-endpoints-s06)). S04 adds the front-end workspace in `apps/` and a studio
 shell that signs in through the API (see [Front-end workspace](#front-end-workspace)). ALM remains the reference model. Nothing here changes
 the ALM metamodel, the store schema or an AIM-PRO/jjodel export.
 
@@ -201,10 +202,45 @@ test with its CLI command on the same seeded database
   table, as the copy tool computes them) are unchanged after every endpoint,
   for every subject, including refusals.
 - **Review key.** `review_payload_key` is `learning.decisions.review_payload_key`
-  over the proposal and its candidates, the key `decide` records. S06 requires
-  the client to send it back.
+  over the proposal and its candidates, the key `decide` records. A decision
+  sends it back (S06).
 - Exact references in paths: `resource_id` and `version` name one `Resource`;
   identifiers with `:` are sent percent-encoded.
+
+## Review endpoints (S06)
+
+Two writes in the `review` module. Both need a session and the CSRF token
+(`X-CSRF-Token`, D8) through `context_writer`, resolve the context as the reads
+do (404 `context_unavailable`), answer `Cache-Control: no-store` and return the
+entity the CLI prints.
+
+| Route | Body | Response | CLI equivalent |
+| --- | --- | --- | --- |
+| `POST /contexts/{context_id}/decisions` | `DecisionRequest`: `target` (exact `EntityRef`), `decision` (`APPROVE`, `REJECT`, `REQUEST_REVISION`), `reason`, `review_payload_key` | the `HumanDecision` | `decide` after `CONFIRM` |
+| `POST /contexts/{context_id}/applications` | `ApplicationRequest`: `proposal` (`EntityRef`), `operation_id` | the `StateChange` | `apply --operation-id` |
+
+- **Stale review → 409.** `LearningService.decide(..., expected_key=...)` refuses
+  with `StateConflict` when the key differs from the key of `target`, or when
+  `target` is no longer the latest revision of that record (for example another
+  reviewer decided after the inbox was loaded). The key ignores `status` and
+  `decision`, so a decision alone never changes it; the revision check is what
+  catches a concurrent decision. The client reloads and reviews again; a
+  decision on the reloaded revision is allowed (a revocation, as in the CLI).
+  Nothing is written before the check.
+- **One write transaction.** `decide` now runs the context load, the checks and
+  the writes in one write transaction, for the CLI too, so the payload that was
+  checked is the payload that is decided. Without `expected_key` (the CLI) the
+  rules are unchanged: a decision on an earlier revision is still recorded.
+- **Replay.** `apply` is the core `apply_proposal`: the same `operation_id`
+  returns the stored `StateChange` without writing; the same id for another
+  proposal is 409. A proposal that is not approved is 422, as the CLI exits 2.
+- **Authority unchanged.** The core checks the `decide` and `apply` actions
+  (403) and the reviewer roles: administrative authority for `Participant` and
+  `PolicySet`, assessment authority for `Evaluation`, content authority for the
+  other kinds (422, plain `ValueError`).
+- **Interchangeable with the CLI.** A decision recorded by one is applied by the
+  other, and an application replays across both with the same operation id
+  (`tests/services/test_authoring_review_api.py`, on SQLite and PostgreSQL).
 
 ## Synthetic seed (D15)
 

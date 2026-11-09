@@ -1,6 +1,26 @@
 {
   "components": {
     "schemas": {
+      "ApplicationRequest": {
+        "additionalProperties": false,
+        "description": "Apply an approved proposal, as the CLI ``apply``; ``operation_id`` makes a retry a replay.",
+        "properties": {
+          "operation_id": {
+            "minLength": 1,
+            "title": "Operation Id",
+            "type": "string"
+          },
+          "proposal": {
+            "$ref": "#/components/schemas/EntityRef"
+          }
+        },
+        "required": [
+          "proposal",
+          "operation_id"
+        ],
+        "title": "ApplicationRequest",
+        "type": "object"
+      },
       "ApprovedSyllabus": {
         "additionalProperties": false,
         "properties": {
@@ -382,6 +402,42 @@
           "required_action"
         ],
         "title": "CoverageRequirement",
+        "type": "object"
+      },
+      "DecisionRequest": {
+        "additionalProperties": false,
+        "description": "A decision on ``target``, the exact revision the reviewer saw, as the CLI ``decide``.",
+        "properties": {
+          "decision": {
+            "enum": [
+              "APPROVE",
+              "REJECT",
+              "REQUEST_REVISION"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "reason": {
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "review_payload_key": {
+            "minLength": 1,
+            "title": "Review Payload Key",
+            "type": "string"
+          },
+          "target": {
+            "$ref": "#/components/schemas/EntityRef"
+          }
+        },
+        "required": [
+          "target",
+          "decision",
+          "reason",
+          "review_payload_key"
+        ],
+        "title": "DecisionRequest",
         "type": "object"
       },
       "Entity": {
@@ -1598,7 +1654,7 @@
   },
   "info": {
     "title": "ALM Authoring API",
-    "version": "0.2.0"
+    "version": "0.3.0"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -1971,6 +2027,210 @@
         "summary": "Context summary with the same redaction as the CLI show",
         "tags": [
           "contexts"
+        ]
+      }
+    },
+    "/contexts/{context_id}/applications": {
+      "post": {
+        "operationId": "apply_contexts__context_id__applications_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "context_id",
+            "required": true,
+            "schema": {
+              "title": "Context Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplicationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Entity"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "No valid session"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not authorized, unmapped identity or missing CSRF token"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or the context is unavailable"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict with the current state; reload and retry"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Invalid request or data"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Internal error"
+          }
+        },
+        "summary": "Apply an approved proposal; a replay of the operation id returns the same change",
+        "tags": [
+          "review"
+        ]
+      }
+    },
+    "/contexts/{context_id}/decisions": {
+      "post": {
+        "operationId": "decide_contexts__context_id__decisions_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "context_id",
+            "required": true,
+            "schema": {
+              "title": "Context Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Entity"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "No valid session"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not authorized, unmapped identity or missing CSRF token"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or the context is unavailable"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict with the current state; reload and retry"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Invalid request or data"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Internal error"
+          }
+        },
+        "summary": "Record a human decision on the reviewed payload; 409 if its key or revision is stale",
+        "tags": [
+          "review"
         ]
       }
     },

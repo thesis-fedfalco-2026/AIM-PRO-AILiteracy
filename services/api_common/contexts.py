@@ -14,20 +14,23 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterator
 
-from fastapi import Request, Response
+from fastapi import Depends, Request, Response
 
 from learning.contracts import EntityRef
 from learning.metamodel import load_contract
 from learning.policies import TrustedPolicy
 from learning.service import LearningService
 from learning.store import LearningStore, resolve_location
-from services.api_common.auth import Principal, current_principal
+from services.api_common.auth import Principal, csrf_protected, current_principal
 from services.api_common.errors import ContextUnavailable, error_responses
 from services.api_common.registry import ConfigurationError
 
 
 READ_ERRORS = error_responses(401, 403, 404, 409, 422, 500)
 """What a context read can answer besides 200; 404 includes an unavailable context."""
+
+WRITE_ERRORS = error_responses(401, 403, 404, 409, 422, 500)
+"""What a context write can answer besides 200; 403 includes a missing CSRF token, 409 a stale state."""
 
 
 class PolicyDirectoryError(RuntimeError):
@@ -94,3 +97,9 @@ def context_reader(request: Request, response: Response) -> Principal:
     """The principal of a context read; the response holds private content and is never cached."""
     response.headers['Cache-Control'] = 'no-store'
     return current_principal(request)
+
+
+def context_writer(response: Response, principal: Principal = Depends(csrf_protected)) -> Principal:
+    """The principal of a context write: CSRF-protected, and the response is never cached."""
+    response.headers['Cache-Control'] = 'no-store'
+    return principal
