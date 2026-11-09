@@ -8,12 +8,14 @@ from unittest.mock import patch
 from learning.contracts import EntityRef, entity_data
 from learning.store import LearningStore, StateConflict, canonical
 from tests.learning_fixtures import load_bundle, record, ref
+from tests.store_backends import new_store_location, on_both_backends, sqlite_only
 
 
+@on_both_backends
 class StoreTest(unittest.TestCase):
     def setUp(self):
         self.temp = TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
-        self.path = Path(self.temp.name) / "state.sqlite"
+        self.path = new_store_location(self, self.temp.name, "state.sqlite")
         self.store = LearningStore(self.path); self.addCleanup(self.store.close)
         self.store.seed(load_bundle(), owner="session")
 
@@ -96,6 +98,7 @@ class StoreTest(unittest.TestCase):
         with self.assertRaises(StateConflict):
             self.store.claim_request("req", "session", "different")
 
+    @sqlite_only
     def test_new_database_keys_requests_and_operations_by_owner_then_id(self):
         self.assertEqual(self.store.db.execute("PRAGMA user_version").fetchone()[0], 2)
         for table in ("requests", "operations"):
@@ -103,6 +106,7 @@ class StoreTest(unittest.TestCase):
             self.assertEqual([column[1] for column in sorted(columns, key=lambda column: column[5]) if column[5]],
                              ["owner", "id"])
 
+    @sqlite_only
     def test_concurrent_initialization_does_not_reject_newly_created_schema(self):
         path = Path(self.temp.name) / "concurrent.sqlite"
         connect = sqlite3.connect
@@ -146,6 +150,7 @@ class StoreTest(unittest.TestCase):
         self.assertEqual(self.store.operation_result("shared", "session"), first)
         self.assertEqual(self.store.operation_result("shared", "other"), second)
 
+    @sqlite_only
     def test_v1_migration_preserves_data_and_creates_unmodified_backup(self):
         path, db = self.legacy_database()
         path.chmod(0o600)
@@ -172,6 +177,7 @@ class StoreTest(unittest.TestCase):
                              "fingerprint")
             self.assertEqual(backup.execute("SELECT version FROM contexts WHERE id='session'").fetchone()[0], "1")
 
+    @sqlite_only
     def test_migration_does_not_overwrite_existing_backup(self):
         path, _ = self.legacy_database()
         existing = path.with_name(path.name + ".v1.bak")
@@ -181,6 +187,7 @@ class StoreTest(unittest.TestCase):
         self.assertEqual(existing.read_text(), "keep this backup")
         self.assertEqual(len(list(path.parent.glob(f"{path.name}.v1*.bak"))), 2)
 
+    @sqlite_only
     def test_unversioned_database_with_tables_is_not_mislabelled_v2(self):
         path, db = self.legacy_database()
         with db:
@@ -191,6 +198,7 @@ class StoreTest(unittest.TestCase):
         self.assertEqual(db.execute("PRAGMA user_version").fetchone()[0], 0)
         self.assertEqual(db.execute("SELECT payload FROM requests WHERE id='req'").fetchone()[0], "payload")
 
+    @sqlite_only
     def test_failed_migration_leaves_v1_database_intact(self):
         path, db = self.legacy_database()
         with db:

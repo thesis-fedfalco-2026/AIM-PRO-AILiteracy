@@ -1,6 +1,7 @@
 """Production release, delivery-import and activation acceptance for R1 (#71).
 
-Temporary SQLite only; sockets, DNS and model construction are forbidden. Model
+Temporary SQLite file or PostgreSQL test schema only; sockets, DNS (except for
+the configured PostgreSQL test host) and model construction are forbidden. Model
 responses for the authoring generators are synthetic; every release, import and
 activation step runs the production commands and the generic decide/apply.
 """
@@ -24,6 +25,7 @@ from learning.service import LearningService
 from learning.store import LearningStore, StateConflict
 from tests.authoring_cycle_fixtures import (AUTH, DELIVERY, DELIVERY_TWO, ProductionAuthoring,
                                             entity, ref, trusted_policy)
+from tests.store_backends import block_network, new_store_location, on_both_backends
 
 
 SIMULATED_ASSESSOR = {'EVALUATOR': 'learner-response-evaluator'}
@@ -31,15 +33,11 @@ SIMULATED_ASSESSOR = {'EVALUATOR': 'learner-response-evaluator'}
 
 class ReleaseTest(unittest.TestCase):
     def setUp(self):
-        for target in ('socket.socket.connect', 'socket.create_connection', 'socket.getaddrinfo',
-                       'crewai.LLM', 'agent_system.runtime.LLMFactory.__call__'):
-            blocker = patch(target, side_effect=AssertionError('Release tests must not use the network or models'))
-            blocked = blocker.start()
-            self.addCleanup(blocker.stop)
-            self.addCleanup(blocked.assert_not_called)
+        block_network(self, 'Release tests must not use the network or models',
+                      'crewai.LLM', 'agent_system.runtime.LLMFactory.__call__')
         self.temp = TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
-        self.path = Path(self.temp.name) / 'releases.sqlite'
+        self.path = new_store_location(self, self.temp.name, 'releases.sqlite')
         self.store = LearningStore(self.path)
         self.addCleanup(self.store.close)
         self.service = LearningService(self.store, load_contract(), trusted_policy(),
@@ -95,6 +93,7 @@ class ReleaseTest(unittest.TestCase):
                 update={'origin': 'OBSERVED_EVENT'})}), context_id)
 
 
+@on_both_backends
 class ReleaseProposalTest(ReleaseTest):
     def test_release_proposal_is_pending_exact_and_replays(self):
         self.build()
@@ -186,6 +185,7 @@ class ReleaseProposalTest(ReleaseTest):
         self.assertFalse([r for r in self.store.read_context(AUTH).fields['models'] if r['id'].startswith('authoring-release:')])
 
 
+@on_both_backends
 class ReleaseInspectionTest(ReleaseTest):
     def test_show_release_cites_receipts_closure_and_ignores_later_revisions(self):
         self.build()
@@ -236,6 +236,7 @@ class ReleaseInspectionTest(ReleaseTest):
             self.author.delivery_import(release, service=revoked)
 
 
+@on_both_backends
 class DeliveryImportTest(ReleaseTest):
     def test_import_requires_an_applied_release(self):
         self.build()
@@ -349,6 +350,7 @@ class DeliveryImportTest(ReleaseTest):
             self.author.delivery_import(release, DELIVERY_TWO, 'import-again')
         self.assertEqual(self.store.read_context(DELIVERY_TWO).fields['models'], [])
 
+@on_both_backends
 class ActivationTest(ReleaseTest):
     def test_activation_is_refused_with_explicit_findings(self):
         release = self.released()
@@ -434,6 +436,7 @@ class ActivationTest(ReleaseTest):
         self.assertEqual(self.store.read_context(DELIVERY).fields['mode'], 'PREPARATION')
 
 
+@on_both_backends
 class ReservedRuleTest(ReleaseTest):
     def test_generic_proposals_cannot_create_releases_or_bypass_the_import(self):
         release = self.released()
@@ -489,6 +492,7 @@ class ReservedRuleTest(ReleaseTest):
         self.assertIn('RELEASE_PIN_MISMATCH', {f.code for f in self.service.inspect_release(AUTH, 'admin', forged.ref).findings})
 
 
+@on_both_backends
 class ReleaseCliTest(ReleaseTest):
     def test_cli_release_inspection_import_preview_and_activation_refusal(self):
         self.build()

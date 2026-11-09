@@ -20,18 +20,16 @@ from learning.store import LearningStore, StateConflict
 from tests.authoring_cycle_fixtures import AUTH, DELIVERY, SimulatedAuthoring, trusted_policy
 from tests.syllabus_fixtures import Curator, Reviewer
 from tests.test_aimpro_retrieval import response
+from tests.store_backends import block_network, new_store_location, on_both_backends
 
 
+@on_both_backends
 class AuthoringProjectTest(unittest.TestCase):
     def setUp(self):
-        for target in ('socket.socket.connect', 'socket.create_connection', 'socket.getaddrinfo'):
-            blocker = patch(target, side_effect=AssertionError('Project acceptance must not use the network'))
-            blocked = blocker.start()
-            self.addCleanup(blocker.stop)
-            self.addCleanup(blocked.assert_not_called)
+        block_network(self, 'Project acceptance must not use the network')
         self.temp = TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
-        self.path = Path(self.temp.name) / 'project.sqlite'
+        self.path = new_store_location(self, self.temp.name, 'project.sqlite')
         self.store = LearningStore(self.path)
         self.addCleanup(self.store.close)
         self.models = Mock(side_effect=AssertionError('Project operations must not construct models'))

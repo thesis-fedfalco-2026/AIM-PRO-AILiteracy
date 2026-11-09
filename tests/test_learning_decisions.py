@@ -1,5 +1,4 @@
 from dataclasses import replace
-from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 
@@ -10,6 +9,7 @@ from learning.metamodel import load_contract
 from learning.store import LearningStore, StateConflict
 from tests.learning_fixtures import load_bundle, record, ref
 from tests.test_learning_context import policy
+from tests.store_backends import new_store_location, on_both_backends
 
 
 def admin_bundle():
@@ -20,10 +20,12 @@ def admin_bundle():
     return tuple([*data, admin])
 
 
+@on_both_backends
 class DecisionsTest(unittest.TestCase):
     def setUp(self):
         self.temp = TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
-        self.store = LearningStore(Path(self.temp.name) / "state.sqlite"); self.addCleanup(self.store.close)
+        self.store = LearningStore(new_store_location(self, self.temp.name, "state.sqlite"))
+        self.addCleanup(self.store.close)
         self.store.seed(admin_bundle(), owner="session")
         self.policy = policy()
 

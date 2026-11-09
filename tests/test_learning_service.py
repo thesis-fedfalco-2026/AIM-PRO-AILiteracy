@@ -13,12 +13,14 @@ from learning.outputs import LearningResponse, ProposedChange
 from tests.test_learning_context import policy
 from tests.test_learning_assessment import assessment_bundle
 from tests.learning_fixtures import record, ref
+from tests.store_backends import new_store_location, on_both_backends
 
 
+@on_both_backends
 class ServiceTest(unittest.TestCase):
     def setUp(self):
         self.temp = TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
-        self.path = Path(self.temp.name) / 'state.sqlite'
+        self.path = new_store_location(self, self.temp.name, 'state.sqlite')
         self.store = LearningStore(self.path); self.addCleanup(self.store.close)
         self.factory = Mock(side_effect=RuntimeError('provider private text'))
         self.service = LearningService(self.store, load_contract(), policy(), self.factory)

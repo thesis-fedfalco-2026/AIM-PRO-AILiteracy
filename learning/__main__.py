@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-import sqlite3
 import sys
 from uuid import uuid4
 
@@ -14,12 +13,12 @@ from learning.metamodel import load_contract, validate_entity
 from learning.policies import TrustedPolicy, authorize
 from learning.releases import ActivationRefused
 from learning.service import LearningService
-from learning.store import LearningStore
+from learning.store import LearningStore, database_errors
 
 
 def parse_args(argv=None):
     parser = argparse.ArgumentParser(description='Local ALM lifecycle with explicit context and policy')
-    parser.add_argument('--db', type=Path, required=True)
+    parser.add_argument('--db', required=True, help='SQLite file, sqlite:///path or postgresql:// URL')
     parser.add_argument('--policy', type=Path, required=True)
     parser.add_argument('--subject', required=True)
     parser.add_argument('--context', required=True)
@@ -285,7 +284,7 @@ def main(argv=None):
         print(json.dumps({'refused': 'activation', 'findings': [f.model_dump() for f in error.findings]},
                          ensure_ascii=False, indent=2), file=sys.stderr)
         return 2
-    except (ValueError, OSError, KeyError, EOFError, sqlite3.Error):
+    except (ValueError, OSError, KeyError, EOFError, *database_errors()):
         print('Operation not performed: check the context, permissions, references and data format.',file=sys.stderr)
         return 2
 
