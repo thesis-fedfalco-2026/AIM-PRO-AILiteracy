@@ -151,10 +151,30 @@ In the pull_request run, `store-backends` (PostgreSQL service) ran 346 tests, OK
 
 ## Open decisions
 
-None blocked S08. For S09a, findings 3 and 4 may need an owner answer:
+None blocked S08.
 
-- a job outcome for source preparation;
-- where uploaded AIM-PRO exports are stored for the worker.
+### Owner answers (9 November 2026, after the PR was opened)
+
+The owner answered the two questions from findings 3 and 4. This chat's
+reading of the answers is below; it was not checked with the owner.
+
+1. **Source preparation.** "Provide the sources and prepare them; then the
+   user decides whether to use them and accepts them." Reading:
+   - source preparation becomes an agent job in S09a;
+   - its result is the prepared sources, not a proposal;
+   - the teacher reviews them and decides whether the Curator syllabus job
+     uses them; nothing is used until the teacher accepts.
+
+   This needs a job outcome for "completed, awaiting the teacher's choice", a
+   change to the job contract in the guide (statuses `QUEUED` … `ABANDONED`),
+   to be designed in S09a.
+2. **Uploaded AIM-PRO exports.** "In a local folder." Reading: an upload is
+   stored unchanged in a local directory on the host, the one the worker reads
+   (`ALM_AIMPRO_EXPORTS`), and Curator jobs name it by file name and SHA-256,
+   as S08 already does.
+
+A chat does not edit the roadmap (working protocol, rule 9). The owner may
+record these answers there as decisions.
 
 Still open from the roadmap: D19, D21, G7 / D4.
 
