@@ -1,0 +1,35 @@
+# Local Keycloak for the role-application APIs (roadmap S03). Synthetic users only.
+#
+#   export ALM_KEYCLOAK_ADMIN_PASSWORD=...   # Keycloak console (admin)
+#   export ALM_KEYCLOAK_DEV_PASSWORD=...     # dev-admin, dev-learner, dev-unmapped
+#   export ALM_OIDC_CLIENT_SECRET=...        # client alm-authoring-api; the API uses the same value
+#   docker compose -f compose.identity.yml up -d --wait
+#
+# Issuer: http://127.0.0.1:58080/realms/alm-dev. The realm is imported from
+# infra/keycloak/alm-dev-realm.json at every start; nothing is persisted.
+# The dev identity map (infra/keycloak/identity-map.dev.json) names this issuer,
+# so keep the port, or change both. Manual smoke test: docs/architecture/role-applications.md.
+services:
+  alm-keycloak:
+    image: quay.io/keycloak/keycloak:26.8.1@sha256:3f3c5f8e03c614774b4bd9173b88391fefa4153bfc010d8012d59ad825377332
+    command:
+      - start-dev
+      - --import-realm
+      - --hostname=http://127.0.0.1:58080
+      - --health-enabled=true
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${ALM_KEYCLOAK_ADMIN_PASSWORD:?set ALM_KEYCLOAK_ADMIN_PASSWORD}
+      ALM_KEYCLOAK_DEV_PASSWORD: ${ALM_KEYCLOAK_DEV_PASSWORD:?set ALM_KEYCLOAK_DEV_PASSWORD}
+      ALM_OIDC_CLIENT_SECRET: ${ALM_OIDC_CLIENT_SECRET:?set ALM_OIDC_CLIENT_SECRET}
+    ports:
+      - "127.0.0.1:58080:8080"
+    volumes:
+      - ./infra/keycloak/alm-dev-realm.json:/opt/keycloak/data/import/alm-dev-realm.json:ro
+    healthcheck:
+      test: [CMD-SHELL, "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.0\\r\\n\\r\\n' >&3 && grep -q UP <&3"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+    security_opt:
+      - no-new-privileges:true

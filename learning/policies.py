@@ -11,6 +11,10 @@ HumanRole = Literal["LEARNER", "CONTENT_RESPONSIBLE", "ASSESSOR", "OBSERVER", "A
 Action = Literal["read", "interact", "submit", "propose", "decide", "apply", "bootstrap"]
 
 
+class AuthorizationError(ValueError):
+    """The trusted policy does not grant the action; a ``ValueError`` for existing callers."""
+
+
 class SubjectGrant(Record):
     roles: list[HumanRole]
     actions: dict[Text, list[Action]]
@@ -47,7 +51,7 @@ def load_trusted_policy(path: Path, policy_ref: EntityRef) -> TrustedPolicy:
 def authorize(policy: TrustedPolicy, subject_key: str, action: str, context_ref: EntityRef) -> None:
     subject = policy.subjects.get(subject_key)
     if context_ref.type != "ExecutionContext" or subject is None or action not in subject.actions.get(context_ref.id, []):
-        raise ValueError("Action is not authorized in this context")
+        raise AuthorizationError("Action is not authorized in this context")
 
 
 def scope_allows(policy: TrustedPolicy, name: str, context_id: str, subject: str,
