@@ -45,9 +45,8 @@
       "pendingEmpty": "No proposal awaits a decision.",
       "approvedHeading": "Approved, not yet applied",
       "approvedEmpty": "No approved proposal waits to be applied.",
-      "records_one": "{{count}} record · proposed by {{responsible}}",
-      "records_other": "{{count}} records · proposed by {{responsible}}",
-      "approvedMeta": "Proposed by {{responsible}}"
+      "approvedMeta": "Proposed by {{responsible}}",
+      "pendingMeta": "Proposed by {{responsible}} · Points to check: {{issues}}"
     },
     "errors": {
       "unavailable": "This context is not available. Check its id, or ask an operator whether its policy is installed.",
@@ -134,6 +133,77 @@
       "conflict": "The proposal can no longer be applied as approved: {{detail}} The page now shows its current state.",
       "forbidden": "You are not allowed to apply this proposal. Nothing was changed.",
       "failed": "The application did not complete. Try again: the retry repeats the same operation, so the change is applied at most once."
+    },
+    "teacher": {
+      "titleAssessment": "Proposed assessment",
+      "titleOther": "Proposed change",
+      "byline": "Proposed by {{responsible}}",
+      "otherProposal": "This proposal has no student activity or assessment content. What it changes is listed in the technical details.",
+      "changes": {
+        "heading": "What changes",
+        "none": "The teaching content is the same as the version in use now. Only internal links and versions change; they are listed in the technical details.",
+        "now": "Now",
+        "proposed": "Proposed"
+      },
+      "change": {
+        "newActivity": "A new student activity is added.",
+        "instructions": "The instructions for students change.",
+        "evidenceAdded": "Evidence students hand in, added: {{value}}",
+        "evidenceRemoved": "Evidence students hand in, removed: {{value}}",
+        "newRubric": "A new rubric is added: {{value}}",
+        "criterionAdded": "Assessment criterion added: {{value}}",
+        "criterionRemoved": "Assessment criterion removed: {{value}}",
+        "criterionChanged": "The assessment criterion “{{value}}” changes.",
+        "newAssessment": "A new assessment is added.",
+        "conditionAdded": "Assessment condition added: “{{value}}”",
+        "conditionRemoved": "Assessment condition removed: “{{value}}”",
+        "acceptedAdded": "Accepted evidence added: {{value}}",
+        "acceptedRemoved": "Accepted evidence removed: {{value}}",
+        "newRequirement": "A new resource requirement is added: {{value}}",
+        "purpose": "The purpose of a resource requirement changes.",
+        "constraintAdded": "Resource condition added: “{{value}}”",
+        "constraintRemoved": "Resource condition removed: “{{value}}”",
+        "requirementRequired": "A resource becomes required.",
+        "requirementOptional": "A resource becomes optional."
+      },
+      "students": {
+        "heading": "What students would be asked to do",
+        "evidence": "What students hand in: {{evidence}}"
+      },
+      "assessed": {
+        "heading": "How it would be assessed",
+        "criterion": "Criterion",
+        "levels": "Levels",
+        "conditions": "Conditions",
+        "accepted": "Accepted evidence: {{evidence}}"
+      },
+      "outcomes": {
+        "heading": "Learning outcomes covered"
+      },
+      "resources": {
+        "heading": "Resources the activity needs",
+        "required": "Required",
+        "optional": "Optional"
+      },
+      "issues": {
+        "heading": "To check before deciding",
+        "none": "Nothing to check: no problem was reported.",
+        "generated": "In the generated content",
+        "source": "In the course and its source material, not caused by this proposal ({{found}})",
+        "notes": "Notes from the generator"
+      },
+      "issue": {
+        "generated": "“{{name}}” does not fit the course model ({{field}}): {{detail}}",
+        "tooFew": "“{{name}}” has {{found}} {{field}}; at least {{lower}} is needed.",
+        "notAllowed": "“{{name}}”: the {{field}} “{{value}}” is not one of the allowed values ({{allowed}}).",
+        "other": "“{{name}}”: {{field}} ({{code}}).",
+        "finding": "{{reason}} {{resolution}}"
+      },
+      "technical": {
+        "heading": "Technical details",
+        "show": "Show the technical details",
+        "intro": "The exact records, their identifiers and a field-by-field comparison, for administrators. The decision covers exactly this payload."
+      }
     }
   }
 }

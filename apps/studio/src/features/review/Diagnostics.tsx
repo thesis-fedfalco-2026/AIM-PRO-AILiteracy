@@ -1,14 +1,9 @@
 import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { readable } from './model';
 import type { Finding, JsonValue } from './reviewApi';
 import { JsonText, ScrollRegion } from './parts';
-
-/** `contract_findings` → `Contract findings`: report keys are data, shown in a readable form. */
-const readable = (key: string) => {
-  const words = key.replace(/[_-]+/g, ' ').trim();
-  return words.charAt(0).toUpperCase() + words.slice(1);
-};
 
 const isRecord = (value: JsonValue): value is Record<string, JsonValue> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -18,7 +13,7 @@ function FindingTable({ heading, findings }: { heading: string; findings: Findin
   const id = useId();
   return (
     <>
-      <h3 id={id}>{heading}</h3>
+      <h4 id={id}>{heading}</h4>
       <ScrollRegion labelledBy={id}>
         <table className="alm-table">
           <thead>
@@ -77,7 +72,7 @@ function ReportEntry({ name, value }: { name: string; value: JsonValue }) {
   }
   return (
     <>
-      <h4 id={id}>{readable(name)}</h4>
+      <h5 id={id}>{readable(name)}</h5>
       {body}
     </>
   );
@@ -96,14 +91,14 @@ export function Diagnostics({ findings, contextFindings, report }: DiagnosticsPr
   const empty = findings.length === 0 && contextFindings.length === 0 && entries.length === 0;
   return (
     <section aria-labelledby="review-diagnostics">
-      <h2 id="review-diagnostics">{t('review.diagnostics.heading')}</h2>
+      <h3 id="review-diagnostics">{t('review.diagnostics.heading')}</h3>
       {empty ? <p>{t('review.diagnostics.none')}</p> : null}
       {findings.length > 0 ? <FindingTable heading={t('review.diagnostics.findings')} findings={findings} /> : null}
       {contextFindings.length > 0
         ? <FindingTable heading={t('review.diagnostics.contextFindings')} findings={contextFindings} /> : null}
       {entries.length > 0 ? (
         <>
-          <h3>{t('review.diagnostics.report')}</h3>
+          <h4>{t('review.diagnostics.report')}</h4>
           {entries.map(([name, value]) => <ReportEntry key={name} name={name} value={value} />)}
         </>
       ) : null}

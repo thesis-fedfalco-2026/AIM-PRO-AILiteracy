@@ -216,6 +216,56 @@ a:focus-visible,
   font-weight: 600;
 }
 
+/* Reading text and comparisons */
+
+.alm-text {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.alm-changes > li + li {
+  margin-top: var(--alm-space-2);
+}
+
+.alm-compare {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--alm-space-3);
+  margin: var(--alm-space-2) 0;
+}
+
+.alm-compare > div {
+  padding: var(--alm-space-2) var(--alm-space-3);
+  border: 1px solid var(--alm-color-border);
+  border-radius: var(--alm-radius);
+}
+
+.alm-compare__label {
+  margin: 0 0 var(--alm-space-1);
+  font-weight: 600;
+}
+
+.alm-levels {
+  display: grid;
+  gap: var(--alm-space-1);
+  margin: 0;
+}
+
+.alm-levels dt {
+  display: inline;
+  font-weight: 600;
+}
+
+.alm-levels dt::after {
+  content: ": ";
+}
+
+.alm-levels dd {
+  display: inline;
+  margin: 0;
+}
+
 /* Lists, tables and records */
 
 .alm-cards {

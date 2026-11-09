@@ -57,7 +57,7 @@ export function Changes({ comparisons }: { comparisons: CandidateComparison[] })
   const { t } = useTranslation();
   return (
     <section aria-labelledby="review-changes">
-      <h2 id="review-changes">{t('review.changes.heading')}</h2>
+      <h3 id="review-changes">{t('review.changes.heading')}</h3>
       <p>{t('review.changes.intro')}</p>
       {comparisons.map((comparison) => (
         <Comparison key={`${comparison.candidate.type}:${comparison.candidate.id}`} comparison={comparison} />

@@ -4,14 +4,17 @@ import { Link } from 'react-router';
 
 import { latestProposals, proposalExplanation, proposalStatus } from './model';
 import { LoadFailure } from './parts';
-import type { Entity, Inbox } from './reviewApi';
+import type { Entity, Finding, Inbox } from './reviewApi';
 import { proposalPath } from './paths';
+import { plainIssues, teacherView } from './teacher';
 import { useInbox } from './useInbox';
 
-function ProposalLink({ contextId, proposal, meta }: { contextId: string; proposal: Entity; meta: string }) {
+function ProposalLink({ contextId, proposal, title, meta }: {
+  contextId: string; proposal: Entity; title?: string; meta: string;
+}) {
   return (
     <li className="alm-card">
-      <Link to={proposalPath(contextId, proposal.id)}>{proposalExplanation(proposal).summary || proposal.id}</Link>
+      <Link to={proposalPath(contextId, proposal.id)}>{title || proposalExplanation(proposal).summary || proposal.id}</Link>
       <p className="alm-muted">{meta}</p>
     </li>
   );
@@ -26,10 +29,19 @@ function InboxLists({ contextId, inbox }: { contextId: string; inbox: Inbox }) {
         <h2 id="inbox-pending">{t('review.inbox.pendingHeading')}</h2>
         {inbox.pending.length === 0 ? <p>{t('review.inbox.pendingEmpty')}</p> : (
           <ul className="alm-cards">
-            {inbox.pending.map(({ proposal, candidates }) => (
-              <ProposalLink key={proposal.id} contextId={contextId} proposal={proposal}
-                meta={t('review.inbox.records', { count: candidates.length, responsible: proposal.provenance.responsible })} />
-            ))}
+            {inbox.pending.map(({ proposal, candidates }) => {
+              const view = teacherView(candidates, [inbox.context, ...inbox.entities]);
+              const findings = (Array.isArray(proposal.fields.findings) ? proposal.fields.findings : []) as unknown as Finding[];
+              const issues = plainIssues(proposalExplanation(proposal).details, findings, inbox.findings);
+              const task = view.activities[0]?.instruction.split('\n')[0];
+              const title = view.isAssessment
+                ? (task ? `${t('review.teacher.titleAssessment')}: ${task}` : t('review.teacher.titleAssessment')) : undefined;
+              return (
+                <ProposalLink key={proposal.id} contextId={contextId} proposal={proposal} {...(title ? { title } : {})}
+                  meta={t('review.inbox.pendingMeta', { responsible: proposal.provenance.responsible,
+                    issues: String(issues.generated.length + issues.source.length) })} />
+              );
+            })}
           </ul>
         )}
       </section>
