@@ -14,3 +14,9 @@ openinference-instrumentation-openai==0.1.69
 
 # WP3 PostgreSQL corpus retrieval.
 psycopg[binary]==3.2.12
+
+# Role-application APIs (roadmap S03, D11). fastapi 0.141.1 is the last release
+# without opentelemetry-api>=1.44, which crewai 1.15.18 (~=1.42.0) excludes.
+fastapi==0.141.1
+uvicorn==0.54.0
+pyjwt[crypto]==2.15.1

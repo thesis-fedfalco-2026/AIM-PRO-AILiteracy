@@ -1,0 +1,69 @@
+{
+  "realm": "alm-dev",
+  "displayName": "ALM development (synthetic users only)",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": false,
+  "rememberMe": false,
+  "loginWithEmailAllowed": false,
+  "duplicateEmailsAllowed": false,
+  "bruteForceProtected": true,
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "clients": [
+    {
+      "clientId": "alm-authoring-api",
+      "name": "ALM Authoring API (development)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${ALM_OIDC_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "frontchannelLogout": false,
+      "redirectUris": ["http://127.0.0.1:58000/auth/callback"],
+      "webOrigins": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://127.0.0.1:58000/"
+      }
+    }
+  ],
+  "users": [
+    {
+      "id": "218842f7-8cad-4b90-96d7-c0540c4bb7f7",
+      "username": "dev-admin",
+      "enabled": true,
+      "email": "dev-admin@example.org",
+      "emailVerified": true,
+      "firstName": "Synthetic",
+      "lastName": "Administrator",
+      "credentials": [{"type": "password", "value": "${ALM_KEYCLOAK_DEV_PASSWORD}", "temporary": false}]
+    },
+    {
+      "id": "0305bbe3-81b8-4458-a974-c2a152eec3da",
+      "username": "dev-learner",
+      "enabled": true,
+      "email": "dev-learner@example.org",
+      "emailVerified": true,
+      "firstName": "Synthetic",
+      "lastName": "Learner",
+      "credentials": [{"type": "password", "value": "${ALM_KEYCLOAK_DEV_PASSWORD}", "temporary": false}]
+    },
+    {
+      "id": "4b8a1440-fcbb-4291-9d8e-3452a70952b5",
+      "username": "dev-unmapped",
+      "enabled": true,
+      "email": "dev-unmapped@example.org",
+      "emailVerified": true,
+      "firstName": "Synthetic",
+      "lastName": "Unmapped",
+      "credentials": [{"type": "password", "value": "${ALM_KEYCLOAK_DEV_PASSWORD}", "temporary": false}]
+    }
+  ]
+}

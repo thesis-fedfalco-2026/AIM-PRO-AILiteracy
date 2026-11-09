@@ -1,0 +1,15 @@
+{
+  "format": 1,
+  "identities": [
+    {
+      "issuer": "http://127.0.0.1:58080/realms/alm-dev",
+      "subject": "218842f7-8cad-4b90-96d7-c0540c4bb7f7",
+      "subject_key": "admin"
+    },
+    {
+      "issuer": "http://127.0.0.1:58080/realms/alm-dev",
+      "subject": "0305bbe3-81b8-4458-a974-c2a152eec3da",
+      "subject_key": "learner"
+    }
+  ]
+}
