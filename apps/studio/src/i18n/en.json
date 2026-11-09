@@ -23,13 +23,24 @@
   },
   "home": {
     "title": "Studio",
-    "intro": "See a course as a whole, and review the proposals that await a person: enter the id of its context.",
+    "intro": "Create a course, see a course as a whole, and review the proposals that await a person.",
     "openHeading": "Open a course",
     "contextLabel": "Context id",
     "contextHint": "The id of the execution context, as given to the CLI with --context.",
     "contextRequired": "Enter the id of a context.",
     "open": "Open the course",
-    "openReview": "Open the review inbox"
+    "openReview": "Open the review inbox",
+    "createHeading": "Create a course",
+    "createIntro": "A new course starts empty, in preparation. You become its administrator; nobody else can see it yet.",
+    "courseLabel": "Course id",
+    "courseHint": "Lowercase letters, digits and hyphens, for example prompting-basics.",
+    "courseRequired": "Enter the id of the new course.",
+    "create": "Create the course",
+    "createForbidden": "You may not create courses. Ask an operator to add you to the course template.",
+    "createConflict": "This id is already in use: {{detail}}",
+    "createRefused": "The course was not created: {{detail}}",
+    "createInvalid": "Use lowercase letters, digits and hyphens only, at most 64 characters.",
+    "createFailed": "The course could not be created. Try again."
   },
   "notFound": {
     "title": "Page not found",
@@ -262,6 +273,72 @@
       "approve": "approved",
       "reject": "rejected",
       "requestRevision": "revision requested"
+    },
+    "notStarted": "This course has no syllabus yet.",
+    "build": "Build the course from an AIM-PRO model"
+  },
+  "build": {
+    "title": "Build the course",
+    "intro": "Start the course from an AIM-PRO model: upload it, let the Curator draft a syllabus, review it, then initialize the project.",
+    "back": "Back to the course",
+    "errors": {
+      "refused": "Refused: {{detail}}",
+      "conflict": "Conflict with the current state: {{detail}}",
+      "forbidden": "You are not allowed to do this in this course.",
+      "failed": "The request did not complete. Try again."
+    },
+    "upload": {
+      "heading": "1. Upload the AIM-PRO model",
+      "intro": "The file is checked and kept exactly as you send it; it is never edited.",
+      "file": "AIM-PRO project export",
+      "fileHint": "The JSON file exported from jjodel (megamodel format 1.0).",
+      "fileRequired": "Choose a file.",
+      "scenarioLabel": "Scenario",
+      "scenarioHint": "The name of the scenario model in the export.",
+      "scenarioRequired": "Enter the name of the scenario.",
+      "competenciesLabel": "Competency catalogue",
+      "competenciesHint": "The name of the competency model in the export.",
+      "competenciesRequired": "Enter the name of the competency catalogue.",
+      "submit": "Upload and check",
+      "stored": "The model was accepted and stored unchanged.",
+      "project": "Project",
+      "scenario": "Scenario",
+      "scenarioValue": "{{scenario}}, {{objects}} objects",
+      "digest": "SHA-256",
+      "conforms": "The scenario fits the course model.",
+      "notConforms": "The scenario does not fully fit the course model. You can still continue: the problems below go with the syllabus to its review.",
+      "contractIssues": "Does not fit the course model ({{found}})",
+      "sourceIssues": "Incomplete in the model ({{found}})"
+    },
+    "curator": {
+      "heading": "2. Draft the syllabus with the Curator",
+      "intro": "The Curator reads the uploaded model and the sources found for your query, and proposes a syllabus. Nothing changes until you approve it.",
+      "needsUpload": "Upload a model first.",
+      "scope": "Source scope",
+      "scopeHint": "The collection of sources this course may search, as named in its policy.",
+      "scopeRequired": "Enter the source scope.",
+      "query": "Search query",
+      "queryHint": "What the sources should be about, in a few words.",
+      "queryRequired": "Enter a search query.",
+      "submit": "Ask the Curator",
+      "queued": "Waiting for the agent worker…",
+      "running": "The Curator is drafting the syllabus…",
+      "proposed": "The syllabus is ready and waits for your review.",
+      "review": "Review the proposed syllabus",
+      "abandoned": "The job was abandoned by an administrator.",
+      "ended": "The Curator did not propose a syllabus: {{detail}}"
+    },
+    "project": {
+      "heading": "3. Initialize the project",
+      "intro": "Once the syllabus is applied, the project gathers what the next steps build on: assessments, materials and the release.",
+      "needsSyllabus": "Apply a syllabus first.",
+      "label": "Project id",
+      "hint": "A short name for the project, for example main.",
+      "required": "Enter the project id.",
+      "submit": "Propose the project",
+      "proposed": "The project is proposed and waits for your review.",
+      "review": "Review the proposed project",
+      "selected": "Project “{{project}}” is initialized."
     }
   }
 }

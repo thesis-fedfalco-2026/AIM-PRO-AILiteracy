@@ -5,6 +5,7 @@ import { createMemoryRouter } from 'react-router';
 import { vi } from 'vitest';
 
 import { StudioApp } from '../src/App';
+import { createBuildApi } from '../src/features/course-build/buildApi';
 import { createReviewApi } from '../src/features/review/reviewApi';
 import { OperationIds } from '../src/features/review/ReviewServices';
 import { createStudioI18n } from '../src/i18n';
@@ -35,9 +36,12 @@ export async function renderStudio(replies: Record<string, Reply[]>, path = '/st
   const navigate = vi.fn();
   let next = 0;
   const operations = new OperationIds(() => `operation-${(next += 1)}`);
+  let issued = 0;
+  const newRequestId = () => `request-${(issued += 1)}`;
   const router = createMemoryRouter(studioRoutes, { basename: STUDIO_BASENAME, initialEntries: [path] });
   render(
-    <StudioApp api={createSessionApi(client)} review={createReviewApi(client)} operations={operations}
+    <StudioApp api={createSessionApi(client)} review={createReviewApi(client)} build={createBuildApi(client)}
+      pollMs={5} newRequestId={newRequestId} operations={operations}
       navigate={navigate} router={router} i18n={await createStudioI18n()} />,
   );
   return { navigate, requests, router };

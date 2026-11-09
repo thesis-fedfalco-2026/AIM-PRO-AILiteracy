@@ -28,6 +28,7 @@ from services.authoring_api.app import create_app
 from tests.authoring_cycle_fixtures import AUTH, DELIVERY, DELIVERY_TWO
 from tests.learning_fixtures import record, ref
 from tests.seed import build_seed
+from tests.services.course_fixtures import module_settings
 from tests.services.oidc_fixtures import (ISSUER, MAPPED_SUBJECT, NO_NETWORK, FakeProvider,
                                           auth_settings, log_in, write_identity_map)
 from tests.store_backends import block_network, new_store_location, on_both_backends
@@ -49,7 +50,7 @@ class ReviewApiCase(unittest.TestCase):
             {'issuer': ISSUER, 'subject': MAPPED_SUBJECT, 'subject_key': 'admin'},
             {'issuer': ISSUER, 'subject': LEARNER_SUBJECT, 'subject_key': 'learner'})
         settings = ApiSettings(auth=auth_settings(), identity_map=identities, store=str(self.location),
-                               policy_dir=self.policies, jobs_store=str(self.root / 'jobs.sqlite'))
+                               policy_dir=self.policies, jobs_store=str(self.root / 'jobs.sqlite'), **module_settings(self.root))
         self.app = create_app(settings, transport=self.provider.transport)
         self.staff = self.signed_in(MAPPED_SUBJECT)
         self.learner = self.signed_in(LEARNER_SUBJECT)

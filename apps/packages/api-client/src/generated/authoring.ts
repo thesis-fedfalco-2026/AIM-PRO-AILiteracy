@@ -88,6 +88,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/contexts/{context_id}/aimpro-exports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload an AIM-PRO project export: checked, then stored unchanged for a Curator job */
+        post: operations["upload_contexts__context_id__aimpro_exports_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/contexts/{context_id}/applications": {
         parameters: {
             query?: never;
@@ -116,6 +133,23 @@ export interface paths {
         put?: never;
         /** Record a human decision on the reviewed payload; 409 if its key or revision is stale */
         post: operations["decide_contexts__context_id__decisions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/contexts/{context_id}/designs/{design_id}/versions/{version}/syllabus": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The approved syllabus of the current Curator outline (CLI show-aimpro-syllabus) */
+        get: operations["design_syllabus_contexts__context_id__designs__design_id__versions__version__syllabus_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -207,6 +241,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/contexts/{context_id}/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Propose a project from an approved syllabus (CLI init-authoring-project); a request id replays */
+        post: operations["initialize_project_contexts__context_id__projects_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/contexts/{context_id}/projects/{project_id}": {
         parameters: {
             query?: never;
@@ -252,6 +303,23 @@ export interface paths {
         get: operations["release_inspection_contexts__context_id__resources__resource_id__versions__version__release_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/courses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a course: a new PREPARATION/DRAFT context with a new policy for its creator */
+        post: operations["create_courses_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -426,6 +494,20 @@ export interface components {
             /** Version */
             version: string;
         };
+        /** CourseRequest */
+        CourseRequest: {
+            /**
+             * Context Id
+             * @description The new course id: lowercase letters, digits and hyphens
+             */
+            context_id: string;
+        };
+        /** CourseView */
+        CourseView: {
+            /** Context Id */
+            context_id: string;
+            policy_ref: components["schemas"]["EntityRef"];
+        };
         /** CoverageRequirement */
         CoverageRequirement: {
             /**
@@ -501,6 +583,35 @@ export interface components {
             error: string;
             /** Request Id */
             request_id: string;
+        };
+        /**
+         * ExportReport
+         * @description An accepted export: its name and digest for a Curator job, and what the scenario check found.
+         */
+        ExportReport: {
+            /** Competencies */
+            competencies: string;
+            /** Conforms */
+            conforms: boolean;
+            /** Contract Findings */
+            contract_findings: {
+                [key: string]: components["schemas"]["JsonValue"];
+            }[];
+            export: components["schemas"]["AimproExport"];
+            /** Objects */
+            objects: number;
+            /** Project Id */
+            project_id: string;
+            /** Root Id */
+            root_id: string;
+            /** Scenario */
+            scenario: string;
+            /** Size */
+            size: number;
+            /** Source Diagnostics */
+            source_diagnostics: {
+                [key: string]: components["schemas"]["JsonValue"];
+            }[];
         };
         /** Finding */
         Finding: {
@@ -674,6 +785,18 @@ export interface components {
             /** Proposals */
             proposals: components["schemas"]["PendingProposal"][];
         };
+        /**
+         * ProjectInitializationRequest
+         * @description ``init-authoring-project``: the exact approved syllabus and base context, with the ALM request id.
+         */
+        ProjectInitializationRequest: {
+            base_context: components["schemas"]["EntityRef"];
+            /** Project Id */
+            project_id: string;
+            /** Request Id */
+            request_id: string;
+            syllabus: components["schemas"]["EntityRef"];
+        };
         /** ProjectInspection */
         ProjectInspection: {
             /** Approval Error */
@@ -710,6 +833,13 @@ export interface components {
             project_id: string;
             /** Required Kinds */
             required_kinds: ("SOURCE" | "SYLLABUS" | "ASSESSMENT" | "TEACHER_CONTENT" | "TRAINER_CONTENT")[];
+        };
+        /** ProjectProposal */
+        ProjectProposal: {
+            design: components["schemas"]["EntityRef"];
+            domain: components["schemas"]["EntityRef"];
+            project: components["schemas"]["EntityRef"];
+            proposal: components["schemas"]["EntityRef"];
         };
         /** ProtectedCaseFact */
         ProtectedCaseFact: {
@@ -1441,6 +1571,90 @@ export interface operations {
             };
         };
     };
+    upload_contexts__context_id__aimpro_exports_post: {
+        parameters: {
+            query?: {
+                competencies?: string;
+                root_id?: string | null;
+                scenario?: string;
+            };
+            header?: never;
+            path: {
+                context_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/octet-stream": string;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExportReport"];
+                };
+            };
+            /** @description No valid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not authorized, unmapped identity or missing CSRF token */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or the context is unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflict with the current state; reload and retry */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Invalid request or data */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Internal error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     apply_contexts__context_id__applications_post: {
         parameters: {
             query?: never;
@@ -1543,6 +1757,84 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Entity"];
+                };
+            };
+            /** @description No valid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not authorized, unmapped identity or missing CSRF token */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or the context is unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflict with the current state; reload and retry */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Invalid request or data */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Internal error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    design_syllabus_contexts__context_id__designs__design_id__versions__version__syllabus_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                context_id: string;
+                design_id: string;
+                version: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovedSyllabus"];
                 };
             };
             /** @description No valid session */
@@ -1990,6 +2282,86 @@ export interface operations {
             };
         };
     };
+    initialize_project_contexts__context_id__projects_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                context_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectInitializationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectProposal"];
+                };
+            };
+            /** @description No valid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not authorized, unmapped identity or missing CSRF token */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or the context is unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflict with the current state; reload and retry */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Invalid request or data */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Internal error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     project_inspection_contexts__context_id__projects__project_id__get: {
         parameters: {
             query?: never;
@@ -2187,6 +2559,75 @@ export interface operations {
             };
             /** @description Not found, or the context is unavailable */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflict with the current state; reload and retry */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Invalid request or data */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Internal error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    create_courses_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CourseRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseView"];
+                };
+            };
+            /** @description No valid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not authorized, unmapped identity or missing CSRF token */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

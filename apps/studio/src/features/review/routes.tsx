@@ -1,6 +1,7 @@
 import type { RouteObject } from 'react-router';
 import { useParams } from 'react-router';
 
+import { BuildPage } from '../course-build/BuildPage';
 import { CoursePage } from '../course/CoursePage';
 import { ProposalPage } from './ProposalPage';
 import { ReviewInboxPage } from './ReviewInboxPage';
@@ -16,6 +17,11 @@ function CourseRoute() {
   return <CoursePage key={contextId} contextId={contextId} />;
 }
 
+function BuildRoute() {
+  const { contextId = '' } = useParams();
+  return <BuildPage key={contextId} contextId={contextId} />;
+}
+
 function ProposalRoute() {
   const { contextId = '', proposalId = '' } = useParams();
   return <ProposalPage key={`${contextId}/${proposalId}`} contextId={contextId} proposalId={proposalId} />;
@@ -23,6 +29,7 @@ function ProposalRoute() {
 
 export const reviewRoutes: RouteObject[] = [
   { path: 'contexts/:contextId/course', element: <CourseRoute /> },
+  { path: 'contexts/:contextId/build', element: <BuildRoute /> },
   { path: 'contexts/:contextId/review', element: <InboxRoute /> },
   { path: 'contexts/:contextId/review/:proposalId', element: <ProposalRoute /> },
 ];

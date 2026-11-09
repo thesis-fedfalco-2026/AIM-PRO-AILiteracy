@@ -36,10 +36,14 @@ class ApiSettings(Settings):
     jobs_store: SecretStr | None = Field(None, description='Jobs store (D14): SQLite file or postgresql:// URL')
     job_poll_seconds: float = Field(1.0, gt=0, description='How often a progress stream reads new job events')
     job_stream_seconds: int = Field(300, ge=0, description='How long a progress stream lasts before the client reconnects')
+    aimpro_exports: Path | None = Field(None, description='Directory of uploaded AIM-PRO exports, the one the worker reads')
+    export_max_bytes: int = Field(10 * 1024 * 1024, gt=0, description='Largest AIM-PRO export accepted by an upload')
+    course_template: Path | None = Field(None, description='Course template: who may create courses and their source scopes')
 
     @classmethod
     def from_env(cls, environ: Mapping[str, str] | None = None) -> ApiSettings:
-        """Read ``ALM_OIDC_*``, ``ALM_IDENTITY_MAP``, ``ALM_STORE``, ``ALM_POLICY_DIR``, ``ALM_JOBS_STORE`` and ``ALM_API_*``.
+        """Read ``ALM_OIDC_*``, ``ALM_IDENTITY_MAP``, ``ALM_STORE``, ``ALM_POLICY_DIR``, ``ALM_JOBS_STORE``,
+        ``ALM_AIMPRO_EXPORTS``, ``ALM_COURSE_TEMPLATE`` and ``ALM_API_*``.
 
         Unset ``ALM_API_MODULES`` selects all modules.
         """
@@ -56,10 +60,13 @@ class ApiSettings(Settings):
             if env.get(name):
                 auth[field] = env[name]
         modules = env.get('ALM_API_MODULES')
-        jobs = {field: env[name] for name, field in (('ALM_API_JOB_POLL_SECONDS', 'job_poll_seconds'),
-                                                     ('ALM_API_JOB_STREAM_SECONDS', 'job_stream_seconds')) if env.get(name)}
+        limits = {field: env[name] for name, field in (('ALM_API_JOB_POLL_SECONDS', 'job_poll_seconds'),
+                                                     ('ALM_API_JOB_STREAM_SECONDS', 'job_stream_seconds'),
+                                                     ('ALM_API_EXPORT_MAX_BYTES', 'export_max_bytes')) if env.get(name)}
+        paths = {field: Path(env[name]) for name, field in (('ALM_AIMPRO_EXPORTS', 'aimpro_exports'),
+                                                            ('ALM_COURSE_TEMPLATE', 'course_template')) if env.get(name)}
         return cls(auth=auth, identity_map=Path(env['ALM_IDENTITY_MAP']),
                    modules=None if modules is None else tuple(m.strip() for m in modules.split(',') if m.strip()),
                    store=env.get('ALM_STORE') or None,
                    policy_dir=Path(env['ALM_POLICY_DIR']) if env.get('ALM_POLICY_DIR') else None,
-                   jobs_store=env.get('ALM_JOBS_STORE') or None, **jobs)
+                   jobs_store=env.get('ALM_JOBS_STORE') or None, **limits, **paths)

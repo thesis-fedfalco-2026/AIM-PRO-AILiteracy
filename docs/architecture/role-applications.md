@@ -232,6 +232,12 @@ trusted policy, or a `policy_ref` found in two files, refuses every resolution
 (500, logged with the file name) instead of choosing one. Subdirectories and
 other files are ignored.
 
+Since S09a the API writes one kind of file there: the policy of a course created
+from the studio (`POST /courses`, see "Course from an AIM-PRO model"). It is a
+new file, written under a temporary name that no reader lists and then linked to
+its name, so it appears whole or not at all; an existing file is never replaced,
+changed or removed. Every other policy change stays an operator action.
+
 ## Configuration
 
 | Variable | Meaning |
@@ -248,6 +254,9 @@ other files are ignored.
 | `ALM_POLICY_DIR` | directory of trusted policy files (D10); required with `ALM_STORE` |
 | `ALM_JOBS_STORE` | jobs store (D14): a SQLite file, created if missing and never the ALM database, or a `postgresql://` URL (schema `jobs`); required when the `jobs` module is selected |
 | `ALM_API_JOB_POLL_SECONDS`, `ALM_API_JOB_STREAM_SECONDS` | progress stream: seconds between reads (default 1) and lifetime before the client reconnects (default 300) |
+| `ALM_COURSE_TEMPLATE` | course template (S09a): who may create courses and the source scopes of a new course; read on every request, never written; required when the `courses` module is selected |
+| `ALM_AIMPRO_EXPORTS` | directory of uploaded AIM-PRO exports, the one the worker reads; must exist; required when the `exports` module is selected |
+| `ALM_API_EXPORT_MAX_BYTES` | largest accepted upload, in bytes (default 10485760, 10 MiB) |
 
 `ALM_API_MODULES=` (empty) runs the identity routes alone, without a store. The
 API never creates a SQLite database: a missing file refuses to start.
@@ -488,11 +497,15 @@ WCAG 2.1 A and AA rules). `npm run test:browser` in `apps/`:
 
 1. starts the API (`e2e/stack/api.mjs`): removes `e2e/.state/`, builds the
    synthetic seed there with `python -m tests.seed`, keeps a copy of its
-   database, and runs `python -m services.authoring_api --port 58001` against the
-   local realm; the Python is `ALM_PYTHON`, else `.venv/bin/python`, else `python3`;
+   database, writes a course template (creator `admin`, source scope `wp3`) and
+   an empty export directory, and runs `python -m services.authoring_api --port 58001`
+   against the local realm, next to the dev-only synthetic worker
+   (`python -m tests.synthetic_worker`); the Python is `ALM_PYTHON`, else
+   `.venv/bin/python`, else `python3`;
 2. builds the studio and serves it with `vite preview` on `127.0.0.1:58000`;
 3. signs in once as `dev-admin` and once as `dev-learner` through Keycloak and keeps the session cookies;
-4. restores the seed database before each test; tests run one at a time.
+4. restores the seed database before each test and removes the course policy
+   files an earlier test created; tests run one at a time.
 
 Ports already in use fail the run (no reuse of another process). The tests need
 Keycloak running (`compose.identity.yml`) and the same `ALM_KEYCLOAK_DEV_PASSWORD`
@@ -507,6 +520,8 @@ browser recorded.
 | `review.spec.ts`: lost application answer | the first application reaches the API but its answer is dropped; the retry sends the same operation id; one `StateChange` exists |
 | `course.spec.ts`: the whole seeded course | every section shows the seed's content (unit, three activities, completion, outcome and competence, strategy, rubric, four materials and the cited source, history with one pending proposal); no request other than `GET`; the SHA-256 of the database file is unchanged; axe; navigation to the inbox and back |
 | `course.spec.ts`: as a learner | `dev-learner` on `architecture-delivery-2` sees only the not-visible message; axe |
+| `build.spec.ts`: a course from an uploaded AIM-PRO model | create a course (one new policy file next to the seed's); upload the AIM-PRO export the fixtures use: the stored file has the uploaded bytes and digest; the Curator job with the synthetic model ends with a link to the proposal; approve and apply the syllabus; the course page shows the structure; propose, approve and apply the project; the build page shows the project; axe on the build page with every disclosure open |
+| `build.spec.ts`: an invalid file | a text file is refused with "The file is not UTF-8 JSON"; no report; the export directory and the database file are unchanged; axe |
 | `accessibility.spec.ts` | axe on the home page (also with its validation error), the inbox with and without pending proposals, the proposal page with every disclosure open, its validation errors, the apply step, a refused application, and an unavailable context |
 
 ```sh
@@ -515,6 +530,104 @@ export ALM_OIDC_CLIENT_SECRET=$(openssl rand -hex 24)
 docker compose -f compose.identity.yml up -d --wait
 cd apps && npm ci --ignore-scripts && npx playwright install chromium && npm run test:browser
 ```
+
+## Course from an AIM-PRO model (S09a)
+
+A teacher creates a course, uploads an AIM-PRO model, lets the Curator draft the
+syllabus, reviews it and initializes the project, all from the studio. Owner
+decisions of 9 November 2026 (issue #97): the API writes the new course's
+policy; uploads are stored in the worker's export directory; a file that does
+not fit the generated contracts is accepted with its findings; source
+preparation as a job is a later step.
+
+### Creating a course: module `courses`
+
+`POST /courses` with `{"context_id"}` (lowercase letters, digits and inner
+hyphens, at most 64) creates a context in PREPARATION/DRAFT with a policy of its
+own. The course template (`ALM_COURSE_TEMPLATE`) is installed by an operator:
+
+```json
+{"format": 1, "creators": ["admin"], "source_scopes": {"wp3": ["wp3"]}}
+```
+
+- Only a subject key listed in `creators` may create a course (403 otherwise,
+  also without the CSRF token). Keycloak roles still grant nothing (D9).
+- The API writes `course-<id>-1.json` in `ALM_POLICY_DIR` with `policy_ref`
+  `PolicySet course:<id>` version 1. The creator is its only subject, with the
+  roles `ADMINISTRATOR` and `CONTENT_RESPONSIBLE` and the actions `read`,
+  `bootstrap`, `propose`, `decide`, `apply` and `interact` in that context only;
+  each template scope becomes a scope of that context and creator with the
+  template's sources. Then the context is bootstrapped as the CLI `bootstrap`
+  does, with that policy.
+- An id that a context uses, or that an installed policy names (in a grant, a
+  scope or its `policy_ref`), is a 409 and writes nothing. A different file
+  already under the course's file name is a 409 and stays as it is.
+- The same request again returns the same `CourseView` (`context_id`,
+  `policy_ref`) and writes nothing; it also completes a creation that stopped
+  after the policy file was written.
+- Not in S09a: adding other teachers or learners, and changing or revoking a
+  course policy from the studio.
+
+### Uploading the model: module `exports`
+
+`POST /contexts/{context_id}/aimpro-exports?scenario=&competencies=&root_id=`
+takes the file as the request body (`application/octet-stream`). The subject
+needs `propose` in the context, checked before the body is read. The checks, in
+order, each with its 422 reason:
+
+| Check | Reason |
+| --- | --- |
+| a body | `The file is empty` |
+| at most `ALM_API_EXPORT_MAX_BYTES` (also from `Content-Length`) | `The file is larger than N bytes` |
+| UTF-8 JSON | `The file is not UTF-8 JSON` |
+| `format` `jjodel-megamodel`, `formatVersion` `1.0` | `The file is not a jjodel megamodel export, format 1.0` |
+| its metamodels load (`aimpro.contracts.Contracts`) | `The metamodels of the export cannot be read` |
+| the scenario and competency catalogue resolve (`aimpro.validation.validate_scenario`; defaults `SCN01`, `elena_usecase_competencies`) | `The scenario and the competency catalogue cannot be resolved in the export` |
+
+While checked, the bytes sit under a hidden temporary name in the export
+directory that no job can name; a refused file leaves nothing there, in the ALM
+store or in the jobs store. An accepted file is linked, unchanged, to
+`<sha256>.json`; the same file again is kept as it is, other bytes under that
+name are a 409. The `ExportReport` gives the `AimproExport` (name and SHA-256)
+for the Curator job, the size, project id, root, number of objects, whether the
+scenario conforms to the generated contracts, and its `source_diagnostics` and
+`contract_findings`. Findings do not refuse a file; they also reach the syllabus
+proposal, whose teacher view shows them in plain words.
+
+### Syllabus and project: module `projects`
+
+| Route | Body | Response | CLI equivalent |
+| --- | --- | --- | --- |
+| `GET /contexts/{context_id}/designs/{design_id}/versions/{version}/syllabus` | | `ApprovedSyllabus` of the context's current Curator outline | `show-aimpro-syllabus` |
+| `POST /contexts/{context_id}/projects` | `ProjectInitializationRequest`: `request_id`, `project_id`, exact `syllabus` and `base_context` | `ProjectProposal`: a pending proposal; the same request id replays it | `init-authoring-project` |
+
+A subject outside the context gets 403 from both routes, as from the CLI. The Curator itself runs as the S08 job
+`generate-aimpro-syllabus`, grounded by a query, on the uploaded export.
+
+### Studio
+
+- The home page has "Create a course"; it opens the new course's build page.
+- `/studio/contexts/{context_id}/build` ("Build the course"), from
+  `src/features/course-build/`: (1) upload the model, with the report and its
+  diagnostics as sentences; (2) ask the Curator with a source scope and a
+  query: the page follows the job (`GET …/jobs/{request_id}` every second) and
+  links to the proposal once it is `PROPOSED`, or says why the job ended;
+  (3) once a syllabus is applied, propose the project from the approved
+  syllabus of the current outline and link to its proposal. Projects already
+  selected (the `authoring-project` manifests of the context's domain models)
+  are listed instead of the form. A retry after a lost answer reuses the
+  step's request id.
+- The course page links to the build page; a course without a design shows
+  "This course has no syllabus yet." to its author or administrator, and the
+  not-visible message to anybody else.
+
+### Synthetic worker (dev only)
+
+`python -m tests.synthetic_worker [--once] [--poll SECONDS]` is the worker of
+S08 with the synthetic models of `tests/services/job_fixtures.py`: same job
+store, kinds and outcomes, no model, provider or network. It needs
+`ALM_STORE`, `ALM_POLICY_DIR`, `ALM_JOBS_STORE` and `ALM_AIMPRO_EXPORTS`. The
+browser tests run it; it is for UI development only, never for real data.
 
 ## Local identity smoke test
 
@@ -541,6 +654,9 @@ export ALM_API_COOKIE_SECURE=false
 python -m tests.seed --output /tmp/alm-seed     # any new directory
 export ALM_STORE=/tmp/alm-seed/alm.sqlite ALM_POLICY_DIR=/tmp/alm-seed/policies
 export ALM_JOBS_STORE=/tmp/alm-seed/jobs.sqlite
+mkdir -p /tmp/alm-seed/exports && export ALM_AIMPRO_EXPORTS=/tmp/alm-seed/exports
+echo '{"format": 1, "creators": ["admin"], "source_scopes": {"wp3": ["wp3"]}}' > /tmp/alm-seed/course-template.json
+export ALM_COURSE_TEMPLATE=/tmp/alm-seed/course-template.json
 python -m services.authoring_api          # http://127.0.0.1:58000
 ```
 

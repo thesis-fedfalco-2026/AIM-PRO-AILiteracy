@@ -27,7 +27,8 @@ function Change({ change }: { change: ContentChange }) {
   );
 }
 
-function IssueText({ issue }: { issue: Issue }) {
+/** One problem as a sentence of the catalogue. */
+export function IssueText({ issue }: { issue: Issue }) {
   const { t } = useTranslation();
   switch (issue.message) {
     case 'review.teacher.issue.generated': return t(issue.message, issue.values);

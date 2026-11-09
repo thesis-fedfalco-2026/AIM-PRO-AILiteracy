@@ -396,6 +396,41 @@
         "title": "CorpusResource",
         "type": "object"
       },
+      "CourseRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "context_id": {
+            "description": "The new course id: lowercase letters, digits and hyphens",
+            "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+            "title": "Context Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "context_id"
+        ],
+        "title": "CourseRequest",
+        "type": "object"
+      },
+      "CourseView": {
+        "additionalProperties": false,
+        "properties": {
+          "context_id": {
+            "minLength": 1,
+            "title": "Context Id",
+            "type": "string"
+          },
+          "policy_ref": {
+            "$ref": "#/components/schemas/EntityRef"
+          }
+        },
+        "required": [
+          "context_id",
+          "policy_ref"
+        ],
+        "title": "CourseView",
+        "type": "object"
+      },
       "CoverageRequirement": {
         "additionalProperties": false,
         "properties": {
@@ -599,6 +634,81 @@
           "request_id"
         ],
         "title": "ErrorBody",
+        "type": "object"
+      },
+      "ExportReport": {
+        "additionalProperties": false,
+        "description": "An accepted export: its name and digest for a Curator job, and what the scenario check found.",
+        "properties": {
+          "competencies": {
+            "minLength": 1,
+            "title": "Competencies",
+            "type": "string"
+          },
+          "conforms": {
+            "title": "Conforms",
+            "type": "boolean"
+          },
+          "contract_findings": {
+            "items": {
+              "additionalProperties": {
+                "$ref": "#/components/schemas/JsonValue"
+              },
+              "type": "object"
+            },
+            "title": "Contract Findings",
+            "type": "array"
+          },
+          "export": {
+            "$ref": "#/components/schemas/AimproExport"
+          },
+          "objects": {
+            "title": "Objects",
+            "type": "integer"
+          },
+          "project_id": {
+            "minLength": 1,
+            "title": "Project Id",
+            "type": "string"
+          },
+          "root_id": {
+            "minLength": 1,
+            "title": "Root Id",
+            "type": "string"
+          },
+          "scenario": {
+            "minLength": 1,
+            "title": "Scenario",
+            "type": "string"
+          },
+          "size": {
+            "title": "Size",
+            "type": "integer"
+          },
+          "source_diagnostics": {
+            "items": {
+              "additionalProperties": {
+                "$ref": "#/components/schemas/JsonValue"
+              },
+              "type": "object"
+            },
+            "title": "Source Diagnostics",
+            "type": "array"
+          }
+        },
+        "required": [
+          "export",
+          "size",
+          "project_id",
+          "scenario",
+          "competencies",
+          "root_id",
+          "objects",
+          "conforms",
+          "source_diagnostics",
+          "contract_findings"
+        ],
+        "title": "ExportReport",
         "type": "object"
       },
       "Finding": {
@@ -1062,6 +1172,36 @@
         "title": "PendingProposals",
         "type": "object"
       },
+      "ProjectInitializationRequest": {
+        "additionalProperties": false,
+        "description": "``init-authoring-project``: the exact approved syllabus and base context, with the ALM request id.",
+        "properties": {
+          "base_context": {
+            "$ref": "#/components/schemas/EntityRef"
+          },
+          "project_id": {
+            "minLength": 1,
+            "title": "Project Id",
+            "type": "string"
+          },
+          "request_id": {
+            "minLength": 1,
+            "title": "Request Id",
+            "type": "string"
+          },
+          "syllabus": {
+            "$ref": "#/components/schemas/EntityRef"
+          }
+        },
+        "required": [
+          "project_id",
+          "base_context",
+          "syllabus",
+          "request_id"
+        ],
+        "title": "ProjectInitializationRequest",
+        "type": "object"
+      },
       "ProjectInspection": {
         "additionalProperties": false,
         "properties": {
@@ -1186,6 +1326,31 @@
           "artifacts"
         ],
         "title": "ProjectManifest",
+        "type": "object"
+      },
+      "ProjectProposal": {
+        "additionalProperties": false,
+        "properties": {
+          "design": {
+            "$ref": "#/components/schemas/EntityRef"
+          },
+          "domain": {
+            "$ref": "#/components/schemas/EntityRef"
+          },
+          "project": {
+            "$ref": "#/components/schemas/EntityRef"
+          },
+          "proposal": {
+            "$ref": "#/components/schemas/EntityRef"
+          }
+        },
+        "required": [
+          "proposal",
+          "project",
+          "domain",
+          "design"
+        ],
+        "title": "ProjectProposal",
         "type": "object"
       },
       "ProtectedCaseFact": {
@@ -2290,7 +2455,7 @@
   },
   "info": {
     "title": "ALM Authoring API",
-    "version": "0.4.0"
+    "version": "0.5.0"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -2666,6 +2831,151 @@
         ]
       }
     },
+    "/contexts/{context_id}/aimpro-exports": {
+      "post": {
+        "operationId": "upload_contexts__context_id__aimpro_exports_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "context_id",
+            "required": true,
+            "schema": {
+              "title": "Context Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scenario",
+            "required": false,
+            "schema": {
+              "default": "SCN01",
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Scenario",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "competencies",
+            "required": false,
+            "schema": {
+              "default": "elena_usecase_competencies",
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Competencies",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "root_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Root Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "No valid session"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not authorized, unmapped identity or missing CSRF token"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or the context is unavailable"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict with the current state; reload and retry"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Invalid request or data"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Internal error"
+          }
+        },
+        "summary": "Upload an AIM-PRO project export: checked, then stored unchanged for a Curator job",
+        "tags": [
+          "exports"
+        ]
+      }
+    },
     "/contexts/{context_id}/applications": {
       "post": {
         "operationId": "apply_contexts__context_id__applications_post",
@@ -2867,6 +3177,116 @@
         "summary": "Record a human decision on the reviewed payload; 409 if its key or revision is stale",
         "tags": [
           "review"
+        ]
+      }
+    },
+    "/contexts/{context_id}/designs/{design_id}/versions/{version}/syllabus": {
+      "get": {
+        "operationId": "design_syllabus_contexts__context_id__designs__design_id__versions__version__syllabus_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "context_id",
+            "required": true,
+            "schema": {
+              "title": "Context Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "design_id",
+            "required": true,
+            "schema": {
+              "title": "Design Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "title": "Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovedSyllabus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "No valid session"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not authorized, unmapped identity or missing CSRF token"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or the context is unavailable"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict with the current state; reload and retry"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Invalid request or data"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Internal error"
+          }
+        },
+        "summary": "The approved syllabus of the current Curator outline (CLI show-aimpro-syllabus)",
+        "tags": [
+          "projects"
         ]
       }
     },
@@ -3398,6 +3818,108 @@
         ]
       }
     },
+    "/contexts/{context_id}/projects": {
+      "post": {
+        "operationId": "initialize_project_contexts__context_id__projects_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "context_id",
+            "required": true,
+            "schema": {
+              "title": "Context Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectInitializationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectProposal"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "No valid session"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not authorized, unmapped identity or missing CSRF token"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or the context is unavailable"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict with the current state; reload and retry"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Invalid request or data"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Internal error"
+          }
+        },
+        "summary": "Propose a project from an approved syllabus (CLI init-authoring-project); a request id replays",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
     "/contexts/{context_id}/projects/{project_id}": {
       "get": {
         "operationId": "project_inspection_contexts__context_id__projects__project_id__get",
@@ -3716,6 +4238,87 @@
         "summary": "Receipts, the exact frozen closure and findings of this release (CLI show-release)",
         "tags": [
           "releases"
+        ]
+      }
+    },
+    "/courses": {
+      "post": {
+        "operationId": "create_courses_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CourseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "No valid session"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not authorized, unmapped identity or missing CSRF token"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict with the current state; reload and retry"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Invalid request or data"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Internal error"
+          }
+        },
+        "summary": "Create a course: a new PREPARATION/DRAFT context with a new policy for its creator",
+        "tags": [
+          "courses"
         ]
       }
     },

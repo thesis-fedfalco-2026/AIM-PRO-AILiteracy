@@ -33,7 +33,7 @@ class OpenApiSnapshotTest(unittest.TestCase):
     def schema(self):
         return json.loads((SNAPSHOT_DIR / 'authoring.json').read_text(encoding='utf-8'))
 
-    def test_snapshot_lists_the_skeleton_read_only_authoring_review_and_job_endpoints(self):
+    def test_snapshot_lists_the_skeleton_read_only_authoring_review_job_course_and_export_endpoints(self):
         schema = self.schema()
         self.assertEqual(schema['info']['title'], 'ALM Authoring API')
         resource = '/contexts/{context_id}/resources/{resource_id}/versions/{version}'
@@ -44,9 +44,19 @@ class OpenApiSnapshotTest(unittest.TestCase):
                           '/contexts/{context_id}': ['get'], '/contexts/{context_id}/pending-proposals': ['get'],
                           '/contexts/{context_id}/decisions': ['post'], '/contexts/{context_id}/applications': ['post'],
                           '/contexts/{context_id}/projects/{project_id}': ['get'],
+                          '/contexts/{context_id}/projects': ['post'],
+                          '/contexts/{context_id}/designs/{design_id}/versions/{version}/syllabus': ['get'],
                           resource + '/project-syllabus': ['get'], resource + '/release': ['get'],
                           '/contexts/{context_id}/jobs': ['post'], job: ['get'], job + '/events': ['get'],
-                          job + '/abandonment': ['post']})
+                          job + '/abandonment': ['post'], '/courses': ['post'],
+                          '/contexts/{context_id}/aimpro-exports': ['post']})
+
+    def test_an_export_upload_is_the_raw_file(self):
+        upload = self.schema()['paths']['/contexts/{context_id}/aimpro-exports']['post']
+        self.assertEqual(upload['requestBody'], {'required': True, 'content': {
+            'application/octet-stream': {'schema': {'type': 'string', 'format': 'binary'}}}})
+        self.assertEqual(sorted(p['name'] for p in upload['parameters']),
+                         ['competencies', 'context_id', 'root_id', 'scenario'])
 
     def test_job_progress_is_a_server_sent_event_stream_of_status_and_progress(self):
         schema = self.schema()

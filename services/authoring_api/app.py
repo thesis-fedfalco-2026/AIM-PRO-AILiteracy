@@ -11,12 +11,13 @@ from services.api_common.contexts import ContextServices, PolicyDirectory
 from services.api_common.identity import IdentityMap, load_identity_map
 from services.api_common.registry import ConfigurationError, ModuleRegistry
 from services.api_common.settings import ApiSettings, AuthSettings
-from services.authoring_api import context_summary, jobs, projects, releases, review
+from services.authoring_api import context_summary, courses, exports, jobs, projects, releases, review
 
 
 TITLE = 'ALM Authoring API'
-VERSION = '0.4.0'
-REGISTRY = ModuleRegistry((context_summary.MODULE, review.MODULE, projects.MODULE, releases.MODULE, jobs.MODULE))
+VERSION = '0.5.0'
+REGISTRY = ModuleRegistry((context_summary.MODULE, review.MODULE, projects.MODULE, releases.MODULE, jobs.MODULE,
+                           courses.MODULE, exports.MODULE))
 
 
 def create_app(settings: ApiSettings | None = None, *, transport: httpx.BaseTransport | None = None) -> FastAPI:
@@ -30,10 +31,18 @@ def create_app(settings: ApiSettings | None = None, *, transport: httpx.BaseTran
         contexts = ContextServices(settings.store.get_secret_value(), PolicyDirectory(settings.policy_dir))
     if jobs.MODULE in modules and settings.jobs_store is None:
         raise ConfigurationError('The jobs module needs ALM_JOBS_STORE')
+    if courses.MODULE in modules:
+        if settings.course_template is None:
+            raise ConfigurationError('The courses module needs ALM_COURSE_TEMPLATE')
+        courses.load_template(settings.course_template)
+    if exports.MODULE in modules and (settings.aimpro_exports is None or not settings.aimpro_exports.is_dir()):
+        raise ConfigurationError('The exports module needs ALM_AIMPRO_EXPORTS, an existing directory')
     authenticator = Authenticator(settings.auth, load_identity_map(settings.identity_map), transport=transport)
     app = build_app(TITLE, VERSION, modules, authenticator)
     app.state.contexts = contexts
     jobs.configure(app, settings)
+    courses.configure(app, settings)
+    exports.configure(app, settings)
     return app
 
 
