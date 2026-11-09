@@ -325,24 +325,39 @@ S05 and S06 endpoints only; nothing in the API, the core or the store changed.
 
 - **Inbox.** Two lists: proposals `AWAITING_DECISION` (from `pending-proposals`,
   newest first) and proposals `APPROVED` but not applied (from the context
-  summary, which holds the latest revision of each proposal). Each entry is the
-  first sentence of the proposal's `proposedChange`.
+  summary, which holds the latest revision of each proposal). A pending
+  assessment is named "Proposed assessment: " plus the first line of its
+  activity instruction, with the number of points to check; other entries show
+  the first sentence of the proposal's `proposedChange`.
 - **No context list.** The API does not list contexts (a response never reveals
   which contexts exist, D10), so the home page asks for the context id, as the
   CLI's `--context` does.
-- **Proposal page.** The summary sentence; facts (status, proposer, id,
-  revision, base context version, review payload key); diagnostics: the
-  proposal's `findings`, the context's snapshot findings, and the generator
-  report, which is the JSON object that follows the sentence in
-  `proposedChange` (`contract_findings`, `source_diagnostics`, `generator_gaps`,
-  …), shown as lists and tables; the changes; the exact payload (proposal and
-  candidates as JSON); the decision form.
-- **Diff against the applied version.** Each candidate is compared with the
-  record of the same type and id in the context summary, the version applied
-  now. The comparison covers `fields` and lists each differing leaf by path
-  (`criteria[1].description`) with the applied and the proposed value. A
-  candidate without an applied record is "New record"; identical fields are
-  "Unchanged" (collapsed).
+- **Teacher view first (owner validation, 9 November 2026).** The first version
+  showed the data model (field paths, versions, hashes, structure records); the
+  owner found it incomprehensible for a teacher. The proposal page now leads
+  with the teaching content of the candidates (`teacher.ts`, `TeacherView.tsx`):
+  - *What changes*: sentences computed from the teaching records only
+    (`ActivityDefinition` instruction and evidence, `Rubric` criteria by key,
+    `AssessmentSpecification` conditions and accepted evidence,
+    `ResourceRequirement` purpose, conditions and required/optional), compared
+    with the applied record of the same type and id; a change of links or
+    versions alone is "the teaching content is the same". On the seed the only
+    sentence is "Assessment condition added: “Explain two prompting choices.”";
+  - *What students would be asked to do*, *How it would be assessed* (rubric as
+    criteria and levels, conditions), *Learning outcomes covered* (statements,
+    not ids), *Resources the activity needs*;
+  - *To check before deciding*: the generator report and the findings as
+    sentences, grouped by where the problem is: the generated content (shown),
+    the course and its source material (closed, with a count: the proposal does
+    not cause them), and the generator's notes.
+  Proposals without teaching records (release, import, completion rules) show
+  their summary sentence instead.
+- **Technical details, closed.** Identifiers and versions, the review payload
+  key, the raw diagnostics (proposal findings, context findings, the generator
+  report as lists and tables), the field-by-field diff of every candidate
+  against the applied record (each differing leaf by path, for example
+  `criteria[1].description`) and the exact payload. The decision covers exactly
+  this payload.
 - **Decision.** Approve, reject or request a revision, with a reason (both
   required, checked before any request). The request carries the exact revision
   shown and its `review_payload_key`. After any answer the page reloads both
@@ -384,7 +399,7 @@ browser recorded.
 
 | Test | Checks |
 | --- | --- |
-| `review.spec.ts`: reviews and applies the Evaluator proposal | inbox → proposal; diagnostics and changes shown; approve, then apply; the CLI `show` lists one decision with the reviewed key and one `StateChange` whose `newVersion` is the context version |
+| `review.spec.ts`: reviews and applies the Evaluator proposal | inbox → proposal; the teacher view (one change, the activity, the rubric, the outcome, the points to check) and the technical details; approve, then apply; the CLI `show` lists one decision with the reviewed key and one `StateChange` whose `newVersion` is the context version |
 | `review.spec.ts`: decided by another reviewer after loading | the CLI rejects while the page is open; the browser's approval gets 409, the page reloads and shows "Rejected"; only the CLI decision exists |
 | `review.spec.ts`: lost application answer | the first application reaches the API but its answer is dropped; the retry sends the same operation id; one `StateChange` exists |
 | `accessibility.spec.ts` | axe on the home page (also with its validation error), the inbox with and without pending proposals, the proposal page with every disclosure open, its validation errors, the apply step, a refused application, and an unavailable context |
@@ -467,7 +482,9 @@ cd apps && npm ci --ignore-scripts && npm run dev --workspace @alm/studio   # ht
    inbox". Expected: one proposal under "Awaiting a decision"; open it, approve
    it with a reason, then press "Apply the change". Expected: "Decision
    recorded: Approve.", then "Change applied. The context is now at version …"
-   and the status "Applied"; the inbox is then empty. The handoff of S07
+   and the status "Applied"; the inbox is then empty. The proposal page opens
+   with the teacher view; identifiers and the field diff are under "Technical
+   details". The handoff of S07
    (`docs/plans/handoffs/chat-15.md`) has the full owner test script.
 
 Stop with `docker compose -f compose.identity.yml down`. The issuer contains the
