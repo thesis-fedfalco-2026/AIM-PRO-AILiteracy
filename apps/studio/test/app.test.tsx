@@ -1,36 +1,11 @@
-import { createAuthoringClient } from '@alm/api-client';
-import { createSessionApi } from '@alm/auth';
-import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react';
-import { createMemoryRouter } from 'react-router';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { act, cleanup, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, describe, expect, it } from 'vitest';
 
-import { StudioApp } from '../src/App';
 import en from '../src/i18n/en.json';
 import { createStudioI18n } from '../src/i18n';
-import { STUDIO_BASENAME, studioRoutes } from '../src/routes';
+import { renderStudio, SESSION } from './harness';
 
-const SESSION = { subject_key: 'admin', csrf_token: 'csrf-1', expires_at: '2026-11-09T10:00:00Z' };
 const END_SESSION = 'http://127.0.0.1:58080/realms/alm-dev/protocol/openid-connect/logout?client_id=x';
-
-type Reply = { status: number; body?: unknown };
-
-async function renderStudio(replies: Record<string, Reply[]>, path = '/studio/') {
-  const requests: Request[] = [];
-  const client = createAuthoringClient({
-    baseUrl: 'http://studio.test',
-    fetch: async (request: Request) => {
-      requests.push(request);
-      const key = `${request.method} ${new URL(request.url).pathname}`;
-      const reply = replies[key]?.shift();
-      if (!reply) throw new Error(`Unexpected request ${key}`);
-      return Response.json(reply.body ?? { error: 'x', detail: 'x', request_id: 'r' }, { status: reply.status });
-    },
-  });
-  const navigate = vi.fn();
-  const router = createMemoryRouter(studioRoutes, { basename: STUDIO_BASENAME, initialEntries: [path] });
-  render(<StudioApp api={createSessionApi(client)} navigate={navigate} router={router} i18n={await createStudioI18n()} />);
-  return { navigate, requests };
-}
 
 afterEach(cleanup);
 

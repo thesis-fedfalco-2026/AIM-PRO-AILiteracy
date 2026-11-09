@@ -1,6 +1,7 @@
 import type { RouteObject } from 'react-router';
 
 import { HomePage } from './features/home/HomePage';
+import { reviewRoutes } from './features/review/routes';
 import { NotFoundPage } from './shell/NotFoundPage';
 import { StudioShell } from './shell/StudioShell';
 
@@ -13,6 +14,7 @@ export const studioRoutes: RouteObject[] = [
     element: <StudioShell />,
     children: [
       { index: true, element: <HomePage /> },
+      ...reviewRoutes,
       { path: '*', element: <NotFoundPage /> },
     ],
   },
