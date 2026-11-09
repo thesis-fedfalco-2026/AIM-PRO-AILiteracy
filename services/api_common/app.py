@@ -10,7 +10,7 @@ from pydantic import BaseModel
 
 from services.api_common import auth
 from services.api_common.auth import Authenticator, csrf_protected
-from services.api_common.errors import install_error_handlers
+from services.api_common.errors import error_responses, install_error_handlers
 from services.api_common.registry import ApiModule, ConfigurationError
 from services.api_common.request_ids import RequestIdMiddleware
 
@@ -49,7 +49,8 @@ def create_app(title: str, version: str, modules: Iterable[ApiModule], authentic
     install_error_handlers(app)
     app.add_middleware(RequestIdMiddleware)
 
-    @app.get('/health', response_model=HealthView, tags=['health'], summary='Liveness; needs no session')
+    @app.get('/health', response_model=HealthView, tags=['health'], responses=error_responses(500),
+             summary='Liveness; needs no session')
     def health():
         return HealthView(status='ok')
 

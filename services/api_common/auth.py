@@ -19,6 +19,7 @@ from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 import httpx
 
+from services.api_common.errors import error_responses
 from services.api_common.identity import IdentityMap
 from services.api_common.oidc import LoginFailed, OidcClient, ProviderUnavailable, new_secret, pkce_pair
 from services.api_common.registry import ApiModule
@@ -150,7 +151,7 @@ def csrf_protected(request: Request) -> Principal:
 router = APIRouter(prefix='/auth', tags=['auth'])
 
 
-@router.get('/login', status_code=302, response_class=RedirectResponse,
+@router.get('/login', status_code=302, response_class=RedirectResponse, responses=error_responses(422, 500, 502),
             summary='Start the OIDC code flow with PKCE at the identity provider')
 def login(request: Request, return_to: str | None = Query(None, description='Local path to return to')):
     try:
@@ -161,6 +162,7 @@ def login(request: Request, return_to: str | None = Query(None, description='Loc
 
 
 @router.get('/callback', status_code=303, response_class=RedirectResponse,
+            responses=error_responses(401, 403, 422, 500, 502),
             summary='Finish the code flow, map the identity and start a server-side session')
 def callback(request: Request, state: str | None = None, code: str | None = None, error: str | None = None):
     try:
@@ -170,7 +172,8 @@ def callback(request: Request, state: str | None = None, code: str | None = None
         raise HTTPException(502, 'Identity provider unavailable') from None
 
 
-@router.get('/session', response_model=SessionView, summary='The signed-in subject and the CSRF token for writes')
+@router.get('/session', response_model=SessionView, responses=error_responses(401, 403, 500),
+            summary='The signed-in subject and the CSRF token for writes')
 def session(request: Request, response: Response):
     auth = authenticator(request)
     current = auth.session(request)
@@ -180,7 +183,7 @@ def session(request: Request, response: Response):
                        expires_at=datetime.fromtimestamp(current.expires_at, timezone.utc))
 
 
-@router.post('/logout', response_model=LogoutView,
+@router.post('/logout', response_model=LogoutView, responses=error_responses(401, 403, 500),
              summary='End the session; the result is the provider logout URL to visit, if any')
 def logout(request: Request, response: Response, _: Principal = Depends(csrf_protected)):
     return LogoutView(end_session_url=authenticator(request).logout(request, response))

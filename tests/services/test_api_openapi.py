@@ -30,12 +30,37 @@ class OpenApiSnapshotTest(unittest.TestCase):
         self.assertEqual(self.run_main('--check'), (0, ''))
         self.assertEqual(sorted(p.name for p in SNAPSHOT_DIR.glob('*.json')), ['authoring.json'])
 
-    def test_snapshot_lists_only_the_skeleton_endpoints(self):
-        schema = json.loads((SNAPSHOT_DIR / 'authoring.json').read_text(encoding='utf-8'))
+    def schema(self):
+        return json.loads((SNAPSHOT_DIR / 'authoring.json').read_text(encoding='utf-8'))
+
+    def test_snapshot_lists_the_skeleton_and_read_only_authoring_endpoints(self):
+        schema = self.schema()
         self.assertEqual(schema['info']['title'], 'ALM Authoring API')
+        resource = '/contexts/{context_id}/resources/{resource_id}/versions/{version}'
         self.assertEqual({path: sorted(methods) for path, methods in schema['paths'].items()},
                          {'/health': ['get'], '/auth/login': ['get'], '/auth/callback': ['get'],
-                          '/auth/session': ['get'], '/auth/logout': ['post']})
+                          '/auth/session': ['get'], '/auth/logout': ['post'],
+                          '/contexts/{context_id}': ['get'], '/contexts/{context_id}/pending-proposals': ['get'],
+                          '/contexts/{context_id}/projects/{project_id}': ['get'],
+                          resource + '/project-syllabus': ['get'], resource + '/release': ['get']})
+
+    def test_every_error_response_documents_the_error_body(self):
+        schema = self.schema()
+        self.assertNotIn('HTTPValidationError', schema['components']['schemas'])
+        self.assertNotIn('ValidationError', schema['components']['schemas'])
+        self.assertEqual(set(schema['components']['schemas']['ErrorBody']['required']), {'error', 'detail', 'request_id'})
+        for path, methods in schema['paths'].items():
+            for method, operation in methods.items():
+                errors = {status: response for status, response in operation['responses'].items() if int(status) >= 400}
+                with self.subTest(f'{method.upper()} {path}'):
+                    self.assertIn('500', errors)
+                    for response in errors.values():
+                        self.assertEqual(response['content']['application/json']['schema'],
+                                         {'$ref': '#/components/schemas/ErrorBody'})
+                    if path.startswith('/contexts/'):
+                        self.assertEqual(sorted(errors), ['401', '403', '404', '409', '422', '500'])
+                    if path.startswith('/auth/') and path != '/auth/login':
+                        self.assertIn('401', errors)
 
     def test_rendering_is_deterministic(self):
         self.assertEqual(snapshots(), snapshots())

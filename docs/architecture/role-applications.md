@@ -5,9 +5,9 @@ This guide fixes the backend boundaries of the role applications described in th
 [prototype roadmap](../plans/prototype-roadmap.md). It applies owner defaults
 D8–D10, approved with the roadmap (PR #73) and confirmed on 9 November 2026.
 
-S03 builds the shared skeleton only: `services/api_common` and an Authoring API
-with health and identity routes. No business endpoint exists yet; S05 adds the
-first read-only modules. S04 adds the front-end workspace in `apps/` and a studio
+S03 builds the shared skeleton: `services/api_common` and an Authoring API
+with health and identity routes. S05 adds the first read-only modules (see
+[Read-only authoring endpoints](#read-only-authoring-endpoints-s05)). S04 adds the front-end workspace in `apps/` and a studio
 shell that signs in through the API (see [Front-end workspace](#front-end-workspace)). ALM remains the reference model. Nothing here changes
 the ALM metamodel, the store schema or an AIM-PRO/jjodel export.
 
@@ -58,7 +58,8 @@ idempotency key: a replayed `request_id` returns the same job.
    check, and a module router that includes other routers (their routes could
    not be checked).
 3. **No core internals.** Modules call `LearningService` and the read-only
-   helpers it exposes. They never import `learning.store` or `learning.decisions`.
+   helpers it exposes. They never import `learning.store` or `learning.decisions`
+   (checked by `ModuleBoundaryTest` in `tests/services/test_api_contexts.py`).
    When data is missing, a service method is added with tests first.
 4. **Contracts.** Request and response models are Pydantic classes in the module,
    built from existing records; store rows are never exposed raw. The OpenAPI
@@ -69,12 +70,16 @@ idempotency key: a replayed `request_id` returns the same job.
 
 ## Errors and request ids
 
-Every error has the body `{"error", "detail", "request_id"}`.
+Every error has the body `{"error", "detail", "request_id"}`. The OpenAPI
+snapshot documents that body (`ErrorBody`) for each error status of each route
+(`error_responses` in `services/api_common/errors.py`), so the generated client
+types error bodies correctly; FastAPI's default validation schema is not used.
 
 | Cause | Status | `error` | `detail` |
 | --- | --- | --- | --- |
 | no session, expired session, failed login | 401 | `unauthenticated` | fixed text |
 | `AuthorizationError` from `learning.policies.authorize`, unmapped identity, CSRF | 403 | `forbidden` | fixed text |
+| `ContextUnavailable`: no such context, or its trusted policy is not installed (D10) | 404 | `context_unavailable` | `Context unavailable`; the reason is logged with the request id |
 | `StateConflict` (reload, then retry) | 409 | `conflict` | the conflict message |
 | request model, record (`ValidationError`) or core `ValueError` | 422 | `validation` | locations and messages; never input values |
 | identity provider unreachable or not the configured issuer | 502 | `identity_provider_unavailable` | fixed text |
@@ -138,10 +143,17 @@ exactly, without URL normalization.
 
 ### Policy resolution (D10, from S05)
 
-A configured directory holds trusted policy files. For each request the API
-loads the file whose `policy_ref` equals the context's `policies` reference. No
-match means the context is unavailable; installing an approved policy preview
-stays a host operator action.
+A configured directory (`ALM_POLICY_DIR`) holds trusted policy files. For each
+request the API reads the context's `policies` reference and loads the
+`*.json` file whose `policy_ref` equals it exactly (`PolicyDirectory` in
+`services/api_common/contexts.py`). No match means the context is unavailable
+(404 `context_unavailable`); a context that does not exist gives the same
+answer, so a response does not reveal which contexts exist. The directory is
+read on every request: installing an approved policy preview stays a host
+operator action, a file copy, and needs no restart. A file that is not a valid
+trusted policy, or a `policy_ref` found in two files, refuses every resolution
+(500, logged with the file name) instead of choosing one. Subdirectories and
+other files are ignored.
 
 ## Configuration
 
@@ -155,6 +167,63 @@ stays a host operator action.
 | `ALM_API_COOKIE_SECURE` | `true` by default; `false` only for local HTTP |
 | `ALM_API_SESSION_TTL`, `ALM_API_LOGIN_TTL` | seconds; defaults 3600 and 600 |
 | `ALM_API_MODULES` | comma-separated module names; unset selects all |
+| `ALM_STORE` | ALM store: an existing SQLite file or a `postgresql://` URL (kept secret: it may hold a password); required when any authoring module is selected |
+| `ALM_POLICY_DIR` | directory of trusted policy files (D10); required with `ALM_STORE` |
+
+`ALM_API_MODULES=` (empty) runs the identity routes alone, without a store. The
+API never creates a SQLite database: a missing file refuses to start.
+
+## Read-only authoring endpoints (S05)
+
+Four modules, each one router, all reads (`GET`, a session, no CSRF). Each
+response is a record the CLI already prints, so every endpoint has a parity
+test with its CLI command on the same seeded database
+(`tests/services/test_authoring_read_api.py`). Responses carry
+`Cache-Control: no-store`.
+
+| Module | Route | Response | CLI equivalent |
+| --- | --- | --- | --- |
+| `contexts` | `GET /contexts/{context_id}` | `ContextSummary`: context, visible entities, findings | `show` |
+| `review` | `GET /contexts/{context_id}/pending-proposals` | `PendingProposals`: newest first, each with the proposal, its exact candidates and `review_payload_key` | `show` (proposals `AWAITING_DECISION`) and the preview `decide` prints before `CONFIRM` |
+| `projects` | `GET /contexts/{context_id}/projects/{project_id}` | `ProjectInspection` | `show-authoring-project` |
+| `projects` | `GET /contexts/{context_id}/resources/{resource_id}/versions/{version}/project-syllabus` | `ApprovedSyllabus` of that exact current project revision | `show-project-syllabus` |
+| `releases` | `GET /contexts/{context_id}/resources/{resource_id}/versions/{version}/release` | `ReleaseInspection` | `show-release` |
+
+- **One store and policy per request.** `ContextServices.open` opens the store,
+  resolves the policy (D10) and builds a `LearningService` with it inside the
+  route function, then closes the store. The service's orchestrator factory
+  refuses: the API never builds agents.
+- **Redaction.** A learner-only subject gets exactly what `show` gives it: the
+  context, its own participant record and its own learning records; its pending
+  proposal list is empty. Project and release reads need the `propose` action
+  and content authority, as in the CLI.
+- **No writes.** The table digests of the store (row count and SHA-256 per
+  table, as the copy tool computes them) are unchanged after every endpoint,
+  for every subject, including refusals.
+- **Review key.** `review_payload_key` is `learning.decisions.review_payload_key`
+  over the proposal and its candidates, the key `decide` records. S06 requires
+  the client to send it back.
+- Exact references in paths: `resource_id` and `version` name one `Resource`;
+  identifiers with `:` are sent percent-encoded.
+
+## Synthetic seed (D15)
+
+`python -m tests.seed --output DIR [--db LOCATION]` builds a development
+database through the production commands; only model and retrieval responses are
+synthetic (the fixtures of `tests/authoring_cycle_fixtures.py`). No model or
+network is used. `DIR` must be new or empty and receives `alm.sqlite` (unless
+`--db`; a PostgreSQL URL is never written to disk), `policies/` (the installed
+trusted policy), `policy-previews/` (the delivery import's preview, not
+installed) and `seed.json` (contexts, subjects, exact references).
+
+| Context | State |
+| --- | --- |
+| `architecture-authoring` | applied syllabus, project, assessment, teacher and trainer content, completion rules and release; one pending Evaluator revision |
+| `architecture-delivery` | the applied import of that release; its policy is the preview, so it is unavailable until the preview is copied into `policies/` |
+| `architecture-delivery-2` | a pending import of the same release; `learner` is a participant |
+
+The subjects are `admin` (administrator, content responsible, assessor) and
+`learner`, the subject keys of the dev identity map.
 
 ## Front-end workspace
 
@@ -190,8 +259,8 @@ or `label`. A new language is one more catalogue.
 
 **Serving.** The dev realm registers the callback and the post-logout page on
 `127.0.0.1:58000`. In development the studio's Vite server (`npm run dev`, or
-`npm run preview` for the build) listens there and forwards `/auth` and
-`/health` to the API on `ALM_STUDIO_API_URL` (default `http://127.0.0.1:58001`),
+`npm run preview` for the build) listens there and forwards `/auth`,
+`/health` and `/contexts` to the API on `ALM_STUDIO_API_URL` (default `http://127.0.0.1:58001`),
 so the browser sees one origin and the session cookie stays same-site. `/`
 redirects to `/studio/`. How a shared deployment serves the built studio (API
 or reverse proxy) is part of D17.
@@ -218,6 +287,8 @@ export ALM_OIDC_REDIRECT_URI=http://127.0.0.1:58000/auth/callback
 export ALM_OIDC_POST_LOGOUT_REDIRECT_URI=http://127.0.0.1:58000/
 export ALM_IDENTITY_MAP=infra/keycloak/identity-map.dev.json
 export ALM_API_COOKIE_SECURE=false
+python -m tests.seed --output /tmp/alm-seed     # any new directory
+export ALM_STORE=/tmp/alm-seed/alm.sqlite ALM_POLICY_DIR=/tmp/alm-seed/policies
 python -m services.authoring_api          # http://127.0.0.1:58000
 ```
 
@@ -234,6 +305,12 @@ In a browser:
    `http://127.0.0.1:58000/`. `/auth/session` is then 401.
 4. Sign in as `dev-unmapped`. Expected: 403 `Identity is not mapped to a policy
    subject`, and `/auth/session` stays 401.
+5. Signed in as `dev-admin`, open `/contexts/architecture-authoring/pending-proposals`.
+   Expected: one proposal with its candidates and `review_payload_key`.
+   `/contexts/architecture-delivery` is 404 `context_unavailable` until the
+   preview file is copied into `ALM_POLICY_DIR`. As `dev-learner`,
+   `/contexts/architecture-delivery-2` lists only the context and the learner's
+   own participant record.
 
 ### With the studio
 

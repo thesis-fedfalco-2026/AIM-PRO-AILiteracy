@@ -240,9 +240,21 @@ class LearningService:
             return export_trace(self.store, context, project, scenario=scenario,
                                 competencies=competencies)
 
+    def _learner_only(self, subject_key):
+        return set(self.policy.subjects[subject_key].roles) <= {'LEARNER'}
+
+    def pending_proposals(self, context_id, subject_key):
+        """Proposals awaiting a decision; a learner-only subject sees none, as in :meth:`show`."""
+        from learning.review import pending_proposals
+        with self.store.read_transaction():
+            context = self._context(context_id, subject_key)
+            if self._learner_only(subject_key):
+                return ()
+            return pending_proposals(self.store, context)
+
     def show(self, context_id, subject_key):
         context = self._context(context_id, subject_key)
-        learner_only = set(self.policy.subjects[subject_key].roles) <= {'LEARNER'}
+        learner_only = self._learner_only(subject_key)
         visible = []
         for entity in context.snapshot.entities.values():
             if learner_only and (entity.type not in {'ExecutionContext','Participant','LearningState','ActivityOccurrence','LearningEvidence'}
