@@ -42,7 +42,8 @@ them and names what is new.
 | --- | --- | --- |
 | Course in sections | S07b | done (read only): PR #90, reaching `main` through PR #92 |
 | Review in plain words | S07 | teacher view done for assessments (reaching `main` through PR #92); other proposal kinds in S09c |
-| AIM-PRO upload starts a build | S09a (new) | needs S08 |
+| AIM-PRO upload starts a build | S09a | done: PR #98 (course created from the studio, upload, Curator job, project initialization) |
+| Sources prepared, then accepted by the teacher | S09a2 (new) | needs S09a; D22 |
 | Progressive refinement with agents | S09b (new) | needs S08; D18 decided |
 | Rubrics, assessments, teacher and trainer content | S09c (was S09) | needs S08 |
 | Course validation | S10 | activation blocked by D4 until S11 |
@@ -77,6 +78,9 @@ Facts in this table are a snapshot. Every chat re-verifies the ones it uses.
 | UI language | English first, externalised strings | 8 Nov 2026 |
 | D1–D5 | R1 scope, manifest format 1, policy preview, D4 = a, tracking in #71 | 8 Nov 2026 |
 | D18 | A teacher refines a proposal both ways: a conversation with the Design Agent, and manual edits of the proposed content. The agents' output and the teacher's edits stay proposals that a human decides and applies | 9 Nov 2026 |
+| D22 | Source preparation becomes an agent job, in its own step (S09a2), not in S09a. Its result is the prepared sources, not a proposal: the teacher reviews them and decides whether the Curator syllabus job uses them; nothing is used until the teacher accepts. The job contract gains an outcome for "completed, awaiting the teacher's choice" (Chat 16 owner answer 1, Chat 17) | 9 Nov 2026 |
+| D23 | A teacher creates a course from the studio, and the API writes its policy. An operator installs a course template (`ALM_COURSE_TEMPLATE`, read only for the API) naming the subjects who may create courses and the source scopes of a new course. `POST /courses` writes one new policy file in `ALM_POLICY_DIR` granting the creator `ADMINISTRATOR` and `CONTENT_RESPONSIBLE` in that context only, and bootstraps the context in PREPARATION/DRAFT. The API never changes or removes an existing policy file; the same request returns the same course (Chat 17, issue #97) | 9 Nov 2026 |
+| D24 | Uploaded AIM-PRO exports are stored unchanged in the worker's export directory (`ALM_AIMPRO_EXPORTS`) as `<sha256>.json`. An upload is refused when it is not JSON, is over the size limit (10 MiB, configurable), is not a jjodel megamodel 1.0 export, its metamodels cannot be read, or the chosen scenario and competency catalogue cannot be resolved. Findings against the generated contracts do not refuse it: they are diagnostics shown in plain words (Chat 16 owner answer 2, Chat 17) | 9 Nov 2026 |
 | D20 | A learner sees everything needed to follow and learn from the course: syllabus, material, activities, exercises and the rest of the learning content. What the learner sees comes from the validated course, never from drafts or other learners' records; the exact projection (for example rubrics and assessment criteria) is defined in S12 with the owner | 9 Nov 2026 |
 | Earlier | Socratic option b; live model runs only with owner authorization; never edit AIM-PRO/jjodel exports | see `docs/architecture/agentic-network-decisions.md` |
 
@@ -104,6 +108,7 @@ Open decisions that block later steps, not decided here:
 | D16 | Scenario input independent of the AIM-PRO export (today the Curator reads the AIM-PRO project export) | nothing before S13; needed when scenarios change |
 | D19 | How a learner's courses are listed: the contexts where the learner is a participant (needs an API that lists the subject's own contexts, a change from "responses never reveal which contexts exist", D10), or an enrolment record. The owner could not try the learner side yet (9 Nov 2026): no learner app exists before S13 | S12 |
 | D21 | The trainer's role once a course is validated, beyond authoring trainer content. Owner direction (9 Nov 2026), to be clarified: the trainer is used to give learners practice, a kind of Socratic agent that hands out exercises with a method. Open points: whether the trainer is a person, an agent or both, and how it relates to the Socratic coach of S13 | after S13 |
+| D25 | Course membership: how other teachers, trainers and learners join a course created from the studio (D23 gives its policy one subject, the creator). Options include new policy versions written by the API, a change of a context's `policies` reference, or an enrolment record (related to D19) | S10 for learners in delivery; any course with more than one author |
 | D17 | Deployment owner and shared environment | any shared deployment |
 | D6 | Sending the convergence draft to `rik99` | nothing in this roadmap |
 | Decision 6 details | Organisation documents and guidance | S15 |
@@ -162,9 +167,10 @@ metamodel.
 | S07 | 2 | Studio review inbox, with a teacher view — **milestone M1: first usable app** | S06 |
 | S07b | 2 | Studio course overview, read only (owner, 9 Nov 2026) | S07 |
 | S08 | 3 | Agent job worker and progress stream | S07b, D14 |
-| S09a | 4 | Course from an uploaded AIM-PRO model: upload, Curator job, syllabus proposal | S08 |
+| S09a | 4 | Course from an uploaded AIM-PRO model: course creation, upload, Curator job, syllabus proposal, project initialization (done: PR #98) | S08 |
+| S09a2 | 4 | Source preparation as a job; the teacher reviews and accepts the prepared sources for the Curator | S09a, D22 |
 | S09b | 4 | Progressive refinement of the syllabus and design with the agents | S09a, D18 |
-| S09c | 4 | Rubrics, assessments, teacher and trainer content from the studio; teacher view for every proposal kind | S09a |
+| S09c | 4 | Rubrics, assessments, teacher and trainer content from the studio; teacher view for every proposal kind | S09a (S09a2 for prepared sources) |
 | S10 | 8 | Course validation: release and delivery views — **milestone M2: authoring to delivery** | S09c |
 | S11 | — | Runtime assessor role and evaluation adapter (G7) | S10, owner decision |
 | S12 | 5 | Learner API, including the learner's own courses | S11, D19, D20 |
@@ -373,11 +379,36 @@ reads it (S08), its diagnostics shown in plain words, and the resulting
 syllabus proposal reviewed in the inbox and visible in the course overview.
 Project initialization from the approved syllabus.
 
+**Done** in PR #98 (issue #97, handoff `docs/plans/handoffs/chat-17.md`), with
+D22–D24 taken when the step started. Course creation from the studio (D23) was
+added to the scope by the owner.
+
 **Acceptance.**
 
-- [ ] Browser test: upload the synthetic AIM-PRO export, run the Curator job with the synthetic model, review and apply the syllabus, initialize the project.
-- [ ] An invalid file is refused with its reason; nothing is recorded.
-- [ ] The uploaded bytes are kept unchanged (digest test).
+- [x] Browser test: upload the synthetic AIM-PRO export, run the Curator job with the synthetic model, review and apply the syllabus, initialize the project.
+- [x] An invalid file is refused with its reason; nothing is recorded.
+- [x] The uploaded bytes are kept unchanged (digest test).
+- [x] A course created from the studio gets its own new policy file and a PREPARATION/DRAFT context; only listed creators may create one; existing policy files are never changed.
+
+### S09a2 — Source preparation as a job
+
+**Goal.** A teacher has the sources of a course prepared, reviews them and
+decides whether the Curator uses them (D22).
+
+**Scope.** The job kind `prepare-aimpro-syllabus-sources` (today CLI only)
+queued from the build page, with its source plan (queries, documents, coverage
+requirements) entered in the studio; a job outcome for "completed, awaiting the
+teacher's choice" in the job contract and the guide; a view of the prepared
+sources in plain words (documents, excerpts, licence verdicts as usage
+conditions); the teacher's acceptance, after which the Curator job runs on the
+accepted preparation (`prepared_sources`) instead of a single query. Moved here
+from S09c: source preparation with licence verdicts.
+
+**Acceptance.** Proposed, to confirm when the step starts:
+
+- [ ] Browser test: prepare sources with the synthetic retrieval, review them, accept them, run the Curator on them, review and apply the syllabus.
+- [ ] Sources not accepted are never used by a Curator job (test).
+- [ ] A replayed request id returns the same preparation and runs no retrieval again.
 
 ### S09b — Progressive refinement with the agents
 
@@ -398,8 +429,7 @@ view, and the course overview after each applied step.
 **Goal.** An author runs the rest of the authoring cycle from the studio.
 
 **Scope.** The former S09: job forms for Evaluator, Teacher and Trainer showing
-the exact inputs; source preparation with licence verdicts as usage
-conditions; binding proposals. A teacher view for every proposal kind
+the exact inputs; binding proposals (source preparation moved to S09a2). A teacher view for every proposal kind
 (teacher and trainer content, completion rules, release, import), as S07 did
 for assessments.
 
