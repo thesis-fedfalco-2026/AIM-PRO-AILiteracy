@@ -88,6 +88,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/contexts/{context_id}/applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Apply an approved proposal; a replay of the operation id returns the same change */
+        post: operations["apply_contexts__context_id__applications_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/contexts/{context_id}/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record a human decision on the reviewed payload; 409 if its key or revision is stale */
+        post: operations["decide_contexts__context_id__decisions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/contexts/{context_id}/pending-proposals": {
         parameters: {
             query?: never;
@@ -177,6 +211,15 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * ApplicationRequest
+         * @description Apply an approved proposal, as the CLI ``apply``; ``operation_id`` makes a retry a replay.
+         */
+        ApplicationRequest: {
+            /** Operation Id */
+            operation_id: string;
+            proposal: components["schemas"]["EntityRef"];
+        };
         /** ApprovedSyllabus */
         ApprovedSyllabus: {
             artifact: components["schemas"]["SyllabusArtifact"];
@@ -308,6 +351,22 @@ export interface components {
             source_quote: string;
             /** Source Target Id */
             source_target_id: string;
+        };
+        /**
+         * DecisionRequest
+         * @description A decision on ``target``, the exact revision the reviewer saw, as the CLI ``decide``.
+         */
+        DecisionRequest: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "APPROVE" | "REJECT" | "REQUEST_REVISION";
+            /** Reason */
+            reason: string;
+            /** Review Payload Key */
+            review_payload_key: string;
+            target: components["schemas"]["EntityRef"];
         };
         /** Entity */
         Entity: {
@@ -978,6 +1037,166 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ContextSummary"];
+                };
+            };
+            /** @description No valid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not authorized, unmapped identity or missing CSRF token */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or the context is unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflict with the current state; reload and retry */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Invalid request or data */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Internal error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    apply_contexts__context_id__applications_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                context_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplicationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Entity"];
+                };
+            };
+            /** @description No valid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not authorized, unmapped identity or missing CSRF token */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or the context is unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflict with the current state; reload and retry */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Invalid request or data */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Internal error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    decide_contexts__context_id__decisions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                context_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DecisionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Entity"];
                 };
             };
             /** @description No valid session */

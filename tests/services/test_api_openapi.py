@@ -33,7 +33,7 @@ class OpenApiSnapshotTest(unittest.TestCase):
     def schema(self):
         return json.loads((SNAPSHOT_DIR / 'authoring.json').read_text(encoding='utf-8'))
 
-    def test_snapshot_lists_the_skeleton_and_read_only_authoring_endpoints(self):
+    def test_snapshot_lists_the_skeleton_read_only_authoring_and_review_endpoints(self):
         schema = self.schema()
         self.assertEqual(schema['info']['title'], 'ALM Authoring API')
         resource = '/contexts/{context_id}/resources/{resource_id}/versions/{version}'
@@ -41,6 +41,7 @@ class OpenApiSnapshotTest(unittest.TestCase):
                          {'/health': ['get'], '/auth/login': ['get'], '/auth/callback': ['get'],
                           '/auth/session': ['get'], '/auth/logout': ['post'],
                           '/contexts/{context_id}': ['get'], '/contexts/{context_id}/pending-proposals': ['get'],
+                          '/contexts/{context_id}/decisions': ['post'], '/contexts/{context_id}/applications': ['post'],
                           '/contexts/{context_id}/projects/{project_id}': ['get'],
                           resource + '/project-syllabus': ['get'], resource + '/release': ['get']})
 

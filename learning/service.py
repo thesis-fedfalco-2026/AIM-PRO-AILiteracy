@@ -69,8 +69,11 @@ class LearningService:
         save_proposal(self.store, context, proposal, candidates)
         return proposal
 
-    def decide(self, context_id, subject_key, target, decision, reason):
-        return record_decision(self.store, self._context(context_id, subject_key), target, decision, reason)
+    def decide(self, context_id, subject_key, target, decision, reason, *, expected_key=None):
+        # The checks and the writes share one write transaction: what was checked is what is decided.
+        with self.store.write_transaction():
+            return record_decision(self.store, self._context(context_id, subject_key), target, decision, reason,
+                                   expected_key=expected_key)
 
     def apply(self, context_id, subject_key, proposal, operation_id):
         return apply_proposal(self.store, self._context(context_id, subject_key), proposal, operation_id=operation_id)
