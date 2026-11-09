@@ -5,7 +5,7 @@ import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
-import { useBuildServices } from '../build/BuildServices';
+import { useBuildServices } from '../course-build/BuildServices';
 import { buildPath, coursePath, inboxPath } from '../review/paths';
 import { ReviewError } from '../review/reviewApi';
 import { useCsrfToken } from '../review/ReviewServices';

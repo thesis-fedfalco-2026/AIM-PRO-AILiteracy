@@ -7,7 +7,7 @@ import { createRoot } from 'react-dom/client';
 import { createBrowserRouter } from 'react-router';
 
 import { StudioApp } from './App';
-import { createBuildApi } from './features/build/buildApi';
+import { createBuildApi } from './features/course-build/buildApi';
 import { createReviewApi } from './features/review/reviewApi';
 import { createStudioI18n } from './i18n';
 import { STUDIO_BASENAME, studioRoutes } from './routes';

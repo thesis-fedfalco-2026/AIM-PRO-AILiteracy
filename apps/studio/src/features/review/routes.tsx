@@ -1,7 +1,7 @@
 import type { RouteObject } from 'react-router';
 import { useParams } from 'react-router';
 
-import { BuildPage } from '../build/BuildPage';
+import { BuildPage } from '../course-build/BuildPage';
 import { CoursePage } from '../course/CoursePage';
 import { ProposalPage } from './ProposalPage';
 import { ReviewInboxPage } from './ReviewInboxPage';

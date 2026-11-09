@@ -5,8 +5,8 @@ import { I18nextProvider } from 'react-i18next';
 import { RouterProvider } from 'react-router';
 import type { createBrowserRouter } from 'react-router';
 
-import type { BuildApi } from './features/build/buildApi';
-import { BuildServicesProvider } from './features/build/BuildServices';
+import type { BuildApi } from './features/course-build/buildApi';
+import { BuildServicesProvider } from './features/course-build/BuildServices';
 import type { ReviewApi } from './features/review/reviewApi';
 import { ReviewServicesProvider } from './features/review/ReviewServices';
 import type { OperationIds } from './features/review/ReviewServices';

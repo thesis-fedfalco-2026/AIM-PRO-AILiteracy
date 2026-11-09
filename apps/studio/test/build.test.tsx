@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { selectedProjects } from '../src/features/build/projects';
+import { selectedProjects } from '../src/features/course-build/projects';
 import type { Entity } from '../src/features/review/reviewApi';
 import en from '../src/i18n/en.json';
 import type { Reply } from './harness';

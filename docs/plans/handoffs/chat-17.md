@@ -73,7 +73,7 @@ PR #96).
 | `services/api_common/settings.py`, `services/authoring_api/app.py` | `ALM_COURSE_TEMPLATE`, `ALM_AIMPRO_EXPORTS`, `ALM_API_EXPORT_MAX_BYTES`; both new modules registered and checked at start; API version 0.5.0 |
 | `services/openapi/authoring.json`, `apps/packages/api-client/src/generated/authoring.ts` | Regenerated |
 | `tests/synthetic_worker.py` | Dev-only worker with the synthetic models of `tests/services/job_fixtures.py` |
-| `apps/studio/src/features/build/` | `BuildPage` (upload with report, Curator job followed to its proposal, project initialization), `buildApi`, `BuildServices`, `projects.ts` (selected projects, current design) |
+| `apps/studio/src/features/course-build/` | `BuildPage` (upload with report, Curator job followed to its proposal, project initialization), `buildApi`, `BuildServices`, `projects.ts` (selected projects, current design) |
 | `apps/studio/src/features/home/HomePage.tsx`, `features/course/CoursePage.tsx` | "Create a course"; course page links to the build page; "no syllabus yet" for the course's author |
 | `apps/studio/src/App.tsx`, `main.tsx`, `routes.tsx`, `paths.ts`, `i18n/en.json`, `vite.config.ts` | Wiring, strings, `/courses` proxied to the API |
 | `apps/e2e/build.spec.ts`, `e2e/stack/*`, `e2e/support.ts` | Browser acceptance; the stack runs the synthetic worker, an export directory and a course template; course policy files are removed before each test |
@@ -124,6 +124,17 @@ browser tests use SQLite; the API tests of `courses` run on both backends). A
 concurrent creation of the same course by two requests at once (the code
 handles it; no test makes the race happen).
 
+**CI.** The first runs on `eaffb38` (push run
+[42681156436](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/actions/runs/42681156436),
+pull_request run
+[42681170385](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/actions/runs/42681170385))
+failed `front-end` and `browser`; the five Python jobs passed. Cause: the root
+`.gitignore` ignores every directory named `build/`, so
+`apps/studio/src/features/build/` was never committed, although every local
+check passed on the working tree. The feature moved to
+`apps/studio/src/features/course-build/`; the result of the next run is in the
+PR.
+
 ## Acceptance items of #97
 
 | Item | Status | Evidence |
@@ -162,10 +173,12 @@ handles it; no test makes the race happen).
    id would be possible. The inbox lists the pending one.
 8. **Uploads are never removed.** As jobs (Chat 16 finding 10), the export
    directory only grows.
-9. **The syllabus proposal has no teacher view of its own.** It shows the
+9. **`build/` is ignored everywhere in the repository** (root `.gitignore`,
+   line 11). A source folder with that name is silently left out of commits.
+10. **The syllabus proposal has no teacher view of its own.** It shows the
    generic teacher view (summary, diagnostics in words, technical details).
    A syllabus view in words belongs with S09b/S09c.
-10. **Still open from earlier chats.** Chat 16 findings 1–12 are unchanged
+11. **Still open from earlier chats.** Chat 16 findings 1–12 are unchanged
     except 3 (source preparation: owner decided, separate step) and 4 (export
     storage: done here).
 

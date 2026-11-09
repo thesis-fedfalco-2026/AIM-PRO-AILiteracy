@@ -5,7 +5,7 @@ import { createMemoryRouter } from 'react-router';
 import { vi } from 'vitest';
 
 import { StudioApp } from '../src/App';
-import { createBuildApi } from '../src/features/build/buildApi';
+import { createBuildApi } from '../src/features/course-build/buildApi';
 import { createReviewApi } from '../src/features/review/reviewApi';
 import { OperationIds } from '../src/features/review/ReviewServices';
 import { createStudioI18n } from '../src/i18n';

@@ -608,7 +608,7 @@ A subject outside the context gets 403 from both routes, as from the CLI. The Cu
 
 - The home page has "Create a course"; it opens the new course's build page.
 - `/studio/contexts/{context_id}/build` ("Build the course"), from
-  `src/features/build/`: (1) upload the model, with the report and its
+  `src/features/course-build/`: (1) upload the model, with the report and its
   diagnostics as sentences; (2) ask the Curator with a source scope and a
   query: the page follows the job (`GET …/jobs/{request_id}` every second) and
   links to the proposal once it is `PROPOSED`, or says why the job ended;
