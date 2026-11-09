@@ -39,6 +39,7 @@ const api = spawn(python(), ['-m', 'services.authoring_api', '--port', String(AP
     ALM_API_COOKIE_SECURE: 'false',
     ALM_STORE: DATABASE,
     ALM_POLICY_DIR: `${SEED}policies`,
+    ALM_JOBS_STORE: `${STATE}jobs.sqlite`,
   },
 });
 for (const signal of /** @type {const} */ (['SIGINT', 'SIGTERM'])) process.on(signal, () => api.kill(signal));

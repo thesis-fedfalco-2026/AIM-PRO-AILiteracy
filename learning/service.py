@@ -78,12 +78,21 @@ class LearningService:
     def apply(self, context_id, subject_key, proposal, operation_id):
         return apply_proposal(self.store, self._context(context_id, subject_key), proposal, operation_id=operation_id)
 
-    def abandon_request(self, context_id, subject_key, request_id):
+    def authorize_jobs(self, context_id, subject_key):
+        """Check that the subject may queue and follow agent jobs here: ``propose``, as each generator checks."""
+        authorize(self.policy, subject_key, 'propose', self.store.read_context(context_id).ref)
+        self._context(context_id, subject_key)
+
+    def authorize_abandonment(self, context_id, subject_key):
+        """Check the administrative authority that :meth:`abandon_request` requires; records nothing."""
+        authorize(self.policy, subject_key, 'apply', self.store.read_context(context_id).ref)
         context = self._context(context_id, subject_key)
-        authorize(self.policy, subject_key, 'apply', context.snapshot.context.ref)
         roles = set(self.policy.subjects[subject_key].roles) & set(context.participant.fields['roles'])
         if 'ADMINISTRATOR' not in roles:
             raise ValueError('Abandonment requires administrative authority')
+
+    def abandon_request(self, context_id, subject_key, request_id):
+        self.authorize_abandonment(context_id, subject_key)
         response = LearningResponse(kind='FAILURE', content=ABANDONED_CONTENT)
         self.store.abandon_request(request_id, context_id, response.model_dump(mode='json'))
         return response

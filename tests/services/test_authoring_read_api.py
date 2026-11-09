@@ -62,8 +62,8 @@ class AuthoringReadApiTest(unittest.TestCase):
         identities = write_identity_map(self.root,
             {'issuer': ISSUER, 'subject': MAPPED_SUBJECT, 'subject_key': 'admin'},
             {'issuer': ISSUER, 'subject': LEARNER_SUBJECT, 'subject_key': 'learner'})
-        settings = ApiSettings(auth=auth_settings(), identity_map=identities,
-                               store=str(self.location), policy_dir=self.policies)
+        settings = ApiSettings(auth=auth_settings(), identity_map=identities, store=str(self.location),
+                               policy_dir=self.policies, jobs_store=str(self.root / 'jobs.sqlite'))
         self.app = create_app(settings, transport=self.provider.transport)
         self.staff = self.signed_in(MAPPED_SUBJECT)
         self.learner = self.signed_in(LEARNER_SUBJECT)

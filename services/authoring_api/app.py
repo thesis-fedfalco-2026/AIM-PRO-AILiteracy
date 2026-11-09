@@ -11,12 +11,12 @@ from services.api_common.contexts import ContextServices, PolicyDirectory
 from services.api_common.identity import IdentityMap, load_identity_map
 from services.api_common.registry import ConfigurationError, ModuleRegistry
 from services.api_common.settings import ApiSettings, AuthSettings
-from services.authoring_api import context_summary, projects, releases, review
+from services.authoring_api import context_summary, jobs, projects, releases, review
 
 
 TITLE = 'ALM Authoring API'
-VERSION = '0.3.0'
-REGISTRY = ModuleRegistry((context_summary.MODULE, review.MODULE, projects.MODULE, releases.MODULE))
+VERSION = '0.4.0'
+REGISTRY = ModuleRegistry((context_summary.MODULE, review.MODULE, projects.MODULE, releases.MODULE, jobs.MODULE))
 
 
 def create_app(settings: ApiSettings | None = None, *, transport: httpx.BaseTransport | None = None) -> FastAPI:
@@ -28,9 +28,12 @@ def create_app(settings: ApiSettings | None = None, *, transport: httpx.BaseTran
         if settings.store is None or settings.policy_dir is None:
             raise ConfigurationError('Authoring modules need ALM_STORE and ALM_POLICY_DIR')
         contexts = ContextServices(settings.store.get_secret_value(), PolicyDirectory(settings.policy_dir))
+    if jobs.MODULE in modules and settings.jobs_store is None:
+        raise ConfigurationError('The jobs module needs ALM_JOBS_STORE')
     authenticator = Authenticator(settings.auth, load_identity_map(settings.identity_map), transport=transport)
     app = build_app(TITLE, VERSION, modules, authenticator)
     app.state.contexts = contexts
+    jobs.configure(app, settings)
     return app
 
 

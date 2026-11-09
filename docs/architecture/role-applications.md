@@ -11,7 +11,8 @@ with health and identity routes. S05 adds the first read-only modules (see
 decisions and application (see [Review endpoints](#review-endpoints-s06)). S04 adds the front-end workspace in `apps/` and a studio
 shell that signs in through the API (see [Front-end workspace](#front-end-workspace)); S07 adds the
 studio review inbox, milestone M1 (see [Studio review inbox](#studio-review-inbox-s07)), and S07b a
-read-only course overview (see [Studio course overview](#studio-course-overview-s07b)). ALM remains the reference model. Nothing here changes
+read-only course overview (see [Studio course overview](#studio-course-overview-s07b)). S08 adds the agent job worker, its
+jobs store and the `jobs` module (see [Agent jobs](#agent-jobs)). ALM remains the reference model. Nothing here changes
 the ALM metamodel, the store schema or an AIM-PRO/jjodel export.
 
 ## Processes
@@ -48,6 +49,79 @@ applies it through the decision endpoints. Job states: `QUEUED`, `RUNNING`,
 `PROPOSED`, `REJECTED`, `FAILED`, `ABANDONED`. Progress events are the
 content-free events of `agent_system/events.py`. The ALM `request_id` stays the
 idempotency key: a replayed `request_id` returns the same job.
+
+### Implementation (S08)
+
+`services/jobs` holds the jobs store, the job kinds and the worker; the
+Authoring API imports only the first two.
+
+- **Jobs store** (`services/jobs/store.py`, D14). A SQLite location is a
+  database file of its own, refused if it holds the ALM tables; a PostgreSQL
+  location keeps its tables in the `jobs` schema. A job is named by its context
+  and its `request_id`; the same command under the same id is the same job,
+  another command (kind, command or subject) is a conflict. Status changes go
+  one way (`QUEUED` → `RUNNING` → a final status; `QUEUED` or `RUNNING` →
+  `ABANDONED`) and each is recorded as a `status` event in the same
+  transaction.
+- **Job kinds** (`services/jobs/kinds.py`), named as the CLI commands they
+  run: `generate-project-assessments`, `generate-project-teacher`,
+  `generate-project-trainer` (a `GenerationCommand`) and
+  `generate-aimpro-syllabus` (the Curator: an AIM-PRO export by file name and
+  SHA-256 in the worker's `ALM_AIMPRO_EXPORTS` directory, the source scope, and
+  a query or a prepared-sources request id). The worker refuses an export that
+  is missing or differs from the named digest; it never writes the export.
+  `prepare-aimpro-syllabus-sources` (no model, no proposal) and `ask` (the
+  learner request, S12) stay CLI commands.
+- **Worker** (`services/jobs/worker.py`, `python -m services.jobs`). It claims
+  the oldest queued job, opens its context with the trusted policy (D10),
+  checks again that the subject may `propose`, and runs the existing service
+  method inside an `agent_system.events` run bound to the job's event sink.
+  Outcome: `PROPOSED` (the pending proposal is linked), `REJECTED` (the host
+  refused the command before any model; `detail` is the core's fixed message,
+  never input text), `FAILED` (generation did not complete, or an unexpected
+  error, logged by type only), `ABANDONED`. A replayed `request_id` that the
+  ALM store already answered (by a job or the CLI) returns that answer without
+  building a model. It is the only process that loads model credentials: the
+  production factories are the CLI's, built when a job needs them; the
+  provider-call listener reports model calls as progress.
+- **Event sink.** The run's events are validated by `agent_system.events`
+  (identifiers, codes, counts and durations only) before they reach the sink;
+  the sink keeps them in memory and records them in the jobs store, because the
+  API runs in another process. Outside tests a refused event is dropped with a
+  warning; tests use a strict sink, which makes it fail the run.
+
+| Route | Who | Result |
+| --- | --- | --- |
+| `POST /contexts/{context_id}/jobs` (CSRF) | `propose` in the context | `JobView`, `QUEUED` or the existing job; 409 for another command under the same id |
+| `GET /contexts/{context_id}/jobs/{request_id}` | `propose` | `JobView`; 404 for an unknown job |
+| `GET /contexts/{context_id}/jobs/{request_id}/events` | `propose` | server-sent events until the final status (below) |
+| `POST /contexts/{context_id}/jobs/{request_id}/abandonment` (CSRF) | administrator, as the CLI `abandon` | `JobView` `ABANDONED`; 409 once the job has ended, or while a running job's request is not reserved yet |
+
+Authorization is checked before a stream starts, so its errors are ordinary
+JSON error bodies. The stream has two event names: `status`
+(`{"status", "proposal_refs"}`) and `progress` (an `alm.event/1` record); each
+event's `id` is its sequence, so a client reconnects with `Last-Event-ID`. A
+stream ends after the final status, or after `ALM_API_JOB_STREAM_SECONDS`; it
+reads new events every `ALM_API_JOB_POLL_SECONDS`. Neither the stream nor the
+`detail` of a job carries a command, a prompt, a document or a learner's text;
+`JobView` returns the command to the subjects who may propose in the context.
+
+Abandonment: a queued job is marked `ABANDONED` and never started. A running
+job whose worker was interrupted has its ALM request abandoned as the CLI
+`abandon` does, then the job is marked `ABANDONED`; if the worker is still
+running, its own write is refused and the job stays `ABANDONED`.
+
+Run a worker next to the API (same `ALM_STORE`, `ALM_POLICY_DIR` and
+`ALM_JOBS_STORE`):
+
+```sh
+export ALM_JOBS_STORE=/tmp/alm-seed/jobs.sqlite   # or a postgresql:// URL (schema "jobs")
+export ALM_AIMPRO_EXPORTS=/path/to/exports         # optional: Curator jobs
+python -m services.jobs            # --once runs at most one job; --poll SECONDS
+```
+
+The worker calls real models for the jobs it runs: start it only with the
+owner's authorization for live runs. Tests use synthetic models only.
 
 ## Module rules
 
@@ -172,6 +246,8 @@ other files are ignored.
 | `ALM_API_MODULES` | comma-separated module names; unset selects all |
 | `ALM_STORE` | ALM store: an existing SQLite file or a `postgresql://` URL (kept secret: it may hold a password); required when any authoring module is selected |
 | `ALM_POLICY_DIR` | directory of trusted policy files (D10); required with `ALM_STORE` |
+| `ALM_JOBS_STORE` | jobs store (D14): a SQLite file, created if missing and never the ALM database, or a `postgresql://` URL (schema `jobs`); required when the `jobs` module is selected |
+| `ALM_API_JOB_POLL_SECONDS`, `ALM_API_JOB_STREAM_SECONDS` | progress stream: seconds between reads (default 1) and lifetime before the client reconnects (default 300) |
 
 `ALM_API_MODULES=` (empty) runs the identity routes alone, without a store. The
 API never creates a SQLite database: a missing file refuses to start.
@@ -464,6 +540,7 @@ export ALM_IDENTITY_MAP=infra/keycloak/identity-map.dev.json
 export ALM_API_COOKIE_SECURE=false
 python -m tests.seed --output /tmp/alm-seed     # any new directory
 export ALM_STORE=/tmp/alm-seed/alm.sqlite ALM_POLICY_DIR=/tmp/alm-seed/policies
+export ALM_JOBS_STORE=/tmp/alm-seed/jobs.sqlite
 python -m services.authoring_api          # http://127.0.0.1:58000
 ```
 

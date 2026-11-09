@@ -122,6 +122,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/contexts/{context_id}/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Queue an agent job; the same request id and command return the same job, another command 409 */
+        post: operations["queue_contexts__context_id__jobs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/contexts/{context_id}/jobs/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A job with its status and, once ended, its pending proposal or the reason it ended */
+        get: operations["read_contexts__context_id__jobs__request_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/contexts/{context_id}/jobs/{request_id}/abandonment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Abandon a queued or interrupted job (administrators); 409 once the job has ended */
+        post: operations["abandon_contexts__context_id__jobs__request_id__abandonment_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/contexts/{context_id}/jobs/{request_id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Server-sent events: status and content-free progress, until the job ends; resume with Last-Event-ID */
+        get: operations["follow_contexts__context_id__jobs__request_id__events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/contexts/{context_id}/pending-proposals": {
         parameters: {
             query?: never;
@@ -212,6 +280,16 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /**
+         * AimproExport
+         * @description An AIM-PRO project export in the worker's export directory, at this exact SHA-256.
+         */
+        AimproExport: {
+            /** Name */
+            name: string;
+            /** Sha256 */
+            sha256: string;
+        };
+        /**
          * ApplicationRequest
          * @description Apply an approved proposal, as the CLI ``apply``; ``operation_id`` makes a retry a replay.
          */
@@ -256,6 +334,30 @@ export interface components {
              */
             kind: "SOURCE" | "SYLLABUS" | "ASSESSMENT" | "TEACHER_CONTENT" | "TRAINER_CONTENT";
             resource: components["schemas"]["EntityRef"];
+        };
+        /**
+         * AssessmentJob
+         * @description The Evaluator: ``learning generate-project-assessments``.
+         */
+        "AssessmentJob-Input": {
+            command: components["schemas"]["GenerationCommand-Input"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "generate-project-assessments";
+        };
+        /**
+         * AssessmentJob
+         * @description The Evaluator: ``learning generate-project-assessments``.
+         */
+        "AssessmentJob-Output": {
+            command: components["schemas"]["GenerationCommand-Output"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "generate-project-assessments";
         };
         /**
          * ContextSummary
@@ -420,6 +522,58 @@ export interface components {
             /** Target */
             target: string;
         };
+        /** GenerationCommand */
+        "GenerationCommand-Input": {
+            /**
+             * Assessments
+             * @default []
+             */
+            assessments: components["schemas"]["EntityRef"][];
+            base_context: components["schemas"]["EntityRef"];
+            project: components["schemas"]["EntityRef"];
+            /**
+             * Requirements
+             * @default []
+             */
+            requirements: string[];
+            /**
+             * Shared Content
+             * @default []
+             */
+            shared_content: components["schemas"]["EntityRef"][];
+            /**
+             * Stimulus Requirements
+             * @default []
+             */
+            stimulus_requirements: components["schemas"]["StimulusRequirement"][];
+            teacher_plan?: components["schemas"]["TeacherPlan-Input"] | null;
+        };
+        /** GenerationCommand */
+        "GenerationCommand-Output": {
+            /**
+             * Assessments
+             * @default []
+             */
+            assessments: components["schemas"]["EntityRef"][];
+            base_context: components["schemas"]["EntityRef"];
+            project: components["schemas"]["EntityRef"];
+            /**
+             * Requirements
+             * @default []
+             */
+            requirements: string[];
+            /**
+             * Shared Content
+             * @default []
+             */
+            shared_content: components["schemas"]["EntityRef"][];
+            /**
+             * Stimulus Requirements
+             * @default []
+             */
+            stimulus_requirements: components["schemas"]["StimulusRequirement"][];
+            teacher_plan?: components["schemas"]["TeacherPlan-Output"] | null;
+        };
         /** HealthView */
         HealthView: {
             /**
@@ -427,6 +581,43 @@ export interface components {
              * @constant
              */
             status: "ok";
+        };
+        /**
+         * JobRequest
+         * @description A job command with the client's ``request_id``, the ALM idempotency key.
+         */
+        JobRequest: {
+            /** Job */
+            job: components["schemas"]["AssessmentJob-Input"] | components["schemas"]["TeacherJob-Input"] | components["schemas"]["TrainerJob-Input"] | components["schemas"]["SyllabusJob"];
+            /** Request Id */
+            request_id: string;
+        };
+        /**
+         * JobView
+         * @description A job: its exact command, its status and, once ended, its pending proposal or the reason it ended.
+         */
+        JobView: {
+            /** Context Id */
+            context_id: string;
+            /** Created */
+            created: string;
+            /** Detail */
+            detail?: string | null;
+            /** Job */
+            job: components["schemas"]["AssessmentJob-Output"] | components["schemas"]["TeacherJob-Output"] | components["schemas"]["TrainerJob-Output"] | components["schemas"]["SyllabusJob"];
+            /** Proposal Refs */
+            proposal_refs: components["schemas"]["EntityRef"][];
+            /** Request Id */
+            request_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "QUEUED" | "RUNNING" | "PROPOSED" | "REJECTED" | "FAILED" | "ABANDONED";
+            /** Subject Key */
+            subject_key: string;
+            /** Updated */
+            updated: string;
         };
         JsonValue: unknown;
         /** LeadInput */
@@ -519,6 +710,16 @@ export interface components {
             project_id: string;
             /** Required Kinds */
             required_kinds: ("SOURCE" | "SYLLABUS" | "ASSESSMENT" | "TEACHER_CONTENT" | "TRAINER_CONTENT")[];
+        };
+        /** ProtectedCaseFact */
+        ProtectedCaseFact: {
+            assessment: components["schemas"]["EntityRef"];
+            /** Quote */
+            quote: string;
+            /** Stimulus Key */
+            stimulus_key: string;
+            /** Unit Key */
+            unit_key: string;
         };
         /** Provenance */
         Provenance: {
@@ -690,6 +891,20 @@ export interface components {
             /** Trace Sha256 */
             trace_sha256: string;
         };
+        /** StimulusRequirement */
+        StimulusRequirement: {
+            /** Brief */
+            brief: string;
+            /** Key */
+            key: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "PROMPT_VARIANT" | "PEER_FAILURE" | "PROMPT_MOVE_CARD" | "TRANSCRIPT" | "OTHER";
+            /** Unit Key */
+            unit_key: string;
+        };
         /** SyllabusArtifact */
         SyllabusArtifact: {
             /** Context Id */
@@ -741,6 +956,44 @@ export interface components {
             /** Units */
             units: components["schemas"]["SyllabusUnit"][];
         };
+        /**
+         * SyllabusJob
+         * @description The Curator: ``learning generate-aimpro-syllabus``, grounded by a query or prepared sources.
+         */
+        SyllabusJob: {
+            /**
+             * Competencies
+             * @default elena_usecase_competencies
+             */
+            competencies: string;
+            /**
+             * K
+             * @default 5
+             */
+            k: number;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "generate-aimpro-syllabus";
+            /**
+             * Prepared Sources
+             * @description Exact completed source-preparation request id
+             */
+            prepared_sources?: string | null;
+            project: components["schemas"]["AimproExport"];
+            /** Query */
+            query?: string | null;
+            /** Root Id */
+            root_id?: string | null;
+            /**
+             * Scenario
+             * @default SCN01
+             */
+            scenario: string;
+            /** Source Scope */
+            source_scope: string;
+        };
         /** SyllabusUnit */
         SyllabusUnit: {
             /** Corpus Citations */
@@ -778,6 +1031,99 @@ export interface components {
              * @enum {string}
              */
             verdict: "ACCEPT" | "REJECT" | "UNCERTAIN";
+        };
+        /**
+         * TeacherJob
+         * @description The Teacher: ``learning generate-project-teacher``.
+         */
+        "TeacherJob-Input": {
+            command: components["schemas"]["GenerationCommand-Input"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "generate-project-teacher";
+        };
+        /**
+         * TeacherJob
+         * @description The Teacher: ``learning generate-project-teacher``.
+         */
+        "TeacherJob-Output": {
+            command: components["schemas"]["GenerationCommand-Output"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "generate-project-teacher";
+        };
+        /** TeacherPlan */
+        "TeacherPlan-Input": {
+            /**
+             * Format Version
+             * @default 1
+             * @constant
+             */
+            format_version: 1;
+            /**
+             * Protected Case Facts
+             * @default []
+             */
+            protected_case_facts: components["schemas"]["ProtectedCaseFact"][];
+            /**
+             * Transcript Peers
+             * @default []
+             */
+            transcript_peers: components["schemas"]["TranscriptPeerLink"][];
+        };
+        /** TeacherPlan */
+        "TeacherPlan-Output": {
+            /**
+             * Format Version
+             * @default 1
+             * @constant
+             */
+            format_version: 1;
+            /**
+             * Protected Case Facts
+             * @default []
+             */
+            protected_case_facts: components["schemas"]["ProtectedCaseFact"][];
+            /**
+             * Transcript Peers
+             * @default []
+             */
+            transcript_peers: components["schemas"]["TranscriptPeerLink"][];
+        };
+        /**
+         * TrainerJob
+         * @description The Trainer: ``learning generate-project-trainer``.
+         */
+        "TrainerJob-Input": {
+            command: components["schemas"]["GenerationCommand-Input"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "generate-project-trainer";
+        };
+        /**
+         * TrainerJob
+         * @description The Trainer: ``learning generate-project-trainer``.
+         */
+        "TrainerJob-Output": {
+            command: components["schemas"]["GenerationCommand-Output"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "generate-project-trainer";
+        };
+        /** TranscriptPeerLink */
+        TranscriptPeerLink: {
+            /** Peer Key */
+            peer_key: string;
+            /** Transcript Key */
+            transcript_key: string;
         };
         /** UnitCoverage */
         UnitCoverage: {
@@ -1197,6 +1543,319 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Entity"];
+                };
+            };
+            /** @description No valid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not authorized, unmapped identity or missing CSRF token */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or the context is unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflict with the current state; reload and retry */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Invalid request or data */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Internal error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    queue_contexts__context_id__jobs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                context_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JobRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobView"];
+                };
+            };
+            /** @description No valid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not authorized, unmapped identity or missing CSRF token */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or the context is unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflict with the current state; reload and retry */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Invalid request or data */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Internal error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    read_contexts__context_id__jobs__request_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                context_id: string;
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobView"];
+                };
+            };
+            /** @description No valid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not authorized, unmapped identity or missing CSRF token */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or the context is unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflict with the current state; reload and retry */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Invalid request or data */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Internal error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    abandon_contexts__context_id__jobs__request_id__abandonment_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                context_id: string;
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobView"];
+                };
+            };
+            /** @description No valid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not authorized, unmapped identity or missing CSRF token */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or the context is unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflict with the current state; reload and retry */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Invalid request or data */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Internal error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    follow_contexts__context_id__jobs__request_id__events_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Last-Event-ID"?: string | null;
+            };
+            path: {
+                context_id: string;
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": unknown;
                 };
             };
             /** @description No valid session */
