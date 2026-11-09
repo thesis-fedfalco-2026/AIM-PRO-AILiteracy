@@ -85,25 +85,23 @@ def resolve_inputs(service, context, role, command):
 
 
 def _cached(store, request_id, context_id, identity):
-    row = store.db.execute('SELECT payload,result FROM requests WHERE id=? AND owner=?',
-                           (request_id, context_id)).fetchone()
+    row = store.request_record(request_id, context_id)
     if row is None:
         return None
-    saved = json.loads(row['payload'])
-    if saved.get('identity') != identity or row['result'] is None:
+    saved = json.loads(row.payload)
+    if saved.get('identity') != identity or row.result is None:
         raise StateConflict('Generation request conflicts or has no confirmed result')
-    return LearningResponse.model_validate_json(row['result'])
+    return LearningResponse.model_validate_json(row.result)
 
 
 def _recorded_origin(store, context_id, recorded, identity, snapshot):
     """Reused text must come from a failed request over the same command and exact inputs."""
-    row = store.db.execute('SELECT payload,result FROM requests WHERE id=? AND owner=?',
-                           (recorded.request_id, context_id)).fetchone()
-    saved = json.loads(row['payload']) if row is not None else {}
+    row = store.request_record(recorded.request_id, context_id)
+    saved = json.loads(row.payload) if row is not None else {}
     origin = {k: v for k, v in identity.items() if k != 'recorded_teacher'}
-    if (row is None or row['result'] is None or saved.get('identity') != origin or
+    if (row is None or row.result is None or saved.get('identity') != origin or
             canonical(saved.get('input_snapshot')) != canonical(snapshot) or
-            LearningResponse.model_validate_json(row['result']).kind != 'FAILURE'):
+            LearningResponse.model_validate_json(row.result).kind != 'FAILURE'):
         raise StateConflict('Recorded Teacher output has no matching failed origin request')
 
 
@@ -116,8 +114,7 @@ def generate_project(service, context_id, subject_key, role, command, *, request
         recorded = RecordedTeacherOutput.model_validate(recorded)
         identity['recorded_teacher'] = {'request_id': recorded.request_id, 'sha256': recorded.sha256}
     # Authorization, exact snapshot and reservation share one short write lock.
-    with service.store.db:
-        service.store.db.execute('BEGIN IMMEDIATE')
+    with service.store.write_transaction():
         context = service._context(context_id, subject_key)
         _authorize(context)
         LearningRequest(request_id=request_id, subject_key=subject_key,
@@ -131,19 +128,17 @@ def generate_project(service, context_id, subject_key, role, command, *, request
             _recorded_origin(service.store, context_id, recorded, identity, saved['input_snapshot'])
             saved['recorded_teacher_text'] = recorded.text
         payload = canonical(saved)
-        service.store.db.execute('INSERT INTO requests VALUES (?,?,?,NULL)', (request_id, context_id, payload))
+        service.store.reserve_request(request_id, context_id, payload)
     try:
         dispatcher, lead, budget = authoring_factory()
         draft, verdict = generate(data, dispatcher=dispatcher, lead=lead, max_context_chars=budget,
                                   recorded_text=None if recorded is None else recorded.text)
         from aimpro.generation_state import revision
         bundle = revision(context, manifest, data, draft, verdict)
-        with service.store.db:
-            service.store.db.execute('BEGIN IMMEDIATE')
+        with service.store.write_transaction():
             # An administrator may have abandoned the request during generation.
-            row = service.store.db.execute('SELECT payload,result FROM requests WHERE id=? AND owner=?',
-                                           (request_id, context_id)).fetchone()
-            if row is None or row['payload'] != payload or row['result'] is not None:
+            row = service.store.request_record(request_id, context_id)
+            if row is None or row.payload != payload or row.result is not None:
                 raise StateConflict('Generation reservation changed during external work')
             current = service._context(context_id, subject_key)
             _authorize(current)

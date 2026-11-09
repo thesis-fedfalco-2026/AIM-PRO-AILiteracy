@@ -151,7 +151,7 @@ def save_proposal(store: LearningStore, context: RunContext, proposal: Entity, c
     _validate_candidates(context, candidates)
     if proposal.fields["reviewPayloadKey"] != review_payload_key(proposal, candidates):
         raise ValueError("Proposal content does not match reviewed payload")
-    with (nullcontext() if store.db.in_transaction else store.db):
+    with (nullcontext() if store.in_transaction else store.atomic()):
         store._put(proposal, context.snapshot.context.id)
         for candidate in candidates:
             store._put(candidate, context.snapshot.context.id, canonical(proposal.ref.model_dump()))
@@ -201,7 +201,7 @@ def record_decision(store: LearningStore, context: RunContext, target: EntityRef
     if reviewed.type == "ChangeProposal":
         fields["status"] = {"APPROVE": "APPROVED", "REJECT": "REJECTED", "REQUEST_REVISION": "DRAFT"}[decision]
     revision = current.model_copy(update={"version": uuid4().hex, "fields": fields})
-    with store.db:
+    with store.atomic():
         store._put(result, context.snapshot.context.id)
         store._put(revision, context.snapshot.context.id)
     return result

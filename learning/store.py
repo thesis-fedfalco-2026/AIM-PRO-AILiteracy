@@ -3,9 +3,10 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-from contextlib import closing, nullcontext
+from contextlib import closing, contextmanager, nullcontext
 from pathlib import Path
 import sqlite3
+from typing import NamedTuple
 
 from learning.contracts import Entity, EntityRef, entity_data
 from learning.metamodel import load_contract, validate_entity
@@ -17,6 +18,12 @@ class StateConflict(ValueError):
 
 def canonical(value) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False)
+
+
+class RequestRecord(NamedTuple):
+    """A reserved request: its canonical payload and, once confirmed, its canonical result."""
+    payload: str
+    result: str | None
 
 
 class LearningStore:
@@ -101,6 +108,30 @@ class LearningStore:
     def close(self):
         self.db.close()
 
+    @property
+    def in_transaction(self) -> bool:
+        return self.db.in_transaction
+
+    @contextmanager
+    def write_transaction(self):
+        """Hold the database write lock from the start; commit on success, roll back on failure."""
+        with self.db:
+            self.db.execute("BEGIN IMMEDIATE")
+            yield
+
+    @contextmanager
+    def read_transaction(self):
+        """Read one consistent snapshot; the first write would still need the write lock."""
+        with self.db:
+            self.db.execute("BEGIN")
+            yield
+
+    @contextmanager
+    def atomic(self):
+        """Commit on success, roll back on failure; the transaction starts at the first write."""
+        with self.db:
+            yield
+
     def _put(self, entity: Entity, owner: str | None, namespace: str = "active"):
         entity = validate_entity(entity_data(entity), self.contract)
         if self.contract.entity_types[entity.type]["instanceLayer"] == "domain_configuration":
@@ -130,7 +161,7 @@ class LearningStore:
 
     def seed(self, entities: tuple[Entity, ...], *, owner: str | None = None):
         """Internal bootstrap primitive; callers must validate administrative authority."""
-        with self.db:
+        with self.atomic():
             for entity in entities:
                 self._put(entity, owner)
                 if entity.type == "ExecutionContext":
@@ -143,6 +174,9 @@ class LearningStore:
         if row is None or (row["owner"] is not None and row["owner"] != owner):
             raise ValueError("Reference unavailable in this context")
         return validate_entity(json.loads(row["payload"]), self.contract)
+
+    def has_context(self, context_id: str) -> bool:
+        return self.db.execute("SELECT 1 FROM contexts WHERE id=?", (context_id,)).fetchone() is not None
 
     def read_context(self, context_id: str) -> Entity:
         row = self.db.execute("SELECT version FROM contexts WHERE id=?", (context_id,)).fetchone()
@@ -159,20 +193,26 @@ class LearningStore:
             latest.setdefault(entity.id, entity)
         return tuple(latest.values())
 
+    def history(self, owner: str) -> tuple[Entity, ...]:
+        """Every active revision the owner holds, ordered by type, id and version."""
+        rows = self.db.execute("SELECT payload FROM entities WHERE namespace='active' AND owner=? ORDER BY type,id,version",
+                               (owner,)).fetchall()
+        return tuple(validate_entity(json.loads(row[0]), self.contract) for row in rows)
+
     def candidates(self, proposal: EntityRef) -> tuple[Entity, ...]:
         rows = self.db.execute("SELECT payload FROM entities WHERE namespace=? ORDER BY id,version",
                                (canonical(proposal.model_dump()),)).fetchall()
         return tuple(validate_entity(json.loads(row[0]), self.contract) for row in rows)
 
     def append_candidates(self, proposal: EntityRef, entities: tuple[Entity, ...]) -> None:
-        with self.db:
+        with self.atomic():
             for entity in entities:
                 owner = entity.fields.get("context", {}).get("id")
                 self._put(entity, owner, canonical(proposal.model_dump()))
 
     def record_event(self, request_id: str, event: Entity) -> Entity:
         owner = event.fields["context"]["id"]
-        with self.db:
+        with self.atomic():
             self._put(event, owner)
         return event
 
@@ -185,8 +225,7 @@ class LearningStore:
         owner = change.fields["context"]["id"]
         fingerprint = hashlib.sha256(canonical([entity_data(change), [entity_data(e) for e in entities],
                                                  expected_version]).encode()).hexdigest()
-        with self.db:
-            self.db.execute("BEGIN IMMEDIATE")
+        with self.write_transaction():
             old = self.db.execute("SELECT * FROM operations WHERE owner=? AND id=?", (owner, operation_id)).fetchone()
             if old:
                 if old["fingerprint"] != fingerprint:
@@ -211,15 +250,33 @@ class LearningStore:
         return change
 
     def claim_request(self, request_id: str, owner: str, payload: str) -> dict | None:
-        with self.db:
-            self.db.execute("BEGIN IMMEDIATE")
+        with self.write_transaction():
             row = self.db.execute("SELECT * FROM requests WHERE owner=? AND id=?", (owner, request_id)).fetchone()
             if row:
                 if row["payload"] != payload or row["result"] is None:
                     raise StateConflict("Request conflicts or has no confirmed result")
                 return json.loads(row["result"])
-            self.db.execute("INSERT INTO requests VALUES (?,?,?,NULL)", (request_id, owner, payload))
+            self.reserve_request(request_id, owner, payload)
         return None
+
+    def reserve_request(self, request_id: str, owner: str, payload: str) -> None:
+        """Record a pending request inside the caller's write transaction."""
+        self.db.execute("INSERT INTO requests VALUES (?,?,?,NULL)", (request_id, owner, payload))
+
+    def request_record(self, request_id: str, owner: str) -> RequestRecord | None:
+        row = self.db.execute("SELECT payload,result FROM requests WHERE owner=? AND id=?",
+                              (owner, request_id)).fetchone()
+        return None if row is None else RequestRecord(row["payload"], row["result"])
+
+    def requests(self, owner: str) -> tuple[RequestRecord, ...]:
+        """Every request of the owner, newest reservation first."""
+        rows = self.db.execute("SELECT payload,result FROM requests WHERE owner=? ORDER BY rowid DESC", (owner,))
+        return tuple(RequestRecord(row["payload"], row["result"]) for row in rows)
+
+    def recorded_requests(self, owner: str) -> tuple[RequestRecord, ...]:
+        """Requests of the owner with a confirmed result."""
+        rows = self.db.execute("SELECT payload,result FROM requests WHERE owner=? AND result IS NOT NULL", (owner,))
+        return tuple(RequestRecord(row["payload"], row["result"]) for row in rows)
 
     def request_result(self, request_id: str, owner: str, payload: str) -> dict | None:
         row = self.db.execute("SELECT payload,result FROM requests WHERE owner=? AND id=?",
@@ -231,7 +288,7 @@ class LearningStore:
         return json.loads(row["result"])
 
     def finish_request(self, request_id: str, owner: str, result: dict):
-        with nullcontext() if self.db.in_transaction else self.db:
+        with nullcontext() if self.in_transaction else self.atomic():
             cursor = self.db.execute("UPDATE requests SET result=? WHERE id=? AND owner=? AND result IS NULL",
                                      (canonical(result), request_id, owner))
             if cursor.rowcount != 1:
