@@ -133,7 +133,7 @@ class AuthoringConfigurationTest(unittest.TestCase):
         self.assertEqual(TestClient(identity_only).get('/contexts/x').status_code, 404)
 
     def test_every_authoring_module_is_registered(self):
-        self.assertEqual(REGISTRY.names, ('contexts', 'review', 'projects', 'releases', 'jobs'))
+        self.assertEqual(REGISTRY.names, ('contexts', 'review', 'projects', 'releases', 'jobs', 'courses', 'exports'))
 
 
 class ModuleBoundaryTest(unittest.TestCase):
@@ -150,7 +150,8 @@ class ModuleBoundaryTest(unittest.TestCase):
 
     def test_authoring_modules_never_import_store_or_decision_internals(self):
         modules = sorted((ROOT / 'services' / 'authoring_api').glob('*.py'))
-        self.assertTrue({'review.py', 'projects.py', 'releases.py', 'context_summary.py'} <= {p.name for p in modules})
+        self.assertTrue({'review.py', 'projects.py', 'releases.py', 'context_summary.py', 'courses.py', 'exports.py'}
+                        <= {p.name for p in modules})
         for path in modules:
             with self.subTest(path.name):
                 found = [name for name in self.imports(path)

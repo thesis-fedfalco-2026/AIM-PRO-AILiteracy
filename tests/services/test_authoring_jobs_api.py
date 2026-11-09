@@ -22,6 +22,7 @@ from tests.authoring_cycle_fixtures import AUTH, DELIVERY_TWO
 from tests.seed import build_seed
 from tests.services.job_fixtures import (REQUIREMENT, SyntheticAgents, evaluator_command, evaluator_job,
                                          export_directory, worker)
+from tests.services.course_fixtures import module_settings
 from tests.services.oidc_fixtures import ISSUER, MAPPED_SUBJECT, NO_NETWORK, FakeProvider, auth_settings, write_identity_map
 from tests.services.test_authoring_review_api import LEARNER_SUBJECT, ReviewApiCase
 from tests.store_backends import block_network
@@ -65,7 +66,7 @@ class JobsApiTest(ReviewApiCase):
             {'issuer': ISSUER, 'subject': LEARNER_SUBJECT, 'subject_key': 'learner'})
         settings = ApiSettings(auth=auth_settings(), identity_map=identities, store=str(self.location),
                                policy_dir=self.policies, jobs_store=str(self.jobs_location),
-                               job_poll_seconds=0.01, job_stream_seconds=5)
+                               job_poll_seconds=0.01, job_stream_seconds=5, **module_settings(self.root))
         self.app = create_app(settings, transport=self.provider.transport)
         self.staff = self.signed_in(MAPPED_SUBJECT)
         self.learner = self.signed_in(LEARNER_SUBJECT)

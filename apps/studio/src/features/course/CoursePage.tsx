@@ -1,10 +1,11 @@
+import { useSession } from '@alm/auth';
 import { StatusMessage } from '@alm/ui';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
 import { readable } from '../review/model';
 import { LoadFailure, useStatusLabel } from '../review/parts';
-import { inboxPath, proposalPath } from '../review/paths';
+import { buildPath, inboxPath, proposalPath } from '../review/paths';
 import type { Inbox } from '../review/reviewApi';
 import { RubricTable } from '../review/RubricTable';
 import { useInbox } from '../review/useInbox';
@@ -199,15 +200,34 @@ function CourseSections({ contextId, course }: { contextId: string; course: Cour
   );
 }
 
+/** Whether the subject takes part in the context as its author or administrator. */
+function mayAuthor(inbox: Inbox, subjectKey: string) {
+  return inbox.entities.some(({ type, fields }) => type === 'Participant' && fields.subjectKey === subjectKey
+    && Array.isArray(fields.roles) && fields.roles.some((role) => role === 'ADMINISTRATOR' || role === 'CONTENT_RESPONSIBLE'));
+}
+
 function CourseContent({ contextId, inbox }: { contextId: string; inbox: Inbox }) {
   const { t } = useTranslation();
+  const { state } = useSession();
   const course = courseOverview(inbox.context, inbox.entities);
+  const subjectKey = state.status === 'signed-in' ? state.session.subjectKey : '';
+  if (!course && inbox.context.fields.learningDesign === undefined && mayAuthor(inbox, subjectKey)) {
+    // A new course: nothing to show until its syllabus is applied.
+    return (
+      <>
+        <StatusMessage>{t('course.notStarted')}</StatusMessage>
+        <p><Link to={buildPath(contextId)}>{t('course.build')}</Link></p>
+        <p><Link to={inboxPath(contextId)}>{t('course.review', { count: inbox.pending.length })}</Link></p>
+      </>
+    );
+  }
   if (!course) return <StatusMessage>{t('course.notVisible')}</StatusMessage>;
   return (
     <>
       <p className="alm-lead"><strong>{course.name}</strong></p>
       <p className="alm-muted">{t('course.state', { status: readable(course.status), mode: readable(course.mode) })}</p>
       <p><Link to={inboxPath(contextId)}>{t('course.review', { count: inbox.pending.length })}</Link></p>
+      <p><Link to={buildPath(contextId)}>{t('course.build')}</Link></p>
       <CourseSections contextId={contextId} course={course} />
     </>
   );

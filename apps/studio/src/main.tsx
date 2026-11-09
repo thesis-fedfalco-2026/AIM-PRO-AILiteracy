@@ -7,6 +7,7 @@ import { createRoot } from 'react-dom/client';
 import { createBrowserRouter } from 'react-router';
 
 import { StudioApp } from './App';
+import { createBuildApi } from './features/build/buildApi';
 import { createReviewApi } from './features/review/reviewApi';
 import { createStudioI18n } from './i18n';
 import { STUDIO_BASENAME, studioRoutes } from './routes';
@@ -19,10 +20,11 @@ void createStudioI18n().then((i18n) => {
   const client = createAuthoringClient({ baseUrl: window.location.origin });
   const api = createSessionApi(client);
   const review = createReviewApi(client);
+  const build = createBuildApi(client);
   const router = createBrowserRouter(studioRoutes, { basename: STUDIO_BASENAME });
   createRoot(root).render(
     <StrictMode>
-      <StudioApp api={api} review={review} router={router} i18n={i18n} />
+      <StudioApp api={api} review={review} build={build} router={router} i18n={i18n} />
     </StrictMode>,
   );
 });

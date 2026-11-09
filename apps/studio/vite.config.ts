@@ -10,7 +10,7 @@ import en from './src/i18n/en.json' with { type: 'json' };
 // servers take that address and forward the API paths, so the browser sees one
 // origin and the session cookie stays same-site (D8).
 const API_URL = process.env.ALM_STUDIO_API_URL ?? 'http://127.0.0.1:58001';
-const proxy = { '/auth': API_URL, '/health': API_URL, '/contexts': API_URL };
+const proxy = { '/auth': API_URL, '/health': API_URL, '/contexts': API_URL, '/courses': API_URL };
 
 /** The page title comes from the English catalogue, like every other visible string. */
 function catalogueTitle(): Plugin {

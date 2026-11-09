@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { copyFileSync, readdirSync, readFileSync, renameSync } from 'node:fs';
+import { copyFileSync, readdirSync, readFileSync, renameSync, rmSync } from 'node:fs';
 
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test as base } from '@playwright/test';
@@ -28,7 +28,7 @@ const CONFIRM_PROMPT = 'Type CONFIRM: ';
 
 /** The CLI on the database the API serves: what the browser did is checked there, or done "by another reviewer". */
 export function cli(subject: string, context: string, args: string[], input = 'CONFIRM\n'): CliResult {
-  const [policy] = readdirSync(`${SEED}policies`).filter((name) => name.endsWith('.json'));
+  const policy = 'architecture-policy-1.json';
   const run = spawnSync(python(), ['-m', 'learning', '--db', DATABASE, '--policy', `${SEED}policies/${policy}`,
     '--subject', subject, '--context', context, ...args], {
     cwd: ROOT, input, encoding: 'utf8', env: { ...process.env, ...TELEMETRY_OFF },
@@ -57,6 +57,10 @@ export const test = base.extend<{ seed: SeedManifest }>({
   // The copy is renamed into place: a request still running from the previous test
   // would otherwise open a truncated file, which LearningStore initialises as new.
   seed: [async ({}, use) => {
+    // Courses created by an earlier test lose their context with the restore: their policy files go too.
+    for (const name of readdirSync(`${SEED}policies`)) {
+      if (name.startsWith('course-')) rmSync(`${SEED}policies/${name}`);
+    }
     copyFileSync(PRISTINE, `${DATABASE}.restore`);
     renameSync(`${DATABASE}.restore`, DATABASE);
     await use(JSON.parse(readFileSync(`${SEED}seed.json`, 'utf8')) as SeedManifest);
