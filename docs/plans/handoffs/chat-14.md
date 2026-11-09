@@ -7,7 +7,8 @@ Issue: [#84](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/issues/8
 - Commits on branch `feat/s06-review-endpoints`, in
   [PR #85](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/pull/85):
   `56924e1` (Chat 13 handoff, cherry-picked from `b165b40`), `a949186`
-  (implementation), and the commit that adds this file.
+  (implementation), `519a690` (this handoff), and a follow-up commit with the
+  owner's answers (CLI `decide` passes its previewed key; this file updated).
 - No model call, no live run, synthetic data only. Services used: a throwaway
   local PostgreSQL 17 container (removed afterwards) and the API process on
   `127.0.0.1:58011` for a smoke test. Keycloak was not started. No ALM
@@ -49,6 +50,11 @@ Core (`learning/`):
 - `service.py`: `LearningService.decide(..., expected_key=None)` runs
   `_context`, the checks and the writes in one `write_transaction`. This also
   applies to the CLI. Without a key the rules are unchanged.
+- `__main__.py` (follow-up, owner answer to finding 2): CLI `decide` passes
+  `review_payload_key` of the payload it printed before `CONFIRM` as
+  `expected_key`. The CLI now refuses (exit 2, nothing recorded) when another
+  reviewer decided while it waited for `CONFIRM`, or when the reference is an
+  earlier revision; a revocation names the current revision.
 
 API (`services/`):
 
@@ -75,9 +81,9 @@ revision comes only from a decision, and it keeps the payload. A key-only check
 would therefore never fire when another reviewer decides after the inbox was
 loaded. With a key, the API also requires `target` to be the latest revision.
 After a 409 the client reloads; a decision on the reloaded revision is allowed,
-and it is a revocation, as in the CLI. Without a key (the CLI) a decision on an
-earlier revision is still recorded, and existing revocation tests rely on that.
-The PR description asks the owner to confirm this reading.
+and it is a revocation. Callers of `LearningService.decide` without a key
+(fixtures and core tests) keep the earlier rule; existing revocation tests rely
+on that. The PR description asks the owner to confirm this reading.
 
 ## Verification
 
@@ -100,6 +106,13 @@ On `a949186` (local, Python 3.12.7, Node 22.22.2):
 | CI `store-backends` list plus `tests.services.test_authoring_review_api`, `ALM_TEST_POSTGRES_URL` on a throwaway `postgres:17` | 272 tests, OK, 7 skipped |
 | S06 PostgreSQL copies alone (`ExpectedKeyDecisionTestPostgreSQL`, `AuthoringReviewApiTestPostgreSQL`, `AssessmentAuthorityApiTestPostgreSQL`) | 15 tests, OK |
 | `npm run check:client`, `npm run typecheck`, `npm test`, `npm run build` (in `apps/`) | OK, OK, 62 tests OK, OK |
+
+After the follow-up commit (CLI passes its previewed key), local: full suite 832
+tests, OK, 142 skipped; `aimpro.generate --check`, `openapi --check`,
+`git diff --check` exit 0; the CI `store-backends` list plus
+`tests.services.test_authoring_review_api` on a new throwaway `postgres:17`:
+OK, 7 skipped (the test count line was not captured). Before the CLI change,
+the two new CLI tests failed (`FAILED (failures=2, skipped=12)`).
 
 Smoke test of the real process (seed in the session scratchpad, deleted afterwards):
 
@@ -185,14 +198,16 @@ not here.
    approve and apply the Evaluator proposal, then `decide` REJECT on its latest
    revision. The status becomes `REJECTED` while the applied change stays in
    the context (the context version is unchanged). This is core behaviour that
-   the CLI already has, and the API inherits it. Should a decision on an
-   `APPLIED` (or `STALE`) proposal be refused?
-2. **The CLI does not pass the key it previews.** `decide` prints the payload,
-   waits for `CONFIRM`, then calls `service.decide` without `expected_key`. The
-   exact revision in the reference still binds the content. Passing
-   `review_payload_key` of the preview would give the CLI the API's
-   "current revision" rule. This is a behaviour change and needs the owner's
-   decision.
+   the CLI already has, and the API inherits it. **Owner, 9 November 2026: do
+   not refuse it; keep the behaviour.** Documented in the guide.
+2. **The CLI did not pass the key it previews.** **Owner, 9 November 2026:
+   "choose the best path".** Chosen: the CLI passes the previewed key, so it has
+   the API's rule (see Changes). Tests:
+   `test_the_cli_records_nothing_if_another_reviewer_decides_before_confirm`
+   (another reviewer decides through the API while the CLI waits for
+   `CONFIRM`; the CLI exits 2 and only that decision exists) and
+   `test_the_cli_decides_only_the_current_revision_as_the_api`. No existing
+   test or document used the CLI on an earlier revision.
 3. **An approval revoked before application gives 422, not 409.** `apply` on a
    proposal that is no longer `APPROVED` raises `ValueError('Proposal is not
    approved')`. The S07 reload-on-409 path does not cover it.
@@ -219,8 +234,8 @@ not here.
 
 ## Open decisions
 
-None blocked S06. The owner may confirm the "stale" interpretation and decide
-findings 1 and 2.
+None blocked S06. Findings 1 and 2 were answered by the owner on 9 November
+2026. The "stale" interpretation is still to be confirmed in the PR review.
 
 ## Next step
 

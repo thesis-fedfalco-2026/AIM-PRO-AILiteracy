@@ -225,12 +225,19 @@ entity the CLI prints.
   reviewer decided after the inbox was loaded). The key ignores `status` and
   `decision`, so a decision alone never changes it; the revision check is what
   catches a concurrent decision. The client reloads and reviews again; a
-  decision on the reloaded revision is allowed (a revocation, as in the CLI).
+  decision on the reloaded revision is allowed (a revocation).
   Nothing is written before the check.
 - **One write transaction.** `decide` now runs the context load, the checks and
-  the writes in one write transaction, for the CLI too, so the payload that was
-  checked is the payload that is decided. Without `expected_key` (the CLI) the
-  rules are unchanged: a decision on an earlier revision is still recorded.
+  the writes in one write transaction, so the payload that was checked is the
+  payload that is decided.
+- **The CLI follows the same rule.** CLI `decide` passes the key of the payload
+  it printed before `CONFIRM` as `expected_key`. If another reviewer decides
+  while the CLI waits, or the reference is an earlier revision, the CLI records
+  nothing and exits 2; a revocation names the current revision. Only callers of
+  `LearningService.decide` without a key (tests, fixtures) keep the earlier
+  rule, where a decision on an earlier revision is recorded.
+- **Applied proposals.** A decision on an `APPLIED` proposal is still recorded
+  and changes its status, not the applied change (owner, 9 November 2026).
 - **Replay.** `apply` is the core `apply_proposal`: the same `operation_id`
   returns the stored `StateChange` without writing; the same id for another
   proposal is 409. A proposal that is not approved is 422, as the CLI exits 2.
