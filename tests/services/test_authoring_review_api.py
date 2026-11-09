@@ -61,8 +61,10 @@ class ReviewApiCase(unittest.TestCase):
         return client
 
     def cli(self, subject, context_id, *args, answer='CONFIRM'):
+        """Run the CLI; ``answer`` is the reply to the ``CONFIRM`` prompt, or a function of the prompt."""
         output, errors = StringIO(), StringIO()
-        with redirect_stdout(output), redirect_stderr(errors), patch('builtins.input', return_value=answer):
+        reply = {'side_effect': answer} if callable(answer) else {'return_value': answer}
+        with redirect_stdout(output), redirect_stderr(errors), patch('builtins.input', **reply):
             status = cli_main(['--db', str(self.location), '--policy', str(self.policy_file),
                                '--subject', subject, '--context', context_id, *args])
         text = output.getvalue()
@@ -172,6 +174,32 @@ class AuthoringReviewApiTest(ReviewApiCase):
         self.assertEqual(current.fields['status'], 'REJECTED')
         decision = self.ok(self.decide(self.staff, AUTH, current.ref, current.fields['reviewPayloadKey']))
         self.assertEqual(decision.fields['target'], current.ref.model_dump())
+
+    def test_the_cli_records_nothing_if_another_reviewer_decides_before_confirm(self):
+        [(proposal, key)] = self.pending(AUTH)
+        recorded = []
+        def another_reviewer_then_confirm(prompt):
+            recorded.append(self.ok(self.decide(self.staff, AUTH, proposal, key, decision='REJECT')))
+            return 'CONFIRM'
+        status, _ = self.cli('admin', AUTH, 'decide', proposal.model_dump_json(), 'APPROVE', '--reason', REASON,
+                             answer=another_reviewer_then_confirm)
+        self.assertEqual(status, 2)
+        self.assertEqual(len(recorded), 1)
+        _, shown = self.cli('admin', AUTH, 'show')
+        decisions = [e for e in shown['entities'] if e['type'] == 'HumanDecision'
+                     and e['fields']['target']['id'] == proposal.id]
+        self.assertEqual([Entity.model_validate(e) for e in decisions], recorded)
+
+    def test_the_cli_decides_only_the_current_revision_as_the_api(self):
+        [(proposal, key)] = self.pending(AUTH)
+        self.ok(self.decide(self.staff, AUTH, proposal, key))
+        before = self.digests()
+        self.assertEqual(self.cli('admin', AUTH, 'decide', proposal.model_dump_json(), 'REJECT', '--reason', REASON)[0], 2)
+        self.assertEqual(self.digests(), before)
+        current = next(Entity.model_validate(e) for e in self.staff.get(f'/contexts/{AUTH}').json()['entities']
+                       if e['type'] == 'ChangeProposal' and e['id'] == proposal.id)
+        status, revocation = self.cli('admin', AUTH, 'decide', current.ref.model_dump_json(), 'REJECT', '--reason', REASON)
+        self.assertEqual((status, revocation['fields']['target']), (0, current.ref.model_dump()))
 
     def test_a_cli_decision_is_applied_through_the_api_and_replayed_by_the_cli(self):
         [(proposal, _)] = self.pending(AUTH)

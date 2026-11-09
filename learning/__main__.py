@@ -8,7 +8,7 @@ from uuid import uuid4
 
 from learning.context import LearningRequest
 from learning.contracts import EntityRef, entity_data
-from learning.decisions import proposal_candidates
+from learning.decisions import proposal_candidates, review_payload_key
 from learning.metamodel import load_contract, validate_entity
 from learning.policies import TrustedPolicy, authorize
 from learning.releases import ActivationRefused
@@ -230,7 +230,9 @@ def main(argv=None):
                 if input(f'Record {args.decision} for this content? Type CONFIRM: ').strip() != 'CONFIRM':
                     print('Decision not recorded.')
                     return 1
-                result = entity_data(service.decide(args.context,args.subject,target,args.decision,args.reason))
+                # Decide exactly the revision and payload printed above, as the API does with its review key.
+                result = entity_data(service.decide(args.context,args.subject,target,args.decision,args.reason,
+                                                    expected_key=review_payload_key(entity,candidates)))
             elif command == 'apply':
                 result = entity_data(service.apply(args.context,args.subject,EntityRef.model_validate_json(args.proposal),args.operation_id))
             elif command == 'abandon':
