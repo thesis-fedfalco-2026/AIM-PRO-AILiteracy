@@ -63,17 +63,17 @@ def _result(value):
 
 
 def _cached(service, owner, request_id, identity):
-    row = service.store.db.execute('SELECT payload,result FROM requests WHERE owner=? AND id=?', (owner, request_id)).fetchone()
+    row = service.store.request_record(request_id, owner)
     if row is None:
         return None
-    if json.loads(row['payload']).get('identity') != identity or row['result'] is None:
+    if json.loads(row.payload).get('identity') != identity or row.result is None:
         raise StateConflict('Source request conflicts or has no confirmed result')
-    return _result(json.loads(row['result']))
+    return _result(json.loads(row.result))
 
 
 def _pending(service, owner, request_id, payload):
-    row = service.store.db.execute('SELECT payload,result FROM requests WHERE owner=? AND id=?', (owner, request_id)).fetchone()
-    if row is None or row['payload'] != payload or row['result'] is not None:
+    row = service.store.request_record(request_id, owner)
+    if row is None or row.payload != payload or row.result is not None:
         raise StateConflict('Source request reservation changed')
 
 
@@ -98,8 +98,7 @@ def _failed(service, owner, request_id, identity, error):
 def prepare_sources(service, context_id, subject_key, project, plan, *, request_id, search_client_factory,
                     scenario='SCN01', competencies='elena_usecase_competencies', root_id=None):
     plan = SourcePlan.model_validate(plan)
-    with service.store.db:
-        service.store.db.execute('BEGIN IMMEDIATE')
+    with service.store.write_transaction():
         context = _context(service, context_id, subject_key, plan.source_scope)
         root = context.snapshot.context
         request_id = LearningRequest(request_id=request_id, subject_key=subject_key, context_ref=root.ref,
@@ -117,13 +116,12 @@ def prepare_sources(service, context_id, subject_key, project, plan, *, request_
         _draft(context)
         payload = canonical({'identity': identity, 'context': root.model_dump(mode='json'),
                              'source_snapshot': data.model_dump(mode='json')})
-        service.store.db.execute('INSERT INTO requests VALUES (?,?,?,NULL)', (request_id, context_id, payload))
+        service.store.reserve_request(request_id, context_id, payload)
     try:
         evidence, trace = collect_sources(plan, search_client_factory())
         data = data.model_copy(update={'corpus_evidence': evidence})
         result = PreparedSources(subject_key=subject_key, context=root.ref, data=data, trace=trace)
-        with service.store.db:
-            service.store.db.execute('BEGIN IMMEDIATE')
+        with service.store.write_transaction():
             _pending(service, context_id, request_id, payload)
             _fresh(service, context_id, subject_key, plan.source_scope, root, project, plan.source_sha256)
             service.store.finish_request(request_id, context_id, result.model_dump(mode='json'))
@@ -133,13 +131,13 @@ def prepare_sources(service, context_id, subject_key, project, plan, *, request_
 
 
 def _packet(service, owner, subject, request_id):
-    row = service.store.db.execute('SELECT payload,result FROM requests WHERE owner=? AND id=?', (owner, request_id)).fetchone()
-    if row is None or row['result'] is None:
+    row = service.store.request_record(request_id, owner)
+    if row is None or row.result is None:
         raise ValueError('A completed host source preparation is required')
-    identity = json.loads(row['payload']).get('identity', {})
+    identity = json.loads(row.payload).get('identity', {})
     if identity.get('operation') != 'AIMPRO_SOURCE_PREPARATION' or identity.get('subject_key') != subject:
         raise ValueError('Source preparation belongs to another operation or subject')
-    packet = PreparedSources.model_validate_json(row['result'])
+    packet = PreparedSources.model_validate_json(row.result)
     if (packet.subject_key != subject or packet.context.id != owner or
             packet.trace.plan.model_dump(mode='json') != identity.get('plan') or
             packet.data.source.source_sha256 != identity.get('source_sha256')):
@@ -150,8 +148,7 @@ def _packet(service, owner, subject, request_id):
 def generate_selected_syllabus(service, context_id, subject_key, project, *, request_id, prepared_sources,
                               source_scope, authoring_factory, scenario='SCN01',
                               competencies='elena_usecase_competencies', root_id=None):
-    with service.store.db:
-        service.store.db.execute('BEGIN IMMEDIATE')
+    with service.store.write_transaction():
         context = _context(service, context_id, subject_key, source_scope)
         root = context.snapshot.context
         request_id = LearningRequest(request_id=request_id, subject_key=subject_key, context_ref=root.ref,
@@ -171,12 +168,11 @@ def generate_selected_syllabus(service, context_id, subject_key, project, *, req
         data = packet.data
         payload = canonical({'identity': identity, 'context': root.model_dump(mode='json'),
             'preparation_sha256': packet.digest, 'model_input': data.model_dump(mode='json')})
-        service.store.db.execute('INSERT INTO requests VALUES (?,?,?,NULL)', (request_id, context_id, payload))
+        service.store.reserve_request(request_id, context_id, payload)
     try:
         dispatcher, lead, budget = authoring_factory()
         draft, verdict = generate(data, dispatcher=dispatcher, lead=lead, max_context_chars=budget)
-        with service.store.db:
-            service.store.db.execute('BEGIN IMMEDIATE')
+        with service.store.write_transaction():
             _pending(service, context_id, request_id, payload)
             current = _fresh(service, context_id, subject_key, source_scope, root, project, data.source.source_sha256)
             if _packet(service, context_id, subject_key, prepared_sources).digest != packet.digest:

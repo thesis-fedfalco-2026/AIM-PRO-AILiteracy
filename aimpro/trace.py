@@ -11,7 +11,6 @@ from aimpro.contracts import Contracts
 from learning.context import references
 from learning.decisions import review_payload_key
 from learning.contracts import entity_data
-from learning.metamodel import validate_entity
 from learning.store import StateConflict
 
 
@@ -40,10 +39,7 @@ def export_trace(store, context, project=DEFAULT_PROJECT, *, scenario='SCN01',
         raise StateConflict('Context changed during trace export')
 
     # Include every context-owned revision, not only current reachable entities.
-    rows = store.db.execute(
-        "SELECT payload FROM entities WHERE namespace='active' AND owner=? ORDER BY type,id,version",
-        (root.id,)).fetchall()
-    history = [validate_entity(json.loads(row['payload']), context.contract) for row in rows]
+    history = list(store.history(root.id))
     entities = dict(context.snapshot.entities)
     entities.update((item.ref, item) for item in history)
     proposals = [item for item in history if item.type == 'ChangeProposal']

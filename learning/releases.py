@@ -179,8 +179,7 @@ def _role(intent):
 def _command(service, context_id, subject_key, operation, command, request_id, build, result_type):
     payload = canonical({'operation': operation, 'subject_key': subject_key,
                          'command': command.model_dump(mode='json')})
-    with service.store.db:
-        service.store.db.execute('BEGIN IMMEDIATE')
+    with service.store.write_transaction():
         context = service._context(context_id, subject_key)
         _authorize(context)
         LearningRequest(request_id=request_id, subject_key=subject_key,
@@ -193,7 +192,7 @@ def _command(service, context_id, subject_key, operation, command, request_id, b
             return result_type.model_validate(cached)
         if command.base_context != context.snapshot.context.ref:
             raise StateConflict('Request context is stale')
-        service.store.db.execute('INSERT INTO requests VALUES (?,?,?,NULL)', (request_id, context_id, payload))
+        service.store.reserve_request(request_id, context_id, payload)
         result = build(service.store, context, command)
         service.store.finish_request(request_id, context_id, result.model_dump(mode='json'))
         return result
@@ -266,8 +265,7 @@ def _closure(store, context, domain):
 
 def inspect_release(service, context_id, subject_key, release_ref):
     """Report receipts, the exact frozen closure and findings without writes."""
-    with service.store.db:
-        service.store.db.execute('BEGIN')
+    with service.store.read_transaction():
         store = service.store
         context = service._context(context_id, subject_key)
         _authorize(context)
@@ -538,8 +536,8 @@ def propose_activation(service, context_id, subject_key, command, request_id):
 
 
 def _recorded(store, owner, proposal):
-    for row in store.db.execute('SELECT payload,result FROM requests WHERE owner=? AND result IS NOT NULL', (owner,)):
-        payload, result = json.loads(row['payload']), json.loads(row['result'])
+    for row in store.recorded_requests(owner):
+        payload, result = json.loads(row.payload), json.loads(row.result)
         if (isinstance(payload, dict) and payload.get('operation') in COMMANDS and isinstance(result, dict)
                 and isinstance(result.get('proposal'), dict) and result['proposal'].get('id') == proposal.id):
             return payload['operation'], payload['command']

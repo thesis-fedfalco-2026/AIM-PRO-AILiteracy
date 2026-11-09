@@ -72,8 +72,7 @@ def propose_bindings(store, context, teaching_proposal, selections):
             'source_proposal': source.ref.model_dump(), 'selections': [s.model_dump(mode='json') for s in selected],
             'source_explanation': source.fields['proposedChange']}))
     proposal = create_proposal(context, (root.ref,), candidates, explanation)
-    with store.db:
-        store.db.execute('BEGIN IMMEDIATE')
+    with store.write_transaction():
         if store.read_context(root.id).version != root.version:
             raise ValueError('Context changed during binding preparation')
         current = next(e for e in store.owned(root.id, 'ChangeProposal') if e.id == source.id)

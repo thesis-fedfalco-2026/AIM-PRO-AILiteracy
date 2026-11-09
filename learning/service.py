@@ -38,7 +38,7 @@ class LearningService:
         authorize(self.policy, subject_key, 'bootstrap', ref)
         if 'ADMINISTRATOR' not in self.policy.subjects[subject_key].roles:
             raise ValueError('Bootstrap requires administrative authority')
-        if self.store.db.execute('SELECT 1 FROM contexts WHERE id=?', (context_id,)).fetchone():
+        if self.store.has_context(context_id):
             raise ValueError('Context already exists')
         policy = make_entity('PolicySet', self.policy.policy_ref.id, {
             'sourceScopes': sorted(self.policy.scopes) or ['No external source authorized'], 'approvalConditions':['Decision by the authorized responsible person'],
@@ -147,8 +147,7 @@ class LearningService:
             proposal = create_proposal(context, (root.ref,), candidates, explanation)
             response = LearningResponse(kind='PROPOSAL', content='Teaching draft awaits human review; no learning execution or progress is assigned.',
                 proposal_refs=(proposal.ref,), application_status='pending')
-            with self.store.db:
-                self.store.db.execute('BEGIN IMMEDIATE')
+            with self.store.write_transaction():
                 if self.store.read_context(context_id).version != root.version:
                     raise StateConflict('Context changed during didactic generation')
                 save_proposal(self.store, context, proposal, candidates)
@@ -176,8 +175,7 @@ class LearningService:
 
     def approved_aimpro_syllabus(self, context_id, subject_key, design):
         from aimpro.syllabus_state import resolve
-        with self.store.db:
-            self.store.db.execute('BEGIN')
+        with self.store.read_transaction():
             context = self._context(context_id, subject_key)
             authorize(self.policy, subject_key, 'propose', context.snapshot.context.ref)
             return resolve(self.store, context, design)
@@ -237,8 +235,7 @@ class LearningService:
                             competencies='elena_usecase_competencies'):
         from aimpro.trace import export_trace
         # Keep root, history and candidate reads in one SQLite snapshot.
-        with self.store.db:
-            self.store.db.execute('BEGIN')
+        with self.store.read_transaction():
             context = self._context(context_id, subject_key)
             return export_trace(self.store, context, project, scenario=scenario,
                                 competencies=competencies)
@@ -278,17 +275,17 @@ class LearningService:
         if request.intent == 'SOCRATIC_GUIDANCE' and not request.problem_key:
             return LearningResponse(kind='CLARIFICATION',content='Identify the problem to maintain Socratic continuity.')
         if request.intent not in {'SOCRATIC_GUIDANCE','STATE','CLARIFICATION'} and not request.switch_from_socratic:
-            rows = self.store.db.execute('SELECT payload,result FROM requests WHERE owner=? ORDER BY rowid DESC', (request.context_ref.id,))
+            rows = self.store.requests(request.context_ref.id)
             previous = None
             resolved_keys = set()
             for row in rows:
-                value = json.loads(row['payload'])
+                value = json.loads(row.payload)
                 if value.get('subject_key') != request.subject_key or value.get('intent') in {'STATE','CLARIFICATION'}:
                     continue
                 key = value.get('problem_key')
                 if (request.problem_key and key != request.problem_key) or key in resolved_keys:
                     continue
-                result = json.loads(row['result']) if row['result'] else {}
+                result = json.loads(row.result) if row.result else {}
                 if value.get('intent') == 'SOCRATIC_GUIDANCE':
                     previous = value
                     break
@@ -318,8 +315,7 @@ class LearningService:
             if proposals:
                 response = response.model_copy(update={'kind':'PROPOSAL',
                     'proposal_refs':tuple(proposal.ref for proposal, _ in proposals),'application_status':'pending'})
-            with self.store.db:
-                self.store.db.execute('BEGIN IMMEDIATE')
+            with self.store.write_transaction():
                 for record in orchestrator.last_records:
                     self.store._put(record, request.context_ref.id)
                 for proposal, candidates in proposals:

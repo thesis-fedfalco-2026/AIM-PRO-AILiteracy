@@ -248,8 +248,7 @@ def _revision_manifest(store, context, command):
 def propose_project(service, context_id, subject_key, command, request_id):
     payload = canonical({'operation': type(command).__name__, 'subject_key': subject_key,
                          'command': command.model_dump(mode='json')})
-    with service.store.db:
-        service.store.db.execute('BEGIN IMMEDIATE')
+    with service.store.write_transaction():
         context = service._context(context_id, subject_key)
         _authorize(context)
         LearningRequest(request_id=request_id, subject_key=subject_key,
@@ -263,7 +262,7 @@ def propose_project(service, context_id, subject_key, command, request_id):
         if command.base_context != context.snapshot.context.ref:
             raise StateConflict('Project request context is stale')
         _draft(context)
-        service.store.db.execute('INSERT INTO requests VALUES (?,?,?,NULL)', (request_id, context_id, payload))
+        service.store.reserve_request(request_id, context_id, payload)
         if isinstance(command, ProjectInitialization):
             context, manifest = _initialize(service.store, context, command)
             result = _persist(service, context, manifest, (),
@@ -276,8 +275,7 @@ def propose_project(service, context_id, subject_key, command, request_id):
 
 
 def inspect_project(service, context_id, subject_key, project_id):
-    with service.store.db:
-        service.store.db.execute('BEGIN')
+    with service.store.read_transaction():
         context = service._context(context_id, subject_key)
         _authorize(context)
         resource = _selected(service.store, context, project_id)
@@ -299,8 +297,7 @@ def inspect_project(service, context_id, subject_key, project_id):
 
 
 def approved_project_syllabus(service, context_id, subject_key, project_ref):
-    with service.store.db:
-        service.store.db.execute('BEGIN')
+    with service.store.read_transaction():
         context = service._context(context_id, subject_key)
         _authorize(context)
         resource, manifest = _project(service.store, context, project_ref)

@@ -172,8 +172,7 @@ def prepare_execution(store, context, *, learner, scope_name=None, base_dir=ROOT
     names = [e.fields['registryName'] for e in eligible_specializations(preview, registry, next_policy)]
     if set(names) != set(WORKERS) or len(names) != len(WORKERS):
         raise ValueError('Prepared specializations do not match the actual worker registry')
-    with store.db:
-        store.db.execute('BEGIN IMMEDIATE')
+    with store.write_transaction():
         if store.read_context(root.id).version != root.version:
             raise ValueError('Context changed during execution setup')
         save_proposal(store, context, proposal, tuple(candidates))

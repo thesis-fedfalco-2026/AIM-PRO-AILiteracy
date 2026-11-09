@@ -66,8 +66,7 @@ def generate_syllabus(service, context_id, subject_key, project, *, request_id, 
         proposal = create_proposal(context, (root.ref,), saved, explanation)
         result = LearningResponse(kind='PROPOSAL', content='Curator syllabus awaits human review; the outline remains a draft.',
                                   proposal_refs=(proposal.ref,), application_status='pending')
-        with service.store.db:
-            service.store.db.execute('BEGIN IMMEDIATE')
+        with service.store.write_transaction():
             if service.store.read_context(context_id).version != root.version:
                 raise StateConflict('Context changed during syllabus generation')
             save_proposal(service.store, context, proposal, saved)
