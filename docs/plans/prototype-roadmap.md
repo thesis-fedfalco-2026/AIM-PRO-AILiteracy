@@ -19,6 +19,37 @@ wins until the owner changes it.
   Applications never call agents, models, the database or MCP directly.
 - **Every generated artefact is a proposal** that a human decides and applies.
 
+## Owner vision (9 November 2026)
+
+Stated by the owner after using the S07 review inbox (Chat 15 handoff, "Owner
+validation"). It is the target of the steps below; this revision maps it onto
+them and names what is new.
+
+- **Teachers and trainers build a course progressively**: the syllabus, its
+  lessons, activities, targets and competences first, refined step by step,
+  then the rubrics, the assessments and the other parts of the course. Agents
+  help improve the quality of the course; people decide.
+- **An AIM-PRO model can be uploaded** to start the build of a course.
+- **The studio shows the course in sections**: the syllabus, the assessments,
+  the rubrics, the materials and the process behind them, not only a review of
+  one proposal.
+- **The course is validated** and then becomes usable by learners and trainers.
+- **Learners** sign in, see the courses they are enrolled in, open one, see its
+  material and syllabus, take part in learning activities, do exercises and
+  assessments, and talk to the Socratic agent.
+
+| Vision | Step | Status after this revision |
+| --- | --- | --- |
+| Course in sections | S07b | done in PR #90 (read only) |
+| Review in plain words | S07 | teacher view done in PR #88; other proposal kinds in S09c |
+| AIM-PRO upload starts a build | S09a (new) | needs S08 |
+| Progressive refinement with agents | S09b (new) | needs S08 and D18 |
+| Rubrics, assessments, teacher and trainer content | S09c (was S09) | needs S08 |
+| Course validation | S10 | activation blocked by D4 until S11 |
+| Learner: my courses, material, syllabus | S12, S13 (extended) | needs S11, D19, D20 |
+| Learner: activities, exercises, assessments, Socratic agent | S13 | needs S11 |
+| Trainers using the validated course | open | D21 |
+
 ## Verified baseline (8 November 2026)
 
 | Fact | Value | How verified |
@@ -69,6 +100,10 @@ Open decisions that block later steps, not decided here:
 | --- | --- | --- |
 | G7 / D4 lift | Runtime assessor role and evaluation adapter, and the explicit decision that lets activation proceed when it exists | S11 and every learner step |
 | D16 | Scenario input independent of the AIM-PRO export (today the Curator reads the AIM-PRO project export) | nothing before S13; needed when scenarios change |
+| D18 | How a teacher refines a proposal with the agents: a revision request whose reason becomes input of a new generation job, and/or the Design Agent conversation (left out of S09 until now) | S09b |
+| D19 | How a learner's courses are listed: the contexts where the learner is a participant (needs an API that lists the subject's own contexts, a change from "responses never reveal which contexts exist", D10), or an enrolment record | S12 |
+| D20 | What a learner may see of the course: today LEARNING redaction shows a learner only the context, its participant record and its own learning records, so no syllabus or material | S12, S13 |
+| D21 | The trainer's role once a course is validated (delivering it, following learners), beyond authoring trainer content | after S13 |
 | D17 | Deployment owner and shared environment | any shared deployment |
 | D6 | Sending the convergence draft to `rik99` | nothing in this roadmap |
 | Decision 6 details | Organisation documents and guidance | S15 |
@@ -124,13 +159,16 @@ metamodel.
 | S04 | 0c | Front-end workspace and studio shell with login | S03, D12 |
 | S05 | 1 | Read-only Authoring API, policy resolver, synthetic seed | S04, D10, D15 |
 | S06 | 2 | Review endpoints: decide and apply with review key | S05 |
-| S07 | 2 | Studio review inbox — **milestone M1: first usable app** | S06 |
-| S08 | 3 | Agent job worker and progress stream | S07, D14 |
-| S09 | 4 | Studio authoring: projects, generation, sources | S08 |
-| S10 | 8 | Studio release and delivery views — **milestone M2: authoring to delivery** | S09 |
+| S07 | 2 | Studio review inbox, with a teacher view — **milestone M1: first usable app** | S06 |
+| S07b | 2 | Studio course overview, read only (owner, 9 Nov 2026) | S07 |
+| S08 | 3 | Agent job worker and progress stream | S07b, D14 |
+| S09a | 4 | Course from an uploaded AIM-PRO model: upload, Curator job, syllabus proposal | S08 |
+| S09b | 4 | Progressive refinement of the syllabus and design with the agents | S09a, D18 |
+| S09c | 4 | Rubrics, assessments, teacher and trainer content from the studio; teacher view for every proposal kind | S09a |
+| S10 | 8 | Course validation: release and delivery views — **milestone M2: authoring to delivery** | S09c |
 | S11 | — | Runtime assessor role and evaluation adapter (G7) | S10, owner decision |
-| S12 | 5 | Learner API | S11 |
-| S13 | 5 | Learner app — **milestone M3: learner practice end to end** | S12 |
+| S12 | 5 | Learner API, including the learner's own courses | S11, D19, D20 |
+| S13 | 5 | Learner app: my courses, course view, practice — **milestone M3: learner practice end to end** | S12 |
 | S14 | — | Scenario input independent of the AIM-PRO export | D16 |
 | S15 | 6 | Organisation context and guidance | decision 6 details |
 
@@ -300,6 +338,14 @@ database.
 - [ ] Accessibility check (axe) passes on the inbox views.
 - [ ] Handoff includes a short owner test script for teacher validation.
 
+### S07b — Studio course overview
+
+**Goal.** A teacher or trainer sees the whole course of a context in sections.
+
+**Scope.** Done in PR #90 (issue #89): a read-only course page from the context
+summary (structure, outcomes and competences, strategies, assessments,
+materials, history), linked with the review inbox. No API change.
+
 ### S08 — Agent job worker
 
 **Goal.** Generation runs in a worker, outside HTTP requests, with progress.
@@ -317,23 +363,54 @@ credentials load only in the worker. Tests use the synthetic generator models.
 - [ ] The event stream carries no content (strict event log in tests).
 - [ ] The API process imports no model client (test).
 
-### S09 — Studio authoring
+### S09a — Course from an uploaded AIM-PRO model
 
-**Goal.** An author runs the authoring cycle from the studio.
+**Goal.** A teacher starts the build of a course by uploading an AIM-PRO model.
 
-**Scope.** Project initialization and revision; job forms for Curator,
-Evaluator, Teacher and Trainer showing the exact inputs; source preparation with
-licence verdicts as usage conditions; binding proposals. The Design Agent
-conversation stays out.
+**Scope.** Upload of an AIM-PRO project export in the studio (size and format
+checks; the file is stored as received and never edited), the Curator job that
+reads it (S08), its diagnostics shown in plain words, and the resulting
+syllabus proposal reviewed in the inbox and visible in the course overview.
+Project initialization from the approved syllabus.
+
+**Acceptance.**
+
+- [ ] Browser test: upload the synthetic AIM-PRO export, run the Curator job with the synthetic model, review and apply the syllabus, initialize the project.
+- [ ] An invalid file is refused with its reason; nothing is recorded.
+- [ ] The uploaded bytes are kept unchanged (digest test).
+
+### S09b — Progressive refinement with the agents
+
+**Goal.** A teacher refines the syllabus and the design step by step with the
+agents: lessons, activities, targets, competences.
+
+**Scope.** Defined with the owner from D18. At least: a revision request whose
+reason the next generation receives, the regenerated proposal compared with
+the previous one in the teacher view, and the course overview after each
+applied step.
+
+**Acceptance.** Defined with the owner when the step starts.
+
+### S09c — Rubrics, assessments and content from the studio
+
+**Goal.** An author runs the rest of the authoring cycle from the studio.
+
+**Scope.** The former S09: job forms for Evaluator, Teacher and Trainer showing
+the exact inputs; source preparation with licence verdicts as usage
+conditions; binding proposals. A teacher view for every proposal kind
+(teacher and trainer content, completion rules, release, import), as S07 did
+for assessments.
 
 **Acceptance.**
 
 - [ ] Browser test: the synthetic authoring cycle reaches the same project state as `tests/test_authoring_cycle.py`.
 - [ ] Each form shows the exact refs it sends; a stale base is refused and reloaded.
+- [ ] Every proposal kind of the seed has a teacher view (browser test).
 
-### S10 — Release and delivery views (M2)
+### S10 — Course validation: release and delivery views (M2)
 
-**Goal.** Release, import and activation from the studio.
+**Goal.** Release, import and activation from the studio: the owner's "course
+validation". Activation stays refused while D4 holds (S11).
 
 **Scope.** Views over `propose-release`, `show-release`, `propose-delivery-import`
 (binding selection, policy preview download) and `propose-activation` (findings
@@ -362,7 +439,8 @@ on how D4 is lifted before implementation.
 **Goal.** A separate learner process with LEARNING redaction.
 
 **Scope.** Learner request as a job, attempt submission, own progress
-(occurrences and approved states only). No authoring code importable.
+(occurrences and approved states only); the learner's own courses (D19) and
+what of each course the learner may see (D20). No authoring code importable.
 
 **Acceptance.**
 
@@ -374,8 +452,10 @@ on how D4 is lifted before implementation.
 
 **Goal.** A learner practises in the browser on an activated synthetic delivery.
 
-**Scope.** Practice screen with the Socratic coach, progress view. Choosing
-between alternative next exercises waits for decision 1.
+**Scope.** My courses; a course view with its syllabus and material (D20);
+practice screen with the Socratic coach (Socratic option b), exercises and
+assessments; progress view. Choosing between alternative next exercises waits
+for decision 1.
 
 **Acceptance.**
 
