@@ -3,3 +3,5 @@ export const inboxPath = (contextId: string) => `/contexts/${encodeURIComponent(
 
 export const proposalPath = (contextId: string, proposalId: string) =>
   `${inboxPath(contextId)}/${encodeURIComponent(proposalId)}`;
+
+export const coursePath = (contextId: string) => `/contexts/${encodeURIComponent(contextId)}/course`;

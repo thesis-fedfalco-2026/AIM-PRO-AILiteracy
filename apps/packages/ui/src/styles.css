@@ -266,6 +266,33 @@ a:focus-visible,
   margin: 0;
 }
 
+/* Course structure */
+
+.alm-tree {
+  margin: 0;
+  padding-left: var(--alm-space-4);
+  border-left: 2px solid var(--alm-color-border);
+}
+
+.alm-node {
+  margin: var(--alm-space-3) 0;
+}
+
+.alm-node__title {
+  margin: 0 0 var(--alm-space-2);
+  font-weight: 600;
+}
+
+.alm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--alm-space-2);
+}
+
+.alm-facts__row {
+  display: contents;
+}
+
 /* Lists, tables and records */
 
 .alm-cards {

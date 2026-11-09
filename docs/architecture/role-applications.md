@@ -10,7 +10,8 @@ with health and identity routes. S05 adds the first read-only modules (see
 [Read-only authoring endpoints](#read-only-authoring-endpoints-s05)); S06 adds
 decisions and application (see [Review endpoints](#review-endpoints-s06)). S04 adds the front-end workspace in `apps/` and a studio
 shell that signs in through the API (see [Front-end workspace](#front-end-workspace)); S07 adds the
-studio review inbox, milestone M1 (see [Studio review inbox](#studio-review-inbox-s07)). ALM remains the reference model. Nothing here changes
+studio review inbox, milestone M1 (see [Studio review inbox](#studio-review-inbox-s07)), and S07b a
+read-only course overview (see [Studio course overview](#studio-course-overview-s07b)). ALM remains the reference model. Nothing here changes
 the ALM metamodel, the store schema or an AIM-PRO/jjodel export.
 
 ## Processes
@@ -378,6 +379,32 @@ S05 and S06 endpoints only; nothing in the API, the core or the store changed.
   and decisions on `ResourceBinding` or `Evaluation` records are not part of
   S07; the CLI still does them.
 
+## Studio course overview (S07b)
+
+Added on the owner's request of 9 November 2026, after validating S07: the
+review inbox alone showed no picture of the course. A read-only page
+`/studio/contexts/{context_id}/course` built from the same two reads as the
+inbox (`GET /contexts/{context_id}` and `GET …/pending-proposals`); no API,
+core or store change. `src/features/course/course.ts` (pure) follows the
+references of the context summary by type and id (the summary holds the latest
+revision of each record):
+
+| Section | From |
+| --- | --- |
+| Name, status, mode | the context's `learningDesign` and its own `status` and `mode` |
+| Structure | the design's `root` `ProcessNode` tree: phases and units in order, each with its activities (intent, format, instruction, evidence), teaching strategies and completion rule condition; a node that refers back to an ancestor is not followed again |
+| Learning outcomes and competences | the design's `outcomes` and the `Topic`s they name |
+| Teaching strategies | the design's `strategies` |
+| Assessments | the design's `assessmentSpecs`: activity, rubric (criteria and levels), conditions, accepted evidence |
+| Materials | `Resource`s whose content is plain text (teaching material); a locator (`http(s)://…`) is a cited source; a JSON package or manifest is left out |
+| History | every `ChangeProposal`, newest first, with its `HumanDecision`s (when, who, verdict, reason) and its `StateChange`; pending and approved ones link to the proposal page |
+
+The home page opens the course ("Open the course") or the inbox; the course
+page links to the inbox with the number of pending proposals, and the inbox
+links back. A subject that cannot see the learning design (a learner, by the
+summary's redaction) gets "The course content of this context is not visible
+to you."
+
 ### Browser tests
 
 `apps/e2e/` holds Playwright tests (Chromium) with axe checks (`@axe-core/playwright`,
@@ -388,7 +415,7 @@ WCAG 2.1 A and AA rules). `npm run test:browser` in `apps/`:
    database, and runs `python -m services.authoring_api --port 58001` against the
    local realm; the Python is `ALM_PYTHON`, else `.venv/bin/python`, else `python3`;
 2. builds the studio and serves it with `vite preview` on `127.0.0.1:58000`;
-3. signs in once as `dev-admin` through Keycloak and keeps the session cookie;
+3. signs in once as `dev-admin` and once as `dev-learner` through Keycloak and keeps the session cookies;
 4. restores the seed database before each test; tests run one at a time.
 
 Ports already in use fail the run (no reuse of another process). The tests need
@@ -402,6 +429,8 @@ browser recorded.
 | `review.spec.ts`: reviews and applies the Evaluator proposal | inbox → proposal; the teacher view (one change, the activity, the rubric, the outcome, the points to check) and the technical details; approve, then apply; the CLI `show` lists one decision with the reviewed key and one `StateChange` whose `newVersion` is the context version |
 | `review.spec.ts`: decided by another reviewer after loading | the CLI rejects while the page is open; the browser's approval gets 409, the page reloads and shows "Rejected"; only the CLI decision exists |
 | `review.spec.ts`: lost application answer | the first application reaches the API but its answer is dropped; the retry sends the same operation id; one `StateChange` exists |
+| `course.spec.ts`: the whole seeded course | every section shows the seed's content (unit, three activities, completion, outcome and competence, strategy, rubric, four materials and the cited source, history with one pending proposal); no request other than `GET`; the SHA-256 of the database file is unchanged; axe; navigation to the inbox and back |
+| `course.spec.ts`: as a learner | `dev-learner` on `architecture-delivery-2` sees only the not-visible message; axe |
 | `accessibility.spec.ts` | axe on the home page (also with its validation error), the inbox with and without pending proposals, the proposal page with every disclosure open, its validation errors, the apply step, a refused application, and an unavailable context |
 
 ```sh

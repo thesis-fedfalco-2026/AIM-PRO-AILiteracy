@@ -17,6 +17,7 @@ export interface Entity extends EntityRef { fields: Record<string, unknown> }
 export interface SeedManifest {
   authoring_context: string;
   delivery_context: string;
+  pending_delivery_context: string;
   staff: string;
   pending_proposals: Record<string, EntityRef[]>;
 }

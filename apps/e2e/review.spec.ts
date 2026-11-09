@@ -23,7 +23,7 @@ test('a reviewer reviews and applies the Evaluator proposal of the seed', async 
   const proposal = evaluatorProposal(seed);
   await page.goto('/studio/');
   await page.getByLabel(en.home.contextLabel).fill(seed.authoring_context);
-  await page.getByRole('button', { name: en.home.open }).click();
+  await page.getByRole('button', { name: en.home.openReview }).click();
 
   const awaiting = page.getByRole('region', { name: en.review.inbox.pendingHeading });
   await expect(awaiting.getByText('Proposed by admin · Points to check: 12')).toBeVisible();
