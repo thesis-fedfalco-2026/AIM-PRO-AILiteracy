@@ -1,0 +1,19 @@
+{
+  "name": "@alm/auth",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Session calls to the backend-for-frontend (D8), shared by the role applications.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@alm/api-client": "0.1.0"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  }
+}

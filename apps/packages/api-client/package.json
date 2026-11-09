@@ -1,0 +1,16 @@
+{
+  "name": "@alm/api-client",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Typed client of the ALM APIs, generated from the OpenAPI snapshots in services/openapi.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "openapi-fetch": "0.17.0"
+  }
+}

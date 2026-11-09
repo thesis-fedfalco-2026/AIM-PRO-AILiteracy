@@ -1,0 +1,33 @@
+{
+  "app": {
+    "name": "ALM Studio",
+    "title": "ALM Studio"
+  },
+  "shell": {
+    "skipToContent": "Skip to main content"
+  },
+  "session": {
+    "loading": "Checking your session…",
+    "signIn": "Sign in",
+    "signInAgain": "Sign in again",
+    "signOut": "Sign out",
+    "signedInAs": "Signed in as {{subject}}",
+    "signOutFailed": "Sign-out did not complete. Reload the page and try again.",
+    "unmapped": "Your account is not linked to a subject of the learning policy. Ask an administrator to add it to the identity map.",
+    "unavailable": "The studio cannot reach the authoring service. Try again in a moment.",
+    "retry": "Try again"
+  },
+  "signIn": {
+    "title": "Sign in to the studio",
+    "body": "Sign in with your organisation account. The studio never sees your password; your session ends when you sign out or when it expires."
+  },
+  "home": {
+    "title": "Studio",
+    "intro": "You are signed in. Review, projects and releases will appear here as their modules are added."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "body": "There is no studio page at this address.",
+    "home": "Go to the studio home"
+  }
+}

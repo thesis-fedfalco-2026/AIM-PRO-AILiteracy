@@ -78,6 +78,24 @@ jobs:
       - run: python -m services.api_common.openapi --check
       - run: python -m unittest tests.services.test_api_common tests.services.test_api_identity tests.services.test_api_openapi tests.services.test_dev_identity -v
 
+  front-end:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.2'
+          cache: npm
+          cache-dependency-path: apps/package-lock.json
+      - run: npm ci --ignore-scripts
+      - run: npm run check:client
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
   offline-evaluation:
     runs-on: ubuntu-latest
     env:

@@ -1,0 +1,33 @@
+/* Design tokens of the role applications. Colour pairs used for text and
+   controls are checked against WCAG 2.1 AA in test/tokens.test.ts. */
+:root {
+  --alm-color-text: #1b1f24;
+  --alm-color-text-muted: #4a5360;
+  --alm-color-background: #ffffff;
+  --alm-color-surface: #f3f5f7;
+  --alm-color-border: #d0d5dc;
+  --alm-color-border-strong: #6b7685;
+  --alm-color-link: #0b57a4;
+  --alm-color-accent: #0b57a4;
+  --alm-color-accent-hover: #08457f;
+  --alm-color-on-accent: #ffffff;
+  --alm-color-focus: #1a56db;
+  --alm-color-danger: #b42318;
+  --alm-color-danger-surface: #fdecea;
+
+  --alm-font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --alm-font-size: 1rem;
+  --alm-font-size-small: 0.875rem;
+  --alm-font-size-large: 1.5rem;
+  --alm-line-height: 1.5;
+
+  --alm-space-1: 0.25rem;
+  --alm-space-2: 0.5rem;
+  --alm-space-3: 1rem;
+  --alm-space-4: 1.5rem;
+  --alm-space-5: 2.5rem;
+
+  --alm-radius: 0.375rem;
+  --alm-content-width: 72rem;
+  --alm-target-size: 2.75rem;
+}
