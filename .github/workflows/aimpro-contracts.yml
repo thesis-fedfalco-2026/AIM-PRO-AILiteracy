@@ -30,7 +30,7 @@ jobs:
           python-version: '3.11'
           cache: pip
       - run: python -m pip install -r requirements.txt
-      - run: python -m unittest tests.test_syllabus_coverage tests.test_source_selection tests.test_authoring_generators tests.test_structured_teacher tests.test_authoring_projects tests.test_authoring_cycle tests.test_releases tests.test_store_architecture tests.test_anthropic tests.test_scn01_evaluator_evidence -v
+      - run: python -m unittest tests.test_syllabus_coverage tests.test_source_selection tests.test_authoring_generators tests.test_structured_teacher tests.test_authoring_projects tests.test_authoring_cycle tests.test_releases tests.test_store_architecture tests.test_anthropic tests.test_scn01_evaluator_evidence tests.test_seed tests.test_learning_review -v
 
   store-backends:
     runs-on: ubuntu-latest
@@ -60,7 +60,7 @@ jobs:
           python-version: '3.11'
           cache: pip
       - run: python -m pip install -r requirements.txt
-      - run: python -m unittest tests.test_store_backends tests.test_learning_store tests.test_learning_service tests.test_learning_decisions tests.test_authoring_projects tests.test_releases tests.test_authoring_cycle -v
+      - run: python -m unittest tests.test_store_backends tests.test_learning_store tests.test_learning_service tests.test_learning_decisions tests.test_authoring_projects tests.test_releases tests.test_authoring_cycle tests.test_seed tests.test_learning_review tests.services.test_authoring_read_api -v
 
   api-skeleton:
     runs-on: ubuntu-latest
@@ -76,7 +76,7 @@ jobs:
           cache: pip
       - run: python -m pip install -r requirements.txt
       - run: python -m services.api_common.openapi --check
-      - run: python -m unittest tests.services.test_api_common tests.services.test_api_identity tests.services.test_api_openapi tests.services.test_dev_identity -v
+      - run: python -m unittest tests.services.test_api_common tests.services.test_api_identity tests.services.test_api_openapi tests.services.test_dev_identity tests.services.test_api_contexts tests.services.test_authoring_read_api -v
 
   front-end:
     runs-on: ubuntu-latest

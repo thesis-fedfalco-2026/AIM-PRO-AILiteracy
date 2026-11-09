@@ -31,10 +31,15 @@ class ApiSettings(Settings):
     auth: AuthSettings
     identity_map: Path
     modules: tuple[Text, ...] | None = None
+    store: SecretStr | None = Field(None, description='ALM store: SQLite file or postgresql:// URL, which may hold a password')
+    policy_dir: Path | None = Field(None, description='Directory of trusted policy files (D10)')
 
     @classmethod
     def from_env(cls, environ: Mapping[str, str] | None = None) -> ApiSettings:
-        """Read ``ALM_OIDC_*``, ``ALM_IDENTITY_MAP`` and ``ALM_API_*``; unset ``ALM_API_MODULES`` selects all modules."""
+        """Read ``ALM_OIDC_*``, ``ALM_IDENTITY_MAP``, ``ALM_STORE``, ``ALM_POLICY_DIR`` and ``ALM_API_*``.
+
+        Unset ``ALM_API_MODULES`` selects all modules.
+        """
         env = os.environ if environ is None else environ
         missing = [name for name in ('ALM_OIDC_ISSUER', 'ALM_OIDC_CLIENT_ID', 'ALM_OIDC_CLIENT_SECRET',
                                      'ALM_OIDC_REDIRECT_URI', 'ALM_IDENTITY_MAP') if not env.get(name)]
@@ -49,4 +54,6 @@ class ApiSettings(Settings):
                 auth[field] = env[name]
         modules = env.get('ALM_API_MODULES')
         return cls(auth=auth, identity_map=Path(env['ALM_IDENTITY_MAP']),
-                   modules=None if modules is None else tuple(m.strip() for m in modules.split(',') if m.strip()))
+                   modules=None if modules is None else tuple(m.strip() for m in modules.split(',') if m.strip()),
+                   store=env.get('ALM_STORE') or None,
+                   policy_dir=Path(env['ALM_POLICY_DIR']) if env.get('ALM_POLICY_DIR') else None)

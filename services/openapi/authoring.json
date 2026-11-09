@@ -1,17 +1,529 @@
 {
   "components": {
     "schemas": {
-      "HTTPValidationError": {
+      "ApprovedSyllabus": {
+        "additionalProperties": false,
         "properties": {
-          "detail": {
+          "artifact": {
+            "$ref": "#/components/schemas/SyllabusArtifact"
+          },
+          "change": {
+            "$ref": "#/components/schemas/EntityRef"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/EntityRef"
+          },
+          "proposal": {
+            "$ref": "#/components/schemas/EntityRef"
+          },
+          "source": {
+            "$ref": "#/components/schemas/LeadInput"
+          },
+          "syllabus": {
+            "$ref": "#/components/schemas/EntityRef"
+          }
+        },
+        "required": [
+          "syllabus",
+          "artifact",
+          "source",
+          "proposal",
+          "decision",
+          "change"
+        ],
+        "title": "ApprovedSyllabus",
+        "type": "object"
+      },
+      "ArtifactInspection": {
+        "additionalProperties": false,
+        "properties": {
+          "approval_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Error"
+          },
+          "receipt": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReviewReceipt"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "selection": {
+            "$ref": "#/components/schemas/ArtifactSelection"
+          }
+        },
+        "required": [
+          "selection"
+        ],
+        "title": "ArtifactInspection",
+        "type": "object"
+      },
+      "ArtifactSelection": {
+        "additionalProperties": false,
+        "properties": {
+          "definitions": {
+            "default": [],
             "items": {
-              "$ref": "#/components/schemas/ValidationError"
+              "$ref": "#/components/schemas/EntityRef"
             },
-            "title": "Detail",
+            "title": "Definitions",
+            "type": "array"
+          },
+          "depends_on": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/EntityRef"
+            },
+            "title": "Depends On",
+            "type": "array"
+          },
+          "key": {
+            "minLength": 1,
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "SOURCE",
+              "SYLLABUS",
+              "ASSESSMENT",
+              "TEACHER_CONTENT",
+              "TRAINER_CONTENT"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "resource": {
+            "$ref": "#/components/schemas/EntityRef"
+          }
+        },
+        "required": [
+          "key",
+          "kind",
+          "resource"
+        ],
+        "title": "ArtifactSelection",
+        "type": "object"
+      },
+      "ContextSummary": {
+        "additionalProperties": false,
+        "description": "The context, the entities the subject may see and the snapshot findings.\n\nA learner-only subject sees only the context, its own participant record and\nits own learning records, never proposals, decisions or other participants.",
+        "properties": {
+          "context": {
+            "$ref": "#/components/schemas/Entity"
+          },
+          "entities": {
+            "items": {
+              "$ref": "#/components/schemas/Entity"
+            },
+            "title": "Entities",
+            "type": "array"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "title": "Findings",
             "type": "array"
           }
         },
-        "title": "HTTPValidationError",
+        "required": [
+          "context",
+          "entities",
+          "findings"
+        ],
+        "title": "ContextSummary",
+        "type": "object"
+      },
+      "CorpusCitation": {
+        "additionalProperties": false,
+        "properties": {
+          "document_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Document Ids",
+            "type": "array"
+          },
+          "resource_id": {
+            "minLength": 1,
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "resource_version": {
+            "minLength": 1,
+            "title": "Resource Version",
+            "type": "string"
+          },
+          "supported_claim": {
+            "minLength": 1,
+            "title": "Supported Claim",
+            "type": "string"
+          }
+        },
+        "required": [
+          "resource_id",
+          "resource_version",
+          "document_ids",
+          "supported_claim"
+        ],
+        "title": "CorpusCitation",
+        "type": "object"
+      },
+      "CorpusDocument": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "title": "Metadata",
+            "type": "object"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "text": {
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "text",
+          "metadata",
+          "score"
+        ],
+        "title": "CorpusDocument",
+        "type": "object"
+      },
+      "CorpusEvidence": {
+        "additionalProperties": false,
+        "properties": {
+          "k": {
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "K",
+            "type": "integer"
+          },
+          "query": {
+            "minLength": 1,
+            "title": "Query",
+            "type": "string"
+          },
+          "resources": {
+            "items": {
+              "$ref": "#/components/schemas/CorpusResource"
+            },
+            "title": "Resources",
+            "type": "array"
+          },
+          "selection": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceSelectionSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source_scope": {
+            "minLength": 1,
+            "title": "Source Scope",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query",
+          "source_scope",
+          "k",
+          "resources"
+        ],
+        "title": "CorpusEvidence",
+        "type": "object"
+      },
+      "CorpusResource": {
+        "additionalProperties": false,
+        "properties": {
+          "documents": {
+            "items": {
+              "$ref": "#/components/schemas/CorpusDocument"
+            },
+            "minItems": 1,
+            "title": "Documents",
+            "type": "array"
+          },
+          "identity": {
+            "minLength": 1,
+            "title": "Identity",
+            "type": "string"
+          },
+          "licence": {
+            "minLength": 1,
+            "title": "Licence",
+            "type": "string"
+          },
+          "source_scope": {
+            "minLength": 1,
+            "title": "Source Scope",
+            "type": "string"
+          },
+          "title": {
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "uri": {
+            "minLength": 1,
+            "title": "Uri",
+            "type": "string"
+          },
+          "version": {
+            "minLength": 1,
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "identity",
+          "version",
+          "title",
+          "uri",
+          "licence",
+          "source_scope",
+          "documents"
+        ],
+        "title": "CorpusResource",
+        "type": "object"
+      },
+      "CoverageRequirement": {
+        "additionalProperties": false,
+        "properties": {
+          "actor": {
+            "enum": [
+              "FACILITATOR",
+              "PEER",
+              "LEARNER"
+            ],
+            "title": "Actor",
+            "type": "string"
+          },
+          "expected_intent": {
+            "enum": [
+              "EXPLAIN",
+              "PRACTICE",
+              "ASSESS"
+            ],
+            "title": "Expected Intent",
+            "type": "string"
+          },
+          "key": {
+            "minLength": 1,
+            "title": "Key",
+            "type": "string"
+          },
+          "required_action": {
+            "minLength": 1,
+            "title": "Required Action",
+            "type": "string"
+          },
+          "source_field": {
+            "enum": [
+              "description",
+              "inPractice",
+              "rationale",
+              "contextDetails"
+            ],
+            "title": "Source Field",
+            "type": "string"
+          },
+          "source_object_id": {
+            "minLength": 1,
+            "title": "Source Object Id",
+            "type": "string"
+          },
+          "source_quote": {
+            "minLength": 1,
+            "title": "Source Quote",
+            "type": "string"
+          },
+          "source_target_id": {
+            "minLength": 1,
+            "title": "Source Target Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "source_target_id",
+          "source_object_id",
+          "source_field",
+          "source_quote",
+          "actor",
+          "expected_intent",
+          "required_action"
+        ],
+        "title": "CoverageRequirement",
+        "type": "object"
+      },
+      "Entity": {
+        "additionalProperties": false,
+        "properties": {
+          "fields": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "title": "Fields",
+            "type": "object"
+          },
+          "id": {
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/Provenance"
+          },
+          "type": {
+            "minLength": 1,
+            "title": "Type",
+            "type": "string"
+          },
+          "version": {
+            "minLength": 1,
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "id",
+          "version",
+          "provenance",
+          "fields"
+        ],
+        "title": "Entity",
+        "type": "object"
+      },
+      "EntityRef": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "type": {
+            "minLength": 1,
+            "title": "Type",
+            "type": "string"
+          },
+          "version": {
+            "minLength": 1,
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "id",
+          "version"
+        ],
+        "title": "EntityRef",
+        "type": "object"
+      },
+      "ErrorBody": {
+        "properties": {
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ValidationIssue"
+                },
+                "type": "array"
+              }
+            ],
+            "title": "Detail"
+          },
+          "error": {
+            "title": "Error",
+            "type": "string"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "error",
+          "detail",
+          "request_id"
+        ],
+        "title": "ErrorBody",
+        "type": "object"
+      },
+      "Finding": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "minLength": 1,
+            "title": "Code",
+            "type": "string"
+          },
+          "reason": {
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "resolution": {
+            "default": "Correct the data or provide the required configuration.",
+            "minLength": 1,
+            "title": "Resolution",
+            "type": "string"
+          },
+          "severity": {
+            "default": "BLOCKING",
+            "enum": [
+              "BLOCKING",
+              "WARNING",
+              "INFORMATION"
+            ],
+            "title": "Severity",
+            "type": "string"
+          },
+          "target": {
+            "minLength": 1,
+            "title": "Target",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "target",
+          "reason"
+        ],
+        "title": "Finding",
         "type": "object"
       },
       "HealthView": {
@@ -26,6 +538,82 @@
           "status"
         ],
         "title": "HealthView",
+        "type": "object"
+      },
+      "JsonValue": {},
+      "LeadInput": {
+        "additionalProperties": false,
+        "properties": {
+          "conforms_to_generated_contracts": {
+            "title": "Conforms To Generated Contracts",
+            "type": "boolean"
+          },
+          "corpus_evidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CorpusEvidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "domain_schemas": {
+            "additionalProperties": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Domain Schemas",
+            "type": "object"
+          },
+          "findings": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Findings",
+            "type": "array"
+          },
+          "metamodel_fingerprint": {
+            "title": "Metamodel Fingerprint",
+            "type": "string"
+          },
+          "purpose": {
+            "const": "AUTHORING_REVIEW",
+            "default": "AUTHORING_REVIEW",
+            "title": "Purpose",
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/ScenarioInput"
+          },
+          "transport_conversions": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Transport Conversions",
+            "type": "array"
+          },
+          "validated_objects": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Validated Objects",
+            "type": "array"
+          }
+        },
+        "required": [
+          "source",
+          "metamodel_fingerprint",
+          "conforms_to_generated_contracts",
+          "findings",
+          "transport_conversions",
+          "validated_objects",
+          "domain_schemas"
+        ],
+        "title": "LeadInput",
         "type": "object"
       },
       "LogoutView": {
@@ -46,6 +634,503 @@
           "end_session_url"
         ],
         "title": "LogoutView",
+        "type": "object"
+      },
+      "PendingProposal": {
+        "additionalProperties": false,
+        "properties": {
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/Entity"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "proposal": {
+            "$ref": "#/components/schemas/Entity"
+          },
+          "review_payload_key": {
+            "minLength": 1,
+            "title": "Review Payload Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "proposal",
+          "candidates",
+          "review_payload_key"
+        ],
+        "title": "PendingProposal",
+        "type": "object"
+      },
+      "PendingProposals": {
+        "additionalProperties": false,
+        "description": "Newest first. A decision must carry the ``review_payload_key`` of the payload the reviewer saw.",
+        "properties": {
+          "proposals": {
+            "items": {
+              "$ref": "#/components/schemas/PendingProposal"
+            },
+            "title": "Proposals",
+            "type": "array"
+          }
+        },
+        "required": [
+          "proposals"
+        ],
+        "title": "PendingProposals",
+        "type": "object"
+      },
+      "ProjectInspection": {
+        "additionalProperties": false,
+        "properties": {
+          "approval_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Error"
+          },
+          "artifacts": {
+            "items": {
+              "$ref": "#/components/schemas/ArtifactInspection"
+            },
+            "title": "Artifacts",
+            "type": "array"
+          },
+          "manifest": {
+            "$ref": "#/components/schemas/ProjectManifest"
+          },
+          "project": {
+            "$ref": "#/components/schemas/EntityRef"
+          },
+          "receipt": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReviewReceipt"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stale_dependencies": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "title": "Stale Dependencies",
+            "type": "array"
+          }
+        },
+        "required": [
+          "project",
+          "manifest",
+          "artifacts",
+          "stale_dependencies"
+        ],
+        "title": "ProjectInspection",
+        "type": "object"
+      },
+      "ProjectManifest": {
+        "additionalProperties": false,
+        "properties": {
+          "artifacts": {
+            "items": {
+              "$ref": "#/components/schemas/ArtifactSelection"
+            },
+            "minItems": 1,
+            "title": "Artifacts",
+            "type": "array"
+          },
+          "authoring_context": {
+            "minLength": 1,
+            "title": "Authoring Context",
+            "type": "string"
+          },
+          "design": {
+            "$ref": "#/components/schemas/EntityRef"
+          },
+          "format": {
+            "const": "authoring-project",
+            "default": "authoring-project",
+            "title": "Format",
+            "type": "string"
+          },
+          "format_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Format Version",
+            "type": "integer"
+          },
+          "previous": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EntityRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "project_id": {
+            "minLength": 1,
+            "title": "Project Id",
+            "type": "string"
+          },
+          "required_kinds": {
+            "items": {
+              "enum": [
+                "SOURCE",
+                "SYLLABUS",
+                "ASSESSMENT",
+                "TEACHER_CONTENT",
+                "TRAINER_CONTENT"
+              ],
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Required Kinds",
+            "type": "array"
+          }
+        },
+        "required": [
+          "project_id",
+          "authoring_context",
+          "design",
+          "required_kinds",
+          "artifacts"
+        ],
+        "title": "ProjectManifest",
+        "type": "object"
+      },
+      "Provenance": {
+        "additionalProperties": false,
+        "properties": {
+          "origin": {
+            "enum": [
+              "CONFIGURATION",
+              "GENERATED_PROPOSAL",
+              "INITIAL_CONTEXT",
+              "HUMAN_DECISION",
+              "OBSERVED_EVENT",
+              "UNRESOLVED_GAP"
+            ],
+            "title": "Origin",
+            "type": "string"
+          },
+          "rationale": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rationale"
+          },
+          "responsible": {
+            "minLength": 1,
+            "title": "Responsible",
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Sources",
+            "type": "array"
+          }
+        },
+        "required": [
+          "origin",
+          "responsible"
+        ],
+        "title": "Provenance",
+        "type": "object"
+      },
+      "ReleaseInspection": {
+        "additionalProperties": false,
+        "properties": {
+          "artifacts": {
+            "items": {
+              "$ref": "#/components/schemas/ReleasedArtifact"
+            },
+            "title": "Artifacts",
+            "type": "array"
+          },
+          "closure": {
+            "items": {
+              "$ref": "#/components/schemas/EntityRef"
+            },
+            "title": "Closure",
+            "type": "array"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "title": "Findings",
+            "type": "array"
+          },
+          "manifest": {
+            "$ref": "#/components/schemas/ReleaseManifest"
+          },
+          "project_receipt": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReviewReceipt"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "receipt": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReviewReceipt"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "release": {
+            "$ref": "#/components/schemas/EntityRef"
+          }
+        },
+        "required": [
+          "release",
+          "manifest",
+          "artifacts",
+          "closure",
+          "findings"
+        ],
+        "title": "ReleaseInspection",
+        "type": "object"
+      },
+      "ReleaseManifest": {
+        "additionalProperties": false,
+        "properties": {
+          "artifacts": {
+            "items": {
+              "$ref": "#/components/schemas/EntityRef"
+            },
+            "minItems": 1,
+            "title": "Artifacts",
+            "type": "array"
+          },
+          "authoring_context": {
+            "minLength": 1,
+            "title": "Authoring Context",
+            "type": "string"
+          },
+          "design": {
+            "$ref": "#/components/schemas/EntityRef"
+          },
+          "domain": {
+            "$ref": "#/components/schemas/EntityRef"
+          },
+          "format": {
+            "const": "authoring-release",
+            "default": "authoring-release",
+            "title": "Format",
+            "type": "string"
+          },
+          "format_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Format Version",
+            "type": "integer"
+          },
+          "project": {
+            "$ref": "#/components/schemas/EntityRef"
+          }
+        },
+        "required": [
+          "authoring_context",
+          "project",
+          "domain",
+          "design",
+          "artifacts"
+        ],
+        "title": "ReleaseManifest",
+        "type": "object"
+      },
+      "ReleasedArtifact": {
+        "additionalProperties": false,
+        "properties": {
+          "receipt": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReviewReceipt"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resource": {
+            "$ref": "#/components/schemas/EntityRef"
+          }
+        },
+        "required": [
+          "resource"
+        ],
+        "title": "ReleasedArtifact",
+        "type": "object"
+      },
+      "ReviewReceipt": {
+        "additionalProperties": false,
+        "properties": {
+          "change": {
+            "$ref": "#/components/schemas/EntityRef"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/EntityRef"
+          },
+          "proposal": {
+            "$ref": "#/components/schemas/EntityRef"
+          }
+        },
+        "required": [
+          "proposal",
+          "decision",
+          "change"
+        ],
+        "title": "ReviewReceipt",
+        "type": "object"
+      },
+      "ScenarioInput": {
+        "additionalProperties": false,
+        "properties": {
+          "competency_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Competency Ids",
+            "type": "array"
+          },
+          "diagnostics": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Diagnostics",
+            "type": "array"
+          },
+          "excluded_scenario_object_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Excluded Scenario Object Ids",
+            "type": "array"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "objects": {
+            "items": {
+              "$ref": "#/components/schemas/SourceObject"
+            },
+            "title": "Objects",
+            "type": "array"
+          },
+          "project_id": {
+            "title": "Project Id",
+            "type": "string"
+          },
+          "purpose": {
+            "const": "AUTHORING_REVIEW",
+            "default": "AUTHORING_REVIEW",
+            "title": "Purpose",
+            "type": "string"
+          },
+          "root_id": {
+            "title": "Root Id",
+            "type": "string"
+          },
+          "scenario_model_id": {
+            "title": "Scenario Model Id",
+            "type": "string"
+          },
+          "source_sha256": {
+            "title": "Source Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_sha256",
+          "project_id",
+          "scenario_model_id",
+          "root_id",
+          "objects",
+          "competency_ids",
+          "excluded_scenario_object_ids",
+          "diagnostics",
+          "limitations"
+        ],
+        "title": "ScenarioInput",
+        "type": "object"
+      },
+      "SelectedExcerpt": {
+        "additionalProperties": false,
+        "properties": {
+          "content_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Content Sha256",
+            "type": "string"
+          },
+          "document_id": {
+            "minLength": 1,
+            "title": "Document Id",
+            "type": "string"
+          },
+          "limitations": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Limitations",
+            "type": "array"
+          },
+          "purpose": {
+            "minLength": 1,
+            "title": "Purpose",
+            "type": "string"
+          },
+          "resource_id": {
+            "minLength": 1,
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "resource_version": {
+            "minLength": 1,
+            "title": "Resource Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "resource_id",
+          "resource_version",
+          "document_id",
+          "content_sha256",
+          "purpose",
+          "limitations"
+        ],
+        "title": "SelectedExcerpt",
         "type": "object"
       },
       "SessionView": {
@@ -72,15 +1157,412 @@
         "title": "SessionView",
         "type": "object"
       },
-      "ValidationError": {
+      "SourceObject": {
+        "additionalProperties": false,
+        "description": "Transport envelope, not a generated AIM-PRO domain class.",
         "properties": {
-          "ctx": {
-            "title": "Context",
+          "attributes": {
+            "additionalProperties": true,
+            "title": "Attributes",
             "type": "object"
           },
-          "input": {
-            "title": "Input"
+          "children": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "Children",
+            "type": "object"
           },
+          "class_name": {
+            "title": "Class Name",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "metamodel_id": {
+            "title": "Metamodel Id",
+            "type": "string"
+          },
+          "model_id": {
+            "title": "Model Id",
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "package": {
+            "title": "Package",
+            "type": "string"
+          },
+          "references": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "References",
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "model_id",
+          "metamodel_id",
+          "package",
+          "class_name",
+          "attributes",
+          "references",
+          "children"
+        ],
+        "title": "SourceObject",
+        "type": "object"
+      },
+      "SourceQuery": {
+        "additionalProperties": false,
+        "properties": {
+          "k": {
+            "default": 20,
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "K",
+            "type": "integer"
+          },
+          "query": {
+            "minLength": 1,
+            "title": "Query",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "SourceQuery",
+        "type": "object"
+      },
+      "SourceSelectionSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "coverage_requirements": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/CoverageRequirement"
+            },
+            "title": "Coverage Requirements",
+            "type": "array"
+          },
+          "documents": {
+            "items": {
+              "$ref": "#/components/schemas/SelectedExcerpt"
+            },
+            "title": "Documents",
+            "type": "array"
+          },
+          "queries": {
+            "items": {
+              "$ref": "#/components/schemas/SourceQuery"
+            },
+            "title": "Queries",
+            "type": "array"
+          },
+          "trace_sha256": {
+            "minLength": 1,
+            "title": "Trace Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "trace_sha256",
+          "queries",
+          "documents"
+        ],
+        "title": "SourceSelectionSummary",
+        "type": "object"
+      },
+      "SyllabusArtifact": {
+        "additionalProperties": false,
+        "properties": {
+          "context_id": {
+            "minLength": 1,
+            "title": "Context Id",
+            "type": "string"
+          },
+          "curator": {
+            "const": "syllabus-designer",
+            "default": "syllabus-designer",
+            "title": "Curator",
+            "type": "string"
+          },
+          "draft": {
+            "$ref": "#/components/schemas/SyllabusDraft"
+          },
+          "format": {
+            "const": "aimpro-syllabus",
+            "default": "aimpro-syllabus",
+            "title": "Format",
+            "type": "string"
+          },
+          "format_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Format Version",
+            "type": "integer"
+          },
+          "outline": {
+            "$ref": "#/components/schemas/EntityRef"
+          },
+          "review": {
+            "$ref": "#/components/schemas/SyllabusVerdict"
+          },
+          "source_snapshot": {
+            "$ref": "#/components/schemas/EntityRef"
+          },
+          "units": {
+            "items": {
+              "$ref": "#/components/schemas/UnitLink"
+            },
+            "minItems": 1,
+            "title": "Units",
+            "type": "array"
+          }
+        },
+        "required": [
+          "context_id",
+          "outline",
+          "source_snapshot",
+          "units",
+          "draft",
+          "review"
+        ],
+        "title": "SyllabusArtifact",
+        "type": "object"
+      },
+      "SyllabusDraft": {
+        "additionalProperties": false,
+        "properties": {
+          "gaps": {
+            "default": [],
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Gaps",
+            "type": "array"
+          },
+          "kind": {
+            "const": "SYLLABUS_DRAFT",
+            "default": "SYLLABUS_DRAFT",
+            "title": "Kind",
+            "type": "string"
+          },
+          "metamodel_fingerprint": {
+            "minLength": 1,
+            "title": "Metamodel Fingerprint",
+            "type": "string"
+          },
+          "source_sha256": {
+            "minLength": 1,
+            "title": "Source Sha256",
+            "type": "string"
+          },
+          "title": {
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "units": {
+            "items": {
+              "$ref": "#/components/schemas/SyllabusUnit"
+            },
+            "maxItems": 24,
+            "minItems": 1,
+            "title": "Units",
+            "type": "array"
+          }
+        },
+        "required": [
+          "source_sha256",
+          "metamodel_fingerprint",
+          "title",
+          "units"
+        ],
+        "title": "SyllabusDraft",
+        "type": "object"
+      },
+      "SyllabusUnit": {
+        "additionalProperties": false,
+        "properties": {
+          "corpus_citations": {
+            "items": {
+              "$ref": "#/components/schemas/CorpusCitation"
+            },
+            "minItems": 1,
+            "title": "Corpus Citations",
+            "type": "array"
+          },
+          "coverage": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/UnitCoverage"
+            },
+            "title": "Coverage",
+            "type": "array"
+          },
+          "key": {
+            "minLength": 1,
+            "title": "Key",
+            "type": "string"
+          },
+          "planned_intents": {
+            "items": {
+              "enum": [
+                "EXPLAIN",
+                "PRACTICE",
+                "ASSESS"
+              ],
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Planned Intents",
+            "type": "array"
+          },
+          "purpose": {
+            "minLength": 1,
+            "title": "Purpose",
+            "type": "string"
+          },
+          "source_competency_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Source Competency Ids",
+            "type": "array"
+          },
+          "source_practice_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Source Practice Ids",
+            "type": "array"
+          },
+          "source_target_id": {
+            "minLength": 1,
+            "title": "Source Target Id",
+            "type": "string"
+          },
+          "title": {
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "title",
+          "source_target_id",
+          "source_competency_ids",
+          "source_practice_ids",
+          "purpose",
+          "planned_intents",
+          "corpus_citations"
+        ],
+        "title": "SyllabusUnit",
+        "type": "object"
+      },
+      "SyllabusVerdict": {
+        "additionalProperties": false,
+        "properties": {
+          "citation_support": {
+            "title": "Citation Support",
+            "type": "boolean"
+          },
+          "reason": {
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "source_alignment": {
+            "title": "Source Alignment",
+            "type": "boolean"
+          },
+          "verdict": {
+            "enum": [
+              "ACCEPT",
+              "REJECT",
+              "UNCERTAIN"
+            ],
+            "title": "Verdict",
+            "type": "string"
+          }
+        },
+        "required": [
+          "verdict",
+          "source_alignment",
+          "citation_support",
+          "reason"
+        ],
+        "title": "SyllabusVerdict",
+        "type": "object"
+      },
+      "UnitCoverage": {
+        "additionalProperties": false,
+        "properties": {
+          "planned_action": {
+            "minLength": 1,
+            "title": "Planned Action",
+            "type": "string"
+          },
+          "requirement_key": {
+            "minLength": 1,
+            "title": "Requirement Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "requirement_key",
+          "planned_action"
+        ],
+        "title": "UnitCoverage",
+        "type": "object"
+      },
+      "UnitLink": {
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "minLength": 1,
+            "title": "Key",
+            "type": "string"
+          },
+          "node": {
+            "$ref": "#/components/schemas/EntityRef"
+          }
+        },
+        "required": [
+          "key",
+          "node"
+        ],
+        "title": "UnitLink",
+        "type": "object"
+      },
+      "ValidationIssue": {
+        "properties": {
           "loc": {
             "items": {
               "anyOf": [
@@ -92,15 +1574,15 @@
                 }
               ]
             },
-            "title": "Location",
+            "title": "Loc",
             "type": "array"
           },
           "msg": {
-            "title": "Message",
+            "title": "Msg",
             "type": "string"
           },
           "type": {
-            "title": "Error Type",
+            "title": "Type",
             "type": "string"
           }
         },
@@ -109,14 +1591,14 @@
           "msg",
           "type"
         ],
-        "title": "ValidationError",
+        "title": "ValidationIssue",
         "type": "object"
       }
     }
   },
   "info": {
     "title": "ALM Authoring API",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -177,15 +1659,55 @@
           "303": {
             "description": "Successful Response"
           },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "No valid session"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not authorized, unmapped identity or missing CSRF token"
+          },
           "422": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/ErrorBody"
                 }
               }
             },
-            "description": "Validation Error"
+            "description": "Invalid request or data"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Identity provider unavailable"
           }
         },
         "summary": "Finish the code flow, map the identity and start a server-side session",
@@ -225,11 +1747,31 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/ErrorBody"
                 }
               }
             },
-            "description": "Validation Error"
+            "description": "Invalid request or data"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Identity provider unavailable"
           }
         },
         "summary": "Start the OIDC code flow with PKCE at the identity provider",
@@ -251,6 +1793,36 @@
               }
             },
             "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "No valid session"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not authorized, unmapped identity or missing CSRF token"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Internal error"
           }
         },
         "summary": "End the session; the result is the provider logout URL to visit, if any",
@@ -272,11 +1844,546 @@
               }
             },
             "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "No valid session"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not authorized, unmapped identity or missing CSRF token"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Internal error"
           }
         },
         "summary": "The signed-in subject and the CSRF token for writes",
         "tags": [
           "auth"
+        ]
+      }
+    },
+    "/contexts/{context_id}": {
+      "get": {
+        "operationId": "context_summary_contexts__context_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "context_id",
+            "required": true,
+            "schema": {
+              "title": "Context Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "No valid session"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not authorized, unmapped identity or missing CSRF token"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or the context is unavailable"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict with the current state; reload and retry"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Invalid request or data"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Internal error"
+          }
+        },
+        "summary": "Context summary with the same redaction as the CLI show",
+        "tags": [
+          "contexts"
+        ]
+      }
+    },
+    "/contexts/{context_id}/pending-proposals": {
+      "get": {
+        "operationId": "pending_proposals_contexts__context_id__pending_proposals_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "context_id",
+            "required": true,
+            "schema": {
+              "title": "Context Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PendingProposals"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "No valid session"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not authorized, unmapped identity or missing CSRF token"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or the context is unavailable"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict with the current state; reload and retry"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Invalid request or data"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Internal error"
+          }
+        },
+        "summary": "Proposals awaiting a decision; none for a learner-only subject, as in show",
+        "tags": [
+          "review"
+        ]
+      }
+    },
+    "/contexts/{context_id}/projects/{project_id}": {
+      "get": {
+        "operationId": "project_inspection_contexts__context_id__projects__project_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "context_id",
+            "required": true,
+            "schema": {
+              "title": "Context Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectInspection"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "No valid session"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not authorized, unmapped identity or missing CSRF token"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or the context is unavailable"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict with the current state; reload and retry"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Invalid request or data"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Internal error"
+          }
+        },
+        "summary": "Current selections, approval receipts and stale dependencies (CLI show-authoring-project)",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/contexts/{context_id}/resources/{resource_id}/versions/{version}/project-syllabus": {
+      "get": {
+        "operationId": "project_syllabus_contexts__context_id__resources__resource_id__versions__version__project_syllabus_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "context_id",
+            "required": true,
+            "schema": {
+              "title": "Context Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "resource_id",
+            "required": true,
+            "schema": {
+              "title": "Resource Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "title": "Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovedSyllabus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "No valid session"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not authorized, unmapped identity or missing CSRF token"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or the context is unavailable"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict with the current state; reload and retry"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Invalid request or data"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Internal error"
+          }
+        },
+        "summary": "The approved syllabus of this exact current project revision (CLI show-project-syllabus)",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/contexts/{context_id}/resources/{resource_id}/versions/{version}/release": {
+      "get": {
+        "operationId": "release_inspection_contexts__context_id__resources__resource_id__versions__version__release_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "context_id",
+            "required": true,
+            "schema": {
+              "title": "Context Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "resource_id",
+            "required": true,
+            "schema": {
+              "title": "Resource Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "title": "Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReleaseInspection"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "No valid session"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not authorized, unmapped identity or missing CSRF token"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or the context is unavailable"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict with the current state; reload and retry"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Invalid request or data"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Internal error"
+          }
+        },
+        "summary": "Receipts, the exact frozen closure and findings of this release (CLI show-release)",
+        "tags": [
+          "releases"
         ]
       }
     },
@@ -293,6 +2400,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Internal error"
           }
         },
         "summary": "Liveness; needs no session",

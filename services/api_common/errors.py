@@ -1,9 +1,10 @@
 """One error shape for every API: ``{"error", "detail", "request_id"}``.
 
 ``StateConflict`` → 409 (reload and retry), ``AuthorizationError`` → 403,
-validation (request models, records, core ``ValueError``) → 422, anything else
-→ 500 without detail. Validation errors never echo input values, which may be
-private text.
+``ContextUnavailable`` → 404, validation (request models, records, core
+``ValueError``) → 422, anything else → 500 without detail. Validation errors
+never echo input values, which may be private text. :func:`error_responses`
+documents the same body in the OpenAPI snapshot.
 """
 
 from __future__ import annotations
@@ -28,19 +29,43 @@ CODES = {400: 'bad_request', 401: 'unauthenticated', 403: 'forbidden', 404: 'not
          502: 'identity_provider_unavailable'}
 
 
+class ContextUnavailable(Exception):
+    """The context does not exist or its trusted policy is not installed; ``reason`` is only logged."""
+
+    def __init__(self, reason: str):
+        self.reason = reason
+        super().__init__('Context unavailable')
+
+
+DESCRIPTIONS = {401: 'No valid session', 403: 'Not authorized, unmapped identity or missing CSRF token',
+                404: 'Not found, or the context is unavailable', 409: 'Conflict with the current state; reload and retry',
+                422: 'Invalid request or data', 500: 'Internal error', 502: 'Identity provider unavailable'}
+
+
+class ValidationIssue(BaseModel):
+    loc: list[str | int]
+    msg: str
+    type: str
+
+
 class ErrorBody(BaseModel):
     error: str
-    detail: str | list[dict]
+    detail: str | list[ValidationIssue]
     request_id: str
+
+
+def error_responses(*statuses: int) -> dict:
+    """OpenAPI ``responses`` for these statuses, all with :class:`ErrorBody`."""
+    return {status: {'model': ErrorBody, 'description': DESCRIPTIONS[status]} for status in statuses}
 
 
 def request_id(request: Request) -> str:
     return getattr(request.state, 'request_id', None) or accepted_request_id(None)
 
 
-def error_response(request: Request, status: int, detail, headers=None) -> JSONResponse:
+def error_response(request: Request, status: int, detail, headers=None, error: str | None = None) -> JSONResponse:
     rid = request_id(request)
-    body = ErrorBody(error=CODES.get(status, 'http_error'), detail=detail, request_id=rid)
+    body = ErrorBody(error=error or CODES.get(status, 'http_error'), detail=detail, request_id=rid)
     return JSONResponse(body.model_dump(), status_code=status, headers={**(headers or {}), REQUEST_ID_HEADER: rid})
 
 
@@ -54,6 +79,11 @@ async def _http(request, error: HTTPException):
 
 async def _conflict(request, error: StateConflict):
     return error_response(request, 409, str(error))
+
+
+async def _unavailable(request, error: ContextUnavailable):
+    logger.warning('Context unavailable (request %s): %s', request_id(request), error.reason)
+    return error_response(request, 404, str(error), error='context_unavailable')
 
 
 async def _forbidden(request, error: AuthorizationError):
@@ -82,6 +112,7 @@ def install_error_handlers(app: FastAPI) -> None:
     app.add_exception_handler(HTTPException, _http)
     app.add_exception_handler(StateConflict, _conflict)
     app.add_exception_handler(AuthorizationError, _forbidden)
+    app.add_exception_handler(ContextUnavailable, _unavailable)
     app.add_exception_handler(RequestValidationError, _request_validation)
     app.add_exception_handler(ValidationError, _record_validation)
     app.add_exception_handler(ValueError, _invalid)

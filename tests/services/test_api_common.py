@@ -9,6 +9,7 @@ from learning.contracts import EntityRef
 from learning.policies import AuthorizationError, TrustedPolicy, authorize
 from learning.store import StateConflict
 from services.api_common.auth import csrf_protected
+from services.api_common.contexts import ContextUnavailable, PolicyDirectoryError
 from services.api_common.registry import ApiModule, ConfigurationError, ModuleRegistry
 from services.api_common.request_ids import REQUEST_ID_HEADER, current_request_id
 from services.api_common.settings import ApiSettings
@@ -49,6 +50,14 @@ def failing_module():
     @router.get('/crash')
     def crash():
         raise RuntimeError(PRIVATE)
+
+    @router.get('/unavailable')
+    def unavailable():
+        raise ContextUnavailable('policy not installed')
+
+    @router.get('/policies')
+    def policies():
+        raise PolicyDirectoryError('Trusted policy file is invalid: private.json')
 
     @router.get('/request-id')
     def request_id():
@@ -114,6 +123,17 @@ class ErrorMappingTest(unittest.TestCase):
         self.assertEqual(body['error'], 'validation')
         self.assertEqual([item['loc'] for item in body['detail']], [['query', 'count']])
         self.assertNotIn(PRIVATE, response.text)
+
+    def test_unavailable_context_is_404_with_a_fixed_detail_and_a_logged_reason(self):
+        with self.assertLogs('services.api_common', 'WARNING') as logs:
+            self.assert_error('/fail/unavailable', 404, 'context_unavailable', 'Context unavailable')
+        self.assertIn('policy not installed', '\n'.join(logs.output))
+        self.assertIn('req-context_unavailable', '\n'.join(logs.output))
+
+    def test_an_invalid_policy_directory_is_500_without_detail(self):
+        with self.assertLogs('services.api_common', 'ERROR'):
+            body = self.assert_error('/fail/policies', 500, 'internal', 'Internal error')
+        self.assertNotIn('private.json', str(body))
 
     def test_anything_else_is_500_without_detail(self):
         with self.assertLogs('services.api_common', 'ERROR') as logs:
