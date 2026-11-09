@@ -96,6 +96,49 @@ jobs:
       - run: npm test
       - run: npm run build
 
+  browser:
+    runs-on: ubuntu-latest
+    env:
+      LANGFUSE_ENABLED: 'false'
+      CREWAI_DISABLE_TELEMETRY: 'true'
+      CREWAI_TRACING_ENABLED: 'false'
+      ALM_PYTHON: python
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.2'
+          cache: npm
+          cache-dependency-path: apps/package-lock.json
+      - run: npm ci --ignore-scripts
+        working-directory: apps
+      - run: npx playwright install --with-deps chromium
+        working-directory: apps
+      - name: Throwaway secrets for the local Keycloak realm
+        run: |
+          for name in ALM_KEYCLOAK_ADMIN_PASSWORD ALM_KEYCLOAK_DEV_PASSWORD ALM_OIDC_CLIENT_SECRET; do
+            value=$(openssl rand -hex 24)
+            echo "::add-mask::$value"
+            echo "$name=$value" >> "$GITHUB_ENV"
+          done
+      - run: docker compose -f compose.identity.yml up -d --wait
+      - run: npm run test:browser
+        working-directory: apps
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-test-report
+          path: |
+            apps/e2e/.state/report
+            apps/e2e/.state/results
+      - if: always()
+        run: docker compose -f compose.identity.yml down
+
   offline-evaluation:
     runs-on: ubuntu-latest
     env:

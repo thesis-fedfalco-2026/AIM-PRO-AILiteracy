@@ -23,11 +23,117 @@
   },
   "home": {
     "title": "Studio",
-    "intro": "You are signed in. Review, projects and releases will appear here as their modules are added."
+    "intro": "Review the proposals that await a person: open the review inbox of a context, decide each proposal and apply the approved ones.",
+    "openHeading": "Open a review inbox",
+    "contextLabel": "Context id",
+    "contextHint": "The id of the execution context, as given to the CLI with --context.",
+    "contextRequired": "Enter the id of a context.",
+    "open": "Open the inbox"
   },
   "notFound": {
     "title": "Page not found",
     "body": "There is no studio page at this address.",
     "home": "Go to the studio home"
+  },
+  "review": {
+    "inbox": {
+      "title": "Review inbox",
+      "context": "Context {{contextId}}",
+      "loading": "Loading the review inbox…",
+      "reload": "Reload",
+      "pendingHeading": "Awaiting a decision",
+      "pendingEmpty": "No proposal awaits a decision.",
+      "approvedHeading": "Approved, not yet applied",
+      "approvedEmpty": "No approved proposal waits to be applied.",
+      "records_one": "{{count}} record · proposed by {{responsible}}",
+      "records_other": "{{count}} records · proposed by {{responsible}}",
+      "approvedMeta": "Proposed by {{responsible}}"
+    },
+    "errors": {
+      "unavailable": "This context is not available. Check its id, or ask an operator whether its policy is installed.",
+      "forbidden": "You are not allowed to review this context.",
+      "failed": "The review service did not answer. Try again in a moment.",
+      "retry": "Try again"
+    },
+    "status": {
+      "awaitingDecision": "Awaiting a decision",
+      "approved": "Approved, not applied",
+      "rejected": "Rejected",
+      "draft": "Revision requested",
+      "applied": "Applied",
+      "stale": "Stale: the context changed before application"
+    },
+    "proposal": {
+      "title": "Review a proposal",
+      "back": "Back to the review inbox",
+      "notFound": "There is no proposal {{proposal}} in this context.",
+      "facts": "About this proposal",
+      "id": "Proposal",
+      "revision": "Revision",
+      "status": "Status",
+      "proposedBy": "Proposed by",
+      "baseVersion": "Prepared on context version",
+      "payloadKey": "Review payload key",
+      "notPending": "This proposal does not await a decision. Its status is: {{status}}."
+    },
+    "diagnostics": {
+      "heading": "Diagnostics",
+      "none": "The proposal reports no diagnostics.",
+      "findings": "Findings of the proposal",
+      "contextFindings": "Findings of the context",
+      "report": "Generator report",
+      "empty": "None.",
+      "severity": "Severity",
+      "code": "Code",
+      "target": "Target",
+      "reason": "Reason",
+      "resolution": "Resolution"
+    },
+    "changes": {
+      "heading": "Changes against the applied version",
+      "intro": "Each record of the proposal is compared with the version of the same record that is applied in the context now.",
+      "new": "New record",
+      "changed_one": "{{count}} change",
+      "changed_other": "{{count}} changes",
+      "unchanged": "Unchanged",
+      "noDifference": "No field differs from the applied version.",
+      "appliedRevision": "Applied revision {{version}}, proposed revision {{proposed}}.",
+      "notApplied": "The context has no version of this record yet.",
+      "field": "Field",
+      "applied": "Applied version",
+      "proposed": "Proposed version",
+      "absent": "(absent)"
+    },
+    "payload": {
+      "heading": "Exact payload",
+      "intro": "The proposal and its records exactly as the decision will cover them.",
+      "show": "Show the exact payload"
+    },
+    "decision": {
+      "heading": "Decision",
+      "legend": "Your decision",
+      "approve": "Approve",
+      "reject": "Reject",
+      "requestRevision": "Request a revision",
+      "choiceRequired": "Choose a decision.",
+      "reason": "Reason",
+      "reasonHint": "Recorded with the decision.",
+      "reasonRequired": "Write the reason for the decision.",
+      "submit": "Record the decision",
+      "recorded": "Decision recorded: {{decision}}.",
+      "conflict": "This proposal changed after you opened it, so your decision was not recorded. The page now shows its current state; review it again.",
+      "refused": "The decision was not recorded: {{detail}}",
+      "forbidden": "You are not allowed to decide this proposal. Nothing was recorded.",
+      "failed": "The decision may not have been recorded. The page now shows the current state."
+    },
+    "apply": {
+      "heading": "Application",
+      "intro": "The proposal is approved but not applied. Applying it changes the context; it is a separate step from the approval.",
+      "submit": "Apply the change",
+      "applied": "Change applied. The context is now at version {{version}}.",
+      "conflict": "The proposal can no longer be applied as approved: {{detail}} The page now shows its current state.",
+      "forbidden": "You are not allowed to apply this proposal. Nothing was changed.",
+      "failed": "The application did not complete. Try again: the retry repeats the same operation, so the change is applied at most once."
+    }
   }
 }
