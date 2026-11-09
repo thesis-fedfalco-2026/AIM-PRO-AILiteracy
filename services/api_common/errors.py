@@ -59,6 +59,17 @@ def error_responses(*statuses: int) -> dict:
     return {status: {'model': ErrorBody, 'description': DESCRIPTIONS[status]} for status in statuses}
 
 
+def stream_error_responses(*statuses: int) -> dict:
+    """:func:`error_responses` for a route that streams on success: its errors stay JSON :class:`ErrorBody`.
+
+    FastAPI documents a response ``model`` under the route's own media type, so
+    these refer to the ``ErrorBody`` component, which ``/health`` registers in every app.
+    """
+    schema = {'$ref': '#/components/schemas/ErrorBody'}
+    return {status: {'description': DESCRIPTIONS[status], 'content': {'application/json': {'schema': schema}}}
+            for status in statuses}
+
+
 def request_id(request: Request) -> str:
     return getattr(request.state, 'request_id', None) or accepted_request_id(None)
 

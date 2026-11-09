@@ -7,6 +7,7 @@ import sqlite3
 from learning.contracts import EntityRef
 from learning.context import LearningRequest
 from learning.metamodel import load_contract
+from learning.policies import TrustedPolicy
 from learning.service import LearningService
 from learning.store import LearningStore, canonical
 from learning.outputs import LearningResponse, ProposedChange
@@ -320,6 +321,33 @@ class ServiceTest(unittest.TestCase):
             self.assertEqual(resumed.request(request),terminal)
             self.assertEqual(resumed.request(request),terminal)
         self.factory.assert_not_called()
+
+    def test_job_checks_authorize_without_writing(self):
+        from learning.policies import AuthorizationError
+        self.service.bootstrap('session', 'admin')
+        before = self.store.table_digests()
+        self.service.authorize_jobs('session', 'admin')
+        self.service.authorize_abandonment('session', 'admin')
+        # The learner holds neither ``propose`` nor administrative authority; an outsider no grant at all.
+        for subject in ('learner', 'outsider'):
+            with self.subTest(subject):
+                with self.assertRaises(AuthorizationError):
+                    self.service.authorize_jobs('session', subject)
+                with self.assertRaises(AuthorizationError):
+                    self.service.authorize_abandonment('session', subject)
+        self.assertEqual(self.store.table_digests(), before)
+        self.factory.assert_not_called()
+
+    def test_abandonment_requires_the_administrator_role_besides_apply(self):
+        self.service.bootstrap('session', 'admin')
+        data = policy().model_dump(mode='json')
+        data['subjects']['admin']['roles'] = ['CONTENT_RESPONSIBLE']
+        service = LearningService(self.store, load_contract(), TrustedPolicy.model_validate(data), self.factory)
+        service.authorize_jobs('session', 'admin')
+        with self.assertRaisesRegex(ValueError, 'administrative authority'):
+            service.authorize_abandonment('session', 'admin')
+        with self.assertRaisesRegex(ValueError, 'administrative authority'):
+            service.abandon_request('session', 'admin', 'any-request')
 
     def test_abandonment_wins_before_original_worker_commits(self):
         from smoke import prepare_demo

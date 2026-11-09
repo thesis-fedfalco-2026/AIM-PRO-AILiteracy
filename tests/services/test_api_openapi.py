@@ -33,17 +33,31 @@ class OpenApiSnapshotTest(unittest.TestCase):
     def schema(self):
         return json.loads((SNAPSHOT_DIR / 'authoring.json').read_text(encoding='utf-8'))
 
-    def test_snapshot_lists_the_skeleton_read_only_authoring_and_review_endpoints(self):
+    def test_snapshot_lists_the_skeleton_read_only_authoring_review_and_job_endpoints(self):
         schema = self.schema()
         self.assertEqual(schema['info']['title'], 'ALM Authoring API')
         resource = '/contexts/{context_id}/resources/{resource_id}/versions/{version}'
+        job = '/contexts/{context_id}/jobs/{request_id}'
         self.assertEqual({path: sorted(methods) for path, methods in schema['paths'].items()},
                          {'/health': ['get'], '/auth/login': ['get'], '/auth/callback': ['get'],
                           '/auth/session': ['get'], '/auth/logout': ['post'],
                           '/contexts/{context_id}': ['get'], '/contexts/{context_id}/pending-proposals': ['get'],
                           '/contexts/{context_id}/decisions': ['post'], '/contexts/{context_id}/applications': ['post'],
                           '/contexts/{context_id}/projects/{project_id}': ['get'],
-                          resource + '/project-syllabus': ['get'], resource + '/release': ['get']})
+                          resource + '/project-syllabus': ['get'], resource + '/release': ['get'],
+                          '/contexts/{context_id}/jobs': ['post'], job: ['get'], job + '/events': ['get'],
+                          job + '/abandonment': ['post']})
+
+    def test_job_progress_is_a_server_sent_event_stream_of_status_and_progress(self):
+        schema = self.schema()
+        stream = schema['paths']['/contexts/{context_id}/jobs/{request_id}/events']['get']['responses']['200']
+        self.assertEqual(list(stream['content']), ['text/event-stream'])
+        commands = schema['components']['schemas']['JobRequest']['properties']['job']
+        self.assertEqual(sorted(commands['discriminator']['mapping']),
+                         ['generate-aimpro-syllabus', 'generate-project-assessments',
+                          'generate-project-teacher', 'generate-project-trainer'])
+        self.assertEqual(schema['components']['schemas']['JobView']['properties']['status']['enum'],
+                         ['QUEUED', 'RUNNING', 'PROPOSED', 'REJECTED', 'FAILED', 'ABANDONED'])
 
     def test_every_error_response_documents_the_error_body(self):
         schema = self.schema()
