@@ -26,9 +26,215 @@ class RequestRecord(NamedTuple):
     result: str | None
 
 
+class StoreLocation(NamedTuple):
+    """Backend name (``sqlite`` or ``postgresql``) and its file path or connection URL."""
+    backend: str
+    target: Path | str
+
+
+class TableDigest(NamedTuple):
+    """Row count and SHA-256 of a table's rows in insertion (or key) order."""
+    rows: int
+    sha256: str
+
+
+def resolve_location(location: Path | str) -> StoreLocation:
+    """A ``Path``, a file path or ``sqlite:///path`` selects SQLite; ``postgresql://`` selects PostgreSQL.
+
+    As in SQLAlchemy, ``sqlite:///data/state.sqlite`` is relative and
+    ``sqlite:////srv/state.sqlite`` absolute.
+    """
+    if isinstance(location, Path):
+        return StoreLocation("sqlite", location)
+    text = os.fspath(location)
+    scheme, separator, rest = text.partition("://")
+    if not separator:
+        return StoreLocation("sqlite", Path(text))
+    if scheme in ("postgresql", "postgres"):
+        return StoreLocation("postgresql", text)
+    if scheme == "sqlite" and rest.startswith("/") and len(rest) > 1:
+        return StoreLocation("sqlite", Path(rest[1:]))
+    raise ValueError("Unsupported learning store location")
+
+
+def database_errors() -> tuple[type[Exception], ...]:
+    """Exception types the store backends raise, for callers that report failures generically."""
+    try:
+        import psycopg
+    except ImportError:
+        return (sqlite3.Error,)
+    return (sqlite3.Error, psycopg.Error)
+
+
+# Columns each table copies and hashes; entities and requests keep their insertion order.
+TABLES = {
+    "entities": ("namespace", "type", "id", "version", "owner", "payload"),
+    "contexts": ("id", "version"),
+    "operations": ("id", "owner", "fingerprint", "result"),
+    "requests": ("id", "owner", "payload", "result"),
+}
+# The insertion order: SQLite's rowid, PostgreSQL's identity column (D13).
+INSERTION = {"sqlite": "rowid", "postgresql": "seq"}
+ADD_CONTEXT = {"sqlite": "INSERT OR IGNORE INTO contexts VALUES (?,?)",
+               "postgresql": "INSERT INTO contexts VALUES (?,?) ON CONFLICT DO NOTHING"}
+POSTGRESQL_SCHEMA = (
+    """CREATE TABLE entities (
+        namespace TEXT COLLATE "C" NOT NULL, type TEXT COLLATE "C" NOT NULL, id TEXT COLLATE "C" NOT NULL,
+        version TEXT COLLATE "C" NOT NULL, owner TEXT COLLATE "C", payload TEXT COLLATE "C" NOT NULL,
+        seq BIGINT GENERATED ALWAYS AS IDENTITY UNIQUE,
+        PRIMARY KEY(namespace, id, version))""",
+    'CREATE TABLE contexts (id TEXT COLLATE "C" PRIMARY KEY, version TEXT COLLATE "C" NOT NULL)',
+    """CREATE TABLE operations (
+        id TEXT COLLATE "C" NOT NULL, owner TEXT COLLATE "C" NOT NULL,
+        fingerprint TEXT COLLATE "C" NOT NULL, result TEXT COLLATE "C" NOT NULL,
+        PRIMARY KEY(owner,id))""",
+    """CREATE TABLE requests (
+        id TEXT COLLATE "C" NOT NULL, owner TEXT COLLATE "C" NOT NULL,
+        payload TEXT COLLATE "C" NOT NULL, result TEXT COLLATE "C",
+        seq BIGINT GENERATED ALWAYS AS IDENTITY UNIQUE,
+        PRIMARY KEY(owner,id))""",
+    "CREATE TABLE schema_version (version INTEGER NOT NULL)",
+    "INSERT INTO schema_version VALUES (2)",
+)
+
+
+class _Row(tuple):
+    """A result row read by position or by column name, like ``sqlite3.Row``."""
+
+    def __new__(cls, values, names):
+        row = super().__new__(cls, values)
+        row._names = names
+        return row
+
+    def __getitem__(self, key):
+        return super().__getitem__(self._names[key] if isinstance(key, str) else key)
+
+    def keys(self):
+        return list(self._names)
+
+
+def _rows(cursor):
+    names = {column.name: index for index, column in enumerate(cursor.description or ())}
+    return lambda values: _Row(values, names)
+
+
+class _PostgreSQLConnection:
+    """A psycopg 3 connection with the ``sqlite3`` transaction model the store is written for.
+
+    As in ``sqlite3``: statements outside a transaction run in autocommit,
+    ``INSERT``/``UPDATE``/``DELETE`` open a transaction implicitly, and the
+    connection used as a context manager commits or rolls back whatever is open,
+    so every store method keeps its SQLite transaction boundaries. D13: a write
+    transaction holds one transaction-scoped advisory lock, taken by
+    ``BEGIN IMMEDIATE`` at the start or before an implicit transaction's first
+    write, and reads in READ COMMITTED after the lock, so it sees the latest
+    commit; ``BEGIN`` opens a REPEATABLE READ snapshot. Like ``timeout=5`` in
+    SQLite, a lock wait fails after five seconds. ``?`` placeholders become ``%s``.
+    """
+
+    def __init__(self, url: str):
+        import psycopg
+        self._psycopg = psycopg
+        self.connection = psycopg.connect(url, autocommit=True, row_factory=_rows, client_encoding="utf8")
+        try:
+            self.connection.execute("SET lock_timeout = '5s'")
+            schema, encoding = self.connection.execute(
+                "SELECT current_schema(), current_setting('server_encoding')").fetchone()
+            if schema is None:
+                raise ValueError("PostgreSQL search_path names no existing schema")
+            if encoding != "UTF8":
+                raise ValueError("PostgreSQL learning database must use UTF8 encoding")
+        except Exception:
+            self.connection.close()
+            raise
+        # One store per schema: its write lock does not serialize stores in other schemas.
+        self._lock_key = int.from_bytes(hashlib.sha256(f"learning.store:{schema}".encode()).digest()[:8],
+                                        "big", signed=True)
+        self._locked = False
+        self.total_changes = 0
+
+    @property
+    def in_transaction(self) -> bool:
+        status = self.connection.info.transaction_status
+        return status in (self._psycopg.pq.TransactionStatus.INTRANS, self._psycopg.pq.TransactionStatus.INERROR)
+
+    def execute(self, sql: str, parameters=()):
+        statement = sql.strip().upper()
+        if statement == "BEGIN IMMEDIATE":
+            return self._begin("READ COMMITTED", lock=True)
+        if statement == "BEGIN":
+            return self._begin("REPEATABLE READ", lock=False)
+        write = statement.split(None, 1)[0] in ("INSERT", "UPDATE", "DELETE")
+        if write:
+            if not self.in_transaction:
+                self._begin("READ COMMITTED", lock=False)
+            if not self._locked:
+                self._lock()
+        if parameters:
+            cursor = self.connection.execute(sql.replace("%", "%%").replace("?", "%s"), parameters)
+        else:
+            cursor = self.connection.execute(sql)
+        if write:
+            self.total_changes += max(cursor.rowcount, 0)
+        return cursor
+
+    def _begin(self, isolation: str, *, lock: bool):
+        if self.in_transaction:
+            raise self._psycopg.errors.ActiveSqlTransaction("cannot start a transaction within a transaction")
+        cursor = self.connection.execute("BEGIN ISOLATION LEVEL " + isolation)
+        self._locked = False
+        if lock:
+            self._lock()
+        return cursor
+
+    def _lock(self):
+        self.connection.execute("SELECT pg_advisory_xact_lock(%s)", (self._lock_key,))
+        self._locked = True
+
+    def commit(self):
+        status = self.connection.info.transaction_status
+        self._locked = False
+        if status == self._psycopg.pq.TransactionStatus.INERROR:
+            self.connection.execute("ROLLBACK")
+            raise self._psycopg.errors.InFailedSqlTransaction("transaction failed earlier and was rolled back")
+        if status == self._psycopg.pq.TransactionStatus.INTRANS:
+            self.connection.execute("COMMIT")
+
+    def rollback(self):
+        self._locked = False
+        if self.in_transaction:
+            self.connection.execute("ROLLBACK")
+
+    def close(self):
+        self.connection.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, kind, *_):
+        if kind is None:
+            try:
+                self.commit()
+            except BaseException:
+                self.rollback()
+                raise
+        else:
+            self.rollback()
+        return False
+
+
 class LearningStore:
-    def __init__(self, path: Path):
+    def __init__(self, location: Path | str):
         self.contract = load_contract()
+        self.backend, path = resolve_location(location)
+        if self.backend == "postgresql":
+            self.db = _PostgreSQLConnection(path)
+            try:
+                self._open_postgresql()
+            except Exception:
+                self.close()
+                raise
+            return
         self.db = sqlite3.connect(path, timeout=5)
         self.db.row_factory = sqlite3.Row
         try:
@@ -63,6 +269,29 @@ class LearningStore:
         except Exception:
             self.close()
             raise
+
+    def _open_postgresql(self) -> None:
+        version = self._postgresql_version()
+        if version is None:
+            with self.db:
+                self.db.execute("BEGIN IMMEDIATE")
+                version = self._postgresql_version()
+                if version is None:
+                    if self.db.execute("SELECT 1 FROM information_schema.tables "
+                                       "WHERE table_schema=current_schema() LIMIT 1").fetchone():
+                        raise ValueError("Unversioned learning database contains tables")
+                    for statement in POSTGRESQL_SCHEMA:
+                        self.db.execute(statement)
+                    version = 2
+        if version != 2:
+            raise ValueError("Unsupported learning database version")
+
+    def _postgresql_version(self) -> int | None:
+        if self.db.execute("SELECT 1 FROM information_schema.tables "
+                           "WHERE table_schema=current_schema() AND table_name='schema_version'").fetchone() is None:
+            return None
+        row = self.db.execute("SELECT version FROM schema_version").fetchone()
+        return None if row is None else row[0]
 
     def _migrate_v1(self, path: Path) -> None:
         index = 0
@@ -165,7 +394,7 @@ class LearningStore:
             for entity in entities:
                 self._put(entity, owner)
                 if entity.type == "ExecutionContext":
-                    self.db.execute("INSERT OR IGNORE INTO contexts VALUES (?,?)", (entity.id, entity.version))
+                    self.db.execute(ADD_CONTEXT[self.backend], (entity.id, entity.version))
 
     def read(self, ref: EntityRef, *, owner: str | None, proposal: EntityRef | None = None) -> Entity:
         namespace = "active" if proposal is None else canonical(proposal.model_dump())
@@ -185,8 +414,8 @@ class LearningStore:
         return self.read(EntityRef(type="ExecutionContext", id=context_id, version=row[0]), owner=context_id)
 
     def owned(self, owner: str, kind: str) -> tuple[Entity, ...]:
-        rows = self.db.execute("SELECT payload FROM entities WHERE namespace='active' AND owner=? AND type=? ORDER BY rowid DESC",
-                               (owner, kind)).fetchall()
+        rows = self.db.execute("SELECT payload FROM entities WHERE namespace='active' AND owner=? AND type=? "
+                               f"ORDER BY {INSERTION[self.backend]} DESC", (owner, kind)).fetchall()
         latest = {}
         for row in rows:
             entity = validate_entity(json.loads(row[0]), self.contract)
@@ -270,12 +499,14 @@ class LearningStore:
 
     def requests(self, owner: str) -> tuple[RequestRecord, ...]:
         """Every request of the owner, newest reservation first."""
-        rows = self.db.execute("SELECT payload,result FROM requests WHERE owner=? ORDER BY rowid DESC", (owner,))
+        rows = self.db.execute(f"SELECT payload,result FROM requests WHERE owner=? ORDER BY {INSERTION[self.backend]} DESC",
+                               (owner,))
         return tuple(RequestRecord(row["payload"], row["result"]) for row in rows)
 
     def recorded_requests(self, owner: str) -> tuple[RequestRecord, ...]:
-        """Requests of the owner with a confirmed result."""
-        rows = self.db.execute("SELECT payload,result FROM requests WHERE owner=? AND result IS NOT NULL", (owner,))
+        """Requests of the owner with a confirmed result, by request id."""
+        rows = self.db.execute("SELECT payload,result FROM requests WHERE owner=? AND result IS NOT NULL ORDER BY id",
+                               (owner,))
         return tuple(RequestRecord(row["payload"], row["result"]) for row in rows)
 
     def request_result(self, request_id: str, owner: str, payload: str) -> dict | None:
@@ -296,3 +527,64 @@ class LearningStore:
 
     def abandon_request(self, request_id: str, owner: str, result: dict):
         self.finish_request(request_id, owner, result)
+
+    def table_digests(self) -> dict[str, TableDigest]:
+        """Row count and SHA-256 of every table, as the copy tool verifies them."""
+        return _table_digests(self.db, self.backend)
+
+
+def _table_digests(db, backend: str) -> dict[str, TableDigest]:
+    digests = {}
+    for table, columns in TABLES.items():
+        digest, count = hashlib.sha256(), 0
+        for row in db.execute(f"SELECT {','.join(columns)} FROM {table} ORDER BY {_copy_order(backend, table)}"):
+            digest.update(canonical(list(row)).encode() + b"\n")
+            count += 1
+        digests[table] = TableDigest(count, digest.hexdigest())
+    return digests
+
+
+def _copy_order(backend: str, table: str) -> str:
+    return {"entities": INSERTION[backend], "requests": INSERTION[backend],
+            "contexts": "id", "operations": "owner,id"}[table]
+
+
+def _read_sqlite_source(path: Path) -> sqlite3.Connection:
+    if not path.is_file():
+        raise ValueError("Source learning database file not found")
+    db = sqlite3.connect(f"{path.resolve().as_uri()}?mode=ro", uri=True, timeout=5)
+    try:
+        if db.execute("PRAGMA user_version").fetchone()[0] != 2:
+            raise ValueError("Source is not a version 2 learning database")
+    except Exception:
+        db.close()
+        raise
+    return db
+
+
+def copy_store(source: Path | str, target: str) -> dict[str, TableDigest]:
+    """Copy a SQLite store into an empty PostgreSQL store; return the verified table digests.
+
+    The source is opened read-only and read in one snapshot. Rows are written in
+    one target write transaction, in insertion order, and committed only when the
+    target's row counts and SHA-256 digests equal the source's.
+    """
+    origin, destination = resolve_location(source), resolve_location(target)
+    if origin.backend != "sqlite" or destination.backend != "postgresql":
+        raise ValueError("The copy runs from a SQLite file to a PostgreSQL URL")
+    with closing(_read_sqlite_source(origin.target)) as db, LearningStore(destination.target) as store:
+        with db:
+            db.execute("BEGIN")
+            expected = _table_digests(db, "sqlite")
+            with store.write_transaction():
+                if any(store.db.execute(f"SELECT 1 FROM {table} LIMIT 1").fetchone() for table in TABLES):
+                    raise ValueError("Target store is not empty")
+                for table, columns in TABLES.items():
+                    insert = f"INSERT INTO {table} ({','.join(columns)}) VALUES ({','.join('?' * len(columns))})"
+                    rows = db.execute(f"SELECT {','.join(columns)} FROM {table} ORDER BY {_copy_order('sqlite', table)}")
+                    for row in rows:
+                        store.db.execute(insert, tuple(row))
+                copied = _table_digests(store.db, "postgresql")
+                if copied != expected:
+                    raise ValueError("Copied rows differ from the source; nothing was committed")
+    return copied

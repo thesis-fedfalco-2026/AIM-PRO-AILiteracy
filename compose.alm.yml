@@ -1,0 +1,32 @@
+# Local PostgreSQL for the ALM learning store (roadmap S02). Development data only.
+#
+#   export ALM_POSTGRES_PASSWORD=...   # or set it in .env
+#   docker compose -f compose.alm.yml up -d --wait
+#
+# Store URL (CLI --db, copy tool --to):
+#   postgresql://alm:$ALM_POSTGRES_PASSWORD@127.0.0.1:${ALM_POSTGRES_PORT:-55433}/alm
+# Backend tests use the same URL as ALM_TEST_POSTGRES_URL; each test creates and
+# drops its own alm_test_* schema, so a development store in "public" is untouched.
+services:
+  alm-postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: alm
+      POSTGRES_USER: alm
+      POSTGRES_PASSWORD: ${ALM_POSTGRES_PASSWORD:?set ALM_POSTGRES_PASSWORD in .env}
+      POSTGRES_INITDB_ARGS: --encoding=UTF8
+    ports:
+      - "127.0.0.1:${ALM_POSTGRES_PORT:-55433}:5432"
+    volumes:
+      - alm_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U alm -d alm"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  alm_data:

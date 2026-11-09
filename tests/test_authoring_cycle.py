@@ -7,7 +7,6 @@ so the runtime scenarios patch one explicit EVALUATOR worker into the import.
 """
 
 from dataclasses import replace
-from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import Mock, patch
@@ -23,21 +22,19 @@ from learning.service import LearningService
 from learning.store import LearningStore
 from tests.authoring_cycle_fixtures import (AUTH, DELIVERY, DELIVERY_TWO, ProductionAuthoring,
     SimulatedRuntimeAgents, entity, ref, trusted_policy)
+from tests.store_backends import block_network, new_store_location, on_both_backends
 
 
 SIMULATED_ASSESSOR = {'EVALUATOR': 'learner-response-evaluator'}
 
 
+@on_both_backends
 class AuthoringCycleTest(unittest.TestCase):
     def setUp(self):
-        for target in ('socket.socket.connect', 'socket.create_connection', 'socket.getaddrinfo'):
-            blocker = patch(target, side_effect=AssertionError('Architecture acceptance must not use the network'))
-            blocked = blocker.start()
-            self.addCleanup(blocker.stop)
-            self.addCleanup(blocked.assert_not_called)
+        block_network(self, 'Architecture acceptance must not use the network')
         self.temp = TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
-        self.store = LearningStore(Path(self.temp.name) / 'architecture.sqlite')
+        self.store = LearningStore(new_store_location(self, self.temp.name, 'architecture.sqlite'))
         self.addCleanup(self.store.close)
         self.service = LearningService(self.store, load_contract(), trusted_policy(), Mock())
         for context_id in (AUTH, DELIVERY, DELIVERY_TWO):
