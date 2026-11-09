@@ -296,3 +296,83 @@ decision of 9 November 2026 the next work is, before S08:
    validation"), for the owner to approve in a PR.
 
 S08 (agent job worker, D14) follows the revised roadmap.
+
+---
+
+# Part 2 — S07b studio course overview (read-only)
+
+Same chat, after the owner's decision of 9 November 2026 (see "Owner
+validation"). Issue
+[#89](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/issues/89).
+Branch `feat/s07b-course-overview`, stacked on `feat/s07-studio-review-inbox`
+(PR #88 was not merged yet); its PR targets that branch and is retargeted to
+`main` once #88 is merged.
+
+## Objective
+
+A teacher or trainer sees the whole course of a context in sections, in plain
+words, read only.
+
+## Changes
+
+- `apps/studio/src/features/course/course.ts` (pure, `courseOverview`) and
+  `CoursePage.tsx`; route `/contexts/{context_id}/course`; the section rules are
+  in the guide, "Studio course overview (S07b)".
+- Home: "Open the course" (default) and "Open the review inbox"; the inbox links
+  to the course, the course to the inbox with the pending count; the history
+  links pending and approved proposals to their review page.
+- `review/RubricTable.tsx` extracted from the teacher view and reused.
+- Styles: course tree, actions row, definition-list rows.
+- Browser tests: `course.spec.ts`; the setup signs in `dev-learner` too.
+- No API route, OpenAPI snapshot, core module, store schema, metamodel or
+  AIM-PRO/jjodel export changed. No model call.
+
+## Verification
+
+Contract tests first: `studio/test/course-model.test.ts` (8 tests) was written
+before `course.ts` and passed once it existed; `studio/test/course.test.tsx`
+(page) and the updated home test followed. Local:
+
+| Check | Result |
+| --- | --- |
+| `npm run check:client`, `typecheck`, `test`, `build` | OK, OK, 101 tests OK (90 before), OK |
+| `npm run test:browser` | 8 passed (2 sign-ins + 6 tests) |
+| `git diff --check` | exit 0 |
+| `unittest discover -q`, telemetry off | 832 tests, OK, 142 skipped (no Python change) |
+
+The first page-test run failed once on the test (`findByRole('status')` found
+the session's loading message first), corrected in the test. A full-page
+screenshot of the seeded course was looked at.
+
+## Acceptance items of #89
+
+| Item | Status | Evidence |
+| --- | --- | --- |
+| Every section shows the seed's content | Done | `course.spec.ts` "the course page shows the whole seeded course and writes nothing" |
+| No write request; store unchanged | Done | same test: only `GET` requests; SHA-256 of `alm.sqlite` equal before and after |
+| A learner-only subject sees no authoring content | Done | `course.spec.ts` "as a learner" (`dev-learner`, `architecture-delivery-2`) |
+| axe passes | Done | both tests, every disclosure open |
+| Docs | Done | guide section; this part |
+
+## Findings (S07b)
+
+1. **History sentences are the generators' wording** ("Review the exact
+   ASSESSMENT output and host-composed project revision."). A teacher-facing
+   name per proposal kind would need either a studio mapping by kind or a
+   structured kind on the proposal.
+2. **Materials are not linked to activities by reference.** An activity names
+   its material only in the text of a resource requirement ("Use the complete
+   assigned material: Synthetic WORKSHEET"); the page lists materials apart
+   rather than guess links.
+3. **Course versus context.** The page shows one context's active learning
+   design. A context without one, or a learner, gets the not-visible message;
+   the delivery contexts show the imported release's design when their policy
+   is installed.
+4. **The owner's other expectations** (progressive refinement with agents,
+   AIM-PRO upload, course validation, the learner's catalogue and course
+   view) are for the roadmap revision proposal.
+
+## Next step (after Part 2)
+
+The owner merges #88, then this PR (retargeted to `main`). The roadmap revision
+proposal follows as its own PR; S08 waits for it.

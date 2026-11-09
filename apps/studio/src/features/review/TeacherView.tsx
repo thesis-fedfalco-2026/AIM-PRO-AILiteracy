@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
 import { readable } from './model';
+import { RubricTable } from './RubricTable';
 import type { ContentChange, Issue, PlainIssues, TeacherView as View } from './teacher';
 
 const evidenceList = (codes: string[]) => codes.map(readable).join(', ');
@@ -80,31 +81,7 @@ export function TeacherView({ view, issues }: { view: View; issues: PlainIssues 
           {view.rubrics.map((rubric, index) => (
             <div key={index}>
               <h3>{rubric.name}</h3>
-              <table className="alm-table">
-                <thead>
-                  <tr>
-                    <th scope="col">{t('review.teacher.assessed.criterion')}</th>
-                    <th scope="col">{t('review.teacher.assessed.levels')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rubric.criteria.map((criterion) => (
-                    <tr key={criterion.key}>
-                      <th scope="row">{criterion.description}</th>
-                      <td>
-                        <dl className="alm-levels">
-                          {criterion.levels.map((level) => (
-                            <div key={level.key}>
-                              <dt>{readable(level.key)}</dt>
-                              <dd>{level.descriptor}</dd>
-                            </div>
-                          ))}
-                        </dl>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <RubricTable criteria={rubric.criteria} />
             </div>
           ))}
           {view.assessments.map((assessment, index) => (

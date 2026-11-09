@@ -5,7 +5,7 @@ import { Link } from 'react-router';
 import { latestProposals, proposalExplanation, proposalStatus } from './model';
 import { LoadFailure } from './parts';
 import type { Entity, Finding, Inbox } from './reviewApi';
-import { proposalPath } from './paths';
+import { coursePath, proposalPath } from './paths';
 import { plainIssues, teacherView } from './teacher';
 import { useInbox } from './useInbox';
 
@@ -68,6 +68,7 @@ export function ReviewInboxPage({ contextId }: { contextId: string }) {
     <>
       <h1>{t('review.inbox.title')}</h1>
       <p className="alm-muted">{t('review.inbox.context', { contextId })}</p>
+      <p><Link to={coursePath(contextId)}>{t('review.inbox.course')}</Link></p>
       {state.status === 'loading' ? <StatusMessage>{t('review.inbox.loading')}</StatusMessage> : null}
       {state.status === 'error' ? <LoadFailure reason={state.reason} onRetry={reload} /> : null}
       {state.status === 'ready' ? (

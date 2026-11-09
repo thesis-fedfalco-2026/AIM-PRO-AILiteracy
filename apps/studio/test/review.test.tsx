@@ -53,15 +53,23 @@ const writes = (requests: Request[]) => requests.filter((request) => request.met
 afterEach(cleanup);
 
 describe('home', () => {
-  it('opens the review inbox of the context entered', async () => {
-    const { router } = await renderStudio({ 'GET /auth/session': [signedIn] });
+  it('opens the course or the review inbox of the context entered', async () => {
+    const { router } = await renderStudio({ 'GET /auth/session': [signedIn],
+      [SUMMARY]: [summary()], [PENDING_LIST]: [pending()] });
     const field = await screen.findByLabelText(en.home.contextLabel);
     fireEvent.click(screen.getByRole('button', { name: en.home.open }));
     expect(screen.getByText(en.home.contextRequired)).toBeTruthy();
     expect(field.getAttribute('aria-invalid')).toBe('true');
     fireEvent.change(field, { target: { value: ' my context ' } });
-    fireEvent.click(screen.getByRole('button', { name: en.home.open }));
+    fireEvent.click(screen.getByRole('button', { name: en.home.openReview }));
     await waitFor(() => expect(router.state.location.pathname).toBe('/studio/contexts/my%20context/review'));
+  });
+
+  it('opens the course by default', async () => {
+    const { router } = await renderStudio({ 'GET /auth/session': [signedIn] });
+    fireEvent.change(await screen.findByLabelText(en.home.contextLabel), { target: { value: 'ctx' } });
+    fireEvent.submit(screen.getByRole('button', { name: en.home.open }).closest('form')!);
+    await waitFor(() => expect(router.state.location.pathname).toBe('/studio/contexts/ctx/course'));
   });
 });
 
