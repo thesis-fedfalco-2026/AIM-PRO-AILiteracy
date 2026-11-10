@@ -2,6 +2,7 @@ import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { selectedProjects } from '../src/features/course-build/projects';
+import { attemptOutcome } from '../src/features/course-build/ReviewAttempts';
 import { rowProblem, sourcePlan } from '../src/features/course-build/SourcesStep';
 import type { Entity } from '../src/features/review/reviewApi';
 import en from '../src/i18n/en.json';
@@ -352,3 +353,46 @@ describe('selected projects', () => {
   });
 });
 
+
+describe('the review agent on the Curator drafts (Chat 20)', () => {
+  const verdict = (changes: Record<string, unknown> = {}) => ({
+    verdict: 'ACCEPT', source_alignment: true, citation_support: true, reason: 'Aligned and supported.', ...changes });
+  const REJECTED = verdict({ verdict: 'REJECT', citation_support: false, reason: 'The excerpt does not support the claim.' });
+  const REVIEWS = { request_id: 'request-1', outcome: 'FAILURE', attempts: [
+    { attempt: 1, review: null, check: 'Syllabus unit practices are outside its source target' },
+    { attempt: 2, review: REJECTED, check: null },
+    { attempt: 3, review: verdict({ verdict: 'UNCERTAIN', reason: 'Unsure.' }), check: null }] };
+  const toggle = (details: HTMLElement) => {
+    (details as HTMLDetailsElement).open = true;
+    fireEvent(details, new Event('toggle'));
+  };
+
+  it('names how each draft ended', () => {
+    expect(REVIEWS.attempts.map((attempt) => attemptOutcome(attempt as never))).toEqual(['checks', 'rejected', 'uncertain']);
+    expect(attemptOutcome({ attempt: 1, review: verdict(), check: null } as never)).toBe('accepted');
+    expect(attemptOutcome({ attempt: 1, review: verdict({ source_alignment: false }), check: null } as never)).toBe('rejected');
+  });
+
+  it('shows the assessments of an ended Curator job when the teacher opens them, as model text', async () => {
+    const failed = job('FAILED', { detail: 'Syllabus generation did not complete (Syllabus did not pass semantic review); no proposal was applied.' });
+    const other = job('FAILED', { request_id: 'request-2', subject_key: 'someone-else' });
+    const { requests } = await renderStudio({
+      ...page(EMPTY),
+      'GET /contexts/new-course/jobs': [{ status: 200, body: { jobs: [failed, other, job('RUNNING', { request_id: 'request-3' })] } }],
+      'GET /contexts/new-course/syllabus-reviews/request-1': [{ status: 200, body: REVIEWS }],
+    }, '/studio/contexts/new-course/build');
+    const list = within(await screen.findByTestId('course-jobs'));
+    // Only the teacher's own ended job offers them, and nothing is read before they are opened.
+    const summaries = list.getAllByText(en.build.reviews.summary);
+    expect(summaries).toHaveLength(1);
+    expect(requests.some((request) => request.url.includes('syllabus-reviews'))).toBe(false);
+    toggle(summaries[0]!.closest('details')!);
+    const attempts = within(await screen.findByTestId('review-attempts'));
+    expect(attempts.getByText(`Draft 1: ${en.build.reviews.outcome.checks}`)).toBeTruthy();
+    expect(attempts.getByText('Reason: Syllabus unit practices are outside its source target')).toBeTruthy();
+    expect(attempts.getByText(`Draft 2: ${en.build.reviews.outcome.rejected}`)).toBeTruthy();
+    expect(attempts.getByText('Fits the course model and its sources: yes. Citations support the claims: no.')).toBeTruthy();
+    expect(attempts.getByText("The review agent's assessment (model text): \u201cThe excerpt does not support the claim.\u201d")).toBeTruthy();
+    expect(attempts.getByText(`Draft 3: ${en.build.reviews.outcome.uncertain}`)).toBeTruthy();
+  });
+});

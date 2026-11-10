@@ -8,17 +8,16 @@ from typing import Literal
 
 from pydantic import model_validator
 
-from aimpro.lead import LeadInput, prepare_input
+from aimpro.lead import LeadInput, ReviewError, prepare_input
 from aimpro.lead_types import Record, Text
 from aimpro.source_selection import QueryTrace, RetrievalTrace, SourceDiscovery, SourcePlan, collect_sources, discover
 from aimpro.retrieval import SourceSelectionSummary
 from aimpro.syllabus_coverage import validate_requirements
 from aimpro.syllabus import generate
-from aimpro.syllabus_state import candidates
+from aimpro.syllabus_state import SyllabusResult, candidates
 from learning.context import LearningRequest
 from learning.contracts import EntityRef
 from learning.decisions import create_proposal, save_proposal
-from learning.outputs import LearningResponse
 from learning.policies import scope_allows
 from learning.projects import _authorize, _draft
 from learning.store import StateConflict, canonical
@@ -75,7 +74,7 @@ def _result(value):
         return PreparedSources.model_validate(value)
     if value.get('kind') == 'SOURCE_DISCOVERY':
         return DiscoveredSources.model_validate(value)
-    return LearningResponse.model_validate(value)
+    return SyllabusResult.model_validate(value)
 
 
 def _cached(service, owner, request_id, identity):
@@ -102,9 +101,12 @@ def _fresh(service, context_id, subject_key, scope, root, project, source_sha256
 
 
 def _failed(service, owner, request_id, identity, error, *, operation='Selected-source authoring',
-            content='Selected-source authoring did not complete; no proposal was applied.'):
-    logging.getLogger('agent_system').warning('%s failed (%s)', operation, type(error).__name__)
-    result = LearningResponse(kind='FAILURE', content=content)
+            content='Selected-source authoring did not complete{reason}; no proposal was applied.', attempts=()):
+    """Record the failure; ``content`` names ``{reason}``, the fixed text of a ``ReviewError``, never model text."""
+    reason = f' ({error})' if isinstance(error, ReviewError) else ''
+    logging.getLogger('agent_system').warning('%s failed (%s)%s', operation, type(error).__name__, reason)
+    result = SyllabusResult(kind='FAILURE', content=content.format(reason=reason),
+                            attempts=getattr(error, 'attempts', attempts))
     try:
         service.store.finish_request(request_id, owner, result.model_dump(mode='json'))
     except StateConflict:
@@ -143,7 +145,7 @@ def discover_sources(service, context_id, subject_key, discovery, *, request_id,
         return result
     except Exception as error:
         return _failed(service, context_id, request_id, identity, error, operation='Source discovery',
-                       content='Source discovery did not complete; nothing was recorded for the course.')
+                       content='Source discovery did not complete{reason}; nothing was recorded for the course.')
 
 
 def source_request(service, context_id, subject_key, request_id, kind):
@@ -235,9 +237,10 @@ def generate_selected_syllabus(service, context_id, subject_key, project, *, req
         payload = canonical({'identity': identity, 'context': root.model_dump(mode='json'),
             'preparation_sha256': packet.digest, 'model_input': data.model_dump(mode='json')})
         service.store.reserve_request(request_id, context_id, payload)
+    attempts = ()
     try:
         dispatcher, lead, budget = authoring_factory()
-        draft, verdict = generate(data, dispatcher=dispatcher, lead=lead, max_context_chars=budget)
+        draft, verdict, attempts = generate(data, dispatcher=dispatcher, lead=lead, max_context_chars=budget)
         with service.store.write_transaction():
             _pending(service, context_id, request_id, payload)
             current = _fresh(service, context_id, subject_key, source_scope, root, project, data.source.source_sha256)
@@ -249,10 +252,10 @@ def generate_selected_syllabus(service, context_id, subject_key, project, *, req
                 canonical({'source_preparation': prepared_sources, 'preparation_sha256': packet.digest,
                     'retrieval_trace_sha256': packet.trace.digest, 'source_diagnostics': data.source.diagnostics,
                     'contract_findings': data.findings, 'syllabus_gaps': draft.gaps}))
-            result = LearningResponse(kind='PROPOSAL', content='Selected-source Curator syllabus awaits human review.',
-                                      proposal_refs=(proposal.ref,), application_status='pending')
+            result = SyllabusResult(kind='PROPOSAL', content='Selected-source Curator syllabus awaits human review.',
+                                    proposal_refs=(proposal.ref,), application_status='pending', attempts=attempts)
             save_proposal(service.store, current, proposal, saved)
             service.store.finish_request(request_id, context_id, result.model_dump(mode='json'))
         return result
     except Exception as error:
-        return _failed(service, context_id, request_id, identity, error)
+        return _failed(service, context_id, request_id, identity, error, attempts=attempts)

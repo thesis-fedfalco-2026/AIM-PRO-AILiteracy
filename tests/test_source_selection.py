@@ -23,7 +23,7 @@ from learning.metamodel import load_contract
 from learning.policies import ScopeGrant
 from learning.service import LearningService
 from learning.store import LearningStore, StateConflict
-from tests.syllabus_fixtures import Curator, Reviewer, source
+from tests.syllabus_fixtures import REJECTION, Curator, Reviewer, source, verdict
 from tests.test_aimpro_retrieval import response
 from tests.test_learning_context import policy
 
@@ -237,6 +237,26 @@ class SourceSelectionTest(unittest.TestCase):
         self.assertEqual(self.generate('abandoned').kind,'FAILURE')
         self.assertFalse(self.store.owned('session','ChangeProposal'))
         self.assertEqual(self.store.db.execute("SELECT count(*) FROM entities WHERE namespace<>'active'").fetchone()[0],0)
+
+    def test_a_failure_reports_the_fixed_reason_and_keeps_every_attempt(self):
+        self.prepare()
+        self.reviewer.value = REJECTION
+        with self.assertLogs('agent_system', 'WARNING') as logged:
+            failed = self.generate()
+        self.assertEqual(failed.content, 'Selected-source authoring did not complete '
+                                         '(Syllabus did not pass semantic review); no proposal was applied.')
+        self.assertEqual([a.review for a in failed.attempts], [REJECTION] * 3)
+        self.assertNotIn(REJECTION.reason, '\n'.join(logged.output))
+        self.assertEqual(self.service.aimpro_syllabus_request('session', 'admin', 'selected'), failed)
+        self.reviewer.value, self.reviewer.queue = verdict(), [REJECTION]
+        accepted = self.generate('accepted')
+        self.assertEqual(accepted.kind, 'PROPOSAL')
+        self.assertEqual([a.review for a in accepted.attempts], [REJECTION, verdict()])
+        self.assertEqual(self.generate('accepted'), accepted)
+        # Model-free failures keep only their type in the log and the author's text.
+        self.client.fetch_preparation_documents.side_effect = RuntimeError('Synthetic client text')
+        failed = self.prepare('sources-2')
+        self.assertEqual(failed.content, 'Selected-source authoring did not complete; no proposal was applied.')
 
     def test_scope_revocation_and_concurrent_change_block_final_storage(self):
         def revoke(*args,**kwargs):

@@ -41,30 +41,56 @@ def revised_syllabus(data=None):
                                  'planned_intents': ('PRACTICE',)}))})
 
 
-class Curator:
-    """Returns ``value``, or ``revision`` when asked to revise a syllabus and one is set."""
+def verdict(**changes):
+    """The synthetic reviewer's acceptance, or a verdict with ``changes``."""
+    return SyllabusVerdict(verdict='ACCEPT', source_alignment=True, citation_support=True,
+                           reason='Synthetic relevant source and aligned learning purposes.').model_copy(update=changes)
 
-    def __init__(self, value=None, revision=None):
+
+# A rejection whose reason must never reach an error message, a log line or an event.
+REJECTION = verdict(verdict='REJECT', citation_support=False,
+                    reason='Synthetic reviewer text: the cited excerpt does not support the unit claim.')
+
+
+class Curator:
+    """Returns ``value``; ``revision`` when asked to revise and ``retry`` when asked to try again, if set."""
+
+    def __init__(self, value=None, revision=None, retry=None):
         self.value = value or syllabus()
-        self.revision = revision
+        self.revision, self.retry = revision, retry
         self.calls = []
 
     def run(self, name, prompt):
         self.calls.append((name, prompt))
-        if self.revision is not None and 'AIMPRO_SYLLABUS_REVISION' in prompt.split('\nDATA\n')[0]:
+        instructions = prompt.split('\nDATA\n')[0]
+        if self.retry is not None and 'AIMPRO_SYLLABUS_RETRY' in instructions:
+            return self.retry
+        if self.revision is not None and 'AIMPRO_SYLLABUS_REVISION' in instructions:
             return self.revision
         return self.value
 
 
+# A teacher's reason holding this text makes the synthetic reviewer reject each review prompt once (dev only).
+REJECT_ONCE = '[synthetic reviewer: reject the first draft]'
+
+
 class Reviewer:
-    def __init__(self):
+    """Returns the ``first`` verdicts in order, then ``value``: ``Reviewer(REJECTION)`` rejects once, then accepts.
+
+    A review prompt holding :data:`REJECT_ONCE` (in the reasons of a revision) is rejected the first time it is
+    seen, so the synthetic worker and the browser tests can show a rejected attempt followed by an accepted one.
+    """
+
+    def __init__(self, *first):
         self.calls = []
         self.callback = None
-        self.value = SyllabusVerdict(verdict='ACCEPT', source_alignment=True,
-                                    citation_support=True, reason='Synthetic relevant source and aligned learning purposes.')
+        self.queue = list(first)
+        self.value = verdict()
 
     def kickoff(self, prompt, response_format):
         self.calls.append((prompt, response_format))
         if self.callback:
             self.callback()
-        return SimpleNamespace(pydantic=self.value)
+        if REJECT_ONCE in prompt and [p for p, _ in self.calls].count(prompt) == 1:
+            return SimpleNamespace(pydantic=REJECTION)
+        return SimpleNamespace(pydantic=self.queue.pop(0) if self.queue else self.value)

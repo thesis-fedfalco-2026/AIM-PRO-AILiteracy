@@ -38,6 +38,7 @@ from tests.services.job_fixtures import (EXPORT, REQUIREMENT, SyntheticAgents, d
                                          prepared_syllabus_job, preparation_job, revision_job, source_plan,
                                          worker)
 from tests.store_backends import block_network, new_store_location, on_both_backends
+from tests.syllabus_fixtures import REJECTION
 
 
 NO_NETWORK = 'The job worker tests use synthetic models and no network'
@@ -217,6 +218,29 @@ class CuratorJobTest(WorkerCase):
         self.assertEqual(self.agents.built, ['search', 'authoring'])
         self.assertEqual(self.agents.searches, [('prompting', 3)])
         self.assertEqual((self.agents.exports / EXPORT).read_bytes(), export)
+
+    def test_a_syllabus_rejected_at_every_attempt_fails_with_the_verdicts_kept(self):
+        self.agents.reviewer.value = REJECTION
+        self.submit('job-curator', self.syllabus_job())
+        done = self.worker.run_once()
+        self.assertEqual(done.status, 'FAILED')
+        self.assertEqual(done.detail, 'Syllabus generation did not complete (Syllabus did not pass semantic review); '
+                                      'no proposal was applied.')
+        self.assertEqual([a['review'] for a in self.request_result('job-curator')['attempts']],
+                         [REJECTION.model_dump(mode='json')] * 3)
+        reviews = [json.loads(e.data)['data'] for e in self.jobs.events(AUTH, 'job-curator')
+                   if e.name == 'progress' and json.loads(e.data)['type'] == 'review']
+        self.assertEqual([(r['attempt'], r['verdict']) for r in reviews], [(1, 'REJECT'), (2, 'REJECT'), (3, 'REJECT')])
+        stored = json.dumps([e.data for e in self.jobs.events(AUTH, 'job-curator')]) + done.model_dump_json()
+        self.assertNotIn(REJECTION.reason, stored)
+        self.assertEqual(self.agents.built, ['search', 'authoring'])
+
+    def test_a_syllabus_rejected_once_is_proposed_on_the_next_attempt(self):
+        self.agents.reviewer.queue.append(REJECTION)
+        self.submit('job-curator', self.syllabus_job())
+        done = self.worker.run_once()
+        self.assertEqual(done.status, 'PROPOSED', done.detail)
+        self.assertEqual([a['attempt'] for a in self.request_result('job-curator')['attempts']], [1, 2])
 
     def test_an_export_that_differs_from_the_named_version_is_rejected(self):
         self.submit('job-curator', self.syllabus_job(project={'name': EXPORT, 'sha256': '0' * 64}))

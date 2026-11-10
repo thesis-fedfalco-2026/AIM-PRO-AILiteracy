@@ -16,6 +16,8 @@ export type SourcePlan = Schemas['SourcePlan'];
 export type ExportTargets = Schemas['ExportTargets'];
 export type CoverageRequirement = Schemas['CoverageRequirement'];
 export type AimproExport = ExportReport['export'];
+export type SyllabusReviews = Schemas['SyllabusReviews'];
+export type SyllabusAttempt = SyllabusReviews['attempts'][number];
 
 /** The statuses after which a job never changes again. */
 export const FINAL_STATUSES: readonly JobStatus[] = [
@@ -64,6 +66,8 @@ export interface BuildApi {
   /** Queue the preparation of the excerpts a teacher picked; it then awaits the teacher's choice. */
   queuePreparation(contextId: string, csrfToken: string, requestId: string, command: PreparationCommand): Promise<JobView>;
   readPreparation(contextId: string, requestId: string): Promise<SourcePreparation>;
+  /** How the review agent judged each draft of an ended Curator job, first to last. */
+  readSyllabusReviews(contextId: string, requestId: string): Promise<SyllabusReviews>;
   /** Accept or decline prepared sources; only accepted sources ground a Curator job. */
   chooseSources(contextId: string, csrfToken: string, requestId: string, choice: 'ACCEPTED' | 'DECLINED'): Promise<JobView>;
   /** The learning targets and practices of an uploaded export, for coverage requirements. */
@@ -179,6 +183,12 @@ export function createBuildApi(client: AuthoringClient): BuildApi {
 
     async readPreparation(contextId, requestId) {
       return settle(() => client.GET('/contexts/{context_id}/source-preparations/{request_id}', {
+        params: { path: { context_id: contextId, request_id: requestId } },
+      }));
+    },
+
+    async readSyllabusReviews(contextId, requestId) {
+      return settle(() => client.GET('/contexts/{context_id}/syllabus-reviews/{request_id}', {
         params: { path: { context_id: contextId, request_id: requestId } },
       }));
     },

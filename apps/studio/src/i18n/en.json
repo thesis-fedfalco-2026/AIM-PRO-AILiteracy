@@ -561,6 +561,25 @@
       "review": "Review the proposed project",
       "selected": "Project “{{project}}” is initialized.",
       "next": "The studio ends here for now: assessments, materials and the release are prepared in later steps, not available in the studio yet."
+    },
+    "reviews": {
+      "summary": "How the review agent judged the Curator's drafts",
+      "intro": "The review agent checks each draft of the Curator against the course model and the cited excerpts. A draft it does not accept goes back to the Curator, at most three drafts per job. Its assessments are its own words: model text, not a decision of the application or of a person.",
+      "loading": "Reading the assessments…",
+      "failed": "The assessments could not be read.",
+      "none": "No draft of this job reached the checks or the review agent.",
+      "attempt": "Draft {{attempt}}: {{outcome}}",
+      "outcome": {
+        "accepted": "accepted by the review agent",
+        "rejected": "not accepted by the review agent",
+        "uncertain": "the review agent was uncertain, so it was not accepted",
+        "checks": "refused by the application's checks before the review agent saw it"
+      },
+      "flags": "Fits the course model and its sources: {{alignment}}. Citations support the claims: {{citations}}.",
+      "yes": "yes",
+      "no": "no",
+      "reason": "The review agent's assessment (model text): “{{reason}}”",
+      "check": "Reason: {{check}}"
     }
   }
 }

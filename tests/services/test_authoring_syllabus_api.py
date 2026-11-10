@@ -11,7 +11,7 @@ from learning.contracts import Entity, EntityRef
 from tests.services.job_fixtures import prepared_syllabus_job, revision_job
 from tests.services.test_authoring_exports_api import COURSE
 from tests.services.test_authoring_sources_api import SourcesApiCase
-from tests.syllabus_fixtures import revised_syllabus, syllabus
+from tests.syllabus_fixtures import REJECT_ONCE, REJECTION, revised_syllabus, syllabus, verdict
 
 
 REASON = 'Add a unit where participants explain two choices.'
@@ -162,3 +162,32 @@ class RefinementTest(SyllabusApiCase):
         self.run_worker()
         done = self.job('revision-1')
         self.assertEqual((done['status'], done['detail']), ('REJECTED', STALE))
+
+
+class ReviewAttemptsTest(SyllabusApiCase):
+    """Chat 20: the reviewer's verdict of every Curator attempt, read by the subject who ran the job."""
+
+    def reviews(self, request_id, client=None):
+        return (client or self.staff).get(f'/contexts/{COURSE}/syllabus-reviews/{request_id}')
+
+    def test_every_attempt_of_a_revision_is_read_with_the_reviewers_text(self):
+        first = self.curator()
+        self.assertEqual(self.body(self.reviews('curator-1')), {
+            'request_id': 'curator-1', 'outcome': 'PROPOSAL',
+            'attempts': [{'attempt': 1, 'review': verdict().model_dump(mode='json'), 'check': None}]})
+        ref, key = self.key(first)
+        reason = f'{REASON} {REJECT_ONCE}'
+        self.ok(self.decide(self.staff, COURSE, ref, key, decision='REQUEST_REVISION', reason=reason))
+        self.curator('revision-1', revision_job(first.id))
+        attempts = self.body(self.reviews('revision-1'))['attempts']
+        self.assertEqual([(a['attempt'], a['review'], a['check']) for a in attempts],
+                         [(1, REJECTION.model_dump(mode='json'), None), (2, verdict().model_dump(mode='json'), None)])
+        # The reviewer's text is shown here only: never in the job's detail or its events.
+        self.assertNotIn(REJECTION.reason, str(self.job('revision-1')))
+
+    def test_only_the_subject_of_a_syllabus_request_reads_its_attempts(self):
+        self.curator()
+        self.refused(self.reviews('curator-1', self.learner), 403, 'forbidden')
+        self.refused(self.reviews('unknown'), 404, 'not_found')
+        self.discover()
+        self.refused(self.reviews('discovery-1'), 404, 'not_found')

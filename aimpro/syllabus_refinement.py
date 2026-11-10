@@ -22,11 +22,10 @@ import logging
 
 from aimpro.lead import ReviewError
 from aimpro.syllabus import SyllabusDraft, SyllabusRevision, checked_syllabus, generate
-from aimpro.syllabus_state import candidates, proposed
+from aimpro.syllabus_state import SyllabusResult, candidates, proposed
 from learning.context import LearningRequest
 from learning.contracts import EntityRef
 from learning.decisions import create_proposal, save_proposal
-from learning.outputs import LearningResponse
 from learning.projects import _authorize, _draft
 from learning.store import StateConflict, canonical
 
@@ -62,14 +61,14 @@ def _explanation(summary, base, draft, **refinement):
         'syllabus_gaps': draft.gaps})
 
 
-def _record(service, context_id, request_id, context, base, draft, verdict, explanation, **refinement):
+def _record(service, context_id, request_id, context, base, draft, verdict, explanation, attempts=(), **refinement):
     """Save the new proposal and the request's result; the caller holds the write transaction."""
     root = context.snapshot.context
     saved = candidates(base.source, draft, verdict, context, retrieval_trace=base.trace,
                        revises=base.proposal.ref, **refinement)
     proposal = create_proposal(context, (root.ref,), saved, explanation)
-    result = LearningResponse(kind='PROPOSAL', content='The refined syllabus awaits human review.',
-                              proposal_refs=(proposal.ref,), application_status='pending')
+    result = SyllabusResult(kind='PROPOSAL', content='The refined syllabus awaits human review.',
+                            proposal_refs=(proposal.ref,), application_status='pending', attempts=attempts)
     save_proposal(service.store, context, proposal, saved)
     service.store.finish_request(request_id, context_id, result.model_dump(mode='json'))
     return result
@@ -84,7 +83,7 @@ def revise_syllabus(service, context_id, subject_key, *, request_id, proposal, a
     payload = canonical({'operation': 'AIMPRO_SYLLABUS_REVISE', 'subject_key': subject_key, 'proposal': proposal})
     cached = service.store.request_result(request_id, context_id, payload)
     if cached is not None:
-        return LearningResponse.model_validate(cached)
+        return SyllabusResult.model_validate(cached)
     base = _base(service, context, proposal)
     decision = base.proposal.fields.get('decision')
     decision = decision and service.store.read(EntityRef.model_validate(decision), owner=context_id)
@@ -93,10 +92,11 @@ def revise_syllabus(service, context_id, subject_key, *, request_id, proposal, a
     reasons = (*base.artifact.revision_reasons, decision.fields['reason'])
     cached = service.store.claim_request(request_id, context_id, payload)
     if cached is not None:
-        return LearningResponse.model_validate(cached)
+        return SyllabusResult.model_validate(cached)
+    attempts = ()
     try:
         dispatcher, lead, budget = authoring_factory()
-        draft, verdict = generate(base.source, dispatcher=dispatcher, lead=lead, max_context_chars=budget,
+        draft, verdict, attempts = generate(base.source, dispatcher=dispatcher, lead=lead, max_context_chars=budget,
                                   revision=SyllabusRevision(previous=base.artifact.draft, reasons=reasons))
         explanation = _explanation('Review a Curator revision of a syllabus proposal, asked by the teacher; '
                                    'no approval or learner progress is inferred.', base, draft,
@@ -105,17 +105,17 @@ def revise_syllabus(service, context_id, subject_key, *, request_id, proposal, a
             if service.store.read_context(context_id).version != root.version:
                 raise StateConflict('Context changed during syllabus revision')
             return _record(service, context_id, request_id, context, base, draft, verdict, explanation,
-                           revision_reasons=reasons)
+                           attempts=attempts, revision_reasons=reasons)
     except Exception as error:
         # ReviewError messages are fixed application text, never model or course content: the author may read them.
         reason = f' ({error})' if isinstance(error, ReviewError) else ''
         logging.getLogger('agent_system').warning('Syllabus revision failed (%s)%s', type(error).__name__, reason)
-        result = LearningResponse(kind='FAILURE',
-                                  content=f'Syllabus revision did not complete{reason}; no proposal was applied.')
+        result = SyllabusResult(kind='FAILURE', content=f'Syllabus revision did not complete{reason}; no proposal was applied.',
+                                attempts=getattr(error, 'attempts', attempts))
     try:
         service.store.finish_request(request_id, context_id, result.model_dump(mode='json'))
     except StateConflict:
-        return LearningResponse.model_validate(service.store.claim_request(request_id, context_id, payload))
+        return SyllabusResult.model_validate(service.store.claim_request(request_id, context_id, payload))
     return result
 
 
@@ -133,7 +133,7 @@ def edit_syllabus(service, context_id, subject_key, *, request_id, proposal, dra
                         text='Edit a syllabus proposal', intent='CURATE')
         cached = service.store.request_result(request_id, context_id, payload)
         if cached is not None:
-            return LearningResponse.model_validate(cached)
+            return SyllabusResult.model_validate(cached)
         base = _base(service, context, proposal)
         draft = checked_syllabus(base.source, draft)
         service.store.reserve_request(request_id, context_id, payload)

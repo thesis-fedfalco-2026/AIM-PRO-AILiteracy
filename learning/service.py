@@ -194,6 +194,11 @@ class LearningService:
         from aimpro.source_service import source_request
         return source_request(self, context_id, subject_key, request_id, kind)
 
+    def aimpro_syllabus_request(self, context_id, subject_key, request_id):
+        """The subject's ended Curator syllabus request under the request id, with every attempt, or ``None``."""
+        from aimpro.syllabus_service import syllabus_request
+        return syllabus_request(self, context_id, subject_key, request_id)
+
     def revise_aimpro_syllabus(self, context_id, subject_key, proposal, **kwargs):
         from aimpro.syllabus_refinement import revise_syllabus
         return revise_syllabus(self, context_id, subject_key, proposal=proposal, **kwargs)

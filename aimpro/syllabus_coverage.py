@@ -46,22 +46,24 @@ def validate_requirements(data, requirements):
 
 
 def check_unit_coverage(data, draft):
+    """The draft's coverage of the host requirements; a refusal is a ``ReviewError``, a fixed check text (Chat 20)."""
+    from aimpro.lead import ReviewError
     selection = data.corpus_evidence.selection if data.corpus_evidence else None
     requirements = validate_requirements(data, selection.coverage_requirements if selection else ())
     by_key = {r.key: r for r in requirements}
     seen = set()
     for unit in draft.units:
         if len({c.requirement_key for c in unit.coverage}) != len(unit.coverage):
-            raise ValueError('Coverage keys within a unit must be unique')
+            raise ReviewError('Coverage keys within a unit must be unique')
         for coverage in unit.coverage:
             requirement = by_key.get(coverage.requirement_key)
             if requirement is None:
-                raise ValueError('Unit coverage references an unknown host requirement')
+                raise ReviewError('Unit coverage references an unknown host requirement')
             if (unit.source_target_id != requirement.source_target_id or
                     requirement.expected_intent not in unit.planned_intents or
                     requirement.source_object_id not in {unit.source_target_id, *unit.source_practice_ids}):
-                raise ValueError('Unit coverage differs from the required target, practice or intent')
+                raise ReviewError('Unit coverage differs from the required target, practice or intent')
             seen.add(requirement.key)
     if seen != by_key.keys():
-        raise ValueError('Syllabus omits explicit source-action coverage requirements')
+        raise ReviewError('Syllabus omits explicit source-action coverage requirements')
     return requirements
