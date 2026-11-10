@@ -40,6 +40,11 @@ class SyllabusContractTest(unittest.TestCase):
         self.assertEqual(curator.calls[0][0], 'syllabus-designer')
         self.assertEqual(len(reviewer.calls), 1)
         self.assertIn('never a replacement syllabus', reviewer.calls[0][0])
+        # Calibrated on live verdicts (Chat 20): what is not, by itself, grounds for rejection.
+        for clause in ('retrieved excerpts that no unit cites are not grounds for rejection',
+                       'they are not by themselves grounds for REJECT, UNCERTAIN or a false source_alignment',
+                       'Judge each supported_claim as worded'):
+            self.assertIn(clause, reviewer.calls[0][0].split('\nDATA\n')[0])
         payload = json.loads(curator.calls[0][1].split('\nDATA\n')[1])
         self.assertIn('use fictional customer details only.', curator.calls[0][1])
         self.assertEqual(set(payload['allowed_practice_ids_by_target']), {self.draft.units[0].source_target_id})

@@ -810,6 +810,14 @@ attempts were refused by the review agent without the teacher seeing why:
 5. **The prepared-sources path reports the fixed `ReviewError` text**, as the
    query and revision paths do ("Selected-source authoring did not complete
    (…)"). Other errors keep only their type.
+6. **The review prompt was calibrated on live verdicts** (owner-authorized
+   runs, handoff `docs/plans/handoffs/chat-20.md`), in three clauses only:
+   source diagnostics and a non-conforming source are named as unresolved but
+   are not by themselves grounds for `REJECT`, `UNCERTAIN` or a false
+   `source_alignment`; retrieved excerpts that no unit cites are not grounds
+   for rejection; each `supported_claim` is judged as worded, so a claim
+   limited to what its excerpt states (a general principle whose transfer the
+   draft declares as a gap) is supported.
 
 In the studio, an ended Curator job of the signed-in teacher (`PROPOSED` or
 `FAILED`) offers "How the review agent judged the Curator's drafts" in the job
