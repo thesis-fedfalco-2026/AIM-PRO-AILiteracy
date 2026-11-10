@@ -221,4 +221,12 @@ studio**, whose acceptance is in the roadmap; it includes the 24-unit caps, with
 
 ## PR and CI
 
-PR_SECTION
+PR [#108](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/pull/108), commits `3dd7c21` (the change),
+`91fdebb` (the calibration and this handoff) and this CI record. CI on `3dd7c21`, push run
+[42860773250](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/actions/runs/42860773250); on
+`91fdebb`, push run
+[42866513913](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/actions/runs/42866513913) and
+pull_request run
+[42866528313](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/actions/runs/42866528313): all 7 jobs
+of each passed, `browser` included (`refinement.spec.ts` with a rejected and then an accepted draft) and
+`store-backends` (the PostgreSQL variants of the worker tests).
