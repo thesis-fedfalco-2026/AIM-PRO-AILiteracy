@@ -2,7 +2,7 @@
 
 import logging
 
-from aimpro.lead import prepare_input
+from aimpro.lead import ReviewError, prepare_input
 from aimpro.retrieval import evidence_from_response
 from aimpro.syllabus import generate
 from aimpro.syllabus_state import candidates
@@ -52,7 +52,7 @@ def generate_syllabus(service, context_id, subject_key, project, *, request_id, 
             scope=SearchScope(mode='PREPARATION', source_scope_keys=(source_scope,)))
         evidence = evidence_from_response(query.strip(), source_scope, k, response)
         if not evidence.resources:
-            raise ValueError('No corpus evidence returned for syllabus generation')
+            raise ReviewError('The search found no source for this query in this scope')
         data = data.model_copy(update={'corpus_evidence': evidence})
         dispatcher, lead, budget = authoring_factory()
         draft, verdict = generate(data, dispatcher=dispatcher, lead=lead, max_context_chars=budget)
@@ -73,8 +73,11 @@ def generate_syllabus(service, context_id, subject_key, project, *, request_id, 
             service.store.finish_request(request_id, context_id, result.model_dump(mode='json'))
         return result
     except Exception as error:
-        logging.getLogger('agent_system').warning('Syllabus generation failed (%s)', type(error).__name__)
-        result = LearningResponse(kind='FAILURE', content='Syllabus generation did not complete; no proposal was applied.')
+        # ReviewError messages are fixed application text, never model or course content: the author may read them.
+        reason = f' ({error})' if isinstance(error, ReviewError) else ''
+        logging.getLogger('agent_system').warning('Syllabus generation failed (%s)%s', type(error).__name__, reason)
+        result = LearningResponse(kind='FAILURE',
+                                  content=f'Syllabus generation did not complete{reason}; no proposal was applied.')
     try:
         service.store.finish_request(request_id, context_id, result.model_dump(mode='json'))
     except StateConflict:

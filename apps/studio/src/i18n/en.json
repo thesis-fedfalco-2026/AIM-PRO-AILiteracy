@@ -143,6 +143,7 @@
       "intro": "The proposal is approved but not applied. Applying it changes the context; it is a separate step from the approval.",
       "submit": "Apply the change",
       "applied": "Change applied. The context is now at version {{version}}.",
+      "seeCourse": "See the result on the course page",
       "conflict": "The proposal can no longer be applied as approved: {{detail}} The page now shows its current state.",
       "forbidden": "You are not allowed to apply this proposal. Nothing was changed.",
       "failed": "The application did not complete. Try again: the retry repeats the same operation, so the change is applied at most once."
@@ -275,12 +276,17 @@
       "requestRevision": "revision requested"
     },
     "notStarted": "This course has no syllabus yet.",
-    "build": "Build the course from an AIM-PRO model"
+    "build": "Build the course from an AIM-PRO model",
+    "continueBuild": "Continue building the course: initialize the project, or replace the syllabus"
   },
   "build": {
     "title": "Build the course",
     "intro": "Start the course from an AIM-PRO model: upload it, let the Curator draft a syllabus, review it, then initialize the project.",
     "back": "Back to the course",
+    "current": "Current syllabus",
+    "noSyllabus": "None yet",
+    "replaces": "This course already has a syllabus. Steps 1 and 2 draft a new one: once it is approved and applied, it replaces the current syllabus, which stays in the course history. A course has one syllabus at a time.",
+    "notKept": "This page does not keep an upload or a running Curator after you leave it. The uploaded file stays stored and a running Curator goes on; its proposal appears in the review inbox.",
     "errors": {
       "refused": "Refused: {{detail}}",
       "conflict": "Conflict with the current state: {{detail}}",
@@ -294,10 +300,10 @@
       "fileHint": "The JSON file exported from jjodel (megamodel format 1.0).",
       "fileRequired": "Choose a file.",
       "scenarioLabel": "Scenario",
-      "scenarioHint": "The name of the scenario model in the export.",
+      "scenarioHint": "The name of the scenario model in the export, as jjodel shows it (for example SCN01). If the name is wrong, the refusal lists the models in the file.",
       "scenarioRequired": "Enter the name of the scenario.",
       "competenciesLabel": "Competency catalogue",
-      "competenciesHint": "The name of the competency model in the export.",
+      "competenciesHint": "The name of the competency model in the same export (for example elena_usecase_competencies).",
       "competenciesRequired": "Enter the name of the competency catalogue.",
       "submit": "Upload and check",
       "stored": "The model was accepted and stored unchanged.",
@@ -313,7 +319,7 @@
     "curator": {
       "heading": "2. Draft the syllabus with the Curator",
       "intro": "The Curator reads the uploaded model and the sources found for your query, and proposes a syllabus. Nothing changes until you approve it.",
-      "needsUpload": "Upload a model first.",
+      "needsUpload": "Upload a model first, in step 1. After leaving this page, upload the file again: it is recognized and not stored twice.",
       "scope": "Source scope",
       "scopeHint": "The collection of sources this course may search, as named in its policy.",
       "scopeRequired": "Enter the source scope.",
@@ -321,8 +327,9 @@
       "queryHint": "What the sources should be about, in a few words.",
       "queryRequired": "Enter a search query.",
       "submit": "Ask the Curator",
-      "queued": "Waiting for the agent worker…",
-      "running": "The Curator is drafting the syllabus…",
+      "queued": "Waiting for the agent worker… If this does not change, the worker is not running.",
+      "running": "The Curator is drafting the syllabus… With a large model this takes several minutes. You can leave this page: the proposal will appear in the review inbox.",
+      "retry": "Nothing was changed. You can ask the Curator again.",
       "proposed": "The syllabus is ready and waits for your review.",
       "review": "Review the proposed syllabus",
       "abandoned": "The job was abandoned by an administrator.",
@@ -338,7 +345,8 @@
       "submit": "Propose the project",
       "proposed": "The project is proposed and waits for your review.",
       "review": "Review the proposed project",
-      "selected": "Project “{{project}}” is initialized."
+      "selected": "Project “{{project}}” is initialized.",
+      "next": "The studio ends here for now: assessments, materials and the release are prepared in later steps, not available in the studio yet."
     }
   }
 }

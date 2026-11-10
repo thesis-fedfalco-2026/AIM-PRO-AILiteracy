@@ -131,6 +131,9 @@ class ExportUploadTest(ExportsApiCase):
     # Acceptance: an invalid file is refused with its reason; nothing is recorded.
     def test_an_invalid_file_is_refused_with_its_reason_and_nothing_is_recorded(self):
         project = DEFAULT_PROJECT.read_bytes()
+        # The refusal names the models of the file, so the right scenario and catalogue can be entered.
+        no_scenario = ('The scenario and the competency catalogue cannot be resolved in the export. Models in the export: '
+                       'SCN01, assessment, elena_usecase_competencies, elena_usecase_scenario, learningphase, sustainability')
         cases = [
             (b'', {}, 'The file is empty'),
             (b' ' * (LIMIT + 1), {}, f'The file is larger than {LIMIT} bytes'),
@@ -141,10 +144,8 @@ class ExportUploadTest(ExportsApiCase):
              'The file is not a jjodel megamodel export, format 1.0'),
             (json.dumps({'format': 'jjodel-megamodel', 'formatVersion': '1.0'}).encode(), {},
              'The metamodels of the export cannot be read'),
-            (project, {'scenario': 'NO-SUCH-SCENARIO'},
-             'The scenario and the competency catalogue cannot be resolved in the export'),
-            (project, {'competencies': 'no_such_catalogue'},
-             'The scenario and the competency catalogue cannot be resolved in the export'),
+            (project, {'scenario': 'NO-SUCH-SCENARIO'}, no_scenario),
+            (project, {'competencies': 'no_such_catalogue'}, no_scenario),
         ]
         before = self.digests()
         for content, params, reason in cases:

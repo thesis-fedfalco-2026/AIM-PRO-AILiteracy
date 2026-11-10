@@ -17,7 +17,7 @@ import { useInbox } from '../review/useInbox';
 import { FINAL_STATUSES } from './buildApi';
 import type { ExportReport, JobView } from './buildApi';
 import { useBuildServices } from './BuildServices';
-import { currentDesign, selectedProjects } from './projects';
+import { currentDesign, designName, selectedProjects } from './projects';
 
 type Notice = { tone: 'info' | 'error'; text: string };
 
@@ -174,7 +174,12 @@ function JobStatusText({ contextId, job }: { contextId: string; job: JobView }) 
       </>
     );
     case 'ABANDONED': return <StatusMessage tone="error">{t('build.curator.abandoned')}</StatusMessage>;
-    default: return <StatusMessage tone="error">{t('build.curator.ended', { detail: job.detail ?? '' })}</StatusMessage>;
+    default: return (
+      <>
+        <StatusMessage tone="error">{t('build.curator.ended', { detail: job.detail ?? '' })}</StatusMessage>
+        <p>{t('build.curator.retry')}</p>
+      </>
+    );
   }
 }
 
@@ -279,7 +284,12 @@ function ProjectStep({ contextId, inbox }: { contextId: string; inbox: Inbox }) 
 
   let body;
   if (projects.length > 0) {
-    body = <ul>{projects.map((project) => <li key={project}>{t('build.project.selected', { project })}</li>)}</ul>;
+    body = (
+      <>
+        <ul>{projects.map((project) => <li key={project}>{t('build.project.selected', { project })}</li>)}</ul>
+        <p>{t('build.project.next')}</p>
+      </>
+    );
   } else if (design === null) {
     body = <p className="alm-muted">{t('build.project.needsSyllabus')}</p>;
   } else {
@@ -306,6 +316,22 @@ function ProjectStep({ contextId, inbox }: { contextId: string; inbox: Inbox }) 
   );
 }
 
+/** What the course has now, and what the steps below do to it. */
+function CurrentSyllabus({ inbox }: { inbox: Inbox }) {
+  const { t } = useTranslation();
+  const name = designName(inbox.context, inbox.entities);
+  return (
+    <>
+      <dl className="alm-facts">
+        <dt>{t('build.current')}</dt>
+        <dd>{name ?? t('build.noSyllabus')}</dd>
+      </dl>
+      {name !== null ? <p>{t('build.replaces')}</p> : null}
+      <p className="alm-muted">{t('build.notKept')}</p>
+    </>
+  );
+}
+
 /** Start a course from an AIM-PRO model: upload it, let the Curator draft the syllabus, then initialize the project. */
 export function BuildPage({ contextId }: { contextId: string }) {
   const { t } = useTranslation();
@@ -321,6 +347,7 @@ export function BuildPage({ contextId }: { contextId: string }) {
       {state.status === 'ready' ? (
         <>
           <p><Link to={inboxPath(contextId)}>{t('course.review', { count: state.inbox.pending.length })}</Link></p>
+          <CurrentSyllabus inbox={state.inbox} />
           <UploadStep contextId={contextId} report={report} onUploaded={setReport} />
           <CuratorStep contextId={contextId} report={report} />
           <ProjectStep contextId={contextId} inbox={state.inbox} />

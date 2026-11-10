@@ -231,6 +231,8 @@ describe('proposal review', () => {
     expect((await screen.findByRole('alert')).textContent).toBe(en.review.apply.failed);
     await act(async () => screen.getByRole('button', { name: en.review.apply.submit }).click());
     expect((await screen.findByRole('status')).textContent).toBe('Change applied. The context is now at version c2.');
+    expect(screen.getByRole('link', { name: en.review.apply.seeCourse }).getAttribute('href'))
+      .toBe('/studio/contexts/ctx/course');
     await waitFor(() => expect(screen.getByTestId('proposal-status').textContent).toBe(en.review.status.applied));
 
     const bodies = await Promise.all(writes(requests).map(bodyOf));

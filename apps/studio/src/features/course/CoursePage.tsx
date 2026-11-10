@@ -227,7 +227,7 @@ function CourseContent({ contextId, inbox }: { contextId: string; inbox: Inbox }
       <p className="alm-lead"><strong>{course.name}</strong></p>
       <p className="alm-muted">{t('course.state', { status: readable(course.status), mode: readable(course.mode) })}</p>
       <p><Link to={inboxPath(contextId)}>{t('course.review', { count: inbox.pending.length })}</Link></p>
-      <p><Link to={buildPath(contextId)}>{t('course.build')}</Link></p>
+      <p><Link to={buildPath(contextId)}>{t('course.continueBuild')}</Link></p>
       <CourseSections contextId={contextId} course={course} />
     </>
   );

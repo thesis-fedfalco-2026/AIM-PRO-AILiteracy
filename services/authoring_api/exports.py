@@ -84,6 +84,16 @@ async def _content(request: Request, limit: int) -> bytes:
     return b''.join(chunks)
 
 
+def model_names(data: dict) -> str:
+    """The model names of an export, for a refusal that has to name the right scenario and catalogue."""
+    definitions = data.get('definitions')
+    models = definitions.get('models') if isinstance(definitions, dict) else None
+    names = [m['metadata'].get('name') for m in models if isinstance(m, dict) and isinstance(m.get('metadata'), dict)] \
+        if isinstance(models, list) else []
+    names = sorted({name for name in names if isinstance(name, str) and name.strip()})
+    return f'. Models in the export: {", ".join(names)}' if names else ''
+
+
 def keep(directory: Path, content: bytes, scenario: str, competencies: str, root_id: str | None) -> ExportReport:
     """Check ``content`` and store it unchanged as ``<sha256>.json``; on any refusal nothing stays in ``directory``."""
     if not content:
@@ -110,7 +120,7 @@ def keep(directory: Path, content: bytes, scenario: str, competencies: str, root
         try:
             report = validate_scenario(temporary, scenario=scenario, competencies=competencies, root_id=root_id)
         except UNREADABLE:
-            raise ValueError(NO_SCENARIO) from None
+            raise ValueError(NO_SCENARIO + model_names(data)) from None
         if report['source']['source_sha256'] != digest:
             raise HTTPException(409, 'The file changed while it was checked')
         try:
