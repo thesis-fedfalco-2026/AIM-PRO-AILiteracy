@@ -7,8 +7,10 @@ command, ``FAILED`` when generation does not complete, ``ABANDONED`` when an
 administrator abandoned the request. Source jobs (S09a2) propose nothing: a
 discovery is ``COMPLETED``, a preparation is ``AWAITING_CHOICE`` until the
 teacher accepts or declines it, and a Curator job never uses prepared sources
-that were not accepted. Its content-free events go to the job's
-event sink, recorded for the progress stream.
+that were not accepted. A revision job (S09b) asks the Curator to revise a
+syllabus proposal after the teacher's revision request, on the same sources.
+Its content-free events go to the job's event sink, recorded for the progress
+stream.
 """
 
 import hashlib
@@ -20,6 +22,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from agent_system import events
+from aimpro.syllabus_refinement import NO_REQUEST
 from learning.contracts import EntityRef, Record
 from learning.metamodel import load_contract
 from learning.outputs import LearningResponse
@@ -32,7 +35,8 @@ from tests.authoring_cycle_fixtures import AUTH, trusted_policy
 from tests.seed import build_seed
 from tests.services.job_fixtures import (EXPORT, REQUIREMENT, SyntheticAgents, discovery_job, evaluator_command,
                                          evaluator_job, export_directory, export_ref, new_jobs_location,
-                                         prepared_syllabus_job, preparation_job, source_plan, worker)
+                                         prepared_syllabus_job, preparation_job, revision_job, source_plan,
+                                         worker)
 from tests.store_backends import block_network, new_store_location, on_both_backends
 
 
@@ -329,6 +333,64 @@ class SourceJobTest(WorkerCase):
         self.assertEqual(self.worker.run_once().detail, 'Source retrieval is not available to the worker')
 
 
+@on_both_backends
+class RevisionJobTest(WorkerCase):
+    REASON = 'Add a unit where participants explain two choices.'
+
+    def setUp(self):
+        super().setUp()
+        self.export = export_ref(self.agents.exports)
+
+    def proposed(self, job, request_id='job-curator'):
+        self.submit(request_id, job)
+        done = self.worker.run_once()
+        self.assertEqual(done.status, 'PROPOSED', done.detail)
+        return done.proposal_refs[0]
+
+    def request_revision(self, proposal):
+        with LearningStore(self.location) as store:
+            self.service(store).decide(AUTH, 'admin', proposal, 'REQUEST_REVISION', self.REASON)
+
+    def test_a_revision_job_gives_the_reason_to_the_curator_and_proposes_a_revised_syllabus(self):
+        first = self.proposed({'kind': 'generate-aimpro-syllabus', 'project': self.export,
+                               'source_scope': 'wp3', 'query': 'prompting', 'k': 3})
+        self.request_revision(first)
+        before = self.pending()
+        self.assertNotIn(first, before)
+        searches = list(self.agents.searches)
+        self.agents.built.clear()
+        second = self.proposed(revision_job(first.id), 'job-revision')
+        self.assertEqual(self.pending(), [second, *before])
+        self.assertEqual(self.agents.built, ['authoring'])
+        self.assertEqual(self.agents.searches, searches)
+        prompt = self.agents.curator.calls[-1][1]
+        self.assertEqual(json.loads(prompt.split('\nDATA\n')[1])['teacher_reasons'], [self.REASON])
+
+    def test_a_revision_without_a_revision_request_is_rejected_before_any_model(self):
+        first = self.proposed({'kind': 'generate-aimpro-syllabus', 'project': self.export,
+                               'source_scope': 'wp3', 'query': 'prompting', 'k': 3})
+        self.agents.built.clear()
+        self.submit('job-revision', revision_job(first.id))
+        done = self.worker.run_once()
+        self.assertEqual((done.status, self.agents.built), ('REJECTED', []))
+        self.assertEqual(done.detail, NO_REQUEST)
+        self.submit('job-unknown', revision_job('proposal-unknown'))
+        self.assertEqual(self.worker.run_once().detail, 'Unknown syllabus proposal')
+
+    # Owner decision 4: a revision on prepared sources reuses the accepted preparation.
+    def test_a_revision_on_accepted_sources_reuses_them_without_a_new_retrieval(self):
+        self.submit('job-sources', preparation_job(self.export))
+        self.worker.run_once()
+        self.jobs.transition(AUTH, 'job-sources', {'AWAITING_CHOICE'}, 'ACCEPTED')
+        first = self.proposed(prepared_syllabus_job(self.export, 'job-sources'))
+        self.request_revision(first)
+        retrieval = (list(self.agents.searches), list(self.agents.fetches))
+        self.agents.built.clear()
+        self.proposed(revision_job(first.id), 'job-revision')
+        self.assertEqual(self.agents.built, ['authoring'])
+        self.assertEqual((self.agents.searches, self.agents.fetches), retrieval)
+
+
 class EmitCommand(Record):
     kind: Literal['emit-events']
 
@@ -401,11 +463,13 @@ class KindsTest(unittest.TestCase):
         from learning.__main__ import parse_args
         self.assertEqual(set(KINDS), {'generate-project-assessments', 'generate-project-teacher',
                                       'generate-project-trainer', 'generate-aimpro-syllabus',
-                                      'discover-aimpro-syllabus-sources', 'prepare-aimpro-syllabus-sources'})
+                                      'discover-aimpro-syllabus-sources', 'prepare-aimpro-syllabus-sources',
+                                      'revise-aimpro-syllabus'})
         base = ['--db', 'x', '--policy', 'p', '--subject', 's', '--context', 'c']
         arguments = {'generate-aimpro-syllabus': ['x', '--source-scope', 's', '--query', 'q'],
                      'discover-aimpro-syllabus-sources': ['--discovery', 'd'],
-                     'prepare-aimpro-syllabus-sources': ['x', '--plan', 'p']}
+                     'prepare-aimpro-syllabus-sources': ['x', '--plan', 'p'],
+                     'revise-aimpro-syllabus': ['--proposal', 'p']}
         for name in KINDS:
             with self.subTest(name):
                 self.assertEqual(parse_args([*base, name, *arguments.get(name, ['x']), '--request-id', 'r']).command,

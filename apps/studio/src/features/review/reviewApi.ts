@@ -9,6 +9,8 @@ export type Entity = Omit<Schemas['Entity'], 'fields'> & { fields: Record<string
 export type EntityRef = Schemas['EntityRef'];
 export type Finding = Schemas['Finding'];
 export type DecisionKind = Schemas['DecisionRequest']['decision'];
+export type SyllabusProposalView = Schemas['SyllabusProposalView'];
+export type SyllabusDraft = Schemas['SyllabusDraft-Input'];
 
 export interface PendingProposal {
   proposal: Entity;
@@ -50,6 +52,12 @@ export interface ReviewApi {
   }): Promise<Entity>;
   /** Apply an approved proposal; the same `operationId` replays the same `StateChange`. */
   apply(contextId: string, csrfToken: string, proposal: EntityRef, operationId: string): Promise<Entity>;
+  /** A syllabus proposal with its texts, compared with the proposal it refines and the applied syllabus (S09b). */
+  syllabusProposal(contextId: string, proposalId: string): Promise<SyllabusProposalView>;
+  /** Propose the teacher's own syllabus in place of a syllabus proposal; the same request id replays it. */
+  editSyllabus(contextId: string, csrfToken: string, edit: {
+    requestId: string; proposalId: string; draft: SyllabusDraft;
+  }): Promise<EntityRef>;
 }
 
 const REASONS: Record<number, ReviewFailure> = {
@@ -107,6 +115,21 @@ export function createReviewApi(client: AuthoringClient): ReviewApi {
         headers: { 'X-CSRF-Token': csrfToken },
         body: { proposal, operation_id: operationId },
       })));
+    },
+
+    async syllabusProposal(contextId, proposalId) {
+      return settle(() => client.GET('/contexts/{context_id}/syllabus-proposals/{proposal_id}', {
+        params: { path: { context_id: contextId, proposal_id: proposalId } },
+      }));
+    },
+
+    async editSyllabus(contextId, csrfToken, { requestId, proposalId, draft }) {
+      const edited = await settle(() => client.POST('/contexts/{context_id}/syllabus-edits', {
+        params: { path: { context_id: contextId } },
+        headers: { 'X-CSRF-Token': csrfToken },
+        body: { request_id: requestId, proposal: proposalId, draft },
+      }));
+      return edited.proposal;
     },
   };
 }

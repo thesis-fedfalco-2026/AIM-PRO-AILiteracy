@@ -27,6 +27,7 @@ export const ENDED_STATUSES: readonly JobStatus[] = [...FINAL_STATUSES, 'AWAITIN
 export const DISCOVERY = 'discover-aimpro-syllabus-sources';
 export const PREPARATION = 'prepare-aimpro-syllabus-sources';
 export const CURATOR = 'generate-aimpro-syllabus';
+export const REVISION = 'revise-aimpro-syllabus';
 
 /** The Curator grounded by a search query, or by prepared sources that the teacher accepted. */
 export type CuratorCommand = {
@@ -51,6 +52,8 @@ export interface BuildApi {
   uploadExport(contextId: string, csrfToken: string, file: Blob, scenario: string, competencies: string): Promise<ExportReport>;
   /** Queue the Curator on an uploaded export; the same request id returns the same job. */
   queueCurator(contextId: string, csrfToken: string, requestId: string, command: CuratorCommand): Promise<JobView>;
+  /** Queue the Curator's revision of a syllabus proposal on which the teacher requested a revision. */
+  queueRevision(contextId: string, csrfToken: string, requestId: string, proposalId: string): Promise<JobView>;
   readJob(contextId: string, requestId: string): Promise<JobView>;
   /** The jobs of the course, newest first. */
   listJobs(contextId: string): Promise<JobView[]>;
@@ -121,6 +124,14 @@ export function createBuildApi(client: AuthoringClient): BuildApi {
             scenario: command.scenario, competencies: command.competencies,
           },
         },
+      }));
+    },
+
+    async queueRevision(contextId, csrfToken, requestId, proposalId) {
+      return settle(() => client.POST('/contexts/{context_id}/jobs', {
+        params: { path: { context_id: contextId } },
+        headers: writing(csrfToken),
+        body: { request_id: requestId, job: { kind: REVISION, proposal: proposalId } },
       }));
     },
 

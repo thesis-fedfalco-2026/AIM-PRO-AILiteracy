@@ -110,6 +110,20 @@ describe('course overview', () => {
     expect(courseOverview(CONTEXT, [CONTEXT])).toBeNull();
   });
 
+  it('shows the applied syllabus of the design in words, and none for a design without one', () => {
+    expect(course.syllabus).toBeNull();
+    const payload = (outline: string, fields: Record<string, unknown> = {}) => entity('Resource', `syllabus-${outline}`, {
+      title: 'Curator syllabus draft', contentOrLocator: JSON.stringify({ format: 'aimpro-syllabus', format_version: 1,
+        outline: ref('LearningDesign', outline), draft: { title: 'Prompting syllabus, revised', units: [
+          { title: 'Explain two choices', purpose: 'Write a prompt and explain two choices.', planned_intents: ['PRACTICE'] }] },
+        ...fields }) });
+    const applied = courseOverview(CONTEXT, [...ENTITIES, payload('design-0'), payload('design-1', { edited_by: 'teacher-1' })])!;
+    expect(applied.syllabus).toEqual({ title: 'Prompting syllabus, revised', editedBy: 'teacher-1', units: [
+      { title: 'Explain two choices', purpose: 'Write a prompt and explain two choices.', intents: ['PRACTICE'] }] });
+    // A syllabus payload is not a teaching material.
+    expect(applied.materials.map((material) => material.title)).toEqual(['Synthetic WORKSHEET']);
+  });
+
   it('stops at a node that refers to itself', () => {
     const loop = entity('ProcessNode', 'phase-1', { name: 'Loop', kind: 'PHASE', children: [ref('ProcessNode', 'phase-1')] });
     const looped = courseOverview(CONTEXT, [CONTEXT, DESIGN, loop])!;

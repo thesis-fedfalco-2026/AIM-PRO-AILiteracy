@@ -76,6 +76,8 @@ Authoring API imports only the first two.
   SHA-256 in the worker's `ALM_AIMPRO_EXPORTS` directory, the source scope, and
   a query or a prepared-sources request id). The worker refuses an export that
   is missing or differs from the named digest; it never writes the export.
+  `revise-aimpro-syllabus` (S09b: the Curator's revision of a syllabus
+  proposal, named by its id, after a revision request; no export, no search).
   Source kinds (S09a2), no model and no proposal:
   `discover-aimpro-syllabus-sources` (a `SourceDiscovery`: source scope and
   1–20 queries) and `prepare-aimpro-syllabus-sources` (an export and its
@@ -538,6 +540,7 @@ browser recorded.
 | `course.spec.ts`: as a learner | `dev-learner` on `architecture-delivery-2` sees only the not-visible message; axe |
 | `build.spec.ts`: a course from an uploaded AIM-PRO model | create a course (one new policy file next to the seed's); upload the AIM-PRO export the fixtures use: the stored file has the uploaded bytes and digest; the Curator job with the synthetic model ends with a link to the proposal; approve and apply the syllabus; the course page shows the structure; propose, approve and apply the project; the build page shows the project; axe on the build page with every disclosure open |
 | `build.spec.ts`: a syllabus on accepted sources (S09a2) | upload; search with two queries (synthetic retrieval); the excerpt found by both, with its usage conditions; tick it, write its purpose and limitations, prepare; the prepared sources; axe with every disclosure open; no prepared sources offered to the Curator before the choice; accept; the Curator on the accepted sources ends with a proposal; approve and apply; the course structure; back on the build page, the three jobs listed with their status; axe |
+| `refinement.spec.ts`: a syllabus refined step by step (S09b) | upload; the Curator by a query; the syllabus in words (competency, practice, planned activities) compared with a course without a syllabus, and not the generic "same teaching content" sentence; axe; a revision request with its reason; "Ask the Curator for a revised syllabus" ends with a link to the revision, compared with the previous proposal (title changed, one unit changed in its purpose, one unit added) and showing the reason; axe; approve and apply: the course shows the revised syllabus; the teacher edits it (syllabus title, a unit title; axe on the form): a new proposal by the teacher, compared with the syllabus in use; approve and apply: the course shows the teacher's syllabus, "Edited by"; axe |
 | `build.spec.ts`: an invalid file | a text file is refused with "The file is not UTF-8 JSON"; no report; the export directory and the database file are unchanged; axe |
 | `accessibility.spec.ts` | axe on the home page (also with its validation error), the inbox with and without pending proposals, the proposal page with every disclosure open, its validation errors, the apply step, a refused application, and an unavailable context |
 
@@ -708,6 +711,71 @@ text; then the prepared sources and "Accept these sources" or "Decline
 them"); 3. the Curator, which works from "Sources I accepted" (the export,
 scenario and scope of the preparation) or "A search query"; 4. the project.
 Each queued job is followed every second until its run has ended.
+
+## Syllabus refinement (S09b)
+
+A teacher refines the syllabus step by step (D18). The Curator's output and the
+teacher's edits stay proposals that a human decides and applies. Owner
+decisions of 10 November 2026 (issue #104):
+
+1. **Units are paired by learning target.** Two syllabi are compared unit by
+   unit on `source_target_id`; units on the same target are paired in their
+   order; the extra units are added or removed (`aimpro/syllabus_compare.py`).
+   The unit key is not used: the Curator does not keep it between generations.
+2. **The Curator holds the conversation.** A revision request
+   (`REQUEST_REVISION`, which leaves the proposal `DRAFT`) is one turn: the job
+   `revise-aimpro-syllabus` gives the Curator the previous syllabus and the
+   reasons of the whole chain, first to last, as data of its prompt
+   (`AIMPRO_SYLLABUS_REVISION`, `previous_syllabus`, `teacher_reasons`). Its
+   result is reviewed by the review agent as any generated syllabus.
+3. **A manual edit is complete** (every field; units added, removed and
+   reordered) and passes **the same checks** as a generated syllabus
+   (`checked_syllabus`). It is recorded as a proposal by the teacher, without a
+   model, declared "edited by the teacher, not reviewed by the agent"; the
+   teacher may approve and apply it.
+4. **A refinement reuses the input of the proposal it refines** (the source
+   snapshot with its prepared or retrieved excerpts): nothing is searched or
+   prepared again. The course must still be at that proposal's step: its base
+   version, or the version its application produced; otherwise "The course
+   changed after this syllabus proposal; prepare the sources and generate the
+   syllabus again" (a fixed `ReviewError`).
+
+The syllabus payload (`SyllabusArtifact`, format version 1) gains optional
+fields, omitted when absent so that earlier payloads keep their exact shape:
+`revises` (the `ChangeProposal` it refines), `revision_reasons` and
+`edited_by`; `review` is absent exactly when `edited_by` is set. The resolver
+of an applied syllabus checks the review only when there is one.
+
+### Module `syllabus`
+
+| Route | Who | Response |
+| --- | --- | --- |
+| `GET /contexts/{context_id}/syllabus-proposals/{proposal_id}` | a subject who is not learner-only | `SyllabusProposalView`: the proposal's syllabus (status, responsible, draft, review or `edited_by`, revision reasons); the texts of its targets (statement, competencies by name, practices with how they work) and of every excerpt it may cite (text, licence, and the purpose and limitations of prepared sources); the proposal it refines and the comparison with it; the course design (`NONE`, `SYLLABUS`, `OTHER`), the applied syllabus and the comparison with it |
+| `POST /contexts/{context_id}/syllabus-edits` (CSRF) | `propose`, content authority | `SyllabusEdit` `{request_id, proposal, draft}` → `EditedSyllabus` `{proposal}`; the same request again returns the same proposal; a refused check is a 422 with its fixed text; 404 for a proposal without a syllabus |
+
+A revision is queued as a job (`POST …/jobs`, kind `revise-aimpro-syllabus`,
+`{"proposal": id}`); the worker rejects it before any model without a revision
+request on the latest revision of the proposal, or when the course has moved.
+
+### Studio
+
+- **Proposal page.** A proposal whose records include a syllabus payload shows
+  "Proposed syllabus": the units in words, the revision requests that led to
+  it, what it leaves open, "What the revision changes" or "What the edit
+  changes" (units with their status and, for a changed unit, each changed field
+  before and after), and "Compared with the syllabus of the course". The
+  generic teacher view is not shown for it. After a revision request, "Ask the
+  Curator for a revised syllabus" queues the revision job, follows it and links
+  to the new proposal; a revision job already started for the proposal is shown
+  again. "Edit this syllabus yourself" opens the editor.
+- **Editor** (`…/review/{proposal}/edit`): the syllabus title and what it
+  leaves open; per unit its title, purpose, learning target (the competencies
+  follow the target), planned activities, practices of the target and cited
+  excerpts with what they support; add, remove and move units and citations.
+  "Propose this syllabus" sends the whole syllabus and opens the new proposal.
+- **Course overview.** The structure section shows the syllabus in use: title,
+  "Edited by" for a teacher's syllabus, and each unit's purpose and planned
+  activities.
 
 ## Local identity smoke test
 

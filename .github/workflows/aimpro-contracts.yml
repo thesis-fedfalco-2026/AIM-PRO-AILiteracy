@@ -15,7 +15,7 @@ jobs:
       - run: python -m pip install pydantic==2.12.5 PyYAML==6.0.3
       - run: python -m aimpro.generate --check
       - run: python -m aimpro.generate docs/resources/aimpro-megamodel-2026-11-04.json --output docs/aimpro/generated-2026-11-04 --check
-      - run: python -m unittest tests.test_aimpro_audit tests.test_aimpro_change_requests tests.test_aimpro_adapter tests.test_aimpro_contracts tests.test_aimpro_data_types tests.test_aimpro_lead tests.test_aimpro_didactic tests.test_aimpro_retrieval tests.test_aimpro_authoring tests.test_aimpro_syllabus tests.test_aimpro_bindings tests.test_aimpro_execution_setup tests.test_aimpro_demo tests.test_aimpro_trace -v
+      - run: python -m unittest tests.test_aimpro_audit tests.test_aimpro_change_requests tests.test_aimpro_adapter tests.test_aimpro_contracts tests.test_aimpro_data_types tests.test_aimpro_lead tests.test_aimpro_didactic tests.test_aimpro_retrieval tests.test_aimpro_authoring tests.test_aimpro_syllabus tests.test_syllabus_refinement tests.test_aimpro_bindings tests.test_aimpro_execution_setup tests.test_aimpro_demo tests.test_aimpro_trace -v
 
   authoring-architecture:
     runs-on: ubuntu-latest
@@ -76,7 +76,7 @@ jobs:
           cache: pip
       - run: python -m pip install -r requirements.txt
       - run: python -m services.api_common.openapi --check
-      - run: python -m unittest tests.services.test_api_common tests.services.test_api_identity tests.services.test_api_openapi tests.services.test_dev_identity tests.services.test_api_contexts tests.services.test_authoring_read_api tests.services.test_authoring_review_api tests.services.test_authoring_jobs_api tests.services.test_job_boundaries tests.services.test_authoring_courses_api tests.services.test_authoring_exports_api tests.services.test_authoring_sources_api -v
+      - run: python -m unittest tests.services.test_api_common tests.services.test_api_identity tests.services.test_api_openapi tests.services.test_dev_identity tests.services.test_api_contexts tests.services.test_authoring_read_api tests.services.test_authoring_review_api tests.services.test_authoring_jobs_api tests.services.test_job_boundaries tests.services.test_authoring_courses_api tests.services.test_authoring_exports_api tests.services.test_authoring_sources_api tests.services.test_authoring_syllabus_api -v
 
   front-end:
     runs-on: ubuntu-latest

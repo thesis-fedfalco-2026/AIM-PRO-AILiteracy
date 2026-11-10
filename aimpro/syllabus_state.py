@@ -5,13 +5,14 @@ import json
 from typing import Literal
 from uuid import uuid4
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from aimpro.contracts import encoded
 from aimpro.lead import LeadInput, ReviewError
 from aimpro.lead_types import Record, Text
+from aimpro.source_selection import RetrievalTrace
 from aimpro.syllabus import CURATOR, SyllabusDraft, SyllabusVerdict, checked_syllabus, checked_verdict
-from learning.contracts import EntityRef, Provenance, entity_data, make_entity
+from learning.contracts import Entity, EntityRef, Provenance, entity_data, make_entity
 from learning.decisions import approval_valid, proposal_candidates, review_payload_key
 from learning.metamodel import validate_entity
 from learning.store import canonical
@@ -31,7 +32,22 @@ class SyllabusArtifact(Record):
     source_snapshot: EntityRef
     units: tuple[UnitLink, ...] = Field(min_length=1)
     draft: SyllabusDraft
-    review: SyllabusVerdict
+    # A teacher's edit (S09b) has no review by the agent; the teacher decides it as is.
+    review: SyllabusVerdict | None = Field(None, exclude_if=lambda value: value is None)
+    # The refinement chain (S09b), omitted when absent to keep the payloads of earlier syllabi unchanged.
+    revises: EntityRef | None = Field(None, exclude_if=lambda value: value is None)
+    revision_reasons: tuple[Text, ...] = Field((), exclude_if=lambda value: not value)
+    edited_by: Text | None = Field(None, exclude_if=lambda value: value is None)
+
+    @model_validator(mode='after')
+    def reviewed_unless_edited(self):
+        if (self.review is None) != (self.edited_by is not None):
+            raise ValueError('A syllabus is reviewed by the agent unless a teacher edited it')
+        if self.edited_by is not None and self.revises is None:
+            raise ValueError('An edited syllabus names the proposal it edits')
+        if self.revises is not None and self.revises.type != 'ChangeProposal':
+            raise ValueError('A syllabus revises a change proposal')
+        return self
 
 
 class ApprovedSyllabus(Record):
@@ -43,9 +59,61 @@ class ApprovedSyllabus(Record):
     change: EntityRef
 
 
-def candidates(data, draft, verdict, context, *, retrieval_trace=None):
+class NoSyllabus(ValueError):
+    """The context has no proposal under this id, or the proposal holds no syllabus."""
+
+
+class ProposedSyllabus(Record):
+    """A syllabus proposal at its latest revision, whatever its status, with the input it was built on."""
+    proposal: Entity
+    syllabus: Entity
+    artifact: SyllabusArtifact
+    source: LeadInput
+    trace: RetrievalTrace | None = None
+
+
+def syllabus_artifact(entity):
+    """The syllabus payload of a Resource, or ``None`` when it holds none."""
+    if entity.type != 'Resource':
+        return None
+    try:
+        raw = json.loads(entity.fields.get('contentOrLocator', ''))
+    except (TypeError, ValueError):
+        return None
+    if not isinstance(raw, dict) or raw.get('format') != 'aimpro-syllabus':
+        return None
+    return SyllabusArtifact.model_validate(raw)
+
+
+def proposed(store, context, proposal_id):
+    """The syllabus of the context's proposal ``proposal_id``; ``ValueError`` when it proposes no syllabus."""
+    root = context.snapshot.context
+    proposal = next((p for p in store.owned(root.id, 'ChangeProposal') if p.id == proposal_id), None)
+    if proposal is None:
+        raise NoSyllabus('Unknown syllabus proposal')
+    saved = proposal_candidates(store, proposal)
+    found = [(c, artifact) for c in saved if (artifact := syllabus_artifact(c)) is not None]
+    if len(found) != 1:
+        raise NoSyllabus('The proposal holds no syllabus')
+    syllabus, artifact = found[0]
+    by_ref = {c.ref: c for c in saved}
+    source = by_ref.get(artifact.source_snapshot)
+    if artifact.context_id != root.id or source is None:
+        raise ValueError('Syllabus payload belongs to another outline or context')
+    trace = None
+    for raw in source.fields.get('derivedFrom', []):
+        linked = by_ref.get(EntityRef.model_validate(raw))
+        if linked is not None and linked.id.endswith(':retrieval-trace'):
+            trace = RetrievalTrace.model_validate_json(linked.fields['contentOrLocator'])
+    return ProposedSyllabus(proposal=proposal, syllabus=syllabus, artifact=artifact,
+                            source=LeadInput.model_validate_json(source.fields['contentOrLocator']), trace=trace)
+
+
+def candidates(data, draft, verdict, context, *, retrieval_trace=None, revises=None, revision_reasons=(),
+               edited_by=None):
+    """The ALM records of a syllabus proposal; ``verdict`` is ``None`` only for a teacher's edit (``edited_by``)."""
     draft = checked_syllabus(data, draft)
-    verdict = checked_verdict(verdict)
+    verdict = None if verdict is None and edited_by is not None else checked_verdict(verdict)
     root = context.snapshot.context
     if (root.fields['mode'], root.fields['status']) != ('PREPARATION', 'DRAFT'):
         raise ReviewError('Syllabus import requires a PREPARATION DRAFT context')
@@ -144,9 +212,9 @@ def candidates(data, draft, verdict, context, *, retrieval_trace=None):
         'strategies': [ref(s) for s in strategies.values()]}, [data.source.root_id])
     artifact = SyllabusArtifact(context_id=root.id, outline=design.ref, source_snapshot=source.ref,
         units=tuple(UnitLink(key=u.key, node=node.ref) for u, node in zip(draft.units, units)),
-        draft=draft, review=verdict)
+        draft=draft, review=verdict, revises=revises, revision_reasons=tuple(revision_reasons), edited_by=edited_by)
     syllabus = make('Resource', 'syllabus', {
-        'title': 'Curator syllabus draft: ' + draft.title,
+        'title': ('Curator syllabus draft: ' if edited_by is None else 'Teacher-edited syllabus draft: ') + draft.title,
         'contentOrLocator': encoded(artifact.model_dump(mode='json')),
         'topics': [ref(t) for t in topics.values()], 'outcomes': [ref(o) for o in outcomes.values()],
         'derivedFrom': [ref(source), *(ref(r) for r in corpus)],
@@ -220,7 +288,8 @@ def resolve_artifact(store, context, syllabus_ref):
     source = context.snapshot.get(artifact.source_snapshot)
     data = LeadInput.model_validate_json(source.fields['contentOrLocator'])
     checked_syllabus(data, artifact.draft)
-    checked_verdict(artifact.review)
+    if artifact.review is not None:
+        checked_verdict(artifact.review)
     phase = context.snapshot.get(design.fields['root'])
     if (tuple(u.key for u in artifact.units) != tuple(u.key for u in artifact.draft.units) or
             phase.fields['children'] != [u.node.model_dump() for u in artifact.units] or
