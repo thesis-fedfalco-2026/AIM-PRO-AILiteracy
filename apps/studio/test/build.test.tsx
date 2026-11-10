@@ -153,6 +153,7 @@ describe('building a course', () => {
     fireEvent.click(screen.getByRole('button', { name: en.build.curator.submit }));
     expect(await screen.findByText('The Curator did not propose a syllabus: Syllabus corpus source scope is not authorized'))
       .toBeTruthy();
+    expect(screen.getByText(en.build.curator.retry)).toBeTruthy();
   });
 
   it('proposes the project from the approved syllabus of the current outline', async () => {
@@ -182,6 +183,20 @@ describe('building a course', () => {
     ]), '/studio/contexts/new-course/build');
     expect(await screen.findByText('Project “main” is initialized.')).toBeTruthy();
     expect(screen.queryByRole('button', { name: en.build.project.submit })).toBeNull();
+    expect(screen.getByText(en.build.project.next)).toBeTruthy();
+  });
+
+  it('names the current syllabus and says that a new one replaces it', async () => {
+    await renderStudio(page(WITH_SYLLABUS, [entity('LearningDesign', 'outline', { name: 'Prompting basics' })]),
+      '/studio/contexts/new-course/build');
+    expect((await screen.findByText(en.build.current)).nextElementSibling?.textContent).toBe('Prompting basics');
+    expect(screen.getByText(en.build.replaces)).toBeTruthy();
+  });
+
+  it('says that a course without a syllabus has none yet', async () => {
+    await renderStudio(page(EMPTY), '/studio/contexts/new-course/build');
+    expect((await screen.findByText(en.build.current)).nextElementSibling?.textContent).toBe(en.build.noSyllabus);
+    expect(screen.queryByText(en.build.replaces)).toBeNull();
   });
 });
 

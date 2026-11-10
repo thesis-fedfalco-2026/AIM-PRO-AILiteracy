@@ -35,6 +35,15 @@ export function selectedProjects(context: Entity, entities: Entity[]): string[] 
   return [...found].sort();
 }
 
+/** The name of the course's current learning design, or null when it has none. */
+export function designName(context: Entity, entities: Entity[]): string | null {
+  const design = currentDesign(context);
+  if (design === null) return null;
+  const found = entities.find((entity) => entity.type === design.type && entity.id === design.id);
+  const name = found?.fields.name;
+  return typeof name === 'string' && name.trim() ? name : design.id;
+}
+
 /** The course's current learning design, if it has one. */
 export function currentDesign(context: Entity): EntityRef | null {
   const design = context.fields.learningDesign;

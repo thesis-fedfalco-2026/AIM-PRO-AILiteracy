@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 
 from aimpro.audit import DEFAULT_PROJECT
 from aimpro.lead import prepare_input
-from aimpro.syllabus import checked_syllabus, generate
+from aimpro.syllabus import SyllabusDraft, checked_syllabus, generate
 from aimpro.syllabus_state import SyllabusArtifact
 from learning.contracts import EntityRef, make_entity
 from learning.decisions import proposal_candidates
@@ -81,6 +81,14 @@ class SyllabusContractTest(unittest.TestCase):
         checked_syllabus(self.data, self.draft.model_copy(update={'units': (unit, second)}))
         with self.assertRaisesRegex(ValueError, 'unique'):
             checked_syllabus(self.data, self.draft.model_copy(update={'units': (unit, unit)}))
+
+    def test_a_draft_holds_up_to_96_units(self):
+        unit = self.draft.units[0].model_dump(mode='json')
+        draft = self.draft.model_dump(mode='json')
+        units = [{**unit, 'key': f'unit-{index}'} for index in range(97)]
+        self.assertEqual(len(SyllabusDraft.model_validate({**draft, 'units': units[:96]}).units), 96)
+        with self.assertRaisesRegex(ValueError, 'at most 96'):
+            SyllabusDraft.model_validate({**draft, 'units': units})
 
     def test_grounding_and_semantic_support_are_mandatory(self):
         curator, reviewer = Curator(self.draft), Reviewer()
@@ -211,7 +219,11 @@ class SyllabusServiceTest(unittest.TestCase):
 
     def test_rejected_unsupported_or_invalid_draft_leaves_no_partial_candidates(self):
         self.reviewer.value = self.reviewer.value.model_copy(update={'citation_support': False})
-        self.assertEqual(self.generate().kind, 'FAILURE')
+        failed = self.generate()
+        self.assertEqual(failed.kind, 'FAILURE')
+        # The fixed reason reaches the author; model output never does.
+        self.assertEqual(failed.content, 'Syllabus generation did not complete (Syllabus did not pass semantic review); '
+                                         'no proposal was applied.')
         self.assertEqual(self.generate().kind, 'FAILURE')
         self.assertEqual(self.factory.call_count, 1)
         self.assertEqual(self.store.owned('session', 'ChangeProposal'), ())

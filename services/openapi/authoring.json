@@ -2003,7 +2003,7 @@
             "items": {
               "$ref": "#/components/schemas/SyllabusUnit"
             },
-            "maxItems": 24,
+            "maxItems": 96,
             "minItems": 1,
             "title": "Units",
             "type": "array"

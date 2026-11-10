@@ -32,7 +32,8 @@ class SyllabusDraft(Record):
     source_sha256: Text
     metamodel_fingerprint: Text
     title: Text
-    units: tuple[SyllabusUnit, ...] = Field(min_length=1, max_length=24)
+    # One unit or more per target: a 48-target scenario (LPO AI) needs at least 48.
+    units: tuple[SyllabusUnit, ...] = Field(min_length=1, max_length=96)
     gaps: tuple[Text, ...] = ()
 
 
