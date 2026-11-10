@@ -64,7 +64,7 @@ test('a course is built from an uploaded AIM-PRO model', async ({ page }) => {
   await expect(page.getByRole('region', { name: en.course.structure.heading })).toBeVisible();
   await expect(page.getByText(en.course.notStarted)).toHaveCount(0);
 
-  await page.getByRole('link', { name: en.course.build }).click();
+  await page.getByRole('link', { name: en.course.continueBuild }).click();
   await page.getByLabel(en.build.project.label).fill('main');
   await page.getByRole('button', { name: en.build.project.submit }).click();
   await page.getByRole('link', { name: en.build.project.review }).click();
