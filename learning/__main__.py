@@ -96,6 +96,10 @@ def parse_args(argv=None):
         else:
             generate.add_argument('--query', help='Corpus search query, required with --source-scope')
         generate.add_argument('--k', type=int, default=5, choices=range(1, 21))
+    discovery = commands.add_parser('discover-aimpro-syllabus-sources',
+                                    help='Run discovery queries and record the excerpts found, without models')
+    discovery.add_argument('--discovery', type=Path, required=True)
+    discovery.add_argument('--request-id', required=True)
     sources = commands.add_parser('prepare-aimpro-syllabus-sources', help='Prepare multi-query exact Curator excerpts without models')
     sources.add_argument('project', type=Path)
     sources.add_argument('--plan', type=Path, required=True)
@@ -266,6 +270,10 @@ def main(argv=None):
                     source_scope=args.source_scope, query=args.query, k=args.k,
                     search_factory=_aimpro_search if args.prepared_sources is None else None,
                     prepared_sources=args.prepared_sources).model_dump(mode='json')
+            elif command == 'discover-aimpro-syllabus-sources':
+                result = service.discover_aimpro_syllabus_sources(args.context, args.subject,
+                    json.loads(args.discovery.read_text()), request_id=args.request_id,
+                    search_client_factory=_aimpro_search_client).model_dump(mode='json')
             elif command == 'prepare-aimpro-syllabus-sources':
                 result = service.prepare_aimpro_syllabus_sources(args.context, args.subject, args.project,
                     json.loads(args.plan.read_text()), request_id=args.request_id,

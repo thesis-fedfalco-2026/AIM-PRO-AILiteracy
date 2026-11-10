@@ -13,7 +13,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 
 import {
-  API_PORT, COURSE_TEMPLATE, DATABASE, EXPORTS, ISSUER, PRISTINE, ROOT, SEED, STATE, STUDIO_URL, TELEMETRY_OFF, python,
+  API_PORT, COURSE_TEMPLATE, DATABASE, EXPORTS, ISSUER, JOBS, PRISTINE, ROOT, SEED, STATE, STUDIO_URL, TELEMETRY_OFF, python,
 } from './paths.mjs';
 
 if (!process.env.ALM_OIDC_CLIENT_SECRET) {
@@ -35,7 +35,7 @@ writeFileSync(COURSE_TEMPLATE, JSON.stringify({ format: 1, creators: ['admin'], 
 const shared = {
   ALM_STORE: DATABASE,
   ALM_POLICY_DIR: `${SEED}policies`,
-  ALM_JOBS_STORE: `${STATE}jobs.sqlite`,
+  ALM_JOBS_STORE: JOBS,
   ALM_AIMPRO_EXPORTS: EXPORTS,
 };
 const worker = spawn(python(), ['-m', 'tests.synthetic_worker', '--poll', '0.2'], {

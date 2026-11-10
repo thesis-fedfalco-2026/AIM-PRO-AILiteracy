@@ -4,7 +4,10 @@ The worker claims the oldest queued job, opens its context with the trusted
 policy (D10), runs the job kind's service method and records the outcome:
 ``PROPOSED`` with the pending proposal, ``REJECTED`` when the host refuses the
 command, ``FAILED`` when generation does not complete, ``ABANDONED`` when an
-administrator abandoned the request. Its content-free events go to the job's
+administrator abandoned the request. Source jobs (S09a2) propose nothing: a
+discovery is ``COMPLETED``, a preparation is ``AWAITING_CHOICE`` until the
+teacher accepts or declines it, and a Curator job never uses prepared sources
+that were not accepted. Its content-free events go to the job's
 event sink, recorded for the progress stream.
 """
 
@@ -27,8 +30,9 @@ from services.jobs.store import JobStore, StatusEvent
 from services.jobs.worker import JobEventSink
 from tests.authoring_cycle_fixtures import AUTH, trusted_policy
 from tests.seed import build_seed
-from tests.services.job_fixtures import (EXPORT, REQUIREMENT, SyntheticAgents, evaluator_command,
-                                         evaluator_job, export_directory, new_jobs_location, worker)
+from tests.services.job_fixtures import (EXPORT, REQUIREMENT, SyntheticAgents, discovery_job, evaluator_command,
+                                         evaluator_job, export_directory, export_ref, new_jobs_location,
+                                         prepared_syllabus_job, preparation_job, source_plan, worker)
 from tests.store_backends import block_network, new_store_location, on_both_backends
 
 
@@ -226,6 +230,105 @@ class CuratorJobTest(WorkerCase):
         self.assertEqual(self.worker.run_once().detail, 'The AIM-PRO export is not available to the worker')
 
 
+@on_both_backends
+class SourceJobTest(WorkerCase):
+    NOT_ACCEPTED = 'The prepared sources have not been accepted by the teacher'
+
+    def setUp(self):
+        super().setUp()
+        self.export = export_ref(self.agents.exports)
+
+    def prepare(self, request_id='job-sources', subject='admin'):
+        self.submit(request_id, preparation_job(self.export), subject=subject)
+        return self.worker.run_once()
+
+    def test_a_discovery_job_completes_with_the_excerpts_found_and_no_proposal(self):
+        before = self.pending()
+        self.submit('job-discovery', discovery_job('prompting', 'prompt clarity'))
+        done = self.worker.run_once()
+        self.assertEqual((done.status, done.proposal_refs, done.detail), ('COMPLETED', (), None))
+        self.assertEqual(self.statuses('job-discovery'), ['QUEUED', 'RUNNING', 'COMPLETED'])
+        self.assertEqual(self.agents.built, ['search-client'])
+        self.assertEqual(self.agents.searches, [('prompting', 3), ('prompt clarity', 3)])
+        self.assertEqual(self.request_result('job-discovery')['kind'], 'SOURCE_DISCOVERY')
+        self.assertEqual(self.pending(), before)
+
+    def test_a_preparation_job_awaits_the_teachers_choice(self):
+        before = self.pending()
+        export = (self.agents.exports / EXPORT).read_bytes()
+        done = self.prepare()
+        self.assertEqual((done.status, done.proposal_refs, done.detail), ('AWAITING_CHOICE', (), None))
+        self.assertEqual(self.statuses('job-sources'), ['QUEUED', 'RUNNING', 'AWAITING_CHOICE'])
+        self.assertEqual(self.agents.built, ['search-client'])
+        self.assertEqual(self.agents.fetches, [('chunk-1',)])
+        self.assertEqual(self.request_result('job-sources')['kind'], 'SOURCE_PREPARATION')
+        self.assertEqual(self.pending(), before)
+        self.assertEqual((self.agents.exports / EXPORT).read_bytes(), export)
+
+    # Acceptance: a replayed request id returns the same preparation and runs no retrieval again.
+    def test_a_preparation_already_recorded_under_the_request_id_runs_no_retrieval(self):
+        with LearningStore(self.location) as store:
+            recorded = self.service(store).prepare_aimpro_syllabus_sources(AUTH, 'admin',
+                self.agents.exports / EXPORT, source_plan(self.export), request_id='cli-sources',
+                search_client_factory=SyntheticAgents().search_client)
+        done = self.prepare('cli-sources')
+        self.assertEqual(done.status, 'AWAITING_CHOICE')
+        self.assertEqual((self.agents.built, self.agents.searches, self.agents.fetches), ([], [], []))
+        self.assertEqual(self.request_result('cli-sources'), recorded.model_dump(mode='json'))
+
+    # Acceptance: sources that were not accepted are never used by a Curator job.
+    def test_a_curator_job_never_uses_prepared_sources_that_were_not_accepted(self):
+        self.prepare('job-waiting')
+        self.prepare('job-declined')
+        self.jobs.transition(AUTH, 'job-declined', {'AWAITING_CHOICE'}, 'DECLINED')
+        with LearningStore(self.location) as store:
+            self.service(store).prepare_aimpro_syllabus_sources(AUTH, 'admin', self.agents.exports / EXPORT,
+                source_plan(self.export), request_id='cli-sources', search_client_factory=SyntheticAgents().search_client)
+        self.submit('job-discovery', discovery_job())
+        self.worker.run_once()
+        self.agents.built.clear()
+        before = self.pending()
+        for index, prepared in enumerate(('job-waiting', 'job-declined', 'cli-sources', 'job-discovery', 'missing')):
+            request_id = f'job-curator-{index}'
+            self.submit(request_id, prepared_syllabus_job(self.export, prepared))
+            done = self.worker.run_once()
+            with self.subTest(prepared=prepared):
+                self.assertEqual((done.status, done.detail), ('REJECTED', self.NOT_ACCEPTED))
+                self.assertIsNone(self.request_result(request_id))
+        self.assertEqual((self.agents.built, self.pending()), ([], before))
+
+    def test_sources_accepted_by_another_subject_are_not_used(self):
+        # A preparation job of another subject, driven to ACCEPTED by hand, names a request the admin made.
+        with LearningStore(self.location) as store:
+            self.service(store).prepare_aimpro_syllabus_sources(AUTH, 'admin', self.agents.exports / EXPORT,
+                source_plan(self.export), request_id='job-sources', search_client_factory=SyntheticAgents().search_client)
+        self.submit('job-sources', preparation_job(self.export), subject='someone-else')
+        self.jobs.claim()
+        self.jobs.transition(AUTH, 'job-sources', {'RUNNING'}, 'AWAITING_CHOICE')
+        self.jobs.transition(AUTH, 'job-sources', {'AWAITING_CHOICE'}, 'ACCEPTED')
+        self.submit('job-curator', prepared_syllabus_job(self.export, 'job-sources'))
+        done = self.worker.run_once()
+        self.assertEqual((done.status, done.detail), ('REJECTED', self.NOT_ACCEPTED))
+        self.assertIsNone(self.request_result('job-curator'))
+
+    def test_a_curator_job_on_accepted_sources_proposes_a_syllabus_without_a_new_search(self):
+        self.prepare()
+        self.jobs.transition(AUTH, 'job-sources', {'AWAITING_CHOICE'}, 'ACCEPTED')
+        searches = list(self.agents.searches)
+        self.agents.built.clear()
+        self.submit('job-curator', prepared_syllabus_job(self.export, 'job-sources'))
+        done = self.worker.run_once()
+        self.assertEqual(done.status, 'PROPOSED', done.detail)
+        self.assertEqual(self.pending()[0], done.proposal_refs[0])
+        self.assertEqual(self.agents.built, ['authoring'])
+        self.assertEqual(self.agents.searches, searches)
+
+    def test_a_worker_without_a_search_client_rejects_source_jobs(self):
+        self.worker.resources = self.worker.resources._replace(search_client=None)
+        self.submit('job-discovery', discovery_job())
+        self.assertEqual(self.worker.run_once().detail, 'Source retrieval is not available to the worker')
+
+
 class EmitCommand(Record):
     kind: Literal['emit-events']
 
@@ -297,13 +400,23 @@ class KindsTest(unittest.TestCase):
     def test_one_kind_per_generator_and_curator_command_named_as_the_cli(self):
         from learning.__main__ import parse_args
         self.assertEqual(set(KINDS), {'generate-project-assessments', 'generate-project-teacher',
-                                      'generate-project-trainer', 'generate-aimpro-syllabus'})
+                                      'generate-project-trainer', 'generate-aimpro-syllabus',
+                                      'discover-aimpro-syllabus-sources', 'prepare-aimpro-syllabus-sources'})
         base = ['--db', 'x', '--policy', 'p', '--subject', 's', '--context', 'c']
+        arguments = {'generate-aimpro-syllabus': ['x', '--source-scope', 's', '--query', 'q'],
+                     'discover-aimpro-syllabus-sources': ['--discovery', 'd'],
+                     'prepare-aimpro-syllabus-sources': ['x', '--plan', 'p']}
         for name in KINDS:
             with self.subTest(name):
-                self.assertEqual(parse_args([*base, name, 'x', '--request-id', 'r', '--source-scope', 's',
-                                             '--query', 'q'] if name == 'generate-aimpro-syllabus'
-                                            else [*base, name, 'x', '--request-id', 'r']).command, name)
+                self.assertEqual(parse_args([*base, name, *arguments.get(name, ['x']), '--request-id', 'r']).command,
+                                 name)
+
+    def test_a_preparation_names_the_export_its_plan_was_written_for(self):
+        from services.jobs.kinds import PreparationJob
+        export = {'name': EXPORT, 'sha256': 'a' * 64}
+        PreparationJob.model_validate(preparation_job(export))
+        with self.assertRaises(ValueError):
+            PreparationJob.model_validate({**preparation_job(export), 'project': {'name': EXPORT, 'sha256': 'b' * 64}})
 
     def test_the_syllabus_command_needs_exactly_one_grounding(self):
         from services.jobs.kinds import SyllabusJob

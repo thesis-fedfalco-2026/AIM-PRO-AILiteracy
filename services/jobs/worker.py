@@ -6,9 +6,13 @@ the job kind inside an ``agent_system.events`` run bound to the job's event
 sink. The outcome is recorded once:
 
 - ``PROPOSED``: the service recorded a pending proposal, linked from the job;
+- ``COMPLETED``: a source discovery recorded the excerpts it found (no proposal);
+- ``AWAITING_CHOICE``: a source preparation recorded its exact excerpts, which
+  the teacher accepts or declines (no proposal);
 - ``REJECTED``: the host refused the command before any model (stale base,
   authority, missing or changed export, invalid command); ``detail`` is the
-  core's fixed message, never input text;
+  core's fixed message, never input text; a Curator job naming prepared
+  sources that the teacher has not accepted is refused here;
 - ``FAILED``: generation did not complete, or an unexpected error;
 - ``ABANDONED``: an administrator abandoned the request while it ran.
 """
@@ -24,7 +28,7 @@ from agent_system import events
 from learning.policies import AuthorizationError
 from learning.service import ABANDONED_CONTENT
 from services.api_common.errors import ContextUnavailable
-from services.jobs.kinds import KINDS
+from services.jobs.kinds import KINDS, unaccepted_sources
 from services.jobs.store import JobRecord
 
 
@@ -56,6 +60,10 @@ def outcome(response) -> tuple[str, tuple, str | None]:
     """The job status, proposal references and detail of a service response."""
     if response.kind == 'PROPOSAL' and response.proposal_refs:
         return 'PROPOSED', tuple(response.proposal_refs), None
+    if response.kind == 'SOURCE_DISCOVERY':
+        return 'COMPLETED', (), None
+    if response.kind == 'SOURCE_PREPARATION':
+        return 'AWAITING_CHOICE', (), None
     if response.kind == 'FAILURE':
         if response.content == ABANDONED_CONTENT:
             return 'ABANDONED', (), None
@@ -96,6 +104,9 @@ class Worker:
         try:
             with self.contexts.open(job.context_id) as service:
                 service.authorize_jobs(job.context_id, job.subject_key)
+                refused = unaccepted_sources(self.jobs, job.context_id, job.subject_key, command)
+                if refused is not None:
+                    return 'REJECTED', (), refused
                 with events.run(sink, request_id=job.request_id, context_id=job.context_id):
                     response = kind.run(service, job.context_id, job.subject_key, job.request_id, command,
                                         self.resources)

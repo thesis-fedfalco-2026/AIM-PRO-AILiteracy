@@ -46,6 +46,20 @@ class SourcePlan(Record):
         return self
 
 
+class SourceDiscovery(Record):
+    """The queries a teacher runs to find excerpts for a source plan; no excerpt is selected yet."""
+    format: Literal['aimpro-source-discovery'] = 'aimpro-source-discovery'
+    format_version: Literal[1] = 1
+    source_scope: Text
+    queries: tuple[SourceQuery, ...] = Field(min_length=1, max_length=20)
+
+    @model_validator(mode='after')
+    def unique_queries(self):
+        if len({q.query for q in self.queries}) != len(self.queries):
+            raise ValueError('Discovery queries must be unique')
+        return self
+
+
 class QueryTrace(Record):
     query: SourceQuery
     evidence: CorpusEvidence
@@ -65,13 +79,13 @@ class RetrievalTrace(Record):
         return hashlib.sha256(canonical(self.model_dump(mode='json')).encode()).hexdigest()
 
 
-def collect_sources(plan, client):
-    plan = SourcePlan.model_validate(plan)
-    scope = SearchScope(mode='PREPARATION', source_scope_keys=(plan.source_scope,))
+def discover(queries, source_scope, client):
+    """Run each query in the PREPARATION scope; the evidence per query, the unique documents and resources, the hits."""
+    scope = SearchScope(mode='PREPARATION', source_scope_keys=(source_scope,))
     documents, resource_metadata, discoveries = {}, {}, []
     hits = 0
-    for query in plan.queries:
-        evidence = evidence_from_response(query.query, plan.source_scope, query.k,
+    for query in queries:
+        evidence = evidence_from_response(query.query, source_scope, query.k,
                                           client.search(query.query, query.k, scope=scope))
         discoveries.append(QueryTrace(query=query, evidence=evidence))
         for resource in evidence.resources:
@@ -85,6 +99,13 @@ def collect_sources(plan, client):
                 if doc.id in documents and documents[doc.id] != payload:
                     raise ValueError('Excerpt content or metadata conflicts across discovery queries')
                 documents[doc.id] = payload
+    return tuple(discoveries), documents, resource_metadata, hits
+
+
+def collect_sources(plan, client):
+    plan = SourcePlan.model_validate(plan)
+    scope = SearchScope(mode='PREPARATION', source_scope_keys=(plan.source_scope,))
+    discoveries, documents, resource_metadata, hits = discover(plan.queries, plan.source_scope, client)
     if any(resource_key(d.resource_id, d.resource_version) not in resource_metadata for d in plan.documents):
         raise ValueError('Every selected resource must be discovered by the recorded queries')
     refs = tuple(PreparationDocumentRef.model_validate(d.model_dump(include=set(PreparationDocumentRef.model_fields)))

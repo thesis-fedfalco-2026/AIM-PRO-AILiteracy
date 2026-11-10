@@ -133,7 +133,8 @@ class AuthoringConfigurationTest(unittest.TestCase):
         self.assertEqual(TestClient(identity_only).get('/contexts/x').status_code, 404)
 
     def test_every_authoring_module_is_registered(self):
-        self.assertEqual(REGISTRY.names, ('contexts', 'review', 'projects', 'releases', 'jobs', 'courses', 'exports'))
+        self.assertEqual(REGISTRY.names, ('contexts', 'review', 'projects', 'releases', 'jobs', 'courses', 'exports',
+                                          'sources'))
 
 
 class ModuleBoundaryTest(unittest.TestCase):

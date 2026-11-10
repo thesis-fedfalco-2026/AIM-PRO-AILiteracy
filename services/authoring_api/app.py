@@ -11,13 +11,13 @@ from services.api_common.contexts import ContextServices, PolicyDirectory
 from services.api_common.identity import IdentityMap, load_identity_map
 from services.api_common.registry import ConfigurationError, ModuleRegistry
 from services.api_common.settings import ApiSettings, AuthSettings
-from services.authoring_api import context_summary, courses, exports, jobs, projects, releases, review
+from services.authoring_api import context_summary, courses, exports, jobs, projects, releases, review, sources
 
 
 TITLE = 'ALM Authoring API'
-VERSION = '0.5.0'
+VERSION = '0.6.0'
 REGISTRY = ModuleRegistry((context_summary.MODULE, review.MODULE, projects.MODULE, releases.MODULE, jobs.MODULE,
-                           courses.MODULE, exports.MODULE))
+                           courses.MODULE, exports.MODULE, sources.MODULE))
 
 
 def create_app(settings: ApiSettings | None = None, *, transport: httpx.BaseTransport | None = None) -> FastAPI:

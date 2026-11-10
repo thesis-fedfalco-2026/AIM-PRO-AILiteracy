@@ -105,6 +105,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/contexts/{context_id}/aimpro-exports/{sha256}/targets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The learning targets and practices of a stored export, with quotable texts */
+        get: operations["read_targets_contexts__context_id__aimpro_exports__sha256__targets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/contexts/{context_id}/applications": {
         parameters: {
             query?: never;
@@ -163,7 +180,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** The jobs of a context, newest first, with their status */
+        get: operations["listing_contexts__context_id__jobs_get"];
         put?: never;
         /** Queue an agent job; the same request id and command return the same job, another command 409 */
         post: operations["queue_contexts__context_id__jobs_post"];
@@ -201,6 +219,23 @@ export interface paths {
         put?: never;
         /** Abandon a queued or interrupted job (administrators); 409 once the job has ended */
         post: operations["abandon_contexts__context_id__jobs__request_id__abandonment_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/contexts/{context_id}/jobs/{request_id}/choice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** The teacher's choice on prepared sources, once; only accepted sources ground a Curator job */
+        post: operations["choose_contexts__context_id__jobs__request_id__choice_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -301,6 +336,40 @@ export interface paths {
         };
         /** Receipts, the exact frozen closure and findings of this release (CLI show-release) */
         get: operations["release_inspection_contexts__context_id__resources__resource_id__versions__version__release_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/contexts/{context_id}/source-discoveries/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The excerpts a discovery job found, to pick a source plan from */
+        get: operations["discovery_contexts__context_id__source_discoveries__request_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/contexts/{context_id}/source-preparations/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The exact excerpts of a preparation job, for the teacher's choice */
+        get: operations["preparation_contexts__context_id__source_preparations__request_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -552,6 +621,53 @@ export interface components {
             review_payload_key: string;
             target: components["schemas"]["EntityRef"];
         };
+        /** DiscoveredExcerpt */
+        DiscoveredExcerpt: {
+            /** Content Sha256 */
+            content_sha256: string;
+            /** Document Id */
+            document_id: string;
+            /** Found By */
+            found_by: string[];
+            /** Licence */
+            licence: string;
+            /** Licence Verdict */
+            licence_verdict: string | null;
+            /** Resource Id */
+            resource_id: string;
+            /** Resource Version */
+            resource_version: string;
+            /** Text */
+            text: string;
+            /** Title */
+            title: string;
+            /** Uri */
+            uri: string;
+        };
+        /**
+         * DiscoveryJob
+         * @description Source discovery: ``learning discover-aimpro-syllabus-sources``; no model.
+         */
+        "DiscoveryJob-Input": {
+            discovery: components["schemas"]["SourceDiscovery"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "discover-aimpro-syllabus-sources";
+        };
+        /**
+         * DiscoveryJob
+         * @description Source discovery: ``learning discover-aimpro-syllabus-sources``; no model.
+         */
+        "DiscoveryJob-Output": {
+            discovery: components["schemas"]["SourceDiscovery"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "discover-aimpro-syllabus-sources";
+        };
         /** Entity */
         Entity: {
             /** Fields */
@@ -585,6 +701,20 @@ export interface components {
             request_id: string;
         };
         /**
+         * ExportObject
+         * @description An object of the export with the texts a coverage requirement may quote.
+         */
+        ExportObject: {
+            /** Class Name */
+            class_name: string;
+            /** Fields */
+            fields: {
+                [key: string]: string;
+            };
+            /** Id */
+            id: string;
+        };
+        /**
          * ExportReport
          * @description An accepted export: its name and digest for a Curator job, and what the scenario check found.
          */
@@ -612,6 +742,37 @@ export interface components {
             source_diagnostics: {
                 [key: string]: components["schemas"]["JsonValue"];
             }[];
+        };
+        /**
+         * ExportTarget
+         * @description A learning target with its practices: the anchors of a coverage requirement.
+         */
+        ExportTarget: {
+            /** Class Name */
+            class_name: string;
+            /** Fields */
+            fields: {
+                [key: string]: string;
+            };
+            /** Id */
+            id: string;
+            /** Practices */
+            practices: components["schemas"]["ExportObject"][];
+        };
+        /**
+         * ExportTargets
+         * @description The learning targets of a stored export's scenario, for the coverage requirements of a source plan.
+         */
+        ExportTargets: {
+            /** Competencies */
+            competencies: string;
+            export: components["schemas"]["AimproExport"];
+            /** Root Id */
+            root_id: string;
+            /** Scenario */
+            scenario: string;
+            /** Targets */
+            targets: components["schemas"]["ExportTarget"][];
         };
         /** Finding */
         Finding: {
@@ -694,12 +855,20 @@ export interface components {
             status: "ok";
         };
         /**
+         * JobList
+         * @description The jobs of a context, newest first.
+         */
+        JobList: {
+            /** Jobs */
+            jobs: components["schemas"]["JobView"][];
+        };
+        /**
          * JobRequest
          * @description A job command with the client's ``request_id``, the ALM idempotency key.
          */
         JobRequest: {
             /** Job */
-            job: components["schemas"]["AssessmentJob-Input"] | components["schemas"]["TeacherJob-Input"] | components["schemas"]["TrainerJob-Input"] | components["schemas"]["SyllabusJob"];
+            job: components["schemas"]["AssessmentJob-Input"] | components["schemas"]["TeacherJob-Input"] | components["schemas"]["TrainerJob-Input"] | components["schemas"]["SyllabusJob"] | components["schemas"]["DiscoveryJob-Input"] | components["schemas"]["PreparationJob-Input"];
             /** Request Id */
             request_id: string;
         };
@@ -715,7 +884,7 @@ export interface components {
             /** Detail */
             detail?: string | null;
             /** Job */
-            job: components["schemas"]["AssessmentJob-Output"] | components["schemas"]["TeacherJob-Output"] | components["schemas"]["TrainerJob-Output"] | components["schemas"]["SyllabusJob"];
+            job: components["schemas"]["AssessmentJob-Output"] | components["schemas"]["TeacherJob-Output"] | components["schemas"]["TrainerJob-Output"] | components["schemas"]["SyllabusJob"] | components["schemas"]["DiscoveryJob-Output"] | components["schemas"]["PreparationJob-Output"];
             /** Proposal Refs */
             proposal_refs: components["schemas"]["EntityRef"][];
             /** Request Id */
@@ -724,7 +893,7 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "QUEUED" | "RUNNING" | "PROPOSED" | "REJECTED" | "FAILED" | "ABANDONED";
+            status: "QUEUED" | "RUNNING" | "PROPOSED" | "REJECTED" | "FAILED" | "ABANDONED" | "COMPLETED" | "AWAITING_CHOICE" | "ACCEPTED" | "DECLINED";
             /** Subject Key */
             subject_key: string;
             /** Updated */
@@ -784,6 +953,81 @@ export interface components {
         PendingProposals: {
             /** Proposals */
             proposals: components["schemas"]["PendingProposal"][];
+        };
+        /**
+         * PreparationJob
+         * @description Source preparation: ``learning prepare-aimpro-syllabus-sources``; no model. Awaits the teacher's choice.
+         */
+        "PreparationJob-Input": {
+            /**
+             * Competencies
+             * @default elena_usecase_competencies
+             */
+            competencies: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "prepare-aimpro-syllabus-sources";
+            plan: components["schemas"]["SourcePlan"];
+            project: components["schemas"]["AimproExport"];
+            /** Root Id */
+            root_id?: string | null;
+            /**
+             * Scenario
+             * @default SCN01
+             */
+            scenario: string;
+        };
+        /**
+         * PreparationJob
+         * @description Source preparation: ``learning prepare-aimpro-syllabus-sources``; no model. Awaits the teacher's choice.
+         */
+        "PreparationJob-Output": {
+            /**
+             * Competencies
+             * @default elena_usecase_competencies
+             */
+            competencies: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "prepare-aimpro-syllabus-sources";
+            plan: components["schemas"]["SourcePlan"];
+            project: components["schemas"]["AimproExport"];
+            /** Root Id */
+            root_id?: string | null;
+            /**
+             * Scenario
+             * @default SCN01
+             */
+            scenario: string;
+        };
+        /** PreparedExcerpt */
+        PreparedExcerpt: {
+            /** Content Sha256 */
+            content_sha256: string;
+            /** Document Id */
+            document_id: string;
+            /** Licence */
+            licence: string;
+            /** Licence Verdict */
+            licence_verdict: string | null;
+            /** Limitations */
+            limitations: string[];
+            /** Purpose */
+            purpose: string;
+            /** Resource Id */
+            resource_id: string;
+            /** Resource Version */
+            resource_version: string;
+            /** Text */
+            text: string;
+            /** Title */
+            title: string;
+            /** Uri */
+            uri: string;
         };
         /**
          * ProjectInitializationRequest
@@ -968,6 +1212,57 @@ export interface components {
             subject_key: string;
         };
         /**
+         * SourceChoice
+         * @description The teacher's choice on prepared sources: only accepted sources ground a Curator job.
+         */
+        SourceChoice: {
+            /**
+             * Choice
+             * @enum {string}
+             */
+            choice: "ACCEPTED" | "DECLINED";
+        };
+        /**
+         * SourceDiscovery
+         * @description The queries a teacher runs to find excerpts for a source plan; no excerpt is selected yet.
+         */
+        SourceDiscovery: {
+            /**
+             * Format
+             * @default aimpro-source-discovery
+             * @constant
+             */
+            format: "aimpro-source-discovery";
+            /**
+             * Format Version
+             * @default 1
+             * @constant
+             */
+            format_version: 1;
+            /** Queries */
+            queries: components["schemas"]["SourceQuery"][];
+            /** Source Scope */
+            source_scope: string;
+        };
+        /**
+         * SourceDiscoveryView
+         * @description The excerpts the discovery queries found, each once, in the order they were found.
+         */
+        SourceDiscoveryView: {
+            /** Duplicate Hits */
+            duplicate_hits: number;
+            /** Excerpts */
+            excerpts: components["schemas"]["DiscoveredExcerpt"][];
+            /** Queries */
+            queries: components["schemas"]["SourceQuery"][];
+            /** Request Id */
+            request_id: string;
+            /** Source Scope */
+            source_scope: string;
+            /** Unique Documents */
+            unique_documents: number;
+        };
+        /**
          * SourceObject
          * @description Transport envelope, not a generated AIM-PRO domain class.
          */
@@ -996,6 +1291,70 @@ export interface components {
             references: {
                 [key: string]: string[];
             };
+        };
+        /** SourcePlan */
+        SourcePlan: {
+            /**
+             * Coverage Requirements
+             * @default []
+             */
+            coverage_requirements: components["schemas"]["CoverageRequirement"][];
+            /** Documents */
+            documents: components["schemas"]["SelectedExcerpt"][];
+            /**
+             * Format
+             * @default aimpro-source-plan
+             * @constant
+             */
+            format: "aimpro-source-plan";
+            /**
+             * Format Version
+             * @default 1
+             * @constant
+             */
+            format_version: 1;
+            /**
+             * Max Documents Per Resource
+             * @default 4
+             */
+            max_documents_per_resource: number;
+            /**
+             * Min Resources
+             * @default 1
+             */
+            min_resources: number;
+            /** Queries */
+            queries: components["schemas"]["SourceQuery"][];
+            /** Source Scope */
+            source_scope: string;
+            /** Source Sha256 */
+            source_sha256: string;
+        };
+        /**
+         * SourcePreparationView
+         * @description The exact excerpts of a preparation, for the teacher's choice, and the plan they were prepared from.
+         */
+        SourcePreparationView: {
+            /** Coverage Requirements */
+            coverage_requirements: components["schemas"]["CoverageRequirement"][];
+            /** Duplicate Hits */
+            duplicate_hits: number;
+            /** Excerpts */
+            excerpts: components["schemas"]["PreparedExcerpt"][];
+            /** Max Documents Per Resource */
+            max_documents_per_resource: number;
+            /** Min Resources */
+            min_resources: number;
+            /** Queries */
+            queries: components["schemas"]["SourceQuery"][];
+            /** Request Id */
+            request_id: string;
+            /** Source Scope */
+            source_scope: string;
+            /** Source Sha256 */
+            source_sha256: string;
+            /** Unique Documents */
+            unique_documents: number;
         };
         /** SourceQuery */
         SourceQuery: {
@@ -1655,6 +2014,87 @@ export interface operations {
             };
         };
     };
+    read_targets_contexts__context_id__aimpro_exports__sha256__targets_get: {
+        parameters: {
+            query?: {
+                competencies?: string;
+                root_id?: string | null;
+                scenario?: string;
+            };
+            header?: never;
+            path: {
+                context_id: string;
+                sha256: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExportTargets"];
+                };
+            };
+            /** @description No valid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not authorized, unmapped identity or missing CSRF token */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or the context is unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflict with the current state; reload and retry */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Invalid request or data */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Internal error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     apply_contexts__context_id__applications_post: {
         parameters: {
             query?: never;
@@ -1893,6 +2333,84 @@ export interface operations {
             };
         };
     };
+    listing_contexts__context_id__jobs_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                context_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobList"];
+                };
+            };
+            /** @description No valid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not authorized, unmapped identity or missing CSRF token */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or the context is unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflict with the current state; reload and retry */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Invalid request or data */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Internal error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     queue_contexts__context_id__jobs_post: {
         parameters: {
             query?: never;
@@ -2061,6 +2579,87 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobView"];
+                };
+            };
+            /** @description No valid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not authorized, unmapped identity or missing CSRF token */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or the context is unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflict with the current state; reload and retry */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Invalid request or data */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Internal error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    choose_contexts__context_id__jobs__request_id__choice_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                context_id: string;
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SourceChoice"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -2537,6 +3136,160 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReleaseInspection"];
+                };
+            };
+            /** @description No valid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not authorized, unmapped identity or missing CSRF token */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or the context is unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflict with the current state; reload and retry */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Invalid request or data */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Internal error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    discovery_contexts__context_id__source_discoveries__request_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                context_id: string;
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourceDiscoveryView"];
+                };
+            };
+            /** @description No valid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not authorized, unmapped identity or missing CSRF token */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or the context is unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflict with the current state; reload and retry */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Invalid request or data */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Internal error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    preparation_contexts__context_id__source_preparations__request_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                context_id: string;
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourcePreparationView"];
                 };
             };
             /** @description No valid session */

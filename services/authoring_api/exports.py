@@ -21,16 +21,18 @@ from pathlib import Path
 from typing import Annotated
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Path as PathParam, Query, Request
 from pydantic import JsonValue
 from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException
 
 from aimpro.contracts import Contracts
+from aimpro.didactic import targets
+from aimpro.lead import prepare_input
 from aimpro.validation import validate_scenario
 from learning.contracts import Record, Text
 from services.api_common.auth import Principal
-from services.api_common.contexts import WRITE_ERRORS, context_writer, open_context
+from services.api_common.contexts import READ_ERRORS, WRITE_ERRORS, context_reader, context_writer, open_context
 from services.api_common.registry import ApiModule
 from services.jobs.kinds import AimproExport
 
@@ -57,6 +59,31 @@ class ExportReport(Record):
     conforms: bool
     source_diagnostics: tuple[dict[str, JsonValue], ...]
     contract_findings: tuple[dict[str, JsonValue], ...]
+
+
+# The fields a coverage requirement may quote (``aimpro.syllabus_coverage.CoverageRequirement``).
+QUOTABLE = ('description', 'inPractice', 'rationale', 'contextDetails')
+
+
+class ExportObject(Record):
+    """An object of the export with the texts a coverage requirement may quote."""
+    id: Text
+    class_name: Text
+    fields: dict[str, str]
+
+
+class ExportTarget(ExportObject):
+    """A learning target with its practices: the anchors of a coverage requirement."""
+    practices: tuple[ExportObject, ...]
+
+
+class ExportTargets(Record):
+    """The learning targets of a stored export's scenario, for the coverage requirements of a source plan."""
+    export: AimproExport
+    scenario: Text
+    competencies: Text
+    root_id: Text
+    targets: tuple[ExportTarget, ...]
 
 
 def configure(app, settings) -> None:
@@ -138,6 +165,33 @@ def keep(directory: Path, content: bytes, scenario: str, competencies: str, root
                         source_diagnostics=tuple(source['diagnostics']), contract_findings=tuple(report['findings']))
 
 
+def _object(item) -> dict:
+    fields = {name: item.attributes[name] for name in QUOTABLE
+              if isinstance(item.attributes.get(name), str) and item.attributes[name].strip()}
+    return {'id': item.id, 'class_name': item.class_name, 'fields': fields}
+
+
+def export_targets(directory: Path, sha256: str, scenario: str, competencies: str,
+                   root_id: str | None) -> ExportTargets:
+    """The targets and practices of the stored export ``<sha256>.json``; 404 when it is not stored."""
+    path = Path(directory) / (sha256 + '.json')
+    if not path.is_file():
+        raise HTTPException(404, 'No stored export with this SHA-256')
+    try:
+        data = prepare_input(path, scenario=scenario, competencies=competencies, root_id=root_id)
+    except UNREADABLE:
+        raise ValueError(NO_SCENARIO) from None
+    if data.source.source_sha256 != sha256:
+        raise HTTPException(409, OTHER_BYTES)
+    index = {o.id: o for o in data.source.objects}
+    # ``targets`` refuses a scenario without targets or practices with its fixed reason.
+    found = targets(data)
+    return ExportTargets(export=AimproExport(name=path.name, sha256=sha256), scenario=scenario,
+                         competencies=competencies, root_id=data.source.root_id,
+                         targets=tuple(ExportTarget.model_validate({**_object(index[target]), 'practices': [
+                             _object(index[p]) for p in sorted(practices)]}) for target, practices in found.items()))
+
+
 router = APIRouter(tags=['exports'])
 
 FILE_BODY = {'requestBody': {'required': True, 'content': {
@@ -157,6 +211,18 @@ async def upload(context_id: str, request: Request,
     state = request.app.state
     content = await _content(request, state.export_max_bytes)
     return await run_in_threadpool(keep, state.aimpro_exports, content, scenario, competencies, root_id)
+
+
+@router.get('/contexts/{context_id}/aimpro-exports/{sha256}/targets', response_model=ExportTargets,
+            responses=READ_ERRORS, summary='The learning targets and practices of a stored export, with quotable texts')
+def read_targets(context_id: str, request: Request,
+                 sha256: Annotated[str, PathParam(pattern=r'^[0-9a-f]{64}$')],
+                 scenario: Annotated[str, Query(min_length=1, max_length=200)] = 'SCN01',
+                 competencies: Annotated[str, Query(min_length=1, max_length=200)] = 'elena_usecase_competencies',
+                 root_id: Annotated[str | None, Query(min_length=1, max_length=200)] = None,
+                 principal: Principal = Depends(context_reader)):
+    _authorize(request, context_id, principal.subject_key)
+    return export_targets(request.app.state.aimpro_exports, sha256, scenario, competencies, root_id)
 
 
 MODULE = ApiModule('exports', router)

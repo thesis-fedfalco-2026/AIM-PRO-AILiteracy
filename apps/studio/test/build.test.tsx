@@ -2,6 +2,7 @@ import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { selectedProjects } from '../src/features/course-build/projects';
+import { rowProblem, sourcePlan } from '../src/features/course-build/SourcesStep';
 import type { Entity } from '../src/features/review/reviewApi';
 import en from '../src/i18n/en.json';
 import type { Reply } from './harness';
@@ -24,6 +25,7 @@ const page = (context: unknown, entities: unknown[] = []) => ({
   'GET /auth/session': [signedIn],
   'GET /contexts/new-course': [summary(context, entities)],
   'GET /contexts/new-course/pending-proposals': [noPending],
+  'GET /contexts/new-course/jobs': [{ status: 200, body: { jobs: [] } }],
 });
 
 const EXPORT = { name: `${'a'.repeat(64)}.json`, sha256: 'a'.repeat(64) };
@@ -120,7 +122,7 @@ describe('building a course', () => {
     const link = await screen.findByRole('link', { name: en.build.curator.review });
     expect(link.getAttribute('href')).toBe('/studio/contexts/new-course/review/p-syllabus');
     expect(screen.getByText(en.build.curator.proposed)).toBeTruthy();
-    const queued = requests.filter((request) => request.url.endsWith('/jobs'));
+    const queued = requests.filter((request) => request.method === 'POST' && request.url.endsWith('/jobs'));
     expect(await queued[0]!.json()).toEqual({ request_id: 'request-1', job: job('QUEUED').job });
   });
 
@@ -197,6 +199,122 @@ describe('building a course', () => {
     await renderStudio(page(EMPTY), '/studio/contexts/new-course/build');
     expect((await screen.findByText(en.build.current)).nextElementSibling?.textContent).toBe(en.build.noSyllabus);
     expect(screen.queryByText(en.build.replaces)).toBeNull();
+  });
+});
+
+const EXCERPT = {
+  resource_id: 'wp3:test', resource_version: 'v1', document_id: 'chunk-1', content_sha256: 'c'.repeat(64),
+  title: 'Synthetic prompting guide', uri: 'https://example.org/guide', licence: 'CC-BY-4.0', licence_verdict: null,
+  text: 'Specify task, audience and tone.',
+};
+const QUERIES = [{ query: 'prompting', k: 10 }, { query: 'prompt clarity', k: 10 }];
+const DISCOVERY_VIEW = { request_id: 'request-1', source_scope: 'wp3', queries: QUERIES,
+  excerpts: [{ ...EXCERPT, found_by: ['prompting', 'prompt clarity'] }], unique_documents: 1, duplicate_hits: 1 };
+const DOCUMENT = { resource_id: 'wp3:test', resource_version: 'v1', document_id: 'chunk-1', content_sha256: 'c'.repeat(64),
+  purpose: 'Task, audience and tone.', limitations: ['Written for school teachers.', 'No assessment.'] };
+const PLAN = { format: 'aimpro-source-plan', format_version: 1, source_sha256: EXPORT.sha256, source_scope: 'wp3',
+  queries: QUERIES, documents: [DOCUMENT], min_resources: 1, max_documents_per_resource: 1, coverage_requirements: [] };
+const PREPARATION_VIEW = { request_id: 'request-2', source_scope: 'wp3', source_sha256: EXPORT.sha256, queries: QUERIES,
+  excerpts: [{ ...EXCERPT, licence_verdict: 'open', purpose: DOCUMENT.purpose, limitations: DOCUMENT.limitations }],
+  coverage_requirements: [], min_resources: 1, max_documents_per_resource: 1, unique_documents: 1, duplicate_hits: 1 };
+const sourceJob = (requestId: string, status: string, command: Record<string, unknown>) => ({
+  ...job(status), request_id: requestId, job: command,
+});
+const discovery = (status: string) => sourceJob('request-1', status, { kind: 'discover-aimpro-syllabus-sources',
+  discovery: { format: 'aimpro-source-discovery', format_version: 1, source_scope: 'wp3', queries: QUERIES } });
+const preparation = (status: string) => sourceJob('request-2', status, { kind: 'prepare-aimpro-syllabus-sources',
+  project: EXPORT, plan: PLAN, scenario: 'SCN01', competencies: 'elena_usecase_competencies' });
+const curatorOnSources = sourceJob('request-3', 'QUEUED', { kind: 'generate-aimpro-syllabus', project: EXPORT,
+  source_scope: 'wp3', prepared_sources: 'request-2', k: 5, scenario: 'SCN01', competencies: 'elena_usecase_competencies' });
+
+describe('preparing the sources', () => {
+  it('searches, picks an excerpt with its purpose and limitations, prepares it, accepts it and lets the Curator use it', async () => {
+    const { requests } = await renderStudio({
+      ...page(EMPTY),
+      'POST /contexts/new-course/aimpro-exports': [{ status: 200, body: REPORT }],
+      'POST /contexts/new-course/jobs': [{ status: 200, body: discovery('QUEUED') },
+        { status: 200, body: preparation('QUEUED') }, { status: 200, body: curatorOnSources }],
+      'GET /contexts/new-course/jobs/request-1': [{ status: 200, body: discovery('COMPLETED') }],
+      'GET /contexts/new-course/source-discoveries/request-1': [{ status: 200, body: DISCOVERY_VIEW }],
+      'GET /contexts/new-course/jobs/request-2': [{ status: 200, body: preparation('AWAITING_CHOICE') }],
+      'GET /contexts/new-course/source-preparations/request-2': [{ status: 200, body: PREPARATION_VIEW }],
+      'POST /contexts/new-course/jobs/request-2/choice': [{ status: 200, body: preparation('ACCEPTED') }],
+      'GET /contexts/new-course/jobs/request-3': [{ status: 200, body: { ...curatorOnSources, status: 'RUNNING' } }],
+    }, '/studio/contexts/new-course/build');
+    expect(await screen.findByText(en.build.jobs.none)).toBeTruthy();
+    fireEvent.change(screen.getByLabelText(en.build.upload.file), { target: { files: [new File(['{}'], 'm.json')] } });
+    fireEvent.click(screen.getByRole('button', { name: en.build.upload.submit }));
+    await screen.findByText(en.build.upload.stored);
+
+    fill(en.build.sources.scope, 'wp3');
+    fill(en.build.sources.queries, 'prompting\nprompt clarity\n');
+    fireEvent.click(screen.getByRole('button', { name: en.build.sources.search }));
+    const excerpt = within(await screen.findByTestId('discovered-excerpt'));
+    expect(excerpt.getByText('Found by: prompting, prompt clarity')).toBeTruthy();
+    expect(excerpt.getByText('Usage conditions: licence CC-BY-4.0; the corpus has no verdict on it, check it before use.'))
+      .toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: en.build.sources.prepare }));
+    expect(screen.getByText(en.build.sources.pickOne)).toBeTruthy();
+    fireEvent.click(excerpt.getByLabelText('Use excerpt 1'));
+    fireEvent.click(screen.getByRole('button', { name: en.build.sources.prepare }));
+    expect(screen.getByText(en.build.sources.purposeRequired)).toBeTruthy();
+    fireEvent.change(excerpt.getByLabelText(en.build.sources.purpose), { target: { value: DOCUMENT.purpose } });
+    fireEvent.change(excerpt.getByLabelText(en.build.sources.limitations),
+      { target: { value: 'Written for school teachers.\n\nNo assessment.' } });
+    fireEvent.click(screen.getByRole('button', { name: en.build.sources.prepare }));
+
+    const prepared = within(await screen.findByTestId('prepared-sources'));
+    expect(prepared.getByText('Usage conditions: licence CC-BY-4.0; the corpus verdict on it is “open”.')).toBeTruthy();
+    expect(prepared.getByText('Written for school teachers.; No assessment.')).toBeTruthy();
+    fireEvent.click(prepared.getByRole('button', { name: en.build.sources.accept }));
+    expect(await screen.findByText(en.build.sources.accepted)).toBeTruthy();
+
+    // The accepted sources are offered to the Curator, which needs no query for them.
+    expect((screen.getByLabelText(en.build.curator.fromSources) as HTMLInputElement).checked).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: en.build.curator.submit }));
+    expect(await screen.findByText(en.build.curator.running)).toBeTruthy();
+
+    const posted = requests.filter((request) => request.method === 'POST' && request.url.endsWith('/jobs'));
+    expect(await posted[0]!.json()).toEqual({ request_id: 'request-1', job: discovery('QUEUED').job });
+    expect(await posted[1]!.json()).toEqual({ request_id: 'request-2', job: preparation('QUEUED').job });
+    expect(await posted[2]!.json()).toEqual({ request_id: 'request-3', job: curatorOnSources.job });
+    const choice = requests.find((request) => request.url.endsWith('/choice'))!;
+    expect(choice.headers.get('X-CSRF-Token')).toBe(SESSION.csrf_token);
+    expect(await choice.json()).toEqual({ choice: 'ACCEPTED' });
+  });
+
+  it('resumes a preparation awaiting the choice from the list of jobs, and declines it', async () => {
+    const { requests } = await renderStudio({
+      ...page(EMPTY),
+      'GET /contexts/new-course/jobs': [{ status: 200, body: { jobs: [preparation('AWAITING_CHOICE'), discovery('COMPLETED')] } }],
+      'GET /contexts/new-course/source-preparations/request-2': [{ status: 200, body: PREPARATION_VIEW }],
+      'POST /contexts/new-course/jobs/request-2/choice': [{ status: 200, body: preparation('DECLINED') }],
+    }, '/studio/contexts/new-course/build');
+    const list = within(await screen.findByTestId('course-jobs'));
+    expect(list.getByText(/Preparation of the sources: waiting for your choice/)).toBeTruthy();
+    expect(list.getByText(/Search of the sources: done/)).toBeTruthy();
+    fireEvent.click(list.getByRole('button', { name: en.build.jobs.choose }));
+    const prepared = within(await screen.findByTestId('prepared-sources'));
+    fireEvent.click(prepared.getByRole('button', { name: en.build.sources.decline }));
+    expect(await screen.findByText(en.build.sources.declined)).toBeTruthy();
+    expect(await requests.find((request) => request.url.endsWith('/choice'))!.json()).toEqual({ choice: 'DECLINED' });
+    // Nothing was accepted: the Curator offers no prepared sources.
+    expect(screen.queryByLabelText(en.build.curator.fromSources)).toBeNull();
+  });
+
+  it('builds the plan from the picked excerpts and checks each quoted passage', () => {
+    const choices = { 'chunk-1': { picked: true, purpose: ' Task. ', limitations: 'One\n\n two ' } };
+    expect(sourcePlan(DISCOVERY_VIEW as never, EXPORT.sha256, choices, [])).toEqual({
+      ...PLAN, documents: [{ ...DOCUMENT, purpose: 'Task.', limitations: ['One', 'two'] }] });
+    const targets = { export: EXPORT, scenario: 'SCN01', competencies: 'c', root_id: 'r', targets: [{
+      id: 't', class_name: 'LearningTarget', fields: { description: 'Write a first prompt.' },
+      practices: [{ id: 'p', class_name: 'Practice', fields: { inPractice: 'Builds a reminder prompt live.' } }] }] };
+    const row = { target: 't', object: 'p', field: 'inPractice', quote: 'reminder prompt', actor: 'LEARNER' as const,
+      intent: 'PRACTICE' as const, action: 'Build one' };
+    expect(rowProblem(targets, row)).toBeNull();
+    expect(rowProblem(targets, { ...row, quote: 'invented text' })).toBe('quote');
+    expect(rowProblem(targets, { ...row, action: ' ' })).toBe('missing');
   });
 });
 

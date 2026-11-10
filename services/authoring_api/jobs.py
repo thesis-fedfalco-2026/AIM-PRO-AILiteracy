@@ -11,18 +11,25 @@ Progress is a server-sent-events stream: ``status`` events (``StatusEvent``)
 and ``progress`` events (``alm.event/1`` of ``agent_system.events``), with the
 event's sequence as ``id`` so that a client reconnects with ``Last-Event-ID``.
 Neither carries a command, a prompt, a document or a learner's text. The
-stream ends after the job's final status, or after ``job_stream_seconds``.
+stream ends once the job's run has ended (a final status, or a result awaiting
+the teacher's choice), or after ``job_stream_seconds``.
 
 An administrator abandons a job: a queued job is never started; a running job
 whose worker was interrupted has its ALM request abandoned, as the CLI
 ``abandon`` does.
+
+Source jobs (S09a2, D22) propose nothing. A source preparation awaits the
+choice of the teacher who prepared it: accepted or declined, once. A Curator
+job naming prepared sources is refused unless that teacher accepted them.
 """
 
 from __future__ import annotations
 
 import time
 
-from fastapi import APIRouter, Depends, Header, Request
+from typing import Literal
+
+from fastapi import APIRouter, Depends, Header, Query, Request
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 from starlette.exceptions import HTTPException
 
@@ -31,8 +38,8 @@ from services.api_common.auth import Principal
 from services.api_common.contexts import READ_ERRORS, WRITE_ERRORS, context_reader, context_writer, open_context
 from services.api_common.errors import stream_error_responses
 from services.api_common.registry import ApiModule
-from services.jobs.kinds import JobCommand
-from services.jobs.store import FINAL, JobRecord, JobStatus, JobStore, StatusEvent
+from services.jobs.kinds import JobCommand, unaccepted_sources
+from services.jobs.store import ENDED, JobRecord, JobStatus, JobStore, StatusEvent
 
 
 class JobRequest(Record):
@@ -52,6 +59,16 @@ class JobView(Record):
     detail: Text | None = None
     created: Text
     updated: Text
+
+
+class JobList(Record):
+    """The jobs of a context, newest first."""
+    jobs: tuple[JobView, ...]
+
+
+class SourceChoice(Record):
+    """The teacher's choice on prepared sources: only accepted sources ground a Curator job."""
+    choice: Literal['ACCEPTED', 'DECLINED']
 
 
 def _view(job: JobRecord) -> JobView:
@@ -96,9 +113,22 @@ def queue(context_id: str, body: JobRequest, request: Request, principal: Princi
     with open_context(request, context_id) as service:
         service.authorize_jobs(context_id, principal.subject_key)
     with _jobs(request) as jobs:
+        refused = unaccepted_sources(jobs, context_id, principal.subject_key, body.job)
+        if refused is not None:
+            raise HTTPException(409, refused)
         job, _ = jobs.submit(context_id, body.request_id, principal.subject_key, body.job.kind,
                              body.job.model_dump(mode='json'))
     return _view(job)
+
+
+@router.get('/contexts/{context_id}/jobs', response_model=JobList, responses=READ_ERRORS,
+            summary='The jobs of a context, newest first, with their status')
+def listing(context_id: str, request: Request, limit: int = Query(50, ge=1, le=200),
+            principal: Principal = Depends(context_reader)):
+    with open_context(request, context_id) as service:
+        service.authorize_jobs(context_id, principal.subject_key)
+    with _jobs(request) as jobs:
+        return JobList(jobs=tuple(_view(job) for job in jobs.list(context_id, limit)))
 
 
 @router.get('/contexts/{context_id}/jobs/{request_id}', response_model=JobView, responses=READ_ERRORS,
@@ -119,12 +149,12 @@ def follow(request: Request, job: JobRecord = Depends(job_follower),
         # A new connection each time: the generator may resume on another thread. The status is
         # read first, so a job that has ended has its final event in the batch read after it.
         with _jobs(request) as jobs:
-            ended = jobs.get(job.context_id, job.request_id).status in FINAL
+            ended = jobs.get(job.context_id, job.request_id).status in ENDED
             batch = jobs.events(job.context_id, job.request_id, after)
         for event in batch:
             after = event.seq
             yield ServerSentEvent(raw_data=event.data, event=event.name, id=str(event.seq))
-            if event.name == 'status' and StatusEvent.model_validate_json(event.data).status in FINAL:
+            if event.name == 'status' and StatusEvent.model_validate_json(event.data).status in ENDED:
                 return
         if ended or time.monotonic() >= deadline:
             return
@@ -150,6 +180,24 @@ def abandon(context_id: str, request_id: str, request: Request, principal: Princ
             if job.status == 'RUNNING' and current.status == 'ABANDONED':
                 return _view(current)
             raise HTTPException(409, 'The job has ended or changed; reload it')
+    return _view(done)
+
+
+@router.post('/contexts/{context_id}/jobs/{request_id}/choice', response_model=JobView, responses=WRITE_ERRORS,
+             summary="The teacher's choice on prepared sources, once; only accepted sources ground a Curator job")
+def choose(context_id: str, request_id: str, body: SourceChoice, request: Request,
+           principal: Principal = Depends(context_writer)):
+    with open_context(request, context_id) as service:
+        service.authorize_jobs(context_id, principal.subject_key)
+    with _jobs(request) as jobs:
+        job = _job(jobs, context_id, request_id)
+        if job.subject_key != principal.subject_key:
+            raise HTTPException(403, 'Only the teacher who prepared the sources chooses them')
+        if job.status == body.choice:
+            return _view(job)
+        done = jobs.transition(context_id, request_id, {'AWAITING_CHOICE'}, body.choice)
+        if done is None:
+            raise HTTPException(409, 'The job does not await a choice; reload it')
     return _view(done)
 
 

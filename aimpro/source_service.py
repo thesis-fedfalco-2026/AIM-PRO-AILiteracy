@@ -10,7 +10,7 @@ from pydantic import model_validator
 
 from aimpro.lead import LeadInput, prepare_input
 from aimpro.lead_types import Record, Text
-from aimpro.source_selection import RetrievalTrace, SourcePlan, collect_sources
+from aimpro.source_selection import QueryTrace, RetrievalTrace, SourceDiscovery, SourcePlan, collect_sources, discover
 from aimpro.retrieval import SourceSelectionSummary
 from aimpro.syllabus_coverage import validate_requirements
 from aimpro.syllabus import generate
@@ -47,6 +47,20 @@ class PreparedSources(Record):
         return hashlib.sha256(canonical(self.model_dump(mode='json')).encode()).hexdigest()
 
 
+class DiscoveredSources(Record):
+    """What the queries of a discovery found: the teacher picks the excerpts of a source plan from it."""
+    kind: Literal['SOURCE_DISCOVERY'] = 'SOURCE_DISCOVERY'
+    subject_key: Text
+    context: EntityRef
+    discovery: SourceDiscovery
+    discoveries: tuple[QueryTrace, ...]
+    unique_discovered_documents: int
+    duplicate_document_hits: int
+
+
+OPERATIONS = {'SOURCE_DISCOVERY': 'AIMPRO_SOURCE_DISCOVERY', 'SOURCE_PREPARATION': 'AIMPRO_SOURCE_PREPARATION'}
+
+
 def _context(service, context_id, subject_key, source_scope):
     context = service._context(context_id, subject_key)
     _authorize(context)
@@ -59,6 +73,8 @@ def _context(service, context_id, subject_key, source_scope):
 def _result(value):
     if value.get('kind') == 'SOURCE_PREPARATION':
         return PreparedSources.model_validate(value)
+    if value.get('kind') == 'SOURCE_DISCOVERY':
+        return DiscoveredSources.model_validate(value)
     return LearningResponse.model_validate(value)
 
 
@@ -85,14 +101,64 @@ def _fresh(service, context_id, subject_key, scope, root, project, source_sha256
     return context
 
 
-def _failed(service, owner, request_id, identity, error):
-    logging.getLogger('agent_system').warning('Selected-source authoring failed (%s)', type(error).__name__)
-    result = LearningResponse(kind='FAILURE', content='Selected-source authoring did not complete; no proposal was applied.')
+def _failed(service, owner, request_id, identity, error, *, operation='Selected-source authoring',
+            content='Selected-source authoring did not complete; no proposal was applied.'):
+    logging.getLogger('agent_system').warning('%s failed (%s)', operation, type(error).__name__)
+    result = LearningResponse(kind='FAILURE', content=content)
     try:
         service.store.finish_request(request_id, owner, result.model_dump(mode='json'))
     except StateConflict:
         return _cached(service, owner, request_id, identity)
     return result
+
+
+def discover_sources(service, context_id, subject_key, discovery, *, request_id, search_client_factory):
+    """Run the teacher's queries and record every excerpt found; no model, no entity, no proposal."""
+    discovery = SourceDiscovery.model_validate(discovery)
+    with service.store.write_transaction():
+        context = _context(service, context_id, subject_key, discovery.source_scope)
+        root = context.snapshot.context
+        request_id = LearningRequest(request_id=request_id, subject_key=subject_key, context_ref=root.ref,
+                                     text='Discover Curator sources', intent='CURATE').request_id
+        identity = {'operation': OPERATIONS['SOURCE_DISCOVERY'], 'subject_key': subject_key,
+                    'discovery': discovery.model_dump(mode='json')}
+        cached = _cached(service, context_id, request_id, identity)
+        if cached is not None:
+            return cached
+        _draft(context)
+        payload = canonical({'identity': identity, 'context': root.model_dump(mode='json')})
+        service.store.reserve_request(request_id, context_id, payload)
+    try:
+        discoveries, documents, _, hits = discover(discovery.queries, discovery.source_scope, search_client_factory())
+        result = DiscoveredSources(subject_key=subject_key, context=root.ref, discovery=discovery,
+                                   discoveries=discoveries, unique_discovered_documents=len(documents),
+                                   duplicate_document_hits=hits - len(documents))
+        with service.store.write_transaction():
+            _pending(service, context_id, request_id, payload)
+            current = _context(service, context_id, subject_key, discovery.source_scope)
+            _draft(current)
+            if current.snapshot.context.ref != root.ref:
+                raise StateConflict('Source request context changed')
+            service.store.finish_request(request_id, context_id, result.model_dump(mode='json'))
+        return result
+    except Exception as error:
+        return _failed(service, context_id, request_id, identity, error, operation='Source discovery',
+                       content='Source discovery did not complete; nothing was recorded for the course.')
+
+
+def source_request(service, context_id, subject_key, request_id, kind):
+    """The subject's completed discovery or preparation of this kind in the context; ``None`` otherwise."""
+    with service.store.read_transaction():
+        _authorize(service._context(context_id, subject_key))
+        row = service.store.request_record(request_id, context_id)
+    if row is None or row.result is None:
+        return None
+    identity = json.loads(row.payload).get('identity', {})
+    result = json.loads(row.result)
+    if (identity.get('operation') != OPERATIONS[kind] or identity.get('subject_key') != subject_key or
+            result.get('kind') != kind):
+        return None
+    return _result(result)
 
 
 def prepare_sources(service, context_id, subject_key, project, plan, *, request_id, search_client_factory,
@@ -107,7 +173,7 @@ def prepare_sources(service, context_id, subject_key, project, plan, *, request_
         if data.source.source_sha256 != plan.source_sha256:
             raise ValueError('Source plan does not identify the exact scenario export')
         validate_requirements(data, plan.coverage_requirements)
-        identity = {'operation': 'AIMPRO_SOURCE_PREPARATION', 'subject_key': subject_key,
+        identity = {'operation': OPERATIONS['SOURCE_PREPARATION'], 'subject_key': subject_key,
             'source_sha256': data.source.source_sha256, 'metamodel_fingerprint': data.metamodel_fingerprint,
             'root_id': data.source.root_id, 'plan': plan.model_dump(mode='json')}
         cached = _cached(service, context_id, request_id, identity)

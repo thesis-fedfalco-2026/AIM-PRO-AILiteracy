@@ -33,7 +33,7 @@ class OpenApiSnapshotTest(unittest.TestCase):
     def schema(self):
         return json.loads((SNAPSHOT_DIR / 'authoring.json').read_text(encoding='utf-8'))
 
-    def test_snapshot_lists_the_skeleton_read_only_authoring_review_job_course_and_export_endpoints(self):
+    def test_snapshot_lists_the_skeleton_read_only_authoring_review_job_course_export_and_source_endpoints(self):
         schema = self.schema()
         self.assertEqual(schema['info']['title'], 'ALM Authoring API')
         resource = '/contexts/{context_id}/resources/{resource_id}/versions/{version}'
@@ -47,9 +47,12 @@ class OpenApiSnapshotTest(unittest.TestCase):
                           '/contexts/{context_id}/projects': ['post'],
                           '/contexts/{context_id}/designs/{design_id}/versions/{version}/syllabus': ['get'],
                           resource + '/project-syllabus': ['get'], resource + '/release': ['get'],
-                          '/contexts/{context_id}/jobs': ['post'], job: ['get'], job + '/events': ['get'],
-                          job + '/abandonment': ['post'], '/courses': ['post'],
-                          '/contexts/{context_id}/aimpro-exports': ['post']})
+                          '/contexts/{context_id}/jobs': ['get', 'post'], job: ['get'], job + '/events': ['get'],
+                          job + '/abandonment': ['post'], job + '/choice': ['post'], '/courses': ['post'],
+                          '/contexts/{context_id}/aimpro-exports': ['post'],
+                          '/contexts/{context_id}/aimpro-exports/{sha256}/targets': ['get'],
+                          '/contexts/{context_id}/source-discoveries/{request_id}': ['get'],
+                          '/contexts/{context_id}/source-preparations/{request_id}': ['get']})
 
     def test_an_export_upload_is_the_raw_file(self):
         upload = self.schema()['paths']['/contexts/{context_id}/aimpro-exports']['post']
@@ -64,10 +67,11 @@ class OpenApiSnapshotTest(unittest.TestCase):
         self.assertEqual(list(stream['content']), ['text/event-stream'])
         commands = schema['components']['schemas']['JobRequest']['properties']['job']
         self.assertEqual(sorted(commands['discriminator']['mapping']),
-                         ['generate-aimpro-syllabus', 'generate-project-assessments',
-                          'generate-project-teacher', 'generate-project-trainer'])
+                         ['discover-aimpro-syllabus-sources', 'generate-aimpro-syllabus', 'generate-project-assessments',
+                          'generate-project-teacher', 'generate-project-trainer', 'prepare-aimpro-syllabus-sources'])
         self.assertEqual(schema['components']['schemas']['JobView']['properties']['status']['enum'],
-                         ['QUEUED', 'RUNNING', 'PROPOSED', 'REJECTED', 'FAILED', 'ABANDONED'])
+                         ['QUEUED', 'RUNNING', 'PROPOSED', 'REJECTED', 'FAILED', 'ABANDONED', 'COMPLETED',
+                          'AWAITING_CHOICE', 'ACCEPTED', 'DECLINED'])
 
     def test_every_error_response_documents_the_error_body(self):
         schema = self.schema()

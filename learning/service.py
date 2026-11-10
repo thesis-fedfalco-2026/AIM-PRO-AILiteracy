@@ -185,6 +185,15 @@ class LearningService:
         from aimpro.source_service import prepare_sources
         return prepare_sources(self, context_id, subject_key, project, plan, **kwargs)
 
+    def discover_aimpro_syllabus_sources(self, context_id, subject_key, discovery, **kwargs):
+        from aimpro.source_service import discover_sources
+        return discover_sources(self, context_id, subject_key, discovery, **kwargs)
+
+    def aimpro_source_request(self, context_id, subject_key, request_id, kind):
+        """The subject's completed ``SOURCE_DISCOVERY`` or ``SOURCE_PREPARATION`` under the request id, or ``None``."""
+        from aimpro.source_service import source_request
+        return source_request(self, context_id, subject_key, request_id, kind)
+
     def approved_aimpro_syllabus(self, context_id, subject_key, design):
         from aimpro.syllabus_state import resolve
         with self.store.read_transaction():

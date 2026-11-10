@@ -10,16 +10,37 @@ export type ExportReport = Schemas['ExportReport'];
 export type JobView = Schemas['JobView'];
 export type JobStatus = JobView['status'];
 export type ProjectProposal = Schemas['ProjectProposal'];
+export type SourceDiscovery = Schemas['SourceDiscoveryView'];
+export type SourcePreparation = Schemas['SourcePreparationView'];
+export type SourcePlan = Schemas['SourcePlan'];
+export type ExportTargets = Schemas['ExportTargets'];
+export type CoverageRequirement = Schemas['CoverageRequirement'];
+export type AimproExport = ExportReport['export'];
 
 /** The statuses after which a job never changes again. */
-export const FINAL_STATUSES: readonly JobStatus[] = ['PROPOSED', 'REJECTED', 'FAILED', 'ABANDONED'];
+export const FINAL_STATUSES: readonly JobStatus[] = [
+  'PROPOSED', 'REJECTED', 'FAILED', 'ABANDONED', 'COMPLETED', 'ACCEPTED', 'DECLINED',
+];
+/** The statuses after which the worker is done with a job: final, or awaiting the teacher's choice. */
+export const ENDED_STATUSES: readonly JobStatus[] = [...FINAL_STATUSES, 'AWAITING_CHOICE'];
 
-export interface CuratorCommand {
-  export: ExportReport['export'];
+export const DISCOVERY = 'discover-aimpro-syllabus-sources';
+export const PREPARATION = 'prepare-aimpro-syllabus-sources';
+export const CURATOR = 'generate-aimpro-syllabus';
+
+/** The Curator grounded by a search query, or by prepared sources that the teacher accepted. */
+export type CuratorCommand = {
+  export: AimproExport;
   scenario: string;
   competencies: string;
   sourceScope: string;
-  query: string;
+} & ({ query: string } | { preparedSources: string });
+
+export interface PreparationCommand {
+  export: AimproExport;
+  scenario: string;
+  competencies: string;
+  plan: SourcePlan;
 }
 
 /** The steps that start a course: create it, upload its AIM-PRO model, draft its syllabus, initialize its project. */
@@ -31,6 +52,19 @@ export interface BuildApi {
   /** Queue the Curator on an uploaded export; the same request id returns the same job. */
   queueCurator(contextId: string, csrfToken: string, requestId: string, command: CuratorCommand): Promise<JobView>;
   readJob(contextId: string, requestId: string): Promise<JobView>;
+  /** The jobs of the course, newest first. */
+  listJobs(contextId: string): Promise<JobView[]>;
+  /** Queue a search of the course's sources; nothing is selected or used yet. */
+  queueDiscovery(contextId: string, csrfToken: string, requestId: string,
+    command: { sourceScope: string; queries: { query: string; k: number }[] }): Promise<JobView>;
+  readDiscovery(contextId: string, requestId: string): Promise<SourceDiscovery>;
+  /** Queue the preparation of the excerpts a teacher picked; it then awaits the teacher's choice. */
+  queuePreparation(contextId: string, csrfToken: string, requestId: string, command: PreparationCommand): Promise<JobView>;
+  readPreparation(contextId: string, requestId: string): Promise<SourcePreparation>;
+  /** Accept or decline prepared sources; only accepted sources ground a Curator job. */
+  chooseSources(contextId: string, csrfToken: string, requestId: string, choice: 'ACCEPTED' | 'DECLINED'): Promise<JobView>;
+  /** The learning targets and practices of an uploaded export, for coverage requirements. */
+  exportTargets(contextId: string, exported: AimproExport, scenario: string, competencies: string): Promise<ExportTargets>;
   /** The exact approved syllabus of the course's current outline. */
   approvedSyllabus(contextId: string, design: EntityRef): Promise<EntityRef>;
   /** Propose a project from that syllabus; the same request id replays the same proposal. */
@@ -76,14 +110,15 @@ export function createBuildApi(client: AuthoringClient): BuildApi {
     },
 
     async queueCurator(contextId, csrfToken, requestId, command) {
+      const grounding = 'query' in command ? { query: command.query } : { prepared_sources: command.preparedSources };
       return settle(() => client.POST('/contexts/{context_id}/jobs', {
         params: { path: { context_id: contextId } },
         headers: writing(csrfToken),
         body: {
           request_id: requestId,
           job: {
-            kind: 'generate-aimpro-syllabus', project: command.export, source_scope: command.sourceScope,
-            query: command.query, k: 5, scenario: command.scenario, competencies: command.competencies,
+            kind: CURATOR, project: command.export, source_scope: command.sourceScope, ...grounding, k: 5,
+            scenario: command.scenario, competencies: command.competencies,
           },
         },
       }));
@@ -92,6 +127,62 @@ export function createBuildApi(client: AuthoringClient): BuildApi {
     async readJob(contextId, requestId) {
       return settle(() => client.GET('/contexts/{context_id}/jobs/{request_id}', {
         params: { path: { context_id: contextId, request_id: requestId } },
+      }));
+    },
+
+    async listJobs(contextId) {
+      const listed = await settle(() => client.GET('/contexts/{context_id}/jobs', {
+        params: { path: { context_id: contextId } },
+      }));
+      return listed.jobs;
+    },
+
+    async queueDiscovery(contextId, csrfToken, requestId, { sourceScope, queries }) {
+      return settle(() => client.POST('/contexts/{context_id}/jobs', {
+        params: { path: { context_id: contextId } },
+        headers: writing(csrfToken),
+        body: { request_id: requestId, job: {
+          kind: DISCOVERY,
+          discovery: { format: 'aimpro-source-discovery', format_version: 1, source_scope: sourceScope, queries },
+        } },
+      }));
+    },
+
+    async readDiscovery(contextId, requestId) {
+      return settle(() => client.GET('/contexts/{context_id}/source-discoveries/{request_id}', {
+        params: { path: { context_id: contextId, request_id: requestId } },
+      }));
+    },
+
+    async queuePreparation(contextId, csrfToken, requestId, command) {
+      return settle(() => client.POST('/contexts/{context_id}/jobs', {
+        params: { path: { context_id: contextId } },
+        headers: writing(csrfToken),
+        body: {
+          request_id: requestId,
+          job: { kind: PREPARATION, project: command.export, plan: command.plan, scenario: command.scenario,
+            competencies: command.competencies },
+        },
+      }));
+    },
+
+    async readPreparation(contextId, requestId) {
+      return settle(() => client.GET('/contexts/{context_id}/source-preparations/{request_id}', {
+        params: { path: { context_id: contextId, request_id: requestId } },
+      }));
+    },
+
+    async chooseSources(contextId, csrfToken, requestId, choice) {
+      return settle(() => client.POST('/contexts/{context_id}/jobs/{request_id}/choice', {
+        params: { path: { context_id: contextId, request_id: requestId } },
+        headers: writing(csrfToken),
+        body: { choice },
+      }));
+    },
+
+    async exportTargets(contextId, exported, scenario, competencies) {
+      return settle(() => client.GET('/contexts/{context_id}/aimpro-exports/{sha256}/targets', {
+        params: { path: { context_id: contextId, sha256: exported.sha256 }, query: { scenario, competencies } },
       }));
     },
 

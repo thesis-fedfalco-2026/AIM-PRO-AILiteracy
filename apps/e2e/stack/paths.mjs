@@ -11,6 +11,7 @@ export const SEED = `${STATE}seed/`;
 export const DATABASE = `${SEED}alm.sqlite`;
 /** Uploaded AIM-PRO exports, shared by the API and the synthetic worker (S09a). */
 export const EXPORTS = `${STATE}exports/`;
+export const JOBS = `${STATE}jobs.sqlite`;
 export const COURSE_TEMPLATE = `${STATE}course-template.json`;
 /** The AIM-PRO export the fixtures use; the browser test uploads it. */
 export const AIMPRO_EXPORT = `${ROOT}docs/resources/aimpro-megamodel-2026-11-02.json`;
