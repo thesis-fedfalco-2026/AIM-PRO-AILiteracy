@@ -90,6 +90,19 @@ syllabus unit, so downstream Evaluator tasks can use that exact approved context
 Human decisions/application, project initialization and learner resource bindings
 remain separate. No schema migration or external metamodel/export edits occur.
 
+## From the studio (S09a2)
+
+Since S09a2 the same operations run as agent jobs, and a third one comes
+first: **discovery** (`discover-aimpro-syllabus-sources --discovery FILE
+--request-id ID`, a `SourceDiscovery` with `source_scope` and 1–20 unique
+queries). It records every excerpt the queries found, so that a teacher can
+pick the excerpts of the plan without knowing their ids beforehand; it builds
+no model and selects nothing. A preparation queued from the studio then awaits
+the teacher's choice, and a Curator **job** uses only a preparation the teacher
+accepted (see "Source preparation as a job (S09a2)" in
+[role applications](../architecture/role-applications.md)). The CLI commands
+above do not consult that choice: they remain an operator path.
+
 ## SCN01 package prepared on 3 November 2026
 
 Ignored directory: `.cache/aimpro-examples/curator/scn01-selected-sources-1/`.

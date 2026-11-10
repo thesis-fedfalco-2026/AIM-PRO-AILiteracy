@@ -5,7 +5,9 @@ idempotency key: submitting the same command again returns the same job, a
 different command under the same id is a conflict. Status changes go one way
 (``QUEUED`` → ``RUNNING`` → a final status, or ``ABANDONED``) and each one is
 recorded as a ``status`` event, in the same transaction, next to the
-``progress`` events of the run.
+``progress`` events of the run. A source preparation ends its run awaiting the
+teacher's choice (S09a2, D22), which then moves it to ``ACCEPTED`` or
+``DECLINED``, once.
 """
 
 import json
@@ -18,7 +20,7 @@ import unittest
 from agent_system.events import Event
 from learning.contracts import EntityRef
 from learning.store import LearningStore, StateConflict
-from services.jobs.store import FINAL, JobStore, StatusEvent
+from services.jobs.store import CHOICES, ENDED, FINAL, JobStore, StatusEvent
 from tests.store_backends import block_network, on_both_backends
 from tests.services.job_fixtures import new_jobs_location
 
@@ -140,16 +142,52 @@ class JobStoreTest(unittest.TestCase):
                          StatusEvent(status='PROPOSED', proposal_refs=(PROPOSAL,)))
 
     def test_final_statuses_never_change(self):
-        self.assertEqual(FINAL, {'PROPOSED', 'REJECTED', 'FAILED', 'ABANDONED'})
+        self.assertEqual(FINAL, {'PROPOSED', 'REJECTED', 'FAILED', 'ABANDONED', 'COMPLETED', 'ACCEPTED', 'DECLINED'})
+        self.assertEqual(ENDED, FINAL | {'AWAITING_CHOICE'})
         for index, status in enumerate(sorted(FINAL)):
             request_id = f'r{index}'
             self.submit(request_id)
             self.jobs.transition('c1', request_id, {'QUEUED'}, 'RUNNING')
-            self.jobs.transition('c1', request_id, {'RUNNING'}, status)
-            for target in ('RUNNING', *FINAL):
+            if status in CHOICES:
+                self.jobs.transition('c1', request_id, {'RUNNING'}, 'AWAITING_CHOICE')
+                self.jobs.transition('c1', request_id, {'AWAITING_CHOICE'}, status)
+            else:
+                self.jobs.transition('c1', request_id, {'RUNNING'}, status)
+            for current, target in [*((({'QUEUED', 'RUNNING'}, t) for t in ('RUNNING', 'AWAITING_CHOICE', *FINAL)
+                                          if t not in CHOICES)),
+                                    *(({'AWAITING_CHOICE'}, t) for t in CHOICES)]:
                 with self.subTest(status=status, target=target):
-                    self.assertIsNone(self.jobs.transition('c1', request_id, {'QUEUED', 'RUNNING'}, target))
+                    self.assertIsNone(self.jobs.transition('c1', request_id, current, target))
             self.assertEqual(self.jobs.get('c1', request_id).status, status)
+
+    def test_a_run_awaiting_the_choice_is_accepted_or_declined_once(self):
+        for request_id, choice in (('r1', 'ACCEPTED'), ('r2', 'DECLINED')):
+            self.submit(request_id)
+            self.jobs.claim()
+            waiting = self.jobs.transition('c1', request_id, {'RUNNING'}, 'AWAITING_CHOICE')
+            self.assertEqual((waiting.status, waiting.proposal_refs, waiting.detail), ('AWAITING_CHOICE', (), None))
+            # The run has ended: it is never claimed or ended again by a worker.
+            self.assertIsNone(self.jobs.claim())
+            self.assertIsNone(self.jobs.transition('c1', request_id, {'QUEUED', 'RUNNING'}, 'ABANDONED'))
+            chosen = self.jobs.transition('c1', request_id, {'AWAITING_CHOICE'}, choice)
+            self.assertEqual(chosen.status, choice)
+            for other in ('ACCEPTED', 'DECLINED'):
+                with self.subTest(choice=choice, other=other):
+                    self.assertIsNone(self.jobs.transition('c1', request_id, {'AWAITING_CHOICE'}, other))
+            self.assertEqual(self.statuses(request_id=request_id), ['QUEUED', 'RUNNING', 'AWAITING_CHOICE', choice])
+
+    def test_the_jobs_of_a_context_are_listed_newest_first(self):
+        for request_id in ('r1', 'r2', 'r3'):
+            self.submit(request_id)
+        self.submit('r4', context_id='c2')
+        self.jobs.claim()
+        listed = self.jobs.list('c1')
+        self.assertEqual([j.request_id for j in listed], ['r3', 'r2', 'r1'])
+        self.assertEqual(listed[2], self.jobs.get('c1', 'r1'))
+        self.assertEqual([j.request_id for j in self.jobs.list('c1', limit=2)], ['r3', 'r2'])
+        self.assertEqual(self.jobs.list('c3'), ())
+        with self.assertRaises(ValueError):
+            self.jobs.list('c1', limit=0)
 
     def test_a_transition_refuses_unknown_statuses_and_jobs(self):
         self.submit()
@@ -157,6 +195,12 @@ class JobStoreTest(unittest.TestCase):
             self.jobs.transition('c1', 'r1', {'QUEUED'}, 'DONE')
         with self.assertRaises(ValueError):
             self.jobs.transition('c1', 'r1', {'QUEUED'}, 'QUEUED')
+        # Only the teacher's choice ends a run awaiting it, and nothing else is a choice.
+        for current, status in (({'RUNNING'}, 'ACCEPTED'), ({'QUEUED', 'RUNNING'}, 'DECLINED'),
+                                ({'AWAITING_CHOICE'}, 'PROPOSED'), ({'AWAITING_CHOICE'}, 'ABANDONED'),
+                                ({'AWAITING_CHOICE', 'RUNNING'}, 'ACCEPTED')):
+            with self.subTest(current=current, status=status), self.assertRaises(ValueError):
+                self.jobs.transition('c1', 'r1', current, status)
         self.assertIsNone(self.jobs.transition('c1', 'missing', {'QUEUED'}, 'ABANDONED'))
 
     def test_a_queued_job_can_be_abandoned_and_is_never_claimed(self):

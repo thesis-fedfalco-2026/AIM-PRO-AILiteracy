@@ -537,6 +537,123 @@
         "title": "DecisionRequest",
         "type": "object"
       },
+      "DiscoveredExcerpt": {
+        "additionalProperties": false,
+        "properties": {
+          "content_sha256": {
+            "minLength": 1,
+            "title": "Content Sha256",
+            "type": "string"
+          },
+          "document_id": {
+            "minLength": 1,
+            "title": "Document Id",
+            "type": "string"
+          },
+          "found_by": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Found By",
+            "type": "array"
+          },
+          "licence": {
+            "minLength": 1,
+            "title": "Licence",
+            "type": "string"
+          },
+          "licence_verdict": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Licence Verdict"
+          },
+          "resource_id": {
+            "minLength": 1,
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "resource_version": {
+            "minLength": 1,
+            "title": "Resource Version",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "title": {
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "uri": {
+            "minLength": 1,
+            "title": "Uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "resource_id",
+          "resource_version",
+          "document_id",
+          "content_sha256",
+          "title",
+          "uri",
+          "licence",
+          "licence_verdict",
+          "text",
+          "found_by"
+        ],
+        "title": "DiscoveredExcerpt",
+        "type": "object"
+      },
+      "DiscoveryJob-Input": {
+        "additionalProperties": false,
+        "description": "Source discovery: ``learning discover-aimpro-syllabus-sources``; no model.",
+        "properties": {
+          "discovery": {
+            "$ref": "#/components/schemas/SourceDiscovery"
+          },
+          "kind": {
+            "const": "discover-aimpro-syllabus-sources",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "discovery"
+        ],
+        "title": "DiscoveryJob",
+        "type": "object"
+      },
+      "DiscoveryJob-Output": {
+        "additionalProperties": false,
+        "description": "Source discovery: ``learning discover-aimpro-syllabus-sources``; no model.",
+        "properties": {
+          "discovery": {
+            "$ref": "#/components/schemas/SourceDiscovery"
+          },
+          "kind": {
+            "const": "discover-aimpro-syllabus-sources",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "discovery"
+        ],
+        "title": "DiscoveryJob",
+        "type": "object"
+      },
       "Entity": {
         "additionalProperties": false,
         "properties": {
@@ -636,6 +753,36 @@
         "title": "ErrorBody",
         "type": "object"
       },
+      "ExportObject": {
+        "additionalProperties": false,
+        "description": "An object of the export with the texts a coverage requirement may quote.",
+        "properties": {
+          "class_name": {
+            "minLength": 1,
+            "title": "Class Name",
+            "type": "string"
+          },
+          "fields": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Fields",
+            "type": "object"
+          },
+          "id": {
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "class_name",
+          "fields"
+        ],
+        "title": "ExportObject",
+        "type": "object"
+      },
       "ExportReport": {
         "additionalProperties": false,
         "description": "An accepted export: its name and digest for a Curator job, and what the scenario check found.",
@@ -709,6 +856,84 @@
           "contract_findings"
         ],
         "title": "ExportReport",
+        "type": "object"
+      },
+      "ExportTarget": {
+        "additionalProperties": false,
+        "description": "A learning target with its practices: the anchors of a coverage requirement.",
+        "properties": {
+          "class_name": {
+            "minLength": 1,
+            "title": "Class Name",
+            "type": "string"
+          },
+          "fields": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Fields",
+            "type": "object"
+          },
+          "id": {
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "practices": {
+            "items": {
+              "$ref": "#/components/schemas/ExportObject"
+            },
+            "title": "Practices",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "class_name",
+          "fields",
+          "practices"
+        ],
+        "title": "ExportTarget",
+        "type": "object"
+      },
+      "ExportTargets": {
+        "additionalProperties": false,
+        "description": "The learning targets of a stored export's scenario, for the coverage requirements of a source plan.",
+        "properties": {
+          "competencies": {
+            "minLength": 1,
+            "title": "Competencies",
+            "type": "string"
+          },
+          "export": {
+            "$ref": "#/components/schemas/AimproExport"
+          },
+          "root_id": {
+            "minLength": 1,
+            "title": "Root Id",
+            "type": "string"
+          },
+          "scenario": {
+            "minLength": 1,
+            "title": "Scenario",
+            "type": "string"
+          },
+          "targets": {
+            "items": {
+              "$ref": "#/components/schemas/ExportTarget"
+            },
+            "title": "Targets",
+            "type": "array"
+          }
+        },
+        "required": [
+          "export",
+          "scenario",
+          "competencies",
+          "root_id",
+          "targets"
+        ],
+        "title": "ExportTargets",
         "type": "object"
       },
       "Finding": {
@@ -888,6 +1113,24 @@
         "title": "HealthView",
         "type": "object"
       },
+      "JobList": {
+        "additionalProperties": false,
+        "description": "The jobs of a context, newest first.",
+        "properties": {
+          "jobs": {
+            "items": {
+              "$ref": "#/components/schemas/JobView"
+            },
+            "title": "Jobs",
+            "type": "array"
+          }
+        },
+        "required": [
+          "jobs"
+        ],
+        "title": "JobList",
+        "type": "object"
+      },
       "JobRequest": {
         "additionalProperties": false,
         "description": "A job command with the client's ``request_id``, the ALM idempotency key.",
@@ -895,10 +1138,12 @@
           "job": {
             "discriminator": {
               "mapping": {
+                "discover-aimpro-syllabus-sources": "#/components/schemas/DiscoveryJob-Input",
                 "generate-aimpro-syllabus": "#/components/schemas/SyllabusJob",
                 "generate-project-assessments": "#/components/schemas/AssessmentJob-Input",
                 "generate-project-teacher": "#/components/schemas/TeacherJob-Input",
-                "generate-project-trainer": "#/components/schemas/TrainerJob-Input"
+                "generate-project-trainer": "#/components/schemas/TrainerJob-Input",
+                "prepare-aimpro-syllabus-sources": "#/components/schemas/PreparationJob-Input"
               },
               "propertyName": "kind"
             },
@@ -914,6 +1159,12 @@
               },
               {
                 "$ref": "#/components/schemas/SyllabusJob"
+              },
+              {
+                "$ref": "#/components/schemas/DiscoveryJob-Input"
+              },
+              {
+                "$ref": "#/components/schemas/PreparationJob-Input"
               }
             ],
             "title": "Job"
@@ -960,10 +1211,12 @@
           "job": {
             "discriminator": {
               "mapping": {
+                "discover-aimpro-syllabus-sources": "#/components/schemas/DiscoveryJob-Output",
                 "generate-aimpro-syllabus": "#/components/schemas/SyllabusJob",
                 "generate-project-assessments": "#/components/schemas/AssessmentJob-Output",
                 "generate-project-teacher": "#/components/schemas/TeacherJob-Output",
-                "generate-project-trainer": "#/components/schemas/TrainerJob-Output"
+                "generate-project-trainer": "#/components/schemas/TrainerJob-Output",
+                "prepare-aimpro-syllabus-sources": "#/components/schemas/PreparationJob-Output"
               },
               "propertyName": "kind"
             },
@@ -979,6 +1232,12 @@
               },
               {
                 "$ref": "#/components/schemas/SyllabusJob"
+              },
+              {
+                "$ref": "#/components/schemas/DiscoveryJob-Output"
+              },
+              {
+                "$ref": "#/components/schemas/PreparationJob-Output"
               }
             ],
             "title": "Job"
@@ -1002,7 +1261,11 @@
               "PROPOSED",
               "REJECTED",
               "FAILED",
-              "ABANDONED"
+              "ABANDONED",
+              "COMPLETED",
+              "AWAITING_CHOICE",
+              "ACCEPTED",
+              "DECLINED"
             ],
             "title": "Status",
             "type": "string"
@@ -1170,6 +1433,186 @@
           "proposals"
         ],
         "title": "PendingProposals",
+        "type": "object"
+      },
+      "PreparationJob-Input": {
+        "additionalProperties": false,
+        "description": "Source preparation: ``learning prepare-aimpro-syllabus-sources``; no model. Awaits the teacher's choice.",
+        "properties": {
+          "competencies": {
+            "default": "elena_usecase_competencies",
+            "minLength": 1,
+            "title": "Competencies",
+            "type": "string"
+          },
+          "kind": {
+            "const": "prepare-aimpro-syllabus-sources",
+            "title": "Kind",
+            "type": "string"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/SourcePlan"
+          },
+          "project": {
+            "$ref": "#/components/schemas/AimproExport"
+          },
+          "root_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Root Id"
+          },
+          "scenario": {
+            "default": "SCN01",
+            "minLength": 1,
+            "title": "Scenario",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "project",
+          "plan"
+        ],
+        "title": "PreparationJob",
+        "type": "object"
+      },
+      "PreparationJob-Output": {
+        "additionalProperties": false,
+        "description": "Source preparation: ``learning prepare-aimpro-syllabus-sources``; no model. Awaits the teacher's choice.",
+        "properties": {
+          "competencies": {
+            "default": "elena_usecase_competencies",
+            "minLength": 1,
+            "title": "Competencies",
+            "type": "string"
+          },
+          "kind": {
+            "const": "prepare-aimpro-syllabus-sources",
+            "title": "Kind",
+            "type": "string"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/SourcePlan"
+          },
+          "project": {
+            "$ref": "#/components/schemas/AimproExport"
+          },
+          "root_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Root Id"
+          },
+          "scenario": {
+            "default": "SCN01",
+            "minLength": 1,
+            "title": "Scenario",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "project",
+          "plan"
+        ],
+        "title": "PreparationJob",
+        "type": "object"
+      },
+      "PreparedExcerpt": {
+        "additionalProperties": false,
+        "properties": {
+          "content_sha256": {
+            "minLength": 1,
+            "title": "Content Sha256",
+            "type": "string"
+          },
+          "document_id": {
+            "minLength": 1,
+            "title": "Document Id",
+            "type": "string"
+          },
+          "licence": {
+            "minLength": 1,
+            "title": "Licence",
+            "type": "string"
+          },
+          "licence_verdict": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Licence Verdict"
+          },
+          "limitations": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "purpose": {
+            "minLength": 1,
+            "title": "Purpose",
+            "type": "string"
+          },
+          "resource_id": {
+            "minLength": 1,
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "resource_version": {
+            "minLength": 1,
+            "title": "Resource Version",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "title": {
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "uri": {
+            "minLength": 1,
+            "title": "Uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "resource_id",
+          "resource_version",
+          "document_id",
+          "content_sha256",
+          "title",
+          "uri",
+          "licence",
+          "licence_verdict",
+          "text",
+          "purpose",
+          "limitations"
+        ],
+        "title": "PreparedExcerpt",
         "type": "object"
       },
       "ProjectInitializationRequest": {
@@ -1734,6 +2177,111 @@
         "title": "SessionView",
         "type": "object"
       },
+      "SourceChoice": {
+        "additionalProperties": false,
+        "description": "The teacher's choice on prepared sources: only accepted sources ground a Curator job.",
+        "properties": {
+          "choice": {
+            "enum": [
+              "ACCEPTED",
+              "DECLINED"
+            ],
+            "title": "Choice",
+            "type": "string"
+          }
+        },
+        "required": [
+          "choice"
+        ],
+        "title": "SourceChoice",
+        "type": "object"
+      },
+      "SourceDiscovery": {
+        "additionalProperties": false,
+        "description": "The queries a teacher runs to find excerpts for a source plan; no excerpt is selected yet.",
+        "properties": {
+          "format": {
+            "const": "aimpro-source-discovery",
+            "default": "aimpro-source-discovery",
+            "title": "Format",
+            "type": "string"
+          },
+          "format_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Format Version",
+            "type": "integer"
+          },
+          "queries": {
+            "items": {
+              "$ref": "#/components/schemas/SourceQuery"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Queries",
+            "type": "array"
+          },
+          "source_scope": {
+            "minLength": 1,
+            "title": "Source Scope",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_scope",
+          "queries"
+        ],
+        "title": "SourceDiscovery",
+        "type": "object"
+      },
+      "SourceDiscoveryView": {
+        "additionalProperties": false,
+        "description": "The excerpts the discovery queries found, each once, in the order they were found.",
+        "properties": {
+          "duplicate_hits": {
+            "title": "Duplicate Hits",
+            "type": "integer"
+          },
+          "excerpts": {
+            "items": {
+              "$ref": "#/components/schemas/DiscoveredExcerpt"
+            },
+            "title": "Excerpts",
+            "type": "array"
+          },
+          "queries": {
+            "items": {
+              "$ref": "#/components/schemas/SourceQuery"
+            },
+            "title": "Queries",
+            "type": "array"
+          },
+          "request_id": {
+            "minLength": 1,
+            "title": "Request Id",
+            "type": "string"
+          },
+          "source_scope": {
+            "minLength": 1,
+            "title": "Source Scope",
+            "type": "string"
+          },
+          "unique_documents": {
+            "title": "Unique Documents",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "request_id",
+          "source_scope",
+          "queries",
+          "excerpts",
+          "unique_documents",
+          "duplicate_hits"
+        ],
+        "title": "SourceDiscoveryView",
+        "type": "object"
+      },
       "SourceObject": {
         "additionalProperties": false,
         "description": "Transport envelope, not a generated AIM-PRO domain class.",
@@ -1806,6 +2354,154 @@
           "children"
         ],
         "title": "SourceObject",
+        "type": "object"
+      },
+      "SourcePlan": {
+        "additionalProperties": false,
+        "properties": {
+          "coverage_requirements": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/CoverageRequirement"
+            },
+            "maxItems": 48,
+            "title": "Coverage Requirements",
+            "type": "array"
+          },
+          "documents": {
+            "items": {
+              "$ref": "#/components/schemas/SelectedExcerpt"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Documents",
+            "type": "array"
+          },
+          "format": {
+            "const": "aimpro-source-plan",
+            "default": "aimpro-source-plan",
+            "title": "Format",
+            "type": "string"
+          },
+          "format_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Format Version",
+            "type": "integer"
+          },
+          "max_documents_per_resource": {
+            "default": 4,
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Max Documents Per Resource",
+            "type": "integer"
+          },
+          "min_resources": {
+            "default": 1,
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Min Resources",
+            "type": "integer"
+          },
+          "queries": {
+            "items": {
+              "$ref": "#/components/schemas/SourceQuery"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Queries",
+            "type": "array"
+          },
+          "source_scope": {
+            "minLength": 1,
+            "title": "Source Scope",
+            "type": "string"
+          },
+          "source_sha256": {
+            "minLength": 1,
+            "title": "Source Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_sha256",
+          "source_scope",
+          "queries",
+          "documents"
+        ],
+        "title": "SourcePlan",
+        "type": "object"
+      },
+      "SourcePreparationView": {
+        "additionalProperties": false,
+        "description": "The exact excerpts of a preparation, for the teacher's choice, and the plan they were prepared from.",
+        "properties": {
+          "coverage_requirements": {
+            "items": {
+              "$ref": "#/components/schemas/CoverageRequirement"
+            },
+            "title": "Coverage Requirements",
+            "type": "array"
+          },
+          "duplicate_hits": {
+            "title": "Duplicate Hits",
+            "type": "integer"
+          },
+          "excerpts": {
+            "items": {
+              "$ref": "#/components/schemas/PreparedExcerpt"
+            },
+            "title": "Excerpts",
+            "type": "array"
+          },
+          "max_documents_per_resource": {
+            "title": "Max Documents Per Resource",
+            "type": "integer"
+          },
+          "min_resources": {
+            "title": "Min Resources",
+            "type": "integer"
+          },
+          "queries": {
+            "items": {
+              "$ref": "#/components/schemas/SourceQuery"
+            },
+            "title": "Queries",
+            "type": "array"
+          },
+          "request_id": {
+            "minLength": 1,
+            "title": "Request Id",
+            "type": "string"
+          },
+          "source_scope": {
+            "minLength": 1,
+            "title": "Source Scope",
+            "type": "string"
+          },
+          "source_sha256": {
+            "minLength": 1,
+            "title": "Source Sha256",
+            "type": "string"
+          },
+          "unique_documents": {
+            "title": "Unique Documents",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "request_id",
+          "source_scope",
+          "source_sha256",
+          "queries",
+          "excerpts",
+          "coverage_requirements",
+          "min_resources",
+          "max_documents_per_resource",
+          "unique_documents",
+          "duplicate_hits"
+        ],
+        "title": "SourcePreparationView",
         "type": "object"
       },
       "SourceQuery": {
@@ -2455,7 +3151,7 @@
   },
   "info": {
     "title": "ALM Authoring API",
-    "version": "0.5.0"
+    "version": "0.6.0"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -2976,6 +3672,150 @@
         ]
       }
     },
+    "/contexts/{context_id}/aimpro-exports/{sha256}/targets": {
+      "get": {
+        "operationId": "read_targets_contexts__context_id__aimpro_exports__sha256__targets_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "context_id",
+            "required": true,
+            "schema": {
+              "title": "Context Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "sha256",
+            "required": true,
+            "schema": {
+              "pattern": "^[0-9a-f]{64}$",
+              "title": "Sha256",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scenario",
+            "required": false,
+            "schema": {
+              "default": "SCN01",
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Scenario",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "competencies",
+            "required": false,
+            "schema": {
+              "default": "elena_usecase_competencies",
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Competencies",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "root_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Root Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportTargets"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "No valid session"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not authorized, unmapped identity or missing CSRF token"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or the context is unavailable"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict with the current state; reload and retry"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Invalid request or data"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Internal error"
+          }
+        },
+        "summary": "The learning targets and practices of a stored export, with quotable texts",
+        "tags": [
+          "exports"
+        ]
+      }
+    },
     "/contexts/{context_id}/applications": {
       "post": {
         "operationId": "apply_contexts__context_id__applications_post",
@@ -3291,6 +4131,108 @@
       }
     },
     "/contexts/{context_id}/jobs": {
+      "get": {
+        "operationId": "listing_contexts__context_id__jobs_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "context_id",
+            "required": true,
+            "schema": {
+              "title": "Context Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "No valid session"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not authorized, unmapped identity or missing CSRF token"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or the context is unavailable"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict with the current state; reload and retry"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Invalid request or data"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Internal error"
+          }
+        },
+        "summary": "The jobs of a context, newest first, with their status",
+        "tags": [
+          "jobs"
+        ]
+      },
       "post": {
         "operationId": "queue_contexts__context_id__jobs_post",
         "parameters": [
@@ -3589,6 +4531,117 @@
           }
         },
         "summary": "Abandon a queued or interrupted job (administrators); 409 once the job has ended",
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
+    "/contexts/{context_id}/jobs/{request_id}/choice": {
+      "post": {
+        "operationId": "choose_contexts__context_id__jobs__request_id__choice_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "context_id",
+            "required": true,
+            "schema": {
+              "title": "Context Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceChoice"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "No valid session"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not authorized, unmapped identity or missing CSRF token"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or the context is unavailable"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict with the current state; reload and retry"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Invalid request or data"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Internal error"
+          }
+        },
+        "summary": "The teacher's choice on prepared sources, once; only accepted sources ground a Curator job",
         "tags": [
           "jobs"
         ]
@@ -4238,6 +5291,208 @@
         "summary": "Receipts, the exact frozen closure and findings of this release (CLI show-release)",
         "tags": [
           "releases"
+        ]
+      }
+    },
+    "/contexts/{context_id}/source-discoveries/{request_id}": {
+      "get": {
+        "operationId": "discovery_contexts__context_id__source_discoveries__request_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "context_id",
+            "required": true,
+            "schema": {
+              "title": "Context Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceDiscoveryView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "No valid session"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not authorized, unmapped identity or missing CSRF token"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or the context is unavailable"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict with the current state; reload and retry"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Invalid request or data"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Internal error"
+          }
+        },
+        "summary": "The excerpts a discovery job found, to pick a source plan from",
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/contexts/{context_id}/source-preparations/{request_id}": {
+      "get": {
+        "operationId": "preparation_contexts__context_id__source_preparations__request_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "context_id",
+            "required": true,
+            "schema": {
+              "title": "Context Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourcePreparationView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "No valid session"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not authorized, unmapped identity or missing CSRF token"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or the context is unavailable"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict with the current state; reload and retry"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Invalid request or data"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Internal error"
+          }
+        },
+        "summary": "The exact excerpts of a preparation job, for the teacher's choice",
+        "tags": [
+          "sources"
         ]
       }
     },

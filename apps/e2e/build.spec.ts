@@ -75,6 +75,57 @@ test('a course is built from an uploaded AIM-PRO model', async ({ page }) => {
   expect(exportsDigests()[`${sha256(uploaded)}.json`]).toBe(sha256(uploaded));
 });
 
+// Acceptance (S09a2): prepare sources with the synthetic retrieval, review them, accept them, run the Curator
+// on them, review and apply the syllabus.
+test('a syllabus is built on sources the teacher prepared and accepted', async ({ page }) => {
+  await createCourse(page);
+  await page.getByLabel(en.build.upload.file).setInputFiles(AIMPRO_EXPORT);
+  await page.getByRole('button', { name: en.build.upload.submit }).click();
+  await expect(page.getByText(en.build.upload.stored)).toBeVisible();
+
+  await page.getByLabel(en.build.sources.scope).fill('wp3');
+  await page.getByLabel(en.build.sources.queries).fill('prompting\nprompt clarity');
+  await page.getByRole('button', { name: en.build.sources.search }).click();
+  const excerpt = page.getByTestId('discovered-excerpt');
+  await expect(excerpt).toHaveCount(1, { timeout: 30_000 });
+  await expect(excerpt).toContainText('Found by: prompting, prompt clarity');
+  await expect(excerpt).toContainText('Usage conditions: licence CC-BY-4.0');
+  await excerpt.getByLabel('Use excerpt 1').check();
+  await excerpt.getByLabel(en.build.sources.purpose).fill('Task, audience and tone of a business prompt.');
+  await excerpt.getByLabel(en.build.sources.limitations).fill('Synthetic excerpt.\nNot a validated instrument.');
+  await page.getByRole('button', { name: en.build.sources.prepare }).click();
+
+  const prepared = page.getByTestId('prepared-sources');
+  await expect(prepared).toBeVisible({ timeout: 30_000 });
+  await expect(prepared).toContainText('Task, audience and tone of a business prompt.');
+  await expect(prepared).toContainText('Synthetic excerpt.; Not a validated instrument.');
+  await page.locator('details').evaluateAll((all) => all.forEach((details) => { (details as HTMLDetailsElement).open = true; }));
+  await expectAccessible(page);
+  // Not accepted yet: the Curator offers no prepared sources.
+  await expect(page.getByLabel(en.build.curator.fromSources)).toHaveCount(0);
+  await prepared.getByRole('button', { name: en.build.sources.accept }).click();
+  await expect(page.getByText(en.build.sources.accepted)).toBeVisible();
+
+  await expect(page.getByLabel(en.build.curator.fromSources)).toBeChecked();
+  await page.getByRole('button', { name: en.build.curator.submit }).click();
+  await expect(page.getByText(en.build.curator.proposed)).toBeVisible({ timeout: 30_000 });
+  await page.getByRole('link', { name: en.build.curator.review }).click();
+  await expect(page.getByRole('heading', { name: en.review.proposal.title, level: 1 })).toBeVisible();
+  await approveAndApply(page);
+
+  await page.goto(`/studio/contexts/${COURSE}/course`);
+  await expect(page.getByRole('region', { name: en.course.structure.heading })).toBeVisible();
+
+  // After leaving the page, its jobs are listed: the search, the accepted preparation and the Curator.
+  await page.goto(`/studio/contexts/${COURSE}/build`);
+  const jobs = page.getByTestId('course-jobs').getByRole('listitem');
+  await expect(jobs).toHaveCount(3);
+  await expect(jobs.nth(0)).toContainText('Curator syllabus: proposal waiting for review');
+  await expect(jobs.nth(1)).toContainText('Preparation of the sources: accepted');
+  await expect(jobs.nth(2)).toContainText('Search of the sources: done');
+  await expectAccessible(page);
+});
+
 // Acceptance (S09a): an invalid file is refused with its reason; nothing is recorded.
 test('an invalid file is refused with its reason and nothing is recorded', async ({ page }) => {
   await createCourse(page);

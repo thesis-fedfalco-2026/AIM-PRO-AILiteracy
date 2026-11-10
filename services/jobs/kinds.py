@@ -8,6 +8,10 @@ existing ``LearningService`` method, which authorizes, replays a recorded
 ``request_id`` without building a model, and records a pending proposal or a
 failure. Model and retrieval factories come from :class:`Resources`, which only
 the worker holds.
+
+The source kinds (S09a2) build no model and propose nothing: a discovery
+records the excerpts its queries found, a preparation the exact excerpts of its
+source plan, which then await the teacher's choice.
 """
 
 from __future__ import annotations
@@ -19,6 +23,7 @@ from typing import Annotated, Any, Callable, Literal, NamedTuple
 from pydantic import Field, model_validator
 
 from aimpro.generators import GenerationCommand
+from aimpro.source_selection import SourceDiscovery, SourcePlan
 from learning.contracts import Record, Text
 
 
@@ -27,6 +32,7 @@ class Resources(NamedTuple):
     authoring: Callable[[], Any]
     search: Callable[[], Any] | None
     exports: Path | None
+    search_client: Callable[[], Any] | None = None
 
 
 class AssessmentJob(Record):
@@ -72,7 +78,30 @@ class SyllabusJob(Record):
         return self
 
 
-JobCommand = Annotated[AssessmentJob | TeacherJob | TrainerJob | SyllabusJob, Field(discriminator='kind')]
+class DiscoveryJob(Record):
+    """Source discovery: ``learning discover-aimpro-syllabus-sources``; no model."""
+    kind: Literal['discover-aimpro-syllabus-sources']
+    discovery: SourceDiscovery
+
+
+class PreparationJob(Record):
+    """Source preparation: ``learning prepare-aimpro-syllabus-sources``; no model. Awaits the teacher's choice."""
+    kind: Literal['prepare-aimpro-syllabus-sources']
+    project: AimproExport
+    plan: SourcePlan
+    scenario: Text = 'SCN01'
+    competencies: Text = 'elena_usecase_competencies'
+    root_id: Text | None = None
+
+    @model_validator(mode='after')
+    def plan_of_the_export(self):
+        if self.plan.source_sha256 != self.project.sha256:
+            raise ValueError('The source plan was written for another export')
+        return self
+
+
+JobCommand = Annotated[AssessmentJob | TeacherJob | TrainerJob | SyllabusJob | DiscoveryJob | PreparationJob,
+                       Field(discriminator='kind')]
 
 
 class JobKind(NamedTuple):
@@ -107,9 +136,47 @@ def _syllabus(service, context_id, subject_key, request_id, job, resources):
         prepared_sources=job.prepared_sources)
 
 
+NOT_ACCEPTED = 'The prepared sources have not been accepted by the teacher'
+
+
+def unaccepted_sources(jobs, context_id: str, subject_key: str, command) -> str | None:
+    """Why a Curator command may not use its prepared sources; ``None`` when it names none or the teacher accepted them.
+
+    Only a preparation job of the same subject that the teacher moved to ``ACCEPTED`` counts (D22): a
+    preparation recorded by the CLI, awaiting the choice or declined is never used by a job.
+    """
+    prepared = getattr(command, 'prepared_sources', None)
+    if prepared is None:
+        return None
+    job = jobs.get(context_id, prepared)
+    if (job is None or job.kind != 'prepare-aimpro-syllabus-sources' or job.subject_key != subject_key or
+            job.status != 'ACCEPTED'):
+        return NOT_ACCEPTED
+    return None
+
+
+def _search_client(resources: Resources):
+    if resources.search_client is None:
+        raise ValueError('Source retrieval is not available to the worker')
+    return resources.search_client
+
+
+def _discovery(service, context_id, subject_key, request_id, job, resources):
+    return service.discover_aimpro_syllabus_sources(context_id, subject_key, job.discovery, request_id=request_id,
+                                                    search_client_factory=_search_client(resources))
+
+
+def _preparation(service, context_id, subject_key, request_id, job, resources):
+    return service.prepare_aimpro_syllabus_sources(context_id, subject_key, export_path(resources, job.project),
+        job.plan, request_id=request_id, search_client_factory=_search_client(resources), scenario=job.scenario,
+        competencies=job.competencies, root_id=job.root_id)
+
+
 KINDS = {kind.name: kind for kind in (
     JobKind('generate-project-assessments', AssessmentJob, _project('generate_project_assessments')),
     JobKind('generate-project-teacher', TeacherJob, _project('generate_project_teacher')),
     JobKind('generate-project-trainer', TrainerJob, _project('generate_project_trainer')),
     JobKind('generate-aimpro-syllabus', SyllabusJob, _syllabus),
+    JobKind('discover-aimpro-syllabus-sources', DiscoveryJob, _discovery),
+    JobKind('prepare-aimpro-syllabus-sources', PreparationJob, _preparation),
 )}

@@ -1,81 +1,24 @@
-import { useSession } from '@alm/auth';
 import { Button, StatusMessage } from '@alm/ui';
-import { useEffect, useId, useRef, useState } from 'react';
-import type { FormEvent, ReactNode } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
 import { refOf } from '../review/model';
 import { LoadFailure } from '../review/parts';
 import { coursePath, inboxPath, proposalPath } from '../review/paths';
-import { ReviewError } from '../review/reviewApi';
-import type { EntityRef, Inbox, JsonValue, ReviewFailure } from '../review/reviewApi';
+import type { EntityRef, Inbox, JsonValue } from '../review/reviewApi';
 import { useCsrfToken } from '../review/ReviewServices';
 import { plainIssues } from '../review/teacher';
 import { IssueText } from '../review/TeacherView';
 import { useInbox } from '../review/useInbox';
-import { FINAL_STATUSES } from './buildApi';
+import { ENDED_STATUSES, PREPARATION } from './buildApi';
 import type { ExportReport, JobView } from './buildApi';
 import { useBuildServices } from './BuildServices';
+import { JobsList } from './JobsList';
+import { describedBy, Field, TextInput, useFollowedJob, useStep, useSubjectKey } from './parts';
 import { currentDesign, designName, selectedProjects } from './projects';
-
-type Notice = { tone: 'info' | 'error'; text: string };
-
-/** A step's write: busy while it runs, its failure as a notice; an ended session goes back to sign-in. */
-function useStep() {
-  const { t } = useTranslation();
-  const { reload: reloadSession } = useSession();
-  const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState<Notice | null>(null);
-  const failure = (reason: ReviewFailure, detail: string) => {
-    switch (reason) {
-      case 'refused': return t('build.errors.refused', { detail });
-      case 'conflict': return t('build.errors.conflict', { detail });
-      case 'forbidden': return t('build.errors.forbidden');
-      case 'unavailable': return t('review.errors.unavailable');
-      default: return t('build.errors.failed');
-    }
-  };
-  const run = async (action: () => Promise<Notice | null>) => {
-    setBusy(true);
-    setNotice(null);
-    try {
-      setNotice(await action());
-    } catch (error) {
-      const reason = error instanceof ReviewError ? error.reason : 'failed';
-      if (reason === 'signed-out') void reloadSession();
-      else setNotice({ tone: 'error', text: failure(reason, error instanceof ReviewError ? error.detail ?? '' : '') });
-    }
-    setBusy(false);
-  };
-  return { busy, notice, run };
-}
-
-function Field({ id, label, hint, error, children }: {
-  id: string; label: string; hint?: string; error?: string | null; children: ReactNode;
-}) {
-  return (
-    <div className="alm-field">
-      <label htmlFor={id}>{label}</label>
-      {hint ? <p id={`${id}-hint`} className="alm-muted">{hint}</p> : null}
-      {error ? <p id={`${id}-error`} className="alm-field-error">{error}</p> : null}
-      {children}
-    </div>
-  );
-}
-
-const describedBy = (id: string, hint: boolean, error: boolean) =>
-  [hint ? `${id}-hint` : '', error ? `${id}-error` : ''].filter(Boolean).join(' ') || undefined;
-
-function TextInput({ id, value, onChange, invalid, hint }: {
-  id: string; value: string; onChange(value: string): void; invalid: boolean; hint: boolean;
-}) {
-  return (
-    <input id={id} className="alm-input" type="text" autoComplete="off" spellCheck={false} value={value}
-      aria-invalid={invalid} aria-describedby={describedBy(id, hint, invalid)}
-      onChange={(event) => onChange(event.target.value)} />
-  );
-}
+import { SourcesStep } from './SourcesStep';
 
 function Report({ report }: { report: ExportReport }) {
   const { t } = useTranslation();
@@ -183,69 +126,128 @@ function JobStatusText({ contextId, job }: { contextId: string; job: JobView }) 
   }
 }
 
-function CuratorStep({ contextId, report }: { contextId: string; report: ExportReport | null }) {
+/** The Curator works from accepted sources of this teacher, or from a search query. */
+type Grounding = 'sources' | 'query';
+
+/** The prepared sources this teacher accepted, newest first: what a Curator job may use. */
+export function acceptedPreparations(jobs: JobView[], subjectKey: string | null): JobView[] {
+  return jobs.filter((job) => job.job.kind === PREPARATION && job.status === 'ACCEPTED' && job.subject_key === subjectKey);
+}
+
+function CuratorStep({ contextId, report, accepted, onJob }: {
+  contextId: string; report: ExportReport | null; accepted: JobView[]; onJob(job: JobView): void;
+}) {
   const { t } = useTranslation();
   const id = useId();
-  const { api, pollMs, newRequestId } = useBuildServices();
+  const { api, newRequestId } = useBuildServices();
   const csrfToken = useCsrfToken();
   const { busy, notice, run } = useStep();
+  const [grounding, setGrounding] = useState<Grounding | null>(null);
+  const [prepared, setPrepared] = useState('');
   const [scope, setScope] = useState('');
   const [query, setQuery] = useState('');
   const [missing, setMissing] = useState({ scope: false, query: false });
   const [job, setJob] = useState<JobView | null>(null);
   // One request id per command: a retry after a lost answer returns the same job.
   const requestId = useRef<string | null>(null);
+  const follow = useCallback((next: JobView) => { setJob(next); onJob(next); }, [onJob]);
+  useFollowedJob(contextId, job, follow);
 
-  useEffect(() => {
-    if (job === null || FINAL_STATUSES.includes(job.status)) return;
-    const timer = setTimeout(() => {
-      api.readJob(contextId, job.request_id).then(setJob, () => setJob({ ...job }));
-    }, pollMs);
-    return () => clearTimeout(timer);
-  }, [api, contextId, job, pollMs]);
+  const mode: Grounding = grounding ?? (accepted.length > 0 ? 'sources' : 'query');
+  const chosen = accepted.find((item) => item.request_id === prepared) ?? accepted[0] ?? null;
 
-  const change = (set: (value: string) => void) => (value: string) => {
+  const change = <T,>(set: (value: T) => void) => (value: T) => {
     requestId.current = null;
     set(value);
   };
 
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    const found = { scope: !scope.trim(), query: !query.trim() };
-    setMissing(found);
-    if (report === null || found.scope || found.query) return;
+  const queue = (command: Parameters<typeof api.queueCurator>[3]) => {
     requestId.current ??= newRequestId();
     const current = requestId.current;
     void run(async () => {
-      const queued = await api.queueCurator(contextId, csrfToken, current, {
-        export: report.export, scenario: report.scenario, competencies: report.competencies,
-        sourceScope: scope.trim(), query: query.trim(),
-      });
+      const queued = await api.queueCurator(contextId, csrfToken, current, command);
       requestId.current = null;
-      setJob(queued);
+      follow(queued);
       return null;
     });
   };
+
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    if (mode === 'sources') {
+      // The preparation names the export, scenario and scope its sources were prepared for.
+      if (chosen === null || chosen.job.kind !== PREPARATION) return;
+      const { project, plan, scenario, competencies } = chosen.job;
+      queue({ export: project, scenario: scenario ?? 'SCN01', competencies: competencies ?? 'elena_usecase_competencies',
+        sourceScope: plan.source_scope, preparedSources: chosen.request_id });
+      return;
+    }
+    const found = { scope: !scope.trim(), query: !query.trim() };
+    setMissing(found);
+    if (report === null || found.scope || found.query) return;
+    queue({ export: report.export, scenario: report.scenario, competencies: report.competencies,
+      sourceScope: scope.trim(), query: query.trim() });
+  };
+
+  const running = job !== null && !ENDED_STATUSES.includes(job.status);
+  let form = null;
+  if (report !== null || accepted.length > 0) {
+    form = (
+      <form className="alm-form" noValidate onSubmit={submit}>
+        {accepted.length > 0 ? (
+          <fieldset className="alm-fieldset">
+            <legend>{t('build.curator.grounding')}</legend>
+            <label className="alm-choice">
+              <input type="radio" name={`${id}-grounding`} checked={mode === 'sources'}
+                onChange={() => change(setGrounding)('sources')} />
+              {t('build.curator.fromSources')}
+            </label>
+            <label className="alm-choice">
+              <input type="radio" name={`${id}-grounding`} checked={mode === 'query'}
+                onChange={() => change(setGrounding)('query')} />
+              {t('build.curator.fromQuery')}
+            </label>
+          </fieldset>
+        ) : null}
+        {mode === 'sources' ? (
+          <Field id={`${id}-prepared`} label={t('build.curator.prepared')} hint={t('build.curator.preparedHint')}>
+            <select id={`${id}-prepared`} className="alm-input" value={chosen?.request_id ?? ''}
+              aria-describedby={describedBy(`${id}-prepared`, true, false)}
+              onChange={(event) => change(setPrepared)(event.target.value)}>
+              {accepted.map((item) => (
+                <option key={item.request_id} value={item.request_id}>
+                  {t('build.curator.preparedOption', {
+                    count: item.job.kind === PREPARATION ? item.job.plan.documents.length : 0,
+                    created: new Date(item.created).toLocaleString(),
+                  })}
+                </option>
+              ))}
+            </select>
+          </Field>
+        ) : report === null ? <p className="alm-muted">{t('build.curator.needsUpload')}</p> : (
+          <>
+            <Field id={`${id}-scope`} label={t('build.curator.scope')} hint={t('build.curator.scopeHint')}
+              error={missing.scope ? t('build.curator.scopeRequired') : null}>
+              <TextInput id={`${id}-scope`} value={scope} onChange={change(setScope)} invalid={missing.scope} hint />
+            </Field>
+            <Field id={`${id}-query`} label={t('build.curator.query')} hint={t('build.curator.queryHint')}
+              error={missing.query ? t('build.curator.queryRequired') : null}>
+              <TextInput id={`${id}-query`} value={query} onChange={change(setQuery)} invalid={missing.query} hint />
+            </Field>
+          </>
+        )}
+        {mode === 'sources' || report !== null ? (
+          <Button type="submit" busy={busy || running}>{t('build.curator.submit')}</Button>
+        ) : null}
+      </form>
+    );
+  }
 
   return (
     <section aria-labelledby={`${id}-heading`}>
       <h2 id={`${id}-heading`}>{t('build.curator.heading')}</h2>
       <p>{t('build.curator.intro')}</p>
-      {report === null ? <p className="alm-muted">{t('build.curator.needsUpload')}</p> : (
-        <form className="alm-form" noValidate onSubmit={submit}>
-          <Field id={`${id}-scope`} label={t('build.curator.scope')} hint={t('build.curator.scopeHint')}
-            error={missing.scope ? t('build.curator.scopeRequired') : null}>
-            <TextInput id={`${id}-scope`} value={scope} onChange={change(setScope)} invalid={missing.scope} hint />
-          </Field>
-          <Field id={`${id}-query`} label={t('build.curator.query')} hint={t('build.curator.queryHint')}
-            error={missing.query ? t('build.curator.queryRequired') : null}>
-            <TextInput id={`${id}-query`} value={query} onChange={change(setQuery)} invalid={missing.query} hint />
-          </Field>
-          <Button type="submit" busy={busy || (job !== null && !FINAL_STATUSES.includes(job.status))}>
-            {t('build.curator.submit')}
-          </Button>
-        </form>
-      )}
+      {form ?? <p className="alm-muted">{t('build.curator.needsUpload')}</p>}
       {notice ? <StatusMessage tone={notice.tone}>{notice.text}</StatusMessage> : null}
       {job ? <JobStatusText contextId={contextId} job={job} /> : null}
     </section>
@@ -332,11 +334,30 @@ function CurrentSyllabus({ inbox }: { inbox: Inbox }) {
   );
 }
 
-/** Start a course from an AIM-PRO model: upload it, let the Curator draft the syllabus, then initialize the project. */
+/** The jobs of the course: read when the page opens or on request; the steps add and update theirs. */
+function useJobs(contextId: string) {
+  const { api } = useBuildServices();
+  const [jobs, setJobs] = useState<JobView[] | null>(null);
+  const [failed, setFailed] = useState(false);
+  const load = useCallback(() => {
+    setFailed(false);
+    api.listJobs(contextId).then(setJobs, () => setFailed(true));
+  }, [api, contextId]);
+  useEffect(load, [load]);
+  const update = useCallback((job: JobView) => {
+    setJobs((current) => [job, ...(current ?? []).filter((item) => item.request_id !== job.request_id)]);
+  }, []);
+  return { jobs, failed, load, update };
+}
+
+/** Start a course from an AIM-PRO model: upload it, prepare its sources, let the Curator draft the syllabus, then initialize the project. */
 export function BuildPage({ contextId }: { contextId: string }) {
   const { t } = useTranslation();
   const { state, reload } = useInbox(contextId);
+  const subjectKey = useSubjectKey();
   const [report, setReport] = useState<ExportReport | null>(null);
+  const { jobs, failed, load, update } = useJobs(contextId);
+  const [opened, setOpened] = useState<JobView | null>(null);
   return (
     <>
       <p><Link to={coursePath(contextId)}>{t('build.back')}</Link></p>
@@ -348,8 +369,12 @@ export function BuildPage({ contextId }: { contextId: string }) {
         <>
           <p><Link to={inboxPath(contextId)}>{t('course.review', { count: state.inbox.pending.length })}</Link></p>
           <CurrentSyllabus inbox={state.inbox} />
+          <JobsList contextId={contextId} jobs={jobs} failed={failed} subjectKey={subjectKey} onReload={load}
+            onOpen={setOpened} />
           <UploadStep contextId={contextId} report={report} onUploaded={setReport} />
-          <CuratorStep contextId={contextId} report={report} />
+          <SourcesStep contextId={contextId} report={report} opened={opened} onJob={update} />
+          <CuratorStep contextId={contextId} report={report} accepted={acceptedPreparations(jobs ?? [], subjectKey)}
+            onJob={update} />
           <ProjectStep contextId={contextId} inbox={state.inbox} />
         </>
       ) : null}

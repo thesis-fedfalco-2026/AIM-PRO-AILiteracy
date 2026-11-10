@@ -4,7 +4,9 @@ A SQLite location is a database file of its own, refused if it holds the ALM
 tables; a PostgreSQL location keeps its tables in the ``jobs`` schema. A job is
 named by its context and the ALM ``request_id`` of its command, the
 idempotency key: the same command under the same id is the same job, another
-command under that id is a :class:`StateConflict`. Every status change is
+command under that id is a :class:`StateConflict`. A source preparation
+(S09a2, D22) ends its run in ``AWAITING_CHOICE``, which only the teacher's
+choice moves on, to ``ACCEPTED`` or ``DECLINED``. Every status change is
 recorded as a ``status`` event in the same transaction; the run's
 content-free events of ``agent_system.events`` are ``progress`` events. Both
 kinds share one sequence, the cursor of the progress stream.
@@ -29,9 +31,13 @@ from learning.store import StateConflict, canonical, resolve_location
 
 SCHEMA = 'jobs'
 VERSION = 1
-JobStatus = Literal['QUEUED', 'RUNNING', 'PROPOSED', 'REJECTED', 'FAILED', 'ABANDONED']
+JobStatus = Literal['QUEUED', 'RUNNING', 'PROPOSED', 'REJECTED', 'FAILED', 'ABANDONED', 'COMPLETED',
+                    'AWAITING_CHOICE', 'ACCEPTED', 'DECLINED']
 STATUSES = JobStatus.__args__
-FINAL = frozenset({'PROPOSED', 'REJECTED', 'FAILED', 'ABANDONED'})
+FINAL = frozenset({'PROPOSED', 'REJECTED', 'FAILED', 'ABANDONED', 'COMPLETED', 'ACCEPTED', 'DECLINED'})
+# The run has ended: a final status, or a result that awaits the teacher's choice.
+ENDED = FINAL | {'AWAITING_CHOICE'}
+CHOICES = frozenset({'ACCEPTED', 'DECLINED'})
 _COLUMNS = 'seq,context_id,request_id,kind,subject_key,command,status,outcome,created,updated'
 
 
@@ -197,6 +203,15 @@ class JobStore:
             row = self._row(context_id, request_id)
         return None if row is None else self._record(row)
 
+    def list(self, context_id: str, limit: int = 50) -> tuple[JobRecord, ...]:
+        """The jobs of a context, newest first, at most ``limit``."""
+        if not 1 <= limit <= 200:
+            raise ValueError('Invalid job list limit')
+        with self._lock:
+            rows = self._execute(f'SELECT {_COLUMNS} FROM {{p}}jobs WHERE context_id=? ORDER BY seq DESC LIMIT ?',
+                                 (context_id, limit)).fetchall()
+        return tuple(self._record(row) for row in rows)
+
     def claim(self) -> JobRecord | None:
         """Start the oldest queued job: ``QUEUED`` → ``RUNNING``, at most once."""
         lock = ' FOR UPDATE SKIP LOCKED' if self.backend == 'postgresql' else ''
@@ -209,15 +224,21 @@ class JobStore:
 
     def transition(self, context_id: str, request_id: str, current: set[str], status: str, *,
                    proposal_refs: tuple[EntityRef, ...] = (), detail: str | None = None) -> JobRecord | None:
-        """Move a job from one of the ``current`` statuses to ``status``; ``None`` if it is in none of them."""
+        """Move a job from one of the ``current`` statuses to ``status``; ``None`` if it is in none of them.
+
+        Only a choice (``ACCEPTED``, ``DECLINED``) ends ``AWAITING_CHOICE``, and nothing else is a choice.
+        """
         if status not in STATUSES or status == 'QUEUED' or not set(current) <= set(STATUSES) - FINAL:
+            raise ValueError('Invalid job status change')
+        if (status in CHOICES or 'AWAITING_CHOICE' in current) and (set(current), status in CHOICES) != (
+                {'AWAITING_CHOICE'}, True):
             raise ValueError('Invalid job status change')
         with self._transaction():
             return self._transition(context_id, request_id, current, status, proposal_refs, detail)
 
     def _transition(self, context_id, request_id, current, status, proposal_refs, detail):
         outcome = None
-        if status in FINAL:
+        if status in ENDED:
             outcome = canonical({'proposal_refs': [r.model_dump(mode='json') for r in proposal_refs], 'detail': detail})
         marks = ','.join('?' * len(current))
         changed = self._execute(f'UPDATE {{p}}jobs SET status=?, outcome=?, updated=? '

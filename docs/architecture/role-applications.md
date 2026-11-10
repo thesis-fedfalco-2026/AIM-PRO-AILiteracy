@@ -46,7 +46,10 @@ records it in the jobs store (D14: separate tables in a `jobs` schema, never the
 ALM tables) and returns. The worker runs the existing service method. The result
 is a pending proposal or a rejection with check codes; a person decides and
 applies it through the decision endpoints. Job states: `QUEUED`, `RUNNING`,
-`PROPOSED`, `REJECTED`, `FAILED`, `ABANDONED`. Progress events are the
+`PROPOSED`, `REJECTED`, `FAILED`, `ABANDONED`; source jobs (S09a2, D22) add
+`COMPLETED` (a discovery), `AWAITING_CHOICE` (a preparation: completed,
+awaiting the teacher's choice) and the teacher's choice, `ACCEPTED` or
+`DECLINED`. They propose nothing. Progress events are the
 content-free events of `agent_system/events.py`. The ALM `request_id` stays the
 idempotency key: a replayed `request_id` returns the same job.
 
@@ -61,8 +64,11 @@ Authoring API imports only the first two.
   and its `request_id`; the same command under the same id is the same job,
   another command (kind, command or subject) is a conflict. Status changes go
   one way (`QUEUED` → `RUNNING` → a final status; `QUEUED` or `RUNNING` →
-  `ABANDONED`) and each is recorded as a `status` event in the same
-  transaction.
+  `ABANDONED`; `RUNNING` → `AWAITING_CHOICE` → `ACCEPTED` or `DECLINED`, and
+  nothing else ends `AWAITING_CHOICE`) and each is recorded as a `status`
+  event in the same transaction. Final: `PROPOSED`, `REJECTED`, `FAILED`,
+  `ABANDONED`, `COMPLETED`, `ACCEPTED`, `DECLINED`; the run has ended in those
+  and in `AWAITING_CHOICE`.
 - **Job kinds** (`services/jobs/kinds.py`), named as the CLI commands they
   run: `generate-project-assessments`, `generate-project-teacher`,
   `generate-project-trainer` (a `GenerationCommand`) and
@@ -70,20 +76,27 @@ Authoring API imports only the first two.
   SHA-256 in the worker's `ALM_AIMPRO_EXPORTS` directory, the source scope, and
   a query or a prepared-sources request id). The worker refuses an export that
   is missing or differs from the named digest; it never writes the export.
-  `prepare-aimpro-syllabus-sources` (no model, no proposal) and `ask` (the
-  learner request, S12) stay CLI commands.
+  Source kinds (S09a2), no model and no proposal:
+  `discover-aimpro-syllabus-sources` (a `SourceDiscovery`: source scope and
+  1–20 queries) and `prepare-aimpro-syllabus-sources` (an export and its
+  `SourcePlan`, whose `source_sha256` must be the export's). `ask` (the learner
+  request, S12) stays a CLI command.
 - **Worker** (`services/jobs/worker.py`, `python -m services.jobs`). It claims
   the oldest queued job, opens its context with the trusted policy (D10),
   checks again that the subject may `propose`, and runs the existing service
   method inside an `agent_system.events` run bound to the job's event sink.
-  Outcome: `PROPOSED` (the pending proposal is linked), `REJECTED` (the host
-  refused the command before any model; `detail` is the core's fixed message,
-  never input text), `FAILED` (generation did not complete, or an unexpected
+  Outcome: `PROPOSED` (the pending proposal is linked), `COMPLETED` (a
+  discovery was recorded), `AWAITING_CHOICE` (a preparation was recorded),
+  `REJECTED` (the host refused the command before any model; `detail` is the
+  core's fixed message, never input text; also a Curator job naming prepared
+  sources the teacher has not accepted), `FAILED` (generation did not complete, or an unexpected
   error, logged by type only), `ABANDONED`. A replayed `request_id` that the
   ALM store already answered (by a job or the CLI) returns that answer without
-  building a model. It is the only process that loads model credentials: the
-  production factories are the CLI's, built when a job needs them; the
-  provider-call listener reports model calls as progress.
+  building a model or searching again. It is the only process that loads model
+  credentials and the document-search client: the production factories are the
+  CLI's (`_aimpro_authoring`, `_aimpro_search`, `_aimpro_search_client`), built
+  when a job needs them; the provider-call listener reports model calls as
+  progress.
 - **Event sink.** The run's events are validated by `agent_system.events`
   (identifiers, codes, counts and durations only) before they reach the sink;
   the sink keeps them in memory and records them in the jobs store, because the
@@ -93,15 +106,17 @@ Authoring API imports only the first two.
 | Route | Who | Result |
 | --- | --- | --- |
 | `POST /contexts/{context_id}/jobs` (CSRF) | `propose` in the context | `JobView`, `QUEUED` or the existing job; 409 for another command under the same id |
+| `GET /contexts/{context_id}/jobs` | `propose` | `JobList`: the context's jobs, newest first (`limit`, default 50, at most 200) |
 | `GET /contexts/{context_id}/jobs/{request_id}` | `propose` | `JobView`; 404 for an unknown job |
 | `GET /contexts/{context_id}/jobs/{request_id}/events` | `propose` | server-sent events until the final status (below) |
 | `POST /contexts/{context_id}/jobs/{request_id}/abandonment` (CSRF) | administrator, as the CLI `abandon` | `JobView` `ABANDONED`; 409 once the job has ended, or while a running job's request is not reserved yet |
+| `POST /contexts/{context_id}/jobs/{request_id}/choice` (CSRF) | `propose`, and the subject of the job | `SourceChoice` `{"choice": "ACCEPTED" \| "DECLINED"}` → `JobView`; the same choice again returns the job; 409 for another choice or a job not `AWAITING_CHOICE`; 403 for another subject |
 
 Authorization is checked before a stream starts, so its errors are ordinary
 JSON error bodies. The stream has two event names: `status`
 (`{"status", "proposal_refs"}`) and `progress` (an `alm.event/1` record); each
 event's `id` is its sequence, so a client reconnects with `Last-Event-ID`. A
-stream ends after the final status, or after `ALM_API_JOB_STREAM_SECONDS`; it
+stream ends once the run has ended (a final status or `AWAITING_CHOICE`), or after `ALM_API_JOB_STREAM_SECONDS`; it
 reads new events every `ALM_API_JOB_POLL_SECONDS`. Neither the stream nor the
 `detail` of a job carries a command, a prompt, a document or a learner's text;
 `JobView` returns the command to the subjects who may propose in the context.
@@ -521,6 +536,7 @@ browser recorded.
 | `course.spec.ts`: the whole seeded course | every section shows the seed's content (unit, three activities, completion, outcome and competence, strategy, rubric, four materials and the cited source, history with one pending proposal); no request other than `GET`; the SHA-256 of the database file is unchanged; axe; navigation to the inbox and back |
 | `course.spec.ts`: as a learner | `dev-learner` on `architecture-delivery-2` sees only the not-visible message; axe |
 | `build.spec.ts`: a course from an uploaded AIM-PRO model | create a course (one new policy file next to the seed's); upload the AIM-PRO export the fixtures use: the stored file has the uploaded bytes and digest; the Curator job with the synthetic model ends with a link to the proposal; approve and apply the syllabus; the course page shows the structure; propose, approve and apply the project; the build page shows the project; axe on the build page with every disclosure open |
+| `build.spec.ts`: a syllabus on accepted sources (S09a2) | upload; search with two queries (synthetic retrieval); the excerpt found by both, with its usage conditions; tick it, write its purpose and limitations, prepare; the prepared sources; axe with every disclosure open; no prepared sources offered to the Curator before the choice; accept; the Curator on the accepted sources ends with a proposal; approve and apply; the course structure; back on the build page, the three jobs listed with their status; axe |
 | `build.spec.ts`: an invalid file | a text file is refused with "The file is not UTF-8 JSON"; no report; the export directory and the database file are unchanged; axe |
 | `accessibility.spec.ts` | axe on the home page (also with its validation error), the inbox with and without pending proposals, the proposal page with every disclosure open, its validation errors, the apply step, a refused application, and an unavailable context |
 
@@ -628,6 +644,69 @@ S08 with the synthetic models of `tests/services/job_fixtures.py`: same job
 store, kinds and outcomes, no model, provider or network. It needs
 `ALM_STORE`, `ALM_POLICY_DIR`, `ALM_JOBS_STORE` and `ALM_AIMPRO_EXPORTS`. The
 browser tests run it; it is for UI development only, never for real data.
+
+## Source preparation as a job (S09a2)
+
+A teacher has the sources of a course prepared, reviews them and decides
+whether the Curator uses them (D22). Owner decisions of 10 November 2026
+(issue #101): two jobs, a discovery and then a preparation, because a source
+plan names exact excerpts that a teacher cannot know before searching; the
+teacher's acceptance is recorded in the jobs store; a minimal job list; and
+coverage requirements entered from the uploaded export's targets.
+
+1. **Discovery** (`discover-aimpro-syllabus-sources`, core
+   `discover_sources`, CLI of the same name with `--discovery FILE`). The
+   worker runs each query in the PREPARATION scope and records a
+   `SOURCE_DISCOVERY` (every excerpt found, per query, with the unique and
+   repeated hits) in the host requests store under the request id. Authority,
+   scope and a PREPARATION/DRAFT context are checked before the client is
+   built; a replay returns the record without a new search; a failed search is
+   recorded as a failure with a fixed text. No model, no entity, no proposal.
+2. **Preparation** (`prepare-aimpro-syllabus-sources`, unchanged core). The
+   studio builds the `SourcePlan`: the discovery's queries, the excerpts the
+   teacher ticked (exact ids and SHA-256) with the purpose and the limitations
+   the teacher wrote, `min_resources` and `max_documents_per_resource` set to
+   the distribution picked, and the optional coverage requirements. The worker
+   runs the queries again, fetches the exact excerpts and records the
+   `SOURCE_PREPARATION`; the job ends `AWAITING_CHOICE`.
+3. **Choice.** The teacher who prepared the sources accepts or declines them,
+   once (`POST …/jobs/{request_id}/choice`).
+4. **Curator.** A `generate-aimpro-syllabus` job with `prepared_sources` is
+   refused with 409 by the API, and `REJECTED` by the worker before any model,
+   unless the jobs store holds a preparation job under that request id, of the
+   same subject, `ACCEPTED`: "The prepared sources have not been accepted by
+   the teacher". A preparation recorded only by the CLI, awaiting the choice
+   or declined is never used by a job. The CLI `generate-aimpro-syllabus
+   --prepared-sources` is an operator path and does not consult the jobs store.
+
+### Reading what the worker recorded: module `sources`, and the export targets
+
+| Route | Who | Response |
+| --- | --- | --- |
+| `GET /contexts/{context_id}/source-discoveries/{request_id}` | `propose`, content authority, the subject who ran it | `SourceDiscoveryView`: scope, queries, each excerpt once (resource, version, document id, SHA-256, title, URI, licence, corpus licence verdict, exact text, the queries that found it), unique and repeated hits |
+| `GET /contexts/{context_id}/source-preparations/{request_id}` | the same | `SourcePreparationView`: the plan's scope, export SHA-256, queries, limits and coverage requirements; each excerpt with its exact text, licence and verdict, purpose and limitations |
+| `GET /contexts/{context_id}/aimpro-exports/{sha256}/targets?scenario=&competencies=&root_id=` (module `exports`) | `propose` | `ExportTargets`: the learning targets of a stored export with their practices and the texts a coverage requirement may quote (`description`, `inPractice`, `rationale`, `contextDetails`) |
+
+An unknown id, a failed request, another kind or another subject's record is a
+404. The licence and the verdict are the corpus's metadata (`licence`,
+`licence_verdict`); the studio shows them as usage conditions, not as an
+approval.
+
+### Studio
+
+The build page (`src/features/course-build/`) now has, in order: the current
+syllabus; **Jobs of this course** (`JobsList`: kind and status in words, the
+reason of a job that ended, a link to a proposal, and "Pick excerpts from this
+search" or "Review and choose these sources" for the teacher's own jobs; read
+when the page opens and on "Reload the list"); 1. upload; **2. Prepare the
+sources (optional)** (`SourcesStep`: scope, queries and excerpts per query;
+the excerpts found with their usage conditions and text; a tick, a purpose and
+limitations per excerpt; optional coverage requirements chosen from the
+export's targets, practices and field texts, each quote checked against the
+text; then the prepared sources and "Accept these sources" or "Decline
+them"); 3. the Curator, which works from "Sources I accepted" (the export,
+scenario and scope of the preparation) or "A search query"; 4. the project.
+Each queued job is followed every second until its run has ended.
 
 ## Local identity smoke test
 
