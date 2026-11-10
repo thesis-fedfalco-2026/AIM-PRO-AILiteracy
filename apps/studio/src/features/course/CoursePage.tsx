@@ -8,9 +8,10 @@ import { LoadFailure, useStatusLabel } from '../review/parts';
 import { buildPath, inboxPath, proposalPath } from '../review/paths';
 import type { Inbox } from '../review/reviewApi';
 import { RubricTable } from '../review/RubricTable';
+import { INTENT_KEYS } from '../review/SyllabusView';
 import { useInbox } from '../review/useInbox';
 import { courseOverview } from './course';
-import type { CourseNode, CourseOverview, HistoryEntry } from './course';
+import type { CourseNode, CourseOverview, CourseSyllabus, HistoryEntry } from './course';
 
 const SECTIONS = [
   ['course-structure', 'course.structure.heading'],
@@ -88,6 +89,28 @@ function History({ contextId, history }: { contextId: string; history: HistoryEn
   );
 }
 
+/** The syllabus the course follows: each unit's purpose and planned activities. */
+function Syllabus({ syllabus }: { syllabus: CourseSyllabus }) {
+  const { t } = useTranslation();
+  const intents = (codes: string[]) =>
+    codes.map((code) => (code in INTENT_KEYS ? t(INTENT_KEYS[code as keyof typeof INTENT_KEYS]) : code)).join(', ');
+  return (
+    <>
+      <h3>{t('course.syllabus.heading', { title: syllabus.title })}</h3>
+      {syllabus.editedBy ? <p>{t('course.syllabus.editedBy', { teacher: syllabus.editedBy })}</p> : null}
+      <ol>
+        {syllabus.units.map((unit, index) => (
+          <li key={index}>
+            <strong>{unit.title}</strong>
+            <p className="alm-text">{unit.purpose}</p>
+            <p className="alm-muted">{t('course.syllabus.intents', { intents: intents(unit.intents) })}</p>
+          </li>
+        ))}
+      </ol>
+    </>
+  );
+}
+
 function CourseSections({ contextId, course }: { contextId: string; course: CourseOverview }) {
   const { t } = useTranslation();
   return (
@@ -100,6 +123,7 @@ function CourseSections({ contextId, course }: { contextId: string; course: Cour
       <section aria-labelledby="course-structure">
         <h2 id="course-structure">{t('course.structure.heading')}</h2>
         <p>{t('course.structure.intro')}</p>
+        {course.syllabus ? <Syllabus syllabus={course.syllabus} /> : null}
         {course.structure ? <ol className="alm-tree"><Node node={course.structure} /></ol> : <p>{t('course.structure.empty')}</p>}
       </section>
 

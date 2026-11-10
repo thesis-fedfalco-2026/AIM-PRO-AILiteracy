@@ -49,10 +49,34 @@ function IssueList({ heading, issues }: { heading: string; issues: Issue[] }) {
   );
 }
 
+/** What to check before deciding: problems of the proposal, of the course and its sources, and the generator's notes. */
+export function Issues({ issues }: { issues: PlainIssues }) {
+  const { t } = useTranslation();
+  const problems = issues.generated.length + issues.source.length;
+  return (
+    <section aria-labelledby="teacher-issues">
+      <h2 id="teacher-issues">{t('review.teacher.issues.heading')}</h2>
+      {problems === 0 && issues.notes.length === 0 ? <p>{t('review.teacher.issues.none')}</p> : null}
+      <IssueList heading={t('review.teacher.issues.generated')} issues={issues.generated} />
+      {issues.source.length > 0 ? (
+        <details className="alm-disclosure">
+          <summary>{t('review.teacher.issues.source', { found: String(issues.source.length) })}</summary>
+          <ul>{issues.source.map((issue, index) => <li key={index}><IssueText issue={issue} /></li>)}</ul>
+        </details>
+      ) : null}
+      {issues.notes.length > 0 ? (
+        <>
+          <h3>{t('review.teacher.issues.notes')}</h3>
+          <ul>{issues.notes.map((note) => <li key={note}>{note}</li>)}</ul>
+        </>
+      ) : null}
+    </section>
+  );
+}
+
 /** What a teacher needs to decide: the changes, the teaching content, and what to check, in plain words. */
 export function TeacherView({ view, issues }: { view: View; issues: PlainIssues }) {
   const { t } = useTranslation();
-  const problems = issues.generated.length + issues.source.length;
   return (
     <>
       <section aria-labelledby="teacher-changes">
@@ -125,23 +149,7 @@ export function TeacherView({ view, issues }: { view: View; issues: PlainIssues 
 
       {view.isAssessment || view.activities.length > 0 ? null : <p>{t('review.teacher.otherProposal')}</p>}
 
-      <section aria-labelledby="teacher-issues">
-        <h2 id="teacher-issues">{t('review.teacher.issues.heading')}</h2>
-        {problems === 0 && issues.notes.length === 0 ? <p>{t('review.teacher.issues.none')}</p> : null}
-        <IssueList heading={t('review.teacher.issues.generated')} issues={issues.generated} />
-        {issues.source.length > 0 ? (
-          <details className="alm-disclosure">
-            <summary>{t('review.teacher.issues.source', { found: String(issues.source.length) })}</summary>
-            <ul>{issues.source.map((issue, index) => <li key={index}><IssueText issue={issue} /></li>)}</ul>
-          </details>
-        ) : null}
-        {issues.notes.length > 0 ? (
-          <>
-            <h3>{t('review.teacher.issues.notes')}</h3>
-            <ul>{issues.notes.map((note) => <li key={note}>{note}</li>)}</ul>
-          </>
-        ) : null}
-      </section>
+      <Issues issues={issues} />
     </>
   );
 }

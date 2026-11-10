@@ -197,6 +197,104 @@
         "title": "AssessmentJob",
         "type": "object"
       },
+      "CitedExcerpt": {
+        "additionalProperties": false,
+        "description": "An excerpt a unit may cite; ``purpose`` and ``limitations`` exist for prepared sources only.",
+        "properties": {
+          "document_id": {
+            "minLength": 1,
+            "title": "Document Id",
+            "type": "string"
+          },
+          "licence": {
+            "minLength": 1,
+            "title": "Licence",
+            "type": "string"
+          },
+          "limitations": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "purpose": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purpose"
+          },
+          "resource_id": {
+            "minLength": 1,
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "resource_version": {
+            "minLength": 1,
+            "title": "Resource Version",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "title": {
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "uri": {
+            "minLength": 1,
+            "title": "Uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "resource_id",
+          "resource_version",
+          "document_id",
+          "title",
+          "uri",
+          "licence",
+          "text",
+          "purpose",
+          "limitations"
+        ],
+        "title": "CitedExcerpt",
+        "type": "object"
+      },
+      "Competency": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "id": {
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description"
+        ],
+        "title": "Competency",
+        "type": "object"
+      },
       "ContextSummary": {
         "additionalProperties": false,
         "description": "The context, the entities the subject may see and the snapshot findings.\n\nA learner-only subject sees only the context, its own participant record and\nits own learning records, never proposals, decisions or other participants.",
@@ -652,6 +750,19 @@
           "discovery"
         ],
         "title": "DiscoveryJob",
+        "type": "object"
+      },
+      "EditedSyllabus": {
+        "additionalProperties": false,
+        "properties": {
+          "proposal": {
+            "$ref": "#/components/schemas/EntityRef"
+          }
+        },
+        "required": [
+          "proposal"
+        ],
+        "title": "EditedSyllabus",
         "type": "object"
       },
       "Entity": {
@@ -1143,7 +1254,8 @@
                 "generate-project-assessments": "#/components/schemas/AssessmentJob-Input",
                 "generate-project-teacher": "#/components/schemas/TeacherJob-Input",
                 "generate-project-trainer": "#/components/schemas/TrainerJob-Input",
-                "prepare-aimpro-syllabus-sources": "#/components/schemas/PreparationJob-Input"
+                "prepare-aimpro-syllabus-sources": "#/components/schemas/PreparationJob-Input",
+                "revise-aimpro-syllabus": "#/components/schemas/RevisionJob"
               },
               "propertyName": "kind"
             },
@@ -1159,6 +1271,9 @@
               },
               {
                 "$ref": "#/components/schemas/SyllabusJob"
+              },
+              {
+                "$ref": "#/components/schemas/RevisionJob"
               },
               {
                 "$ref": "#/components/schemas/DiscoveryJob-Input"
@@ -1216,7 +1331,8 @@
                 "generate-project-assessments": "#/components/schemas/AssessmentJob-Output",
                 "generate-project-teacher": "#/components/schemas/TeacherJob-Output",
                 "generate-project-trainer": "#/components/schemas/TrainerJob-Output",
-                "prepare-aimpro-syllabus-sources": "#/components/schemas/PreparationJob-Output"
+                "prepare-aimpro-syllabus-sources": "#/components/schemas/PreparationJob-Output",
+                "revise-aimpro-syllabus": "#/components/schemas/RevisionJob"
               },
               "propertyName": "kind"
             },
@@ -1232,6 +1348,9 @@
               },
               {
                 "$ref": "#/components/schemas/SyllabusJob"
+              },
+              {
+                "$ref": "#/components/schemas/RevisionJob"
               },
               {
                 "$ref": "#/components/schemas/DiscoveryJob-Output"
@@ -1433,6 +1552,32 @@
           "proposals"
         ],
         "title": "PendingProposals",
+        "type": "object"
+      },
+      "Practice": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "text"
+        ],
+        "title": "Practice",
         "type": "object"
       },
       "PreparationJob-Input": {
@@ -2028,6 +2173,29 @@
         "title": "ReviewReceipt",
         "type": "object"
       },
+      "RevisionJob": {
+        "additionalProperties": false,
+        "description": "The Curator's revision: ``learning revise-aimpro-syllabus``, after a revision request on the proposal.",
+        "properties": {
+          "kind": {
+            "const": "revise-aimpro-syllabus",
+            "title": "Kind",
+            "type": "string"
+          },
+          "proposal": {
+            "description": "Syllabus proposal id, whose latest revision holds the revision request",
+            "minLength": 1,
+            "title": "Proposal",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "proposal"
+        ],
+        "title": "RevisionJob",
+        "type": "object"
+      },
       "ScenarioInput": {
         "additionalProperties": false,
         "properties": {
@@ -2619,7 +2787,19 @@
             "type": "string"
           },
           "draft": {
-            "$ref": "#/components/schemas/SyllabusDraft"
+            "$ref": "#/components/schemas/SyllabusDraft-Output"
+          },
+          "edited_by": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Edited By"
           },
           "format": {
             "const": "aimpro-syllabus",
@@ -2637,7 +2817,33 @@
             "$ref": "#/components/schemas/EntityRef"
           },
           "review": {
-            "$ref": "#/components/schemas/SyllabusVerdict"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SyllabusVerdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revises": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EntityRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revision_reasons": {
+            "default": [],
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Revision Reasons",
+            "type": "array"
           },
           "source_snapshot": {
             "$ref": "#/components/schemas/EntityRef"
@@ -2656,13 +2862,59 @@
           "outline",
           "source_snapshot",
           "units",
-          "draft",
-          "review"
+          "draft"
         ],
         "title": "SyllabusArtifact",
         "type": "object"
       },
-      "SyllabusDraft": {
+      "SyllabusComparison": {
+        "additionalProperties": false,
+        "description": "``units`` follows the order of the later syllabus; a removed unit follows the last unit of its target.",
+        "properties": {
+          "gaps_added": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Gaps Added",
+            "type": "array"
+          },
+          "gaps_removed": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Gaps Removed",
+            "type": "array"
+          },
+          "order_changed": {
+            "title": "Order Changed",
+            "type": "boolean"
+          },
+          "title_changed": {
+            "title": "Title Changed",
+            "type": "boolean"
+          },
+          "units": {
+            "items": {
+              "$ref": "#/components/schemas/UnitComparison"
+            },
+            "minItems": 1,
+            "title": "Units",
+            "type": "array"
+          }
+        },
+        "required": [
+          "title_changed",
+          "gaps_added",
+          "gaps_removed",
+          "order_changed",
+          "units"
+        ],
+        "title": "SyllabusComparison",
+        "type": "object"
+      },
+      "SyllabusDraft-Input": {
         "additionalProperties": false,
         "properties": {
           "gaps": {
@@ -2712,6 +2964,84 @@
           "units"
         ],
         "title": "SyllabusDraft",
+        "type": "object"
+      },
+      "SyllabusDraft-Output": {
+        "additionalProperties": false,
+        "properties": {
+          "gaps": {
+            "default": [],
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Gaps",
+            "type": "array"
+          },
+          "kind": {
+            "const": "SYLLABUS_DRAFT",
+            "default": "SYLLABUS_DRAFT",
+            "title": "Kind",
+            "type": "string"
+          },
+          "metamodel_fingerprint": {
+            "minLength": 1,
+            "title": "Metamodel Fingerprint",
+            "type": "string"
+          },
+          "source_sha256": {
+            "minLength": 1,
+            "title": "Source Sha256",
+            "type": "string"
+          },
+          "title": {
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "units": {
+            "items": {
+              "$ref": "#/components/schemas/SyllabusUnit"
+            },
+            "maxItems": 96,
+            "minItems": 1,
+            "title": "Units",
+            "type": "array"
+          }
+        },
+        "required": [
+          "source_sha256",
+          "metamodel_fingerprint",
+          "title",
+          "units"
+        ],
+        "title": "SyllabusDraft",
+        "type": "object"
+      },
+      "SyllabusEdit": {
+        "additionalProperties": false,
+        "description": "The teacher's whole syllabus in place of ``proposal`` (an id); ``request_id`` makes a retry a replay.",
+        "properties": {
+          "draft": {
+            "$ref": "#/components/schemas/SyllabusDraft-Input"
+          },
+          "proposal": {
+            "minLength": 1,
+            "title": "Proposal",
+            "type": "string"
+          },
+          "request_id": {
+            "minLength": 1,
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "request_id",
+          "proposal",
+          "draft"
+        ],
+        "title": "SyllabusEdit",
         "type": "object"
       },
       "SyllabusJob": {
@@ -2794,6 +3124,150 @@
           "source_scope"
         ],
         "title": "SyllabusJob",
+        "type": "object"
+      },
+      "SyllabusProposalView": {
+        "additionalProperties": false,
+        "description": "The syllabus of a proposal, the one it refines and the course's applied syllabus, with their texts.",
+        "properties": {
+          "compared_with_current": {
+            "$ref": "#/components/schemas/SyllabusComparison"
+          },
+          "compared_with_refined": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SyllabusComparison"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "course_design": {
+            "default": "NONE",
+            "enum": [
+              "NONE",
+              "SYLLABUS",
+              "OTHER"
+            ],
+            "title": "Course Design",
+            "type": "string"
+          },
+          "current": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SyllabusRecord"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "excerpts": {
+            "items": {
+              "$ref": "#/components/schemas/CitedExcerpt"
+            },
+            "title": "Excerpts",
+            "type": "array"
+          },
+          "refined": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SyllabusRecord"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "syllabus": {
+            "$ref": "#/components/schemas/SyllabusRecord"
+          },
+          "targets": {
+            "items": {
+              "$ref": "#/components/schemas/Target"
+            },
+            "title": "Targets",
+            "type": "array"
+          }
+        },
+        "required": [
+          "syllabus",
+          "targets",
+          "excerpts",
+          "refined",
+          "compared_with_refined",
+          "current",
+          "compared_with_current"
+        ],
+        "title": "SyllabusProposalView",
+        "type": "object"
+      },
+      "SyllabusRecord": {
+        "additionalProperties": false,
+        "properties": {
+          "draft": {
+            "$ref": "#/components/schemas/SyllabusDraft-Output"
+          },
+          "edited_by": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Edited By"
+          },
+          "proposal": {
+            "$ref": "#/components/schemas/EntityRef"
+          },
+          "responsible": {
+            "minLength": 1,
+            "title": "Responsible",
+            "type": "string"
+          },
+          "review": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SyllabusVerdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reviewed_by_agent": {
+            "title": "Reviewed By Agent",
+            "type": "boolean"
+          },
+          "revision_reasons": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Revision Reasons",
+            "type": "array"
+          },
+          "status": {
+            "minLength": 1,
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "proposal",
+          "status",
+          "responsible",
+          "draft",
+          "reviewed_by_agent",
+          "review",
+          "edited_by",
+          "revision_reasons"
+        ],
+        "title": "SyllabusRecord",
         "type": "object"
       },
       "SyllabusUnit": {
@@ -2913,6 +3387,42 @@
           "reason"
         ],
         "title": "SyllabusVerdict",
+        "type": "object"
+      },
+      "Target": {
+        "additionalProperties": false,
+        "properties": {
+          "competencies": {
+            "items": {
+              "$ref": "#/components/schemas/Competency"
+            },
+            "title": "Competencies",
+            "type": "array"
+          },
+          "id": {
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "practices": {
+            "items": {
+              "$ref": "#/components/schemas/Practice"
+            },
+            "title": "Practices",
+            "type": "array"
+          },
+          "statement": {
+            "title": "Statement",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "statement",
+          "competencies",
+          "practices"
+        ],
+        "title": "Target",
         "type": "object"
       },
       "TeacherJob-Input": {
@@ -3074,6 +3584,71 @@
         "title": "TranscriptPeerLink",
         "type": "object"
       },
+      "UnitComparison": {
+        "additionalProperties": false,
+        "properties": {
+          "after": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SyllabusUnit"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "before": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SyllabusUnit"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "changed_fields": {
+            "default": [],
+            "items": {
+              "enum": [
+                "title",
+                "purpose",
+                "planned_intents",
+                "source_competency_ids",
+                "source_practice_ids",
+                "corpus_citations",
+                "coverage"
+              ],
+              "type": "string"
+            },
+            "title": "Changed Fields",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "ADDED",
+              "REMOVED",
+              "CHANGED",
+              "UNCHANGED"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "target_id": {
+            "minLength": 1,
+            "title": "Target Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "target_id",
+          "before",
+          "after"
+        ],
+        "title": "UnitComparison",
+        "type": "object"
+      },
       "UnitCoverage": {
         "additionalProperties": false,
         "properties": {
@@ -3151,7 +3726,7 @@
   },
   "info": {
     "title": "ALM Authoring API",
-    "version": "0.6.0"
+    "version": "0.7.0"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -5493,6 +6068,209 @@
         "summary": "The exact excerpts of a preparation job, for the teacher's choice",
         "tags": [
           "sources"
+        ]
+      }
+    },
+    "/contexts/{context_id}/syllabus-edits": {
+      "post": {
+        "operationId": "syllabus_edit_contexts__context_id__syllabus_edits_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "context_id",
+            "required": true,
+            "schema": {
+              "title": "Context Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyllabusEdit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EditedSyllabus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "No valid session"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not authorized, unmapped identity or missing CSRF token"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or the context is unavailable"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict with the current state; reload and retry"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Invalid request or data"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Internal error"
+          }
+        },
+        "summary": "Record a teacher's edit of a syllabus proposal as a new proposal by that teacher",
+        "tags": [
+          "syllabus"
+        ]
+      }
+    },
+    "/contexts/{context_id}/syllabus-proposals/{proposal_id}": {
+      "get": {
+        "operationId": "syllabus_proposal_contexts__context_id__syllabus_proposals__proposal_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "context_id",
+            "required": true,
+            "schema": {
+              "title": "Context Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "proposal_id",
+            "required": true,
+            "schema": {
+              "title": "Proposal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyllabusProposalView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "No valid session"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not authorized, unmapped identity or missing CSRF token"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or the context is unavailable"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict with the current state; reload and retry"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Invalid request or data"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Internal error"
+          }
+        },
+        "summary": "A syllabus proposal in words, compared with the proposal it refines and the applied syllabus",
+        "tags": [
+          "syllabus"
         ]
       }
     },

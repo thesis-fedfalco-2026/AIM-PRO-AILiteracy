@@ -107,6 +107,14 @@ def parse_args(argv=None):
     sources.add_argument('--scenario', default='SCN01')
     sources.add_argument('--competencies', default='elena_usecase_competencies')
     sources.add_argument('--root-id')
+    revision = commands.add_parser('revise-aimpro-syllabus',
+                                   help='Ask the Curator to revise a syllabus proposal after a revision request')
+    revision.add_argument('--proposal', required=True, help='Syllabus ChangeProposal id')
+    revision.add_argument('--request-id', required=True)
+    edit = commands.add_parser('edit-aimpro-syllabus', help="Propose a teacher's own edit of a syllabus proposal, without models")
+    edit.add_argument('--proposal', required=True, help='Syllabus ChangeProposal id')
+    edit.add_argument('--draft', type=Path, required=True, help='SyllabusDraft JSON')
+    edit.add_argument('--request-id', required=True)
     syllabus = commands.add_parser('show-aimpro-syllabus', help='Resolve the exact approved/applied current syllabus')
     syllabus.add_argument('design', help='Current LearningDesign EntityRef in JSON')
     trace = commands.add_parser('export-aimpro-trace', help='Read-only ALM execution history linked to unchanged AIM-PRO objects')
@@ -279,6 +287,12 @@ def main(argv=None):
                     json.loads(args.plan.read_text()), request_id=args.request_id,
                     search_client_factory=_aimpro_search_client, scenario=args.scenario,
                     competencies=args.competencies, root_id=args.root_id).model_dump(mode='json')
+            elif command == 'revise-aimpro-syllabus':
+                result = service.revise_aimpro_syllabus(args.context, args.subject, args.proposal,
+                    request_id=args.request_id, authoring_factory=_aimpro_authoring).model_dump(mode='json')
+            elif command == 'edit-aimpro-syllabus':
+                result = service.edit_aimpro_syllabus(args.context, args.subject, args.proposal,
+                    json.loads(args.draft.read_text()), request_id=args.request_id).model_dump(mode='json')
             elif command == 'show-aimpro-syllabus':
                 result = service.approved_aimpro_syllabus(args.context, args.subject,
                     EntityRef.model_validate_json(args.design)).model_dump(mode='json')

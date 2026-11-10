@@ -30,13 +30,29 @@ def syllabus(data=None):
         units=units, gaps=('Original source resource and vocabulary diagnostics remain unresolved.',))
 
 
+def revised_syllabus(data=None):
+    """A second syllabus on the same source (S09b): the first unit changed and a second unit on its target."""
+    draft = syllabus(data)
+    first = draft.units[0]
+    return draft.model_copy(update={'title': 'Synthetic business prompting syllabus, revised', 'units': (
+        first.model_copy(update={'purpose': 'Observe a live prompt, then practice task, audience and tone.'}),
+        first.model_copy(update={'key': 'unit-explain', 'title': 'Explain two prompting choices',
+                                 'purpose': 'Write a prompt for a fictional business and explain two choices.',
+                                 'planned_intents': ('PRACTICE',)}))})
+
+
 class Curator:
-    def __init__(self, value=None):
+    """Returns ``value``, or ``revision`` when asked to revise a syllabus and one is set."""
+
+    def __init__(self, value=None, revision=None):
         self.value = value or syllabus()
+        self.revision = revision
         self.calls = []
 
     def run(self, name, prompt):
         self.calls.append((name, prompt))
+        if self.revision is not None and 'AIMPRO_SYLLABUS_REVISION' in prompt.split('\nDATA\n')[0]:
+            return self.revision
         return self.value
 
 

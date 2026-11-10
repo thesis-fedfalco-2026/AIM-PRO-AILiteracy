@@ -4,15 +4,16 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
 import { proposalPath } from '../review/paths';
-import { CURATOR, DISCOVERY, PREPARATION } from './buildApi';
+import { CURATOR, DISCOVERY, PREPARATION, REVISION } from './buildApi';
 import type { JobView } from './buildApi';
 
-type KindKey = `build.jobs.kind.${'discovery' | 'preparation' | 'curator' | 'assessments' | 'teacher' | 'trainer' | 'other'}`;
+type KindKey = `build.jobs.kind.${'discovery' | 'preparation' | 'curator' | 'revision' | 'assessments' | 'teacher' | 'trainer' | 'other'}`;
 
 const KINDS: Record<string, KindKey> = {
   [DISCOVERY]: 'build.jobs.kind.discovery',
   [PREPARATION]: 'build.jobs.kind.preparation',
   [CURATOR]: 'build.jobs.kind.curator',
+  [REVISION]: 'build.jobs.kind.revision',
   'generate-project-assessments': 'build.jobs.kind.assessments',
   'generate-project-teacher': 'build.jobs.kind.teacher',
   'generate-project-trainer': 'build.jobs.kind.trainer',

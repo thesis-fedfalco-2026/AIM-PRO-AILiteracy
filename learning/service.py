@@ -194,6 +194,40 @@ class LearningService:
         from aimpro.source_service import source_request
         return source_request(self, context_id, subject_key, request_id, kind)
 
+    def revise_aimpro_syllabus(self, context_id, subject_key, proposal, **kwargs):
+        from aimpro.syllabus_refinement import revise_syllabus
+        return revise_syllabus(self, context_id, subject_key, proposal=proposal, **kwargs)
+
+    def edit_aimpro_syllabus(self, context_id, subject_key, proposal, draft, *, request_id):
+        from aimpro.syllabus_refinement import edit_syllabus
+        return edit_syllabus(self, context_id, subject_key, request_id=request_id, proposal=proposal, draft=draft)
+
+    def aimpro_syllabus_proposal(self, context_id, subject_key, proposal_id):
+        """The syllabus of a proposal, the proposal it refines and the course's applied syllabus, to compare.
+
+        Returns ``(proposed, refined, current, design)``, each syllabus a ``ProposedSyllabus``: ``refined``
+        and ``current`` (the proposal that applied the course's syllabus) may be ``None``; ``design`` is
+        ``'NONE'``, ``'SYLLABUS'`` or ``'OTHER'`` (a course design that is not a Curator syllabus).
+        A learner-only subject reads no proposal, as in :meth:`show`.
+        """
+        from aimpro.syllabus_state import proposed, resolve
+        from learning.policies import AuthorizationError
+        with self.store.read_transaction():
+            context = self._context(context_id, subject_key)
+            if self._learner_only(subject_key):
+                raise AuthorizationError('Action is not authorized')
+            found = proposed(self.store, context, proposal_id)
+            refines = found.artifact.revises
+            refined = None if refines is None else proposed(self.store, context, refines.id)
+            design = context.snapshot.context.fields.get('learningDesign')
+            current = None
+            if design is not None:
+                try:
+                    current = proposed(self.store, context, resolve(self.store, context, design).proposal.id)
+                except ValueError:
+                    pass
+            return found, refined, current, 'NONE' if design is None else 'SYLLABUS' if current else 'OTHER'
+
     def approved_aimpro_syllabus(self, context_id, subject_key, design):
         from aimpro.syllabus_state import resolve
         with self.store.read_transaction():

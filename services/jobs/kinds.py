@@ -9,6 +9,10 @@ existing ``LearningService`` method, which authorizes, replays a recorded
 failure. Model and retrieval factories come from :class:`Resources`, which only
 the worker holds.
 
+A revision (S09b) asks the Curator to revise a syllabus proposal after the
+teacher's revision request; it is built on the input of that proposal, so it
+names no export and searches nothing.
+
 The source kinds (S09a2) build no model and propose nothing: a discovery
 records the excerpts its queries found, a preparation the exact excerpts of its
 source plan, which then await the teacher's choice.
@@ -78,6 +82,12 @@ class SyllabusJob(Record):
         return self
 
 
+class RevisionJob(Record):
+    """The Curator's revision: ``learning revise-aimpro-syllabus``, after a revision request on the proposal."""
+    kind: Literal['revise-aimpro-syllabus']
+    proposal: Text = Field(description='Syllabus proposal id, whose latest revision holds the revision request')
+
+
 class DiscoveryJob(Record):
     """Source discovery: ``learning discover-aimpro-syllabus-sources``; no model."""
     kind: Literal['discover-aimpro-syllabus-sources']
@@ -100,8 +110,8 @@ class PreparationJob(Record):
         return self
 
 
-JobCommand = Annotated[AssessmentJob | TeacherJob | TrainerJob | SyllabusJob | DiscoveryJob | PreparationJob,
-                       Field(discriminator='kind')]
+JobCommand = Annotated[AssessmentJob | TeacherJob | TrainerJob | SyllabusJob | RevisionJob | DiscoveryJob |
+                       PreparationJob, Field(discriminator='kind')]
 
 
 class JobKind(NamedTuple):
@@ -134,6 +144,11 @@ def _syllabus(service, context_id, subject_key, request_id, job, resources):
         competencies=job.competencies, root_id=job.root_id, source_scope=job.source_scope, query=job.query,
         k=job.k, search_factory=resources.search if job.prepared_sources is None else None,
         prepared_sources=job.prepared_sources)
+
+
+def _revision(service, context_id, subject_key, request_id, job, resources):
+    return service.revise_aimpro_syllabus(context_id, subject_key, job.proposal, request_id=request_id,
+                                          authoring_factory=resources.authoring)
 
 
 NOT_ACCEPTED = 'The prepared sources have not been accepted by the teacher'
@@ -177,6 +192,7 @@ KINDS = {kind.name: kind for kind in (
     JobKind('generate-project-teacher', TeacherJob, _project('generate_project_teacher')),
     JobKind('generate-project-trainer', TrainerJob, _project('generate_project_trainer')),
     JobKind('generate-aimpro-syllabus', SyllabusJob, _syllabus),
+    JobKind('revise-aimpro-syllabus', RevisionJob, _revision),
     JobKind('discover-aimpro-syllabus-sources', DiscoveryJob, _discovery),
     JobKind('prepare-aimpro-syllabus-sources', PreparationJob, _preparation),
 )}

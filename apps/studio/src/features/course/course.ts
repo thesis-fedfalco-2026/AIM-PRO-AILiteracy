@@ -13,6 +13,8 @@ export interface CourseOverview {
   status: string;
   mode: string;
   structure: CourseNode | null;
+  /** The applied Curator syllabus of the design, in words (S09b), or null when the design is not one. */
+  syllabus: CourseSyllabus | null;
   outcomes: { statement: string; competences: string[] }[];
   competences: { name: string; definition: string }[];
   strategies: { name: string; family: string; rationale: string; constraints: string[] }[];
@@ -27,6 +29,13 @@ export interface CourseOverview {
   /** Cited external sources (a locator, not a text). */
   sources: { title: string; url: string; conditions: string }[];
   history: HistoryEntry[];
+}
+
+export interface CourseSyllabus {
+  title: string;
+  /** The teacher who edited it, or null when the Curator wrote it. */
+  editedBy: string | null;
+  units: { title: string; purpose: string; intents: string[] }[];
 }
 
 export interface CourseNode {
@@ -71,6 +80,28 @@ function criteriaOf(rubric: Entity): Criterion[] {
     description: text(criterion.description),
     levels: objects(criterion.levels).map((level) => ({ key: text(level.key), descriptor: text(level.descriptor) })),
   }));
+}
+
+/** The syllabus payload whose outline is `designId`, among the course's resources. */
+function syllabusOf(resources: Entity[], designId: string): CourseSyllabus | null {
+  for (const { fields } of resources) {
+    let payload: unknown;
+    try {
+      payload = JSON.parse(text(fields.contentOrLocator));
+    } catch {
+      continue;
+    }
+    const found = objects(payload as JsonValue)[0];
+    if (!found || found.format !== 'aimpro-syllabus' || refId(found.outline) !== designId) continue;
+    const draft = objects(found.draft)[0];
+    return {
+      title: text(draft?.title),
+      editedBy: text(found.edited_by) || null,
+      units: objects(draft?.units).map((unit) => ({
+        title: text(unit.title), purpose: text(unit.purpose), intents: texts(unit.planned_intents) })),
+    };
+  }
+  return null;
 }
 
 const isPackage = (content: string) => content.trimStart().startsWith('{');
@@ -131,6 +162,7 @@ export function courseOverview(context: Entity, entities: Entity[]): CourseOverv
     status: text(context.fields.status),
     mode: text(context.fields.mode),
     structure: node(refId(design.fields.root), new Set()),
+    syllabus: syllabusOf(resources, design.id),
     outcomes: outcomes.map((outcome) => ({
       statement: text(outcome.fields.statement),
       competences: all('Topic', refIds(outcome.fields.topics)).map((topic) => text(topic.fields.name)),

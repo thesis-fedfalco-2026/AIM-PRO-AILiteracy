@@ -378,6 +378,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/contexts/{context_id}/syllabus-edits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record a teacher's edit of a syllabus proposal as a new proposal by that teacher */
+        post: operations["syllabus_edit_contexts__context_id__syllabus_edits_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/contexts/{context_id}/syllabus-proposals/{proposal_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A syllabus proposal in words, compared with the proposal it refines and the applied syllabus */
+        get: operations["syllabus_proposal_contexts__context_id__syllabus_proposals__proposal_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/courses": {
         parameters: {
             query?: never;
@@ -495,6 +529,39 @@ export interface components {
              * @enum {string}
              */
             kind: "generate-project-assessments";
+        };
+        /**
+         * CitedExcerpt
+         * @description An excerpt a unit may cite; ``purpose`` and ``limitations`` exist for prepared sources only.
+         */
+        CitedExcerpt: {
+            /** Document Id */
+            document_id: string;
+            /** Licence */
+            licence: string;
+            /** Limitations */
+            limitations: string[];
+            /** Purpose */
+            purpose: string | null;
+            /** Resource Id */
+            resource_id: string;
+            /** Resource Version */
+            resource_version: string;
+            /** Text */
+            text: string;
+            /** Title */
+            title: string;
+            /** Uri */
+            uri: string;
+        };
+        /** Competency */
+        Competency: {
+            /** Description */
+            description: string;
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
         };
         /**
          * ContextSummary
@@ -667,6 +734,10 @@ export interface components {
              * @enum {string}
              */
             kind: "discover-aimpro-syllabus-sources";
+        };
+        /** EditedSyllabus */
+        EditedSyllabus: {
+            proposal: components["schemas"]["EntityRef"];
         };
         /** Entity */
         Entity: {
@@ -868,7 +939,7 @@ export interface components {
          */
         JobRequest: {
             /** Job */
-            job: components["schemas"]["AssessmentJob-Input"] | components["schemas"]["TeacherJob-Input"] | components["schemas"]["TrainerJob-Input"] | components["schemas"]["SyllabusJob"] | components["schemas"]["DiscoveryJob-Input"] | components["schemas"]["PreparationJob-Input"];
+            job: components["schemas"]["AssessmentJob-Input"] | components["schemas"]["TeacherJob-Input"] | components["schemas"]["TrainerJob-Input"] | components["schemas"]["SyllabusJob"] | components["schemas"]["RevisionJob"] | components["schemas"]["DiscoveryJob-Input"] | components["schemas"]["PreparationJob-Input"];
             /** Request Id */
             request_id: string;
         };
@@ -884,7 +955,7 @@ export interface components {
             /** Detail */
             detail?: string | null;
             /** Job */
-            job: components["schemas"]["AssessmentJob-Output"] | components["schemas"]["TeacherJob-Output"] | components["schemas"]["TrainerJob-Output"] | components["schemas"]["SyllabusJob"] | components["schemas"]["DiscoveryJob-Output"] | components["schemas"]["PreparationJob-Output"];
+            job: components["schemas"]["AssessmentJob-Output"] | components["schemas"]["TeacherJob-Output"] | components["schemas"]["TrainerJob-Output"] | components["schemas"]["SyllabusJob"] | components["schemas"]["RevisionJob"] | components["schemas"]["DiscoveryJob-Output"] | components["schemas"]["PreparationJob-Output"];
             /** Proposal Refs */
             proposal_refs: components["schemas"]["EntityRef"][];
             /** Request Id */
@@ -953,6 +1024,15 @@ export interface components {
         PendingProposals: {
             /** Proposals */
             proposals: components["schemas"]["PendingProposal"][];
+        };
+        /** Practice */
+        Practice: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Text */
+            text: string;
         };
         /**
          * PreparationJob
@@ -1154,6 +1234,22 @@ export interface components {
             change: components["schemas"]["EntityRef"];
             decision: components["schemas"]["EntityRef"];
             proposal: components["schemas"]["EntityRef"];
+        };
+        /**
+         * RevisionJob
+         * @description The Curator's revision: ``learning revise-aimpro-syllabus``, after a revision request on the proposal.
+         */
+        RevisionJob: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "revise-aimpro-syllabus";
+            /**
+             * Proposal
+             * @description Syllabus proposal id, whose latest revision holds the revision request
+             */
+            proposal: string;
         };
         /** ScenarioInput */
         ScenarioInput: {
@@ -1404,7 +1500,9 @@ export interface components {
              * @constant
              */
             curator: "syllabus-designer";
-            draft: components["schemas"]["SyllabusDraft"];
+            draft: components["schemas"]["SyllabusDraft-Output"];
+            /** Edited By */
+            edited_by?: string | null;
             /**
              * Format
              * @default aimpro-syllabus
@@ -1418,13 +1516,35 @@ export interface components {
              */
             format_version: 1;
             outline: components["schemas"]["EntityRef"];
-            review: components["schemas"]["SyllabusVerdict"];
+            review?: components["schemas"]["SyllabusVerdict"] | null;
+            revises?: components["schemas"]["EntityRef"] | null;
+            /**
+             * Revision Reasons
+             * @default []
+             */
+            revision_reasons: string[];
             source_snapshot: components["schemas"]["EntityRef"];
             /** Units */
             units: components["schemas"]["UnitLink"][];
         };
+        /**
+         * SyllabusComparison
+         * @description ``units`` follows the order of the later syllabus; a removed unit follows the last unit of its target.
+         */
+        SyllabusComparison: {
+            /** Gaps Added */
+            gaps_added: string[];
+            /** Gaps Removed */
+            gaps_removed: string[];
+            /** Order Changed */
+            order_changed: boolean;
+            /** Title Changed */
+            title_changed: boolean;
+            /** Units */
+            units: components["schemas"]["UnitComparison"][];
+        };
         /** SyllabusDraft */
-        SyllabusDraft: {
+        "SyllabusDraft-Input": {
             /**
              * Gaps
              * @default []
@@ -1444,6 +1564,39 @@ export interface components {
             title: string;
             /** Units */
             units: components["schemas"]["SyllabusUnit"][];
+        };
+        /** SyllabusDraft */
+        "SyllabusDraft-Output": {
+            /**
+             * Gaps
+             * @default []
+             */
+            gaps: string[];
+            /**
+             * Kind
+             * @default SYLLABUS_DRAFT
+             * @constant
+             */
+            kind: "SYLLABUS_DRAFT";
+            /** Metamodel Fingerprint */
+            metamodel_fingerprint: string;
+            /** Source Sha256 */
+            source_sha256: string;
+            /** Title */
+            title: string;
+            /** Units */
+            units: components["schemas"]["SyllabusUnit"][];
+        };
+        /**
+         * SyllabusEdit
+         * @description The teacher's whole syllabus in place of ``proposal`` (an id); ``request_id`` makes a retry a replay.
+         */
+        SyllabusEdit: {
+            draft: components["schemas"]["SyllabusDraft-Input"];
+            /** Proposal */
+            proposal: string;
+            /** Request Id */
+            request_id: string;
         };
         /**
          * SyllabusJob
@@ -1483,6 +1636,43 @@ export interface components {
             /** Source Scope */
             source_scope: string;
         };
+        /**
+         * SyllabusProposalView
+         * @description The syllabus of a proposal, the one it refines and the course's applied syllabus, with their texts.
+         */
+        SyllabusProposalView: {
+            compared_with_current: components["schemas"]["SyllabusComparison"];
+            compared_with_refined: components["schemas"]["SyllabusComparison"] | null;
+            /**
+             * Course Design
+             * @default NONE
+             * @enum {string}
+             */
+            course_design: "NONE" | "SYLLABUS" | "OTHER";
+            current: components["schemas"]["SyllabusRecord"] | null;
+            /** Excerpts */
+            excerpts: components["schemas"]["CitedExcerpt"][];
+            refined: components["schemas"]["SyllabusRecord"] | null;
+            syllabus: components["schemas"]["SyllabusRecord"];
+            /** Targets */
+            targets: components["schemas"]["Target"][];
+        };
+        /** SyllabusRecord */
+        SyllabusRecord: {
+            draft: components["schemas"]["SyllabusDraft-Output"];
+            /** Edited By */
+            edited_by: string | null;
+            proposal: components["schemas"]["EntityRef"];
+            /** Responsible */
+            responsible: string;
+            review: components["schemas"]["SyllabusVerdict"] | null;
+            /** Reviewed By Agent */
+            reviewed_by_agent: boolean;
+            /** Revision Reasons */
+            revision_reasons: string[];
+            /** Status */
+            status: string;
+        };
         /** SyllabusUnit */
         SyllabusUnit: {
             /** Corpus Citations */
@@ -1520,6 +1710,17 @@ export interface components {
              * @enum {string}
              */
             verdict: "ACCEPT" | "REJECT" | "UNCERTAIN";
+        };
+        /** Target */
+        Target: {
+            /** Competencies */
+            competencies: components["schemas"]["Competency"][];
+            /** Id */
+            id: string;
+            /** Practices */
+            practices: components["schemas"]["Practice"][];
+            /** Statement */
+            statement: string;
         };
         /**
          * TeacherJob
@@ -1613,6 +1814,23 @@ export interface components {
             peer_key: string;
             /** Transcript Key */
             transcript_key: string;
+        };
+        /** UnitComparison */
+        UnitComparison: {
+            after: components["schemas"]["SyllabusUnit"] | null;
+            before: components["schemas"]["SyllabusUnit"] | null;
+            /**
+             * Changed Fields
+             * @default []
+             */
+            changed_fields: ("title" | "purpose" | "planned_intents" | "source_competency_ids" | "source_practice_ids" | "corpus_citations" | "coverage")[];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ADDED" | "REMOVED" | "CHANGED" | "UNCHANGED";
+            /** Target Id */
+            target_id: string;
         };
         /** UnitCoverage */
         UnitCoverage: {
@@ -3290,6 +3508,163 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SourcePreparationView"];
+                };
+            };
+            /** @description No valid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not authorized, unmapped identity or missing CSRF token */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or the context is unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflict with the current state; reload and retry */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Invalid request or data */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Internal error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    syllabus_edit_contexts__context_id__syllabus_edits_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                context_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SyllabusEdit"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EditedSyllabus"];
+                };
+            };
+            /** @description No valid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not authorized, unmapped identity or missing CSRF token */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or the context is unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflict with the current state; reload and retry */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Invalid request or data */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Internal error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    syllabus_proposal_contexts__context_id__syllabus_proposals__proposal_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                context_id: string;
+                proposal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyllabusProposalView"];
                 };
             };
             /** @description No valid session */

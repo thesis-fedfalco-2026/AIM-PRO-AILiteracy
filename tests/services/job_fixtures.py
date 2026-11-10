@@ -20,7 +20,7 @@ from services.jobs.worker import Worker
 from tests.authoring_cycle_fixtures import AUTH
 from tests.generator_fixtures import SyntheticModels
 from tests.store_backends import _administer, backend, postgres_url
-from tests.syllabus_fixtures import Curator, Reviewer
+from tests.syllabus_fixtures import Curator, Reviewer, revised_syllabus
 from tests.test_aimpro_retrieval import response as corpus_response
 
 
@@ -53,7 +53,7 @@ class SyntheticAgents:
 
     def __init__(self, exports=None):
         self.models = SyntheticModels()
-        self.curator, self.reviewer = Curator(), Reviewer()
+        self.curator, self.reviewer = Curator(revision=revised_syllabus()), Reviewer()
         self.built = []
         self.searches, self.fetches = [], []
         self.exports = exports
@@ -171,3 +171,8 @@ def preparation_job(export, **changes):
 def prepared_syllabus_job(export, prepared_sources, source_scope='wp3'):
     return {'kind': 'generate-aimpro-syllabus', 'project': export, 'source_scope': source_scope,
             'prepared_sources': prepared_sources}
+
+
+def revision_job(proposal_id):
+    """The Curator's revision of a syllabus proposal after the teacher's revision request (S09b)."""
+    return {'kind': 'revise-aimpro-syllabus', 'proposal': proposal_id}

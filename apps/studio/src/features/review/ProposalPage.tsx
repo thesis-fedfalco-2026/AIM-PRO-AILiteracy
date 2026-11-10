@@ -1,6 +1,6 @@
 import { useSession } from '@alm/auth';
 import { StatusMessage } from '@alm/ui';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
@@ -11,11 +11,16 @@ import { Diagnostics } from './Diagnostics';
 import { compareCandidates, latestProposals, proposalExplanation, proposalStatus, refOf } from './model';
 import { LoadFailure, useStatusLabel } from './parts';
 import { ReviewError } from './reviewApi';
-import type { DecisionKind, Entity, Finding, Inbox, JsonValue, PendingProposal, ReviewFailure } from './reviewApi';
+import type {
+  DecisionKind, Entity, Finding, Inbox, JsonValue, PendingProposal, ReviewFailure, SyllabusProposalView,
+} from './reviewApi';
 import { useCsrfToken, useReviewServices } from './ReviewServices';
-import { coursePath, inboxPath } from './paths';
+import { RevisionStep } from './RevisionStep';
+import { coursePath, inboxPath, syllabusEditPath } from './paths';
+import { isSyllabusProposal } from './syllabus';
+import { SyllabusView } from './SyllabusView';
 import { plainIssues, teacherView } from './teacher';
-import { TeacherView } from './TeacherView';
+import { Issues, TeacherView } from './TeacherView';
 import { useInbox } from './useInbox';
 
 type Notice = { tone: 'info' | 'error'; text: string };
@@ -85,6 +90,50 @@ function TechnicalDetails({ proposal, pending, inbox, findings, report }: {
   );
 }
 
+type SyllabusState = { status: 'loading' } | { status: 'ready'; view: SyllabusProposalView } | { status: 'error' };
+
+/** The syllabus of a syllabus proposal, read again when the proposal gets a new revision. */
+function useSyllabus(contextId: string, proposal: Entity): SyllabusState {
+  const { api } = useReviewServices();
+  const [state, setState] = useState<SyllabusState>({ status: 'loading' });
+  const { id, version } = proposal;
+  useEffect(() => {
+    let current = true;
+    setState({ status: 'loading' });
+    api.syllabusProposal(contextId, id).then(
+      (view) => current && setState({ status: 'ready', view }),
+      () => current && setState({ status: 'error' }),
+    );
+    return () => {
+      current = false;
+    };
+  }, [api, contextId, id, version]);
+  return state;
+}
+
+/** The syllabus in words, what to check, and the refinement steps: a Curator revision or the teacher's edit. */
+function SyllabusContent({ inbox, proposal, issues }: {
+  inbox: Inbox; proposal: Entity; issues: ReturnType<typeof plainIssues>;
+}) {
+  const { t } = useTranslation();
+  const contextId = inbox.context.id;
+  const state = useSyllabus(contextId, proposal);
+  const decisionId = typeof proposal.fields.decision === 'object' && proposal.fields.decision !== null
+    && !Array.isArray(proposal.fields.decision) ? proposal.fields.decision.id : undefined;
+  const decision = inbox.entities.find((entity) => entity.type === 'HumanDecision' && entity.id === decisionId);
+  const revision = proposalStatus(proposal) === 'DRAFT' && decision?.fields.decision === 'REQUEST_REVISION';
+  return (
+    <>
+      {state.status === 'loading' ? <StatusMessage>{t('review.syllabus.loading')}</StatusMessage> : null}
+      {state.status === 'error' ? <StatusMessage tone="error">{t('review.syllabus.failed')}</StatusMessage> : null}
+      {state.status === 'ready' ? <SyllabusView view={state.view} /> : null}
+      <Issues issues={issues} />
+      {revision ? <RevisionStep contextId={contextId} proposalId={proposal.id} reason={String(decision.fields.reason ?? '')} /> : null}
+      <p><Link to={syllabusEditPath(contextId, proposal.id)}>{t('review.syllabus.edit.open')}</Link></p>
+    </>
+  );
+}
+
 function ProposalContent({ inbox, proposalId, busy, onDecide, onApply }: {
   inbox: Inbox; proposalId: string; busy: boolean;
   onDecide(pending: PendingProposal, decision: DecisionKind, reason: string): void;
@@ -100,11 +149,14 @@ function ProposalContent({ inbox, proposalId, busy, onDecide, onApply }: {
   const status = proposalStatus(proposal);
   const findings = (Array.isArray(proposal.fields.findings) ? proposal.fields.findings : []) as unknown as Finding[];
   const issues = plainIssues(explanation.details, findings, inbox.findings);
-  const view = pending ? teacherView(pending.candidates, [inbox.context, ...inbox.entities]) : null;
+  const syllabus = isSyllabusProposal(proposal);
+  const view = pending && !syllabus ? teacherView(pending.candidates, [inbox.context, ...inbox.entities]) : null;
+  const title = syllabus ? t('review.teacher.titleSyllabus')
+    : view?.isAssessment ? t('review.teacher.titleAssessment') : t('review.teacher.titleOther');
   return (
     <>
       <p className="alm-lead">
-        <strong>{view?.isAssessment ? t('review.teacher.titleAssessment') : t('review.teacher.titleOther')}</strong>
+        <strong>{title}</strong>
       </p>
       <p>
         {t('review.teacher.byline', { responsible: proposal.provenance.responsible })}
@@ -115,6 +167,7 @@ function ProposalContent({ inbox, proposalId, busy, onDecide, onApply }: {
       {pending || status === 'APPROVED' ? null : <p>{t('review.proposal.notPending', { status: statusLabel(status) })}</p>}
       {status === 'APPROVED' ? <ApplyStep busy={busy} onApply={() => onApply(proposal)} /> : null}
       {view ? <TeacherView view={view} issues={issues} /> : null}
+      {syllabus ? <SyllabusContent inbox={inbox} proposal={proposal} issues={issues} /> : null}
       {pending ? <DecisionForm busy={busy} onDecide={(decision, reason) => onDecide(pending, decision, reason)} /> : null}
       <TechnicalDetails proposal={proposal} pending={pending} inbox={inbox} findings={findings} report={explanation.details} />
     </>
