@@ -5,7 +5,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test as base } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
-import { DATABASE, PRISTINE, ROOT, SEED, TELEMETRY_OFF, python } from './stack/paths.mjs';
+import { DATABASE, JOBS, PRISTINE, ROOT, SEED, TELEMETRY_OFF, python } from './stack/paths.mjs';
 
 /** The English catalogue: tests find controls by the text people see. */
 export const en = JSON.parse(readFileSync(new URL('../studio/src/i18n/en.json', import.meta.url), 'utf8'));
@@ -63,6 +63,10 @@ export const test = base.extend<{ seed: SeedManifest }>({
     }
     copyFileSync(PRISTINE, `${DATABASE}.restore`);
     renameSync(`${DATABASE}.restore`, DATABASE);
+    // The jobs of an earlier test go too. The worker keeps the jobs database open: its rows are deleted, the file stays.
+    const cleared = spawnSync(python(), ['-c', 'import sqlite3, sys\nwith sqlite3.connect(sys.argv[1]) as db:\n'
+      + '    db.execute("DELETE FROM events"); db.execute("DELETE FROM jobs")', JOBS], { encoding: 'utf8' });
+    expect(cleared.status, cleared.stderr).toBe(0);
     await use(JSON.parse(readFileSync(`${SEED}seed.json`, 'utf8')) as SeedManifest);
   }, { auto: true }],
 });

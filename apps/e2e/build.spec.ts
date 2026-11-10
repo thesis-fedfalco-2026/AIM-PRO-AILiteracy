@@ -47,7 +47,7 @@ test('a course is built from an uploaded AIM-PRO model', async ({ page }) => {
   // The bytes are kept as received, under their digest.
   expect(exportsDigests()[`${sha256(uploaded)}.json`]).toBe(sha256(uploaded));
 
-  await page.getByLabel(en.build.curator.scope).fill('wp3');
+  await page.getByLabel(en.build.curator.scope, { exact: true }).fill('wp3');
   await page.getByLabel(en.build.curator.query).fill('prompting');
   await page.getByRole('button', { name: en.build.curator.submit }).click();
   await expect(page.getByText(en.build.curator.proposed)).toBeVisible({ timeout: 30_000 });

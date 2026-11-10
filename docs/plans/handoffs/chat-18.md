@@ -82,6 +82,7 @@ is final.
 | `tests/test_source_discovery.py`, `tests/services/test_authoring_sources_api.py` | New |
 | `tests/services/test_job_store.py`, `test_job_worker.py`, `job_fixtures.py`, `test_api_openapi.py`, `test_api_contexts.py` | New statuses, kinds, synthetic search client, contract assertions |
 | `apps/studio/test/build.test.tsx`, `apps/e2e/build.spec.ts` | Unit tests and the browser acceptance test |
+| `apps/e2e/support.ts`, `apps/e2e/stack/paths.mjs`, `apps/e2e/stack/api.mjs` | The jobs of an earlier test are deleted before each test, as the database is restored |
 | `docs/architecture/role-applications.md`, `docs/aimpro/selected-sources.md` | "Source preparation as a job (S09a2)", job contract, routes, browser test row; discovery in the source guide |
 | `.github/workflows/aimpro-contracts.yml` | `+ tests.test_source_discovery` (job with `test_source_selection`), `+ tests.services.test_authoring_sources_api` (`api-skeleton`) |
 
@@ -125,6 +126,19 @@ on the `wp3` corpus through MCP (the worker's production search client is the
 CLI's, unchanged; no live run). The coverage-requirement form in a browser
 (unit-tested only; the browser test uses no requirement). A preparation with the
 LPO export.
+
+**First CI run** on `d2951af` (push run
+[42803800139](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/actions/runs/42803800139),
+pull_request run
+[42803839640](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/actions/runs/42803839640)):
+every job passed except `browser`. The new S09a2 browser test **passed**; two
+S09a tests failed. (1) `getByLabel('Source scope')` also matched the new
+"Source scope to search" (Playwright matches substrings): the S09a test now asks
+for the exact label. (2) The browser stack restored the database before each
+test but not the jobs database, so the preparation accepted by the S09a2 test
+was still offered to the Curator of the next test on the same course id: the
+per-test fixture now deletes the jobs too. The result of the next run is in
+the PR.
 
 ## Acceptance items of #101
 

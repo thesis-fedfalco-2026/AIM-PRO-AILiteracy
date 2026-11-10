@@ -519,8 +519,9 @@ WCAG 2.1 A and AA rules). `npm run test:browser` in `apps/`:
    `.venv/bin/python`, else `python3`;
 2. builds the studio and serves it with `vite preview` on `127.0.0.1:58000`;
 3. signs in once as `dev-admin` and once as `dev-learner` through Keycloak and keeps the session cookies;
-4. restores the seed database before each test and removes the course policy
-   files an earlier test created; tests run one at a time.
+4. restores the seed database before each test, removes the course policy
+   files an earlier test created and deletes the jobs of the jobs database
+   (`e2e/.state/jobs.sqlite`, kept open by the worker); tests run one at a time.
 
 Ports already in use fail the run (no reuse of another process). The tests need
 Keycloak running (`compose.identity.yml`) and the same `ALM_KEYCLOAK_DEV_PASSWORD`
