@@ -199,3 +199,14 @@ Still open from the roadmap: D19, D21, D25, G7 / D4.
 After the owner merges this PR (which closes #104): **S09c — Rubrics,
 assessments and content from the studio**, whose acceptance is in the roadmap;
 it includes the 24-unit caps, with the owner.
+
+## PR and CI
+
+PR [#105](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/pull/105),
+commit `e6ef3b3` (the change) and this handoff update. CI on `e6ef3b3`, push run
+[42816541682](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/actions/runs/42816541682)
+and pull_request run
+[42816584870](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/actions/runs/42816584870):
+all 14 jobs passed, `browser` included (the new `refinement.spec.ts` with the
+synthetic worker) and `store-backends` (the PostgreSQL variants of the
+revision jobs).
