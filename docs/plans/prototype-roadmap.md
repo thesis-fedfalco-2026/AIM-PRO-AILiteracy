@@ -43,8 +43,8 @@ them and names what is new.
 | Course in sections | S07b | done (read only): PR #90, reaching `main` through PR #92 |
 | Review in plain words | S07 | teacher view done for assessments (reaching `main` through PR #92); other proposal kinds in S09c |
 | AIM-PRO upload starts a build | S09a | done: PR #98 (course created from the studio, upload, Curator job, project initialization) |
-| Sources prepared, then accepted by the teacher | S09a2 (new) | needs S09a; D22 |
-| Progressive refinement with agents | S09b (new) | needs S08; D18 decided |
+| Sources prepared, then accepted by the teacher | S09a2 | done: PR #103 (discovery and preparation jobs, the teacher's choice, job list) |
+| Progressive refinement with agents | S09b | done: PR #105 (syllabus in words, Curator revisions and teacher edits, compared by learning target) |
 | Rubrics, assessments, teacher and trainer content | S09c (was S09) | needs S08 |
 | Course validation | S10 | activation blocked by D4 until S11 |
 | Learner: my courses, material, syllabus | S12, S13 (extended) | needs S11 and D19; D20 decided |
@@ -81,6 +81,8 @@ Facts in this table are a snapshot. Every chat re-verifies the ones it uses.
 | D22 | Source preparation becomes an agent job, in its own step (S09a2), not in S09a. Its result is the prepared sources, not a proposal: the teacher reviews them and decides whether the Curator syllabus job uses them; nothing is used until the teacher accepts. The job contract gains an outcome for "completed, awaiting the teacher's choice" (Chat 16 owner answer 1, Chat 17) | 9 Nov 2026 |
 | D23 | A teacher creates a course from the studio, and the API writes its policy. An operator installs a course template (`ALM_COURSE_TEMPLATE`, read only for the API) naming the subjects who may create courses and the source scopes of a new course. `POST /courses` writes one new policy file in `ALM_POLICY_DIR` granting the creator `ADMINISTRATOR` and `CONTENT_RESPONSIBLE` in that context only, and bootstraps the context in PREPARATION/DRAFT. The API never changes or removes an existing policy file; the same request returns the same course (Chat 17, issue #97) | 9 Nov 2026 |
 | D24 | Uploaded AIM-PRO exports are stored unchanged in the worker's export directory (`ALM_AIMPRO_EXPORTS`) as `<sha256>.json`. An upload is refused when it is not JSON, is over the size limit (10 MiB, configurable), is not a jjodel megamodel 1.0 export, its metamodels cannot be read, or the chosen scenario and competency catalogue cannot be resolved. Findings against the generated contracts do not refuse it: they are diagnostics shown in plain words (Chat 16 owner answer 2, Chat 17) | 9 Nov 2026 |
+| D26 | Source preparation (S09a2) is two jobs. A model-free discovery job runs the teacher's queries and records what they found (in the ALM requests store, replayed without a new search); the teacher picks excerpts with their purpose and limitations; the preparation job fetches them exactly (`SourcePlan` unchanged). The teacher's acceptance is recorded in the jobs store: a preparation job ends `AWAITING_CHOICE` and the teacher moves it to `ACCEPTED` or `DECLINED`; the API and the worker refuse a Curator job on a preparation that is not accepted, while the CLI `--prepared-sources` stays an operator path without acceptance. A minimal job list is on the build page. Coverage requirements are an optional form guided by the uploaded export (Chat 18, issue #101) | 10 Nov 2026 |
+| D27 | Syllabus refinement (S09b, refines D18). Units of two syllabi are paired by learning target (`source_target_id`), in their order when several share a target. The Curator holds the conversation (no separate Design Agent): a revision request is one turn, and the revision job gives the Curator the previous syllabus and the reasons of the whole chain. A teacher's edit is complete (every field; units added, removed and reordered), passes the same checks as a generated syllabus and is a proposal by that teacher, declared not reviewed by the agent; the agent's review of an edit is optional and does not block (its form is D29). A refinement reuses the input of the proposal it refines, accepted sources included, while the course is still at that proposal's step; otherwise the sources are prepared again (Chat 19, issue #104) | 10 Nov 2026 |
 | D20 | A learner sees everything needed to follow and learn from the course: syllabus, material, activities, exercises and the rest of the learning content. What the learner sees comes from the validated course, never from drafts or other learners' records; the exact projection (for example rubrics and assessment criteria) is defined in S12 with the owner | 9 Nov 2026 |
 | Earlier | Socratic option b; live model runs only with owner authorization; never edit AIM-PRO/jjodel exports | see `docs/architecture/agentic-network-decisions.md` |
 
@@ -109,6 +111,8 @@ Open decisions that block later steps, not decided here:
 | D19 | How a learner's courses are listed: the contexts where the learner is a participant (needs an API that lists the subject's own contexts, a change from "responses never reveal which contexts exist", D10), or an enrolment record. The owner could not try the learner side yet (9 Nov 2026): no learner app exists before S13 | S12 |
 | D21 | The trainer's role once a course is validated, beyond authoring trainer content. Owner direction (9 Nov 2026), to be clarified: the trainer is used to give learners practice, a kind of Socratic agent that hands out exercises with a method. Open points: whether the trainer is a person, an agent or both, and how it relates to the Socratic coach of S13 | after S13 |
 | D25 | Course membership: how other teachers, trainers and learners join a course created from the studio (D23 gives its policy one subject, the creator). Options include new policy versions written by the API, a change of a context's `policies` reference, or an enrolment record (related to D19) | S10 for learners in delivery; any course with more than one author |
+| D28 | A Curator revision of the syllabus in use. Today an applied syllabus can be edited by the teacher but not revised by the Curator: a revision needs a revision request, and a decision on an applied proposal is not one. Options: a revision job that carries its own reason, or a new decision kind (Chat 19 finding 2) | when a course is refined after it is applied |
+| D29 | The form of the optional agent review of a teacher's edit (D27): a job that records a new proposal with the review agent's verdict, or a review record beside the edited proposal. Needs a model call (Chat 19 finding 3) | before the review of an edit is offered |
 | D17 | Deployment owner and shared environment | any shared deployment |
 | D6 | Sending the convergence draft to `rik99` | nothing in this roadmap |
 | Decision 6 details | Organisation documents and guidance | S15 |
@@ -168,8 +172,8 @@ metamodel.
 | S07b | 2 | Studio course overview, read only (owner, 9 Nov 2026) | S07 |
 | S08 | 3 | Agent job worker and progress stream | S07b, D14 |
 | S09a | 4 | Course from an uploaded AIM-PRO model: course creation, upload, Curator job, syllabus proposal, project initialization (done: PR #98) | S08 |
-| S09a2 | 4 | Source preparation as a job; the teacher reviews and accepts the prepared sources for the Curator | S09a, D22 |
-| S09b | 4 | Progressive refinement of the syllabus and design with the agents | S09a, D18 |
+| S09a2 | 4 | Source preparation as a job; the teacher reviews and accepts the prepared sources for the Curator (done: PR #103) | S09a, D22 |
+| S09b | 4 | Progressive refinement of the syllabus with the Curator and the teacher (done: PR #105) | S09a, D18 |
 | S09c | 4 | Rubrics, assessments, teacher and trainer content from the studio; teacher view for every proposal kind | S09a (S09a2 for prepared sources) |
 | S10 | 8 | Course validation: release and delivery views — **milestone M2: authoring to delivery** | S09c |
 | S11 | — | Runtime assessor role and evaluation adapter (G7) | S10, owner decision |
@@ -404,11 +408,14 @@ conditions); the teacher's acceptance, after which the Curator job runs on the
 accepted preparation (`prepared_sources`) instead of a single query. Moved here
 from S09c: source preparation with licence verdicts.
 
-**Acceptance.** Proposed, to confirm when the step starts:
+**Done** in PR #103 (issue #101, handoff `docs/plans/handoffs/chat-18.md`), with
+D26 taken when the step started.
 
-- [ ] Browser test: prepare sources with the synthetic retrieval, review them, accept them, run the Curator on them, review and apply the syllabus.
-- [ ] Sources not accepted are never used by a Curator job (test).
-- [ ] A replayed request id returns the same preparation and runs no retrieval again.
+**Acceptance** (confirmed by the owner):
+
+- [x] Browser test: prepare sources with the synthetic retrieval, review them, accept them, run the Curator on them, review and apply the syllabus.
+- [x] Sources not accepted are never used by a Curator job (test).
+- [x] A replayed request id returns the same preparation and runs no retrieval again.
 
 ### S09b — Progressive refinement with the agents
 
@@ -422,7 +429,18 @@ teacher's edit of a proposal recorded as a new proposal by that person, the
 regenerated or edited proposal compared with the previous one in the teacher
 view, and the course overview after each applied step.
 
-**Acceptance.** Defined with the owner when the step starts.
+**Done** in PR #105 (issue #104, handoff `docs/plans/handoffs/chat-19.md`), with
+D27 taken when the step started: the Curator holds the conversation for the
+syllabus. Refinement of the design beyond the syllabus (activities and content)
+comes with the proposal kinds of S09c; D28 and D29 stay open.
+
+**Acceptance** (confirmed by the owner):
+
+- [x] Every syllabus proposal has a teacher view in words: units with title, purpose and intents; competencies and practices by their text, not their ids; the cited excerpts with their purpose and limitations (unit test, and a browser test on the synthetic seed).
+- [x] A syllabus proposal is compared with the course's current syllabus: units paired by learning target, shown as added, removed, changed or unchanged, with the changed fields (unit tests, including several units on one target and a course without a syllabus).
+- [x] A revision request carries its reason to the next Curator generation, and the new proposal is compared with the previous proposal (test with the synthetic models: the reason reaches the prompt).
+- [x] A teacher's manual edit of a syllabus proposal is recorded as a new proposal by that teacher and compared with the one it edits.
+- [x] After each applied step, the course overview shows the applied syllabus.
 
 ### S09c — Rubrics, assessments and content from the studio
 
