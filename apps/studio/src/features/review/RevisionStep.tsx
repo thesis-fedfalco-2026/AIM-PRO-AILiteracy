@@ -7,6 +7,7 @@ import { REVISION } from '../course-build/buildApi';
 import type { JobView } from '../course-build/buildApi';
 import { useBuildServices } from '../course-build/BuildServices';
 import { useFollowedJob } from '../course-build/parts';
+import { ReviewAttempts } from '../course-build/ReviewAttempts';
 import { proposalPath } from './paths';
 import { ReviewError } from './reviewApi';
 import { useCsrfToken } from './ReviewServices';
@@ -62,6 +63,8 @@ export function RevisionStep({ contextId, proposalId, reason }: { contextId: str
           {job.detail ? ` ${t('build.jobs.detail', { detail: job.detail })}` : ''}
         </StatusMessage>
       )}
+      {job && (job.status === 'PROPOSED' || job.status === 'FAILED')
+        ? <ReviewAttempts contextId={contextId} requestId={job.request_id} /> : null}
       {revised ? <p><Link to={proposalPath(contextId, revised.id)}>{t('review.syllabus.revision.open')}</Link></p> : null}
       {failure ? <StatusMessage tone="error">{failure}</StatusMessage> : null}
     </section>

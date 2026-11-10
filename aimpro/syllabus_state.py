@@ -11,11 +11,22 @@ from aimpro.contracts import encoded
 from aimpro.lead import LeadInput, ReviewError
 from aimpro.lead_types import Record, Text
 from aimpro.source_selection import RetrievalTrace
-from aimpro.syllabus import CURATOR, SyllabusDraft, SyllabusVerdict, checked_syllabus, checked_verdict
+from aimpro.syllabus import (CURATOR, SyllabusAttempt, SyllabusDraft, SyllabusVerdict, checked_syllabus,
+                             checked_verdict)
 from learning.contracts import Entity, EntityRef, Provenance, entity_data, make_entity
 from learning.decisions import approval_valid, proposal_candidates, review_payload_key
 from learning.metamodel import validate_entity
+from learning.outputs import LearningResponse
 from learning.store import canonical
+
+
+class SyllabusResult(LearningResponse):
+    """The recorded result of a Curator syllabus request, with every attempt the Curator made (Chat 20).
+
+    ``attempts`` is omitted when empty, so results recorded before it, and of requests without a Curator draft,
+    keep their exact shape. ``content`` stays fixed application text; the reviewer's own words are in ``attempts``.
+    """
+    attempts: tuple[SyllabusAttempt, ...] = Field((), exclude_if=lambda value: not value)
 
 
 class UnitLink(Record):

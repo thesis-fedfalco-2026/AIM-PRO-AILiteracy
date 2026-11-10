@@ -540,7 +540,7 @@ browser recorded.
 | `course.spec.ts`: as a learner | `dev-learner` on `architecture-delivery-2` sees only the not-visible message; axe |
 | `build.spec.ts`: a course from an uploaded AIM-PRO model | create a course (one new policy file next to the seed's); upload the AIM-PRO export the fixtures use: the stored file has the uploaded bytes and digest; the Curator job with the synthetic model ends with a link to the proposal; approve and apply the syllabus; the course page shows the structure; propose, approve and apply the project; the build page shows the project; axe on the build page with every disclosure open |
 | `build.spec.ts`: a syllabus on accepted sources (S09a2) | upload; search with two queries (synthetic retrieval); the excerpt found by both, with its usage conditions; tick it, write its purpose and limitations, prepare; the prepared sources; axe with every disclosure open; no prepared sources offered to the Curator before the choice; accept; the Curator on the accepted sources ends with a proposal; approve and apply; the course structure; back on the build page, the three jobs listed with their status; axe |
-| `refinement.spec.ts`: a syllabus refined step by step (S09b) | upload; the Curator by a query; the syllabus in words (competency, practice, planned activities) compared with a course without a syllabus, and not the generic "same teaching content" sentence; axe; a revision request with its reason; "Ask the Curator for a revised syllabus" ends with a link to the revision, compared with the previous proposal (title changed, one unit changed in its purpose, one unit added) and showing the reason; axe; approve and apply: the course shows the revised syllabus; the teacher edits it (syllabus title, a unit title; axe on the form): a new proposal by the teacher, compared with the syllabus in use; approve and apply: the course shows the teacher's syllabus, "Edited by"; axe |
+| `refinement.spec.ts`: a syllabus refined step by step (S09b) | upload; the Curator by a query; the syllabus in words (competency, practice, planned activities) compared with a course without a syllabus, and not the generic "same teaching content" sentence; axe; a revision request with its reason (with the synthetic reviewer's marker, so its first draft is rejected); "Ask the Curator for a revised syllabus" ends with a link to the revision; the review agent's assessments of the two drafts (rejected, then accepted, its reason labelled as model text); axe; compared with the previous proposal (title changed, one unit changed in its purpose, one unit added) and showing the reason; axe; approve and apply: the course shows the revised syllabus; the teacher edits it (syllabus title, a unit title; axe on the form): a new proposal by the teacher, compared with the syllabus in use; approve and apply: the course shows the teacher's syllabus, "Edited by"; axe |
 | `build.spec.ts`: an invalid file | a text file is refused with "The file is not UTF-8 JSON"; no report; the export directory and the database file are unchanged; axe |
 | `accessibility.spec.ts` | axe on the home page (also with its validation error), the inbox with and without pending proposals, the proposal page with every disclosure open, its validation errors, the apply step, a refused application, and an unavailable context |
 
@@ -752,6 +752,7 @@ of an applied syllabus checks the review only when there is one.
 | --- | --- | --- |
 | `GET /contexts/{context_id}/syllabus-proposals/{proposal_id}` | a subject who is not learner-only | `SyllabusProposalView`: the proposal's syllabus (status, responsible, draft, review or `edited_by`, revision reasons); the texts of its targets (statement, competencies by name, practices with how they work) and of every excerpt it may cite (text, licence, and the purpose and limitations of prepared sources); the proposal it refines and the comparison with it; the course design (`NONE`, `SYLLABUS`, `OTHER`), the applied syllabus and the comparison with it |
 | `POST /contexts/{context_id}/syllabus-edits` (CSRF) | `propose`, content authority | `SyllabusEdit` `{request_id, proposal, draft}` → `EditedSyllabus` `{proposal}`; the same request again returns the same proposal; a refused check is a 422 with its fixed text; 404 for a proposal without a syllabus |
+| `GET /contexts/{context_id}/syllabus-reviews/{request_id}` (Chat 20) | `propose`, the subject who ran the request | `SyllabusReviews` `{request_id, outcome, attempts}`: each Curator draft of an ended syllabus request (by a query, by prepared sources, or a revision), first to last, with the review agent's verdict (`verdict`, `source_alignment`, `citation_support`, `reason`) or the fixed text of the check that refused it; 404 for an unknown or unended request, another kind or another subject |
 
 A revision is queued as a job (`POST …/jobs`, kind `revise-aimpro-syllabus`,
 `{"proposal": id}`); the worker rejects it before any model without a revision
@@ -776,6 +777,46 @@ request on the latest revision of the proposal, or when the course has moved.
 - **Course overview.** The structure section shows the syllabus in use: title,
   "Edited by" for a teacher's syllabus, and each unit's purpose and planned
   activities.
+
+### The review agent's assessment of each draft (Chat 20)
+
+Owner decisions of 10 November 2026 (issue #107), after most real Curator
+attempts were refused by the review agent without the teacher seeing why:
+
+1. **At most three drafts per request** (`aimpro.syllabus.ATTEMPTS`). A draft
+   refused by the deterministic checks (`checked_syllabus`, the coverage
+   checks included) or not accepted by the review agent (`REJECT`,
+   `UNCERTAIN`, or a flag false) goes back to the Curator with
+   `AIMPRO_SYLLABUS_RETRY`: its draft (`rejected_syllabus`) and why
+   (`review_feedback`: the verdict, itself model output, or the fixed check
+   text), as untrusted data. The review agent judges each draft on its own and
+   never sees an earlier verdict. A review over the budget or not a verdict
+   stops at once.
+2. **When the drafts run out, the request fails as before**, with the fixed
+   text of the last refusal; a generated syllabus still always carries an
+   `ACCEPT` review, and `SyllabusVerdict` is unchanged.
+3. **Every draft's assessment is kept with the request's result** in the ALM
+   requests store (`SyllabusResult`: a `LearningResponse` with `attempts`,
+   omitted when empty), for a proposal and for a failure; a replay returns
+   it. The review agent's `reason` is model text: it is shown to the teacher,
+   labelled, and never becomes an error message, the job `detail`, a log line
+   or an event. Each draft emits one content-free `review` event (`stage`
+   `SYLLABUS` or `SYLLABUS_CHECKS`, `attempt`, `verdict` and the two flags).
+4. **The review of a revision receives the revision context**:
+   `previous_syllabus` and `teacher_reasons` as untrusted data, with
+   `AIMPRO_SYLLABUS_REVISION_REVIEW`, which asks it to check every rule and
+   that the draft does what the reasons ask. The review prompt of a generation
+   is unchanged.
+5. **The prepared-sources path reports the fixed `ReviewError` text**, as the
+   query and revision paths do ("Selected-source authoring did not complete
+   (…)"). Other errors keep only their type.
+
+In the studio, an ended Curator job of the signed-in teacher (`PROPOSED` or
+`FAILED`) offers "How the review agent judged the Curator's drafts" in the job
+list and in the revision step; it is read when opened. Each draft shows how it
+ended, the two checks of the review agent in words and its assessment as
+"The review agent's assessment (model text): “…”", or the check that refused
+it.
 
 ## Local identity smoke test
 

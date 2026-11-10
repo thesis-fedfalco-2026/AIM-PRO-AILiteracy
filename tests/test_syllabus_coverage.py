@@ -6,7 +6,8 @@ import unittest
 from unittest.mock import patch
 
 from aimpro.retrieval import SelectedExcerpt, SourceQuery, SourceSelectionSummary
-from aimpro.syllabus import SyllabusDraft, checked_syllabus, generate
+from aimpro.lead import ReviewError
+from aimpro.syllabus import ATTEMPTS, SyllabusDraft, checked_syllabus, generate
 from aimpro.syllabus_coverage import CoverageRequirement, UnitCoverage, validate_requirements
 from tests.syllabus_fixtures import Curator, Reviewer, source, syllabus
 
@@ -64,9 +65,10 @@ class SyllabusCoverageTest(unittest.TestCase):
             'purpose': 'The teacher builds a prompt before participants write their own.'})
         curator = Curator(draft.model_copy(update={'units': (unit,)}))
         reviewer = Reviewer()
-        with self.assertRaisesRegex(ValueError, 'omits explicit source-action coverage'):
+        with self.assertRaisesRegex(ReviewError, 'omits explicit source-action coverage'):
             generate(self.data, dispatcher=curator, lead=reviewer)
-        self.assertEqual(len(curator.calls), 1)
+        # A draft refused by the checks is tried again (Chat 20), and never reaches the reviewer.
+        self.assertEqual(len(curator.calls), ATTEMPTS)
         self.assertEqual(reviewer.calls, [])
 
     def test_coverage_labels_cannot_make_explain_cover_required_practice(self):
@@ -127,4 +129,4 @@ class SyllabusCoverageTest(unittest.TestCase):
         reviewer.value = reviewer.value.model_copy(update={'verdict': 'REJECT', 'source_alignment': False})
         with self.assertRaisesRegex(ValueError, 'semantic review'):
             generate(self.data, dispatcher=Curator(draft), lead=reviewer)
-        self.assertEqual(len(reviewer.calls), 1)
+        self.assertEqual(len(reviewer.calls), ATTEMPTS)

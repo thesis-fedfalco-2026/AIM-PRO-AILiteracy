@@ -54,7 +54,8 @@ class OpenApiSnapshotTest(unittest.TestCase):
                           '/contexts/{context_id}/source-discoveries/{request_id}': ['get'],
                           '/contexts/{context_id}/source-preparations/{request_id}': ['get'],
                           '/contexts/{context_id}/syllabus-proposals/{proposal_id}': ['get'],
-                          '/contexts/{context_id}/syllabus-edits': ['post']})
+                          '/contexts/{context_id}/syllabus-edits': ['post'],
+                          '/contexts/{context_id}/syllabus-reviews/{request_id}': ['get']})
 
     def test_an_export_upload_is_the_raw_file(self):
         upload = self.schema()['paths']['/contexts/{context_id}/aimpro-exports']['post']

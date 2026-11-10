@@ -10,6 +10,10 @@ and with the course's applied syllabus, units paired by learning target
 A teacher's edit is recorded here, without a model: a new proposal by that
 teacher that passes the same checks as a generated syllabus and is declared not
 reviewed by the agent. A Curator revision is the job ``revise-aimpro-syllabus``.
+
+Every draft the Curator made for a syllabus job is read back with how it was
+judged (Chat 20): the review agent's verdict, whose ``reason`` is the agent's
+own text, or the fixed text of the check that refused it.
 """
 
 from __future__ import annotations
@@ -20,7 +24,7 @@ from fastapi import APIRouter, Depends, Request
 from starlette.exceptions import HTTPException
 
 from aimpro.didactic import targets
-from aimpro.syllabus import SyllabusDraft, SyllabusVerdict
+from aimpro.syllabus import SyllabusAttempt, SyllabusDraft, SyllabusVerdict
 from aimpro.syllabus_compare import SyllabusComparison, compare
 from aimpro.syllabus_state import NoSyllabus
 from learning.contracts import EntityRef, Record, Text
@@ -97,6 +101,13 @@ class SyllabusEdit(Record):
 
 class EditedSyllabus(Record):
     proposal: EntityRef
+
+
+class SyllabusReviews(Record):
+    """The Curator's drafts of an ended syllabus job, first to last; ``review.reason`` is the review agent's text."""
+    request_id: Text
+    outcome: Literal['PROPOSAL', 'FAILURE']
+    attempts: tuple[SyllabusAttempt, ...]
 
 
 def _record(found) -> SyllabusRecord:
@@ -188,6 +199,17 @@ def syllabus_edit(context_id: str, body: SyllabusEdit, request: Request, princip
         except NoSyllabus:
             raise HTTPException(404, 'No syllabus proposal under this id') from None
     return EditedSyllabus(proposal=response.proposal_refs[0])
+
+
+@router.get('/contexts/{context_id}/syllabus-reviews/{request_id}', response_model=SyllabusReviews,
+            responses=READ_ERRORS, summary="How the review agent judged each draft of the subject's syllabus job")
+def syllabus_reviews(context_id: str, request_id: str, request: Request, principal: Principal = Depends(context_reader)):
+    with open_context(request, context_id) as service:
+        service.authorize_jobs(context_id, principal.subject_key)
+        result = service.aimpro_syllabus_request(context_id, principal.subject_key, request_id)
+    if result is None or result.kind not in ('PROPOSAL', 'FAILURE'):
+        raise HTTPException(404, 'No ended syllabus job of this subject under this id')
+    return SyllabusReviews(request_id=request_id, outcome=result.kind, attempts=result.attempts)
 
 
 MODULE = ApiModule('syllabus', router)

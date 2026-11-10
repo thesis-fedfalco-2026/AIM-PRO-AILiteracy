@@ -83,11 +83,24 @@ describe('syllabus proposal', () => {
       'POST /contexts/ctx/jobs': [{ status: 200, body: job('QUEUED') }],
       'GET /contexts/ctx/jobs/request-1': [{ status: 200, body: job('PROPOSED', {
         proposal_refs: [{ type: 'ChangeProposal', id: 'p-revised', version: '1' }] }) }],
+      'GET /contexts/ctx/syllabus-reviews/request-1': [{ status: 200, body: { request_id: 'request-1', outcome: 'PROPOSAL',
+        attempts: [{ attempt: 1, check: null, review: { verdict: 'REJECT', source_alignment: false, citation_support: true,
+          reason: 'The new unit drops the demonstration.' } },
+        { attempt: 2, check: null, review: { verdict: 'ACCEPT', source_alignment: true, citation_support: true,
+          reason: 'Does what was asked.' } }] } }],
     }, '/studio/contexts/ctx/review/p-syllabus');
     expect(await screen.findByText(/You asked for a revision: “Add a unit where participants explain their choices.”/)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: en.review.syllabus.revision.ask }));
     const open = await screen.findByRole('link', { name: en.review.syllabus.revision.open });
     expect(open.getAttribute('href')).toBe('/studio/contexts/ctx/review/p-revised');
+    // How the review agent judged each draft of the revision, read when the teacher opens it.
+    const details = screen.getByText(en.build.reviews.summary).closest('details')!;
+    details.open = true;
+    fireEvent(details, new Event('toggle'));
+    const attempts = within(await screen.findByTestId('review-attempts'));
+    expect(attempts.getByText(`Draft 1: ${en.build.reviews.outcome.rejected}`)).toBeTruthy();
+    expect(attempts.getByText(/model text\): “The new unit drops the demonstration.”/)).toBeTruthy();
+    expect(attempts.getByText(`Draft 2: ${en.build.reviews.outcome.accepted}`)).toBeTruthy();
     const queued = requests.filter((request) => request.method === 'POST');
     expect(await queued[0]!.json()).toEqual({ request_id: 'request-1', job: { kind: 'revise-aimpro-syllabus', proposal: 'p-syllabus' } });
     expect(queued[0]!.headers.get('X-CSRF-Token')).toBe(SESSION.csrf_token);

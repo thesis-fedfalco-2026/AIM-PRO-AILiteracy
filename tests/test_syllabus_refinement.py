@@ -17,7 +17,7 @@ from learning.metamodel import load_contract
 from learning.policies import ScopeGrant
 from learning.service import LearningService
 from learning.store import LearningStore
-from tests.syllabus_fixtures import Curator, Reviewer, syllabus
+from tests.syllabus_fixtures import REJECTION, Curator, Reviewer, syllabus, verdict
 from tests.test_aimpro_retrieval import response as search_response
 from tests.test_learning_context import policy
 
@@ -200,6 +200,37 @@ class SyllabusRefinementTest(unittest.TestCase):
         self.assertEqual(response.kind, 'FAILURE')
         self.assertIn('Syllabus fingerprints do not match the source', response.content)
         self.assertEqual(len([p for p in self.store.owned('session', 'ChangeProposal')]), 1)
+
+    def test_a_rejected_revision_is_retried_and_its_review_receives_the_reasons(self):
+        first = self.generate()
+        self.request_revision(first, 'First reason')
+        second = self.revise(first).proposal_refs[0]
+        self.request_revision(second, 'Second reason')
+        self.reviewer.calls, self.reviewer.queue = [], [REJECTION]
+        response = self.revise(second, 'revision-2')
+        self.assertEqual(response.kind, 'PROPOSAL')
+        self.assertEqual([a.review for a in response.attempts], [REJECTION, verdict()])
+        self.assertEqual(self.service.aimpro_syllabus_request('session', 'admin', 'revision-2'), response)
+        for prompt, _ in self.reviewer.calls:
+            data = json.loads(prompt.split('\nDATA\n')[1])
+            self.assertEqual(data['teacher_reasons'], ['First reason', 'Second reason'])
+            self.assertEqual(data['previous_syllabus'], self.syllabus_of(second).artifact.draft.model_dump(mode='json'))
+        retry = json.loads(self.curator.calls[-1][1].split('\nDATA\n')[1])
+        self.assertEqual(retry['review_feedback'], {'review': REJECTION.model_dump(mode='json')})
+        self.assertEqual(retry['teacher_reasons'], ['First reason', 'Second reason'])
+
+    def test_a_revision_rejected_at_every_attempt_keeps_the_verdicts_and_proposes_nothing(self):
+        first = self.generate()
+        self.request_revision(first, 'Reason')
+        self.reviewer.value = REJECTION
+        with self.assertLogs('agent_system', 'WARNING') as logged:
+            response = self.revise(first)
+        self.assertEqual(response.content, 'Syllabus revision did not complete (Syllabus did not pass semantic review); '
+                                           'no proposal was applied.')
+        self.assertEqual(len(response.attempts), 3)
+        self.assertNotIn(REJECTION.reason, '\n'.join(logged.output))
+        self.assertEqual(self.revise(first), response)
+        self.assertEqual(len(self.store.owned('session', 'ChangeProposal')), 1)
 
     def edit(self, proposal, value, request_id='edit'):
         return self.service.edit_aimpro_syllabus('session', 'admin', proposal.id, value, request_id=request_id)

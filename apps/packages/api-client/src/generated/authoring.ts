@@ -412,6 +412,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/contexts/{context_id}/syllabus-reviews/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** How the review agent judged each draft of the subject's syllabus job */
+        get: operations["syllabus_reviews_contexts__context_id__syllabus_reviews__request_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/courses": {
         parameters: {
             query?: never;
@@ -1528,6 +1545,20 @@ export interface components {
             units: components["schemas"]["UnitLink"][];
         };
         /**
+         * SyllabusAttempt
+         * @description One Curator draft and why it was or was not accepted: the reviewer's verdict, or the check that refused it.
+         *
+         *     ``review.reason`` is model text: it is shown to the teacher as the reviewer's assessment and never becomes an
+         *     error message, a log line or an event. ``check`` is the fixed text of a deterministic check.
+         */
+        SyllabusAttempt: {
+            /** Attempt */
+            attempt: number;
+            /** Check */
+            check?: string | null;
+            review?: components["schemas"]["SyllabusVerdict"] | null;
+        };
+        /**
          * SyllabusComparison
          * @description ``units`` follows the order of the later syllabus; a removed unit follows the last unit of its target.
          */
@@ -1672,6 +1703,21 @@ export interface components {
             revision_reasons: string[];
             /** Status */
             status: string;
+        };
+        /**
+         * SyllabusReviews
+         * @description The Curator's drafts of an ended syllabus job, first to last; ``review.reason`` is the review agent's text.
+         */
+        SyllabusReviews: {
+            /** Attempts */
+            attempts: components["schemas"]["SyllabusAttempt"][];
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "PROPOSAL" | "FAILURE";
+            /** Request Id */
+            request_id: string;
         };
         /** SyllabusUnit */
         SyllabusUnit: {
@@ -3665,6 +3711,83 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SyllabusProposalView"];
+                };
+            };
+            /** @description No valid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not authorized, unmapped identity or missing CSRF token */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or the context is unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflict with the current state; reload and retry */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Invalid request or data */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Internal error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    syllabus_reviews_contexts__context_id__syllabus_reviews__request_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                context_id: string;
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyllabusReviews"];
                 };
             };
             /** @description No valid session */
