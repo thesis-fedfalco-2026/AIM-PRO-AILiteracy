@@ -129,7 +129,9 @@ Proposed for the owner to record in the roadmap (a chat does not edit it, workin
   draft is accepted: D30 changed for the Curator);
 - a D-row for this chat: completion rules are a host command with one fixed rule (`COMPLETION_RULE`) proposed
   from the studio and reviewed; the teacher view covers non-pending proposals (part 2);
-- the owner's direction for sources (Chat 21, issue #112 follow-up), as a future step that revises D26.
+- the owner's direction for sources (Chat 21, issue #112 follow-up), as a future step that revises D26;
+- generation by blocks of units for the Evaluator, Teacher and Trainer (owner trial below), as a future step
+  before a large course is built from the studio.
 
 Still open from the roadmap: D19, D21, D25, D28 (now also Chat 21 trial finding 1), D29, D31–D33, G7 / D4.
 
@@ -142,6 +144,39 @@ Still open from the roadmap: D19, D21, D25, D28 (now also Chat 21 trial finding 
   longer pending (approved, applied, rejected), with a browser test on each seeded proposal kind and axe.
 
 Then S10.
+
+## Owner trial in the studio (11 November 2026, on this branch)
+
+The owner restarted the demo stack at 14:50 from this checkout (API 0.10.0 on 58001, worker `python -m services.jobs`
+with the configured `openrouter` profile, `nvidia/nemotron-3.5-super-vl:free`, and `LANGFUSE_ENABLED=true`; studio on
+58000) and continued the course `antonio-lpo` of the Chat 21 trial, guided by this chat. The chat only read the
+stores (`sqlite3 "file:…?mode=ro"`, and a read-only backup for the CLI `show`). The runs are the owner's own use of
+the tool, not an authorized measurement.
+
+| Step | Result |
+| --- | --- |
+| Apply the teacher's edited syllabus (approved in Chat 21) | applied; the course left version 1 |
+| Initialize the project `main`, approve, apply | applied: selections SOURCE and SYLLABUS with a valid receipt, no stale dependency; course version `fac03680…` |
+| Evaluator from its form (no requirements), on 48 units | **FAILED after 600.6 s**: the one `assessment-designer` call reached the wall-clock deadline of a model call (`runtime.properties` `[llm] timeout = 600`) while the model was still writing; no draft reached the checks or the review agent; the course is unchanged |
+
+### Findings of the trial (not changed)
+
+1. **One Evaluator response for 48 units does not fit the call deadline** with the free model (Chat 21 finding 1,
+   now measured once). A provider error stops the request at once (D30 retries only drafts that were judged).
+2. **The failure does not say why.** The job detail is the generic "Authoring generation did not complete; no
+   accepted proposal was persisted."; that the call timed out is visible only in the content-free `provider.call`
+   event (`status: error`, `duration_ms`). The job list has nothing to open, as no draft was judged.
+3. **The project initialization reads as "nothing changes".** Its page says the teaching content is the same and
+   lists nothing else; it creates the project, its catalogue and the course's design reference. The owner asked
+   why it must be approved. Part 2 gives this kind its view in words.
+
+### Owner decision (11 November 2026)
+
+**Generation by blocks of units is a requirement of a future step**, not of S09c2: the Evaluator, Teacher and
+Trainer write a large syllabus in several responses (blocks of units) instead of one. It changes the generator
+core and needs its own scope with the owner (block size, how blocks are reviewed under D30, how one proposal is
+composed). Until then a 48-unit course cannot get assessments with the configured free model. Proposed for the
+roadmap with the other changes above.
 
 ## PR and CI
 
