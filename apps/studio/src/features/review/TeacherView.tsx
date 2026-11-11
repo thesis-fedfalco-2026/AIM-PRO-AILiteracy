@@ -74,17 +74,45 @@ export function Issues({ issues }: { issues: PlainIssues }) {
   );
 }
 
-/** What a teacher needs to decide: the changes, the teaching content, and what to check, in plain words. */
-export function TeacherView({ view, issues }: { view: View; issues: PlainIssues }) {
+function Changes({ changes }: { changes: ContentChange[] }) {
+  const { t } = useTranslation();
+  return (
+    <section aria-labelledby="teacher-changes">
+      <h2 id="teacher-changes">{t('review.teacher.changes.heading')}</h2>
+      {changes.length === 0 ? <p>{t('review.teacher.changes.none')}</p> : (
+        <ul className="alm-changes">{changes.map((change, index) => <Change key={index} change={change} />)}</ul>
+      )}
+    </section>
+  );
+}
+
+/** Completion rules: when each part of the course counts as completed. The content is the one in use. */
+function CompletionRules({ view, issues }: { view: View; issues: PlainIssues }) {
   const { t } = useTranslation();
   return (
     <>
-      <section aria-labelledby="teacher-changes">
-        <h2 id="teacher-changes">{t('review.teacher.changes.heading')}</h2>
-        {view.changes.length === 0 ? <p>{t('review.teacher.changes.none')}</p> : (
-          <ul className="alm-changes">{view.changes.map((change, index) => <Change key={index} change={change} />)}</ul>
-        )}
+      <section aria-labelledby="teacher-completion">
+        <h2 id="teacher-completion">{t('review.teacher.completion.heading')}</h2>
+        <p>{t('review.teacher.completion.intro')}</p>
+        <ul data-testid="completion-rules">
+          {view.rules.map((rule, index) => (
+            <li key={index}>{t('review.teacher.completion.rule', { kind: readable(rule.nodeKind), node: rule.node, rule: rule.rule })}</li>
+          ))}
+        </ul>
       </section>
+      <Changes changes={view.changes} />
+      <Issues issues={issues} />
+    </>
+  );
+}
+
+/** What a teacher needs to decide: the changes, the teaching content, and what to check, in plain words. */
+export function TeacherView({ view, issues }: { view: View; issues: PlainIssues }) {
+  const { t } = useTranslation();
+  if (view.kind === 'completion') return <CompletionRules view={view} issues={issues} />;
+  return (
+    <>
+      <Changes changes={view.changes} />
 
       {view.activities.length > 0 ? (
         <section aria-labelledby="teacher-students">
@@ -95,6 +123,18 @@ export function TeacherView({ view, issues }: { view: View; issues: PlainIssues 
               {activity.evidence.length > 0
                 ? <p className="alm-muted">{t('review.teacher.students.evidence', { evidence: evidenceList(activity.evidence) })}</p>
                 : null}
+            </div>
+          ))}
+        </section>
+      ) : null}
+
+      {view.materials.length > 0 ? (
+        <section aria-labelledby="teacher-materials">
+          <h2 id="teacher-materials">{t('review.teacher.materials.heading')}</h2>
+          {view.materials.map((material, index) => (
+            <div key={index} className="alm-card" data-testid="material">
+              <h3>{material.title}</h3>
+              <p className="alm-text">{material.text}</p>
             </div>
           ))}
         </section>
@@ -147,7 +187,7 @@ export function TeacherView({ view, issues }: { view: View; issues: PlainIssues 
         </section>
       ) : null}
 
-      {view.isAssessment || view.activities.length > 0 ? null : <p>{t('review.teacher.otherProposal')}</p>}
+      {view.kind !== 'other' || view.activities.length > 0 ? null : <p>{t('review.teacher.otherProposal')}</p>}
 
       <Issues issues={issues} />
     </>

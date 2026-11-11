@@ -1,15 +1,30 @@
 import type { Entity, Finding, JsonValue } from './reviewApi';
 
 /**
+ * What a proposal is, for its title and its view: generated assessments, teacher or
+ * trainer content (the role of its generated package), completion rules, or another change.
+ */
+export type ProposalKind = 'assessment' | 'teacher' | 'trainer' | 'completion' | 'other';
+
+/** The title of a proposal of each kind, a catalogue key. */
+export const KIND_TITLES = {
+  assessment: 'review.teacher.titleAssessment', teacher: 'review.teacher.titleTeacher', trainer: 'review.teacher.titleTrainer',
+  completion: 'review.teacher.titleCompletion', other: 'review.teacher.titleOther',
+} as const satisfies Record<ProposalKind, string>;
+
+/**
  * The teaching content of a proposal, as a teacher reviews it: what students are
- * asked to do, how it is assessed, the outcomes and the resources, and what
- * changes compared with the content applied now. Links, versions and structure
- * records are left to the technical details.
+ * asked to do, the material they read, how it is assessed, the outcomes and the
+ * resources, the completion rules, and what changes compared with the content
+ * applied now. Links, versions and structure records are left to the technical details.
  */
 export interface TeacherView {
-  /** The proposal holds an assessment specification. */
-  isAssessment: boolean;
+  kind: ProposalKind;
   activities: { instruction: string; evidence: string[] }[];
+  /** Texts for students: the material of teacher and trainer content. */
+  materials: { title: string; text: string }[];
+  /** Each part of the design with its completion rule, in design order; for completion rules. */
+  rules: { node: string; nodeKind: string; rule: string }[];
   rubrics: { name: string; criteria: Criterion[] }[];
   assessments: { evidence: string[]; conditions: string[] }[];
   requirements: { purpose: string; constraints: string[]; mandatory: boolean }[];
@@ -36,7 +51,7 @@ export type ChangeMessage =
   | 'review.teacher.change.acceptedRemoved' | 'review.teacher.change.newRequirement'
   | 'review.teacher.change.purpose' | 'review.teacher.change.constraintAdded'
   | 'review.teacher.change.constraintRemoved' | 'review.teacher.change.requirementRequired'
-  | 'review.teacher.change.requirementOptional';
+  | 'review.teacher.change.requirementOptional' | 'review.teacher.change.newMaterial' | 'review.teacher.change.material';
 
 /** One change of teaching content; `before` and `after` are texts to compare side by side. */
 export interface ContentChange {
@@ -49,6 +64,38 @@ export interface ContentChange {
 const TEACHING = new Set(['ActivityDefinition', 'Rubric', 'AssessmentSpecification', 'ResourceRequirement']);
 
 const text = (value: JsonValue | undefined) => (typeof value === 'string' ? value : '');
+const isObject = (value: unknown): value is Record<string, JsonValue> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/** A JSON object held as a resource's content (a generated package, a project manifest), or null. */
+function contentObject(resource: Entity): Record<string, JsonValue> | null {
+  const content = text(resource.fields.contentOrLocator);
+  if (!content.trimStart().startsWith('{')) return null;
+  try {
+    const value: unknown = JSON.parse(content);
+    return isObject(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+/** A resource whose content is a text for students, not a package or a manifest. */
+const isMaterial = (entity: Entity) =>
+  entity.type === 'Resource' && text(entity.fields.contentOrLocator) !== '' && contentObject(entity) === null;
+
+const ROLES: Record<string, ProposalKind> = { ASSESSMENT: 'assessment', TEACHER_CONTENT: 'teacher', TRAINER_CONTENT: 'trainer' };
+
+/** The kind of a proposal, from its candidates. */
+function kindOf(candidates: Entity[]): ProposalKind {
+  if (candidates.some((candidate) => candidate.type === 'RuleDefinition')) return 'completion';
+  for (const candidate of candidates.filter((entity) => entity.type === 'Resource')) {
+    const content = contentObject(candidate);
+    const inputs = content?.format === 'project-authoring-output' && isObject(content.inputs) ? content.inputs : null;
+    const role = inputs ? ROLES[text(inputs.role)] : undefined;
+    if (role) return role;
+  }
+  return candidates.some((candidate) => candidate.type === 'AssessmentSpecification') ? 'assessment' : 'other';
+}
 const texts = (value: JsonValue | undefined) => (Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : []);
 const records = (value: JsonValue | undefined) =>
   (Array.isArray(value) ? value : []).filter((v): v is Record<string, JsonValue> =>
@@ -122,9 +169,32 @@ function changesOf(candidate: Entity, applied: Entity | undefined): ContentChang
           message: now.mandatory === true ? 'review.teacher.change.requirementRequired' as const
             : 'review.teacher.change.requirementOptional' as const }] : []),
       ];
+    case 'Resource': {
+      const title = text(now.title);
+      if (!was) return [{ message: 'review.teacher.change.newMaterial', value: title }];
+      return text(was.contentOrLocator) === text(now.contentOrLocator) ? [] : [{ message: 'review.teacher.change.material',
+        value: title, before: text(was.contentOrLocator), after: text(now.contentOrLocator) }];
+    }
     default:
       return [];
   }
+}
+
+/** Each process node of the candidates with its rule, from the root of the candidate design. */
+function rulesOf(candidates: Entity[]): TeacherView['rules'] {
+  const byRef = new Map(candidates.map((entity) => [`${entity.type}\u0000${entity.id}\u0000${entity.version}`, entity]));
+  const get = (value: JsonValue | undefined) => (isObject(value)
+    ? byRef.get(`${text(value.type)}\u0000${text(value.id)}\u0000${text(value.version)}`) : undefined);
+  const design = candidates.find((candidate) => candidate.type === 'LearningDesign');
+  const rules: TeacherView['rules'] = [];
+  const visit = (node: Entity | undefined) => {
+    if (!node) return;
+    const rule = get(node.fields.completionRule);
+    if (rule) rules.push({ node: text(node.fields.name) || node.id, nodeKind: text(node.fields.kind), rule: text(rule.fields.purpose) });
+    for (const child of Array.isArray(node.fields.children) ? node.fields.children : []) visit(get(child));
+  };
+  visit(get(design?.fields.root));
+  return rules;
 }
 
 /** Ids of the outcomes a teaching record names, in order. */
@@ -137,15 +207,17 @@ function outcomeIds(entity: Entity): string[] {
 /** The teacher view of `candidates`, compared with `applied` (the context's current records). */
 export function teacherView(candidates: Entity[], applied: Entity[]): TeacherView {
   const current = new Map(applied.map((entity) => [`${entity.type}\u0000${entity.id}`, entity]));
-  const teaching = candidates.filter((candidate) => TEACHING.has(candidate.type));
+  const teaching = candidates.filter((candidate) => TEACHING.has(candidate.type) || isMaterial(candidate));
   const ofType = (type: string) => teaching.filter((candidate) => candidate.type === type);
   const statements = new Map([...applied, ...candidates].filter((entity) => entity.type === 'LearningOutcome')
     .map((entity) => [entity.id, text(entity.fields.statement) || entity.id]));
   const outcomes = [...new Set(teaching.flatMap(outcomeIds))].map((id) => statements.get(id) ?? id);
   return {
-    isAssessment: ofType('AssessmentSpecification').length > 0,
+    kind: kindOf(candidates),
     activities: ofType('ActivityDefinition').map(({ fields }) => ({
       instruction: text(fields.instruction), evidence: texts(fields.expectedEvidence) })),
+    materials: ofType('Resource').map(({ fields }) => ({ title: text(fields.title), text: text(fields.contentOrLocator) })),
+    rules: rulesOf(candidates),
     rubrics: ofType('Rubric').map((rubric) => ({ name: text(rubric.fields.name), criteria: criteria(rubric) })),
     assessments: ofType('AssessmentSpecification').map(({ fields }) => ({
       evidence: texts(fields.allowedEvidence), conditions: texts(fields.administrationConstraints) })),

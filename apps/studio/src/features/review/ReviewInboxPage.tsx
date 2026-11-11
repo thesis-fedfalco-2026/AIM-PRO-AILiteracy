@@ -6,7 +6,7 @@ import { latestProposals, proposalExplanation, proposalStatus } from './model';
 import { LoadFailure } from './parts';
 import type { Entity, Finding, Inbox } from './reviewApi';
 import { coursePath, proposalPath } from './paths';
-import { plainIssues, teacherView } from './teacher';
+import { KIND_TITLES, plainIssues, teacherView } from './teacher';
 import { useInbox } from './useInbox';
 
 function ProposalLink({ contextId, proposal, title, meta }: {
@@ -34,8 +34,9 @@ function InboxLists({ contextId, inbox }: { contextId: string; inbox: Inbox }) {
               const findings = (Array.isArray(proposal.fields.findings) ? proposal.fields.findings : []) as unknown as Finding[];
               const issues = plainIssues(proposalExplanation(proposal).details, findings, inbox.findings);
               const task = view.activities[0]?.instruction.split('\n')[0];
-              const title = view.isAssessment
-                ? (task ? `${t('review.teacher.titleAssessment')}: ${task}` : t('review.teacher.titleAssessment')) : undefined;
+              const kind = t(KIND_TITLES[view.kind]);
+              const title = view.kind === 'other' ? undefined
+                : view.kind === 'assessment' && task ? `${kind}: ${task}` : kind;
               return (
                 <ProposalLink key={proposal.id} contextId={contextId} proposal={proposal} {...(title ? { title } : {})}
                   meta={t('review.inbox.pendingMeta', { responsible: proposal.provenance.responsible,

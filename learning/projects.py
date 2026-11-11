@@ -39,6 +39,22 @@ class ProjectRevision(Record):
     explanation: Text
 
 
+class CompletionRules(Record):
+    """Put :data:`COMPLETION_RULE` on every process node of the exact project's current design."""
+    project: EntityRef
+    base_context: EntityRef
+
+
+# The one completion rule the host proposes (S09c2): process completion only, decided by a person.
+COMPLETION_RULE = {
+    'purpose': 'Complete this process node only when every direct child is COMPLETED.',
+    'condition': 'Every direct child status equals COMPLETED.',
+    'outcome': 'Process completion only; no acquisition, grade or verification.',
+    'unknownBehavior': 'Missing statuses remain UNKNOWN.',
+    'approvalRequirement': 'Explicit human-reviewed configuration'}
+COMPLETION_EXPLANATION = 'Explicit reviewed completion rules for the composite design; generated content unchanged.'
+
+
 class ProjectProposal(Record):
     proposal: EntityRef
     project: EntityRef
@@ -245,6 +261,40 @@ def _revision_manifest(store, context, command):
     return context, manifest, candidates
 
 
+def _completion_revision(store, context, command):
+    """The project revision that puts the completion rule on every node of the current design.
+
+    A revision selects at least one artifact: the Trainer content is selected again at a new version with
+    unchanged fields, as nothing depends on it; its definitions are reviewed again with it.
+    """
+    _, manifest = _project(store, context, command.project)
+    trainer = next((a for a in manifest.artifacts if a.kind == 'TRAINER_CONTENT'), None)
+    if trainer is None:
+        raise ValueError('Completion rules require the Trainer content of the project')
+    snapshot = context.snapshot
+    version = uuid4().hex
+    def make(kind, key, fields):
+        return validate_entity(entity_data(make_entity(kind, key, fields, version=version,
+            origin='GENERATED_PROPOSAL', responsible=context.request.subject_key)), context.contract)
+    created = []
+    def ruled(node_ref):
+        node = snapshot.get(node_ref)
+        children = [ruled(r) for r in node.fields['children']]
+        rule = make('RuleDefinition', 'completion-rule:' + node.id, {**COMPLETION_RULE,
+            'inputs': [r['id'] for r in (*node.fields['children'], *node.fields['activities'])]})
+        updated = make('ProcessNode', node.id, {**node.fields, 'children': [c.ref.model_dump() for c in children],
+                                                'completionRule': rule.ref.model_dump()})
+        created.extend((rule, updated))
+        return updated
+    design = snapshot.get(manifest.design)
+    design = make('LearningDesign', design.id, {**design.fields, 'root': ruled(design.fields['root']).ref.model_dump()})
+    artifact = snapshot.get(trainer.resource).model_copy(update={'version': version})
+    return ProjectRevision(project=command.project, base_context=command.base_context, design=design.ref,
+        artifacts=(trainer.model_copy(update={'resource': artifact.ref}),),
+        candidates=(artifact, *(snapshot.get(r) for r in trainer.definitions), *created, design),
+        explanation=COMPLETION_EXPLANATION)
+
+
 def propose_project(service, context_id, subject_key, command, request_id):
     payload = canonical({'operation': type(command).__name__, 'subject_key': subject_key,
                          'command': command.model_dump(mode='json')})
@@ -268,6 +318,8 @@ def propose_project(service, context_id, subject_key, command, request_id):
             result = _persist(service, context, manifest, (),
                 'Initialize a project from the exact approved/applied Curator syllabus.')
         else:
+            if isinstance(command, CompletionRules):
+                command = _completion_revision(service.store, context, command)
             context, manifest, candidates = _revision_manifest(service.store, context, command)
             result = _persist(service, context, manifest, candidates, command.explanation)
         service.store.finish_request(request_id, context_id, result.model_dump(mode='json'))

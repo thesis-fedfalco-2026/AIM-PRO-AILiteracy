@@ -453,8 +453,14 @@ S05 and S06 endpoints only; nothing in the API, the core or the store changed.
     sentences, grouped by where the problem is: the generated content (shown),
     the course and its source material (closed, with a count: the proposal does
     not cause them), and the generator's notes.
-  Proposals without teaching records (release, import, completion rules) show
-  their summary sentence instead.
+  Teacher and trainer content (S09c2) also show *Material for students*: the
+  title and text of each material, and a changed text side by side with the
+  one in use. Completion rules show *When each part counts as completed*: each
+  part of the design, from the root, with its rule. The title names the kind
+  (assessment, teacher content, trainer content, completion rules), read from
+  the role of the generated package or the rules among the candidates.
+  Proposals without teaching records (project initialization, release,
+  import) show their summary sentence instead; their views are S09c2 part 2.
 - **Technical details, closed.** Identifiers and versions, the review payload
   key, the raw diagnostics (proposal findings, context findings, the generator
   report as lists and tables), the field-by-field diff of every candidate
@@ -542,6 +548,7 @@ browser recorded.
 | `build.spec.ts`: a syllabus on accepted sources (S09a2) | upload; search with two queries (synthetic retrieval); the excerpt found by both, with its usage conditions; tick it, write its purpose and limitations, prepare; the prepared sources; axe with every disclosure open; no prepared sources offered to the Curator before the choice; accept; the Curator on the accepted sources ends with a proposal; approve and apply; the course structure; back on the build page, the three jobs listed with their status; axe |
 | `refinement.spec.ts`: a syllabus refined step by step (S09b) | upload; the Curator by a query; the syllabus in words (competency, practice, planned activities) compared with a course without a syllabus, and not the generic "same teaching content" sentence; axe; a revision request with its reason (with the synthetic reviewer's marker, so its first draft is rejected); "Ask the Curator for a revised syllabus" ends with a link to the revision; the review agent's assessments of the two drafts (rejected, then accepted, its reason labelled as model text); axe; compared with the previous proposal (title changed, one unit changed in its purpose, one unit added) and showing the reason; axe; approve and apply: the course shows the revised syllabus; the teacher edits it (syllabus title, a unit title; axe on the form): a new proposal by the teacher, compared with the syllabus in use; approve and apply: the course shows the teacher's syllabus, "Edited by"; axe |
 | `generation.spec.ts`: the review of an Evaluator job's drafts (S09c) | on the seed's authoring context, an Evaluator job queued through the API with the browser's session (no form before S09c2), its requirement holding the synthetic reviewer's marker; the job list shows it proposed; "How the review agent judged the drafts of this job": draft 1 not accepted ("Content complete: no", its reason labelled as model text), draft 2 accepted; the job view does not hold the reason; axe |
+| `cycle.spec.ts`: the rest of the authoring cycle (S09c2) | a new course: upload, Curator, approve and apply the syllabus, initialize and apply the project; the Evaluator form shows the project and course version it sends (read back through the API), the Teacher form says it needs the assessments; axe; another author applies an Evaluator proposal through the API, so the form's job is refused at queue time (409): the form says the course changed and shows the new course version; the Evaluator queued again, its proposal read in its teacher view (rubric; axe), approved and applied; the Teacher form shows the applied assessment it sends; the Teacher and Trainer proposals read with their material texts (axe), approved and applied; the completion rules proposed from the build page, read part by part (axe), approved and applied; the project inspection lists the five artifacts with their receipts and no stale dependency, and every node of the design has a rule |
 | `build.spec.ts`: a syllabus not accepted (issue #112) | upload; the Curator by a query holding the synthetic reviewer's `REJECT_EVERY` marker ends with a proposal; the job list shows the fixed notice; axe; the syllabus view says the review agent accepted no draft, with its reason as model text; axe; approve and apply; the course shows the structure |
 | `build.spec.ts`: an invalid file | a text file is refused with "The file is not UTF-8 JSON"; no report; the export directory and the database file are unchanged; axe |
 | `accessibility.spec.ts` | axe on the home page (also with its validation error), the inbox with and without pending proposals, the proposal page with every disclosure open, its validation errors, the apply step, a refused application, and an unavailable context |
@@ -908,6 +915,51 @@ In the studio, an ended Evaluator, Teacher or Trainer job of the signed-in
 teacher offers "How the review agent judged the drafts of this job" in the job
 list, read when opened: each draft, how it ended, the four checks in words and
 the reason as model text, or the check that refused it.
+
+## Generator forms and completion rules (S09c2, part 1)
+
+Owner decisions of 11 November 2026 (issue #115): S09c2 is two PRs. This part
+adds the generator forms, the completion rules and the teacher views of the
+proposals they produce; part 2 adds the views of project initialization,
+release and delivery import, and the teacher view of proposals that are no
+longer pending. Chat 21 trial finding 1 stays open with D28.
+
+1. **The build page runs the rest of the cycle.** Once the project is
+   initialized it shows, in order, the Evaluator, Teacher and Trainer forms
+   and the completion rules. Each form shows what it sends: the project
+   (`Resource` id and version, from `GET /contexts/{id}/projects/{project_id}`),
+   the course version (the context's current ref) and, for the Teacher and
+   Trainer, the applied assessments (the project's `ASSESSMENT` selections),
+   with optional requirements, one per line. The Teacher and Trainer forms
+   need an applied assessment. A command gets a new request id when what it
+   sends changes; a retry of the same command returns the same job.
+2. **A stale base is refused at queue time.** `POST /contexts/{id}/jobs` refuses
+   an Evaluator, Teacher or Trainer command whose `base_context` is not the
+   context's current version with 409 "The course has changed since this form
+   was read; reload it", and records nothing; a request id already queued
+   returns its job. The form then reads the course again (keeping what it
+   showed, with sending disabled, until the new read arrives) and says so.
+3. **Completion rules are a host command with one fixed rule.**
+   `CompletionRules` (`learning.projects`), `LearningService.propose_completion_rules`,
+   the CLI `propose-completion-rules --project --base-context --request-id` and
+   `POST /contexts/{context_id}/completion-rules` (`{request_id, project,
+   base_context}` → `ProjectProposal`) put `COMPLETION_RULE` ("complete this
+   process node only when every direct child is COMPLETED"; process completion
+   only, never a grade or a verification) on every process node of the
+   project's current design, over its direct children and activities, as
+   `RuleDefinition` `completion-rule:<node id>`. The proposal is a project
+   revision: the Trainer content is selected again at a new version with
+   unchanged fields (a revision selects at least one artifact, and nothing
+   depends on the Trainer content), with the new nodes and design. It is
+   refused (422) without Trainer content, and (409) on a stale base or when the
+   Trainer content is stale. A request id replays. The test fixture
+   `ProductionAuthoring.configure_completion` now uses this command; the
+   handlers of a delivery import bind the `completion-rule:` rules.
+4. **API version 0.10.0** (one route added).
+
+The build page lists content made from an earlier version of what it depends
+on (the project's stale dependencies) and asks for it to be generated again
+before the completion rules.
 
 ## Local identity smoke test
 

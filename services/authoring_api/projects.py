@@ -2,7 +2,8 @@
 
 A project is initialized from the approved Curator syllabus of the course's
 current outline (S09a); the result is a pending proposal that a person decides
-and applies through the review endpoints.
+and applies through the review endpoints. Completion rules (S09c2) are proposed
+the same way: the fixed rule on every process node of the project's design.
 
 The Evaluator, Teacher and Trainer jobs (S09c) keep the review agent's verdict
 of each of their drafts with the request's result; the subject who ran the
@@ -19,7 +20,7 @@ from starlette.exceptions import HTTPException
 from aimpro.generators import GenerationAttempt
 from aimpro.syllabus_state import ApprovedSyllabus
 from learning.contracts import EntityRef, Record, Text
-from learning.projects import ProjectInitialization, ProjectInspection, ProjectProposal
+from learning.projects import CompletionRules, ProjectInitialization, ProjectInspection, ProjectProposal
 from services.api_common.auth import Principal
 from services.api_common.contexts import READ_ERRORS, WRITE_ERRORS, context_reader, context_writer, open_context
 from services.api_common.registry import ApiModule
@@ -27,6 +28,11 @@ from services.api_common.registry import ApiModule
 
 class ProjectInitializationRequest(ProjectInitialization):
     """``init-authoring-project``: the exact approved syllabus and base context, with the ALM request id."""
+    request_id: Text
+
+
+class CompletionRulesRequest(CompletionRules):
+    """``propose-completion-rules``: the exact selected project and base context, with the ALM request id."""
     request_id: Text
 
 
@@ -46,6 +52,15 @@ def initialize_project(context_id: str, body: ProjectInitializationRequest, requ
                        principal: Principal = Depends(context_writer)):
     with open_context(request, context_id) as service:
         return service.initialize_authoring_project(context_id, principal.subject_key,
+            body.model_dump(exclude={'request_id'}), request_id=body.request_id)
+
+
+@router.post('/contexts/{context_id}/completion-rules', response_model=ProjectProposal, responses=WRITE_ERRORS,
+             summary='Propose the fixed completion rule on every node of the project design (CLI propose-completion-rules)')
+def propose_completion_rules(context_id: str, body: CompletionRulesRequest, request: Request,
+                             principal: Principal = Depends(context_writer)):
+    with open_context(request, context_id) as service:
+        return service.propose_completion_rules(context_id, principal.subject_key,
             body.model_dump(exclude={'request_id'}), request_id=body.request_id)
 
 

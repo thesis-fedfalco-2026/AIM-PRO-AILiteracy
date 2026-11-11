@@ -16,6 +16,7 @@ import { ENDED_STATUSES, PREPARATION } from './buildApi';
 import type { ExportReport, JobView } from './buildApi';
 import { useBuildServices } from './BuildServices';
 import { JobsList } from './JobsList';
+import { GeneratorsStep } from './GeneratorsStep';
 import { describedBy, Field, TextInput, useFollowedJob, useStep, useSubjectKey } from './parts';
 import { currentDesign, designName, selectedProjects } from './projects';
 import { SourcesStep } from './SourcesStep';
@@ -350,7 +351,10 @@ function useJobs(contextId: string) {
   return { jobs, failed, load, update };
 }
 
-/** Start a course from an AIM-PRO model: upload it, prepare its sources, let the Curator draft the syllabus, then initialize the project. */
+/**
+ * Build a course from an AIM-PRO model: upload it, prepare its sources, let the Curator draft the syllabus,
+ * initialize the project, then queue the Evaluator, Teacher and Trainer and propose the completion rules.
+ */
 export function BuildPage({ contextId }: { contextId: string }) {
   const { t } = useTranslation();
   const { state, reload } = useInbox(contextId);
@@ -358,6 +362,8 @@ export function BuildPage({ contextId }: { contextId: string }) {
   const [report, setReport] = useState<ExportReport | null>(null);
   const { jobs, failed, load, update } = useJobs(contextId);
   const [opened, setOpened] = useState<JobView | null>(null);
+  // A course has one project: the steps after its initialization work on it.
+  const project = state.status === 'ready' ? selectedProjects(state.inbox.context, state.inbox.entities)[0] : undefined;
   return (
     <>
       <p><Link to={coursePath(contextId)}>{t('build.back')}</Link></p>
@@ -376,6 +382,7 @@ export function BuildPage({ contextId }: { contextId: string }) {
           <CuratorStep contextId={contextId} report={report} accepted={acceptedPreparations(jobs ?? [], subjectKey)}
             onJob={update} />
           <ProjectStep contextId={contextId} inbox={state.inbox} />
+          {project !== undefined ? <GeneratorsStep contextId={contextId} projectId={project} onJob={update} /> : null}
         </>
       ) : null}
     </>

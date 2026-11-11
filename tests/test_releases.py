@@ -307,7 +307,7 @@ class DeliveryImportTest(ReleaseTest):
 
     def handlers(self, view):
         return tuple(RuleBinding(rule=r, handler='all_completed') for r in view.closure
-                     if r.type == 'RuleDefinition' and r.id.startswith('course:completion:'))
+                     if r.type == 'RuleDefinition' and r.id.startswith('completion-rule:'))
 
     def test_bindings_must_use_the_pinned_version_new_scope_and_exact_catalogue_resource(self):
         release = self.released()

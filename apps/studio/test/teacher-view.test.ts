@@ -33,7 +33,7 @@ describe('teacher view', () => {
   it('gathers what students do, how it is assessed, the outcomes and the resources', () => {
     const view = teacherView([CONTEXT, activity('p1', 'Write a prompt.'), rubric('p1', [CLARITY]),
       spec('p1', ['One evening workshop']), requirement('p1', ['Fictional data only'])], applied);
-    expect(view.isAssessment).toBe(true);
+    expect(view.kind).toBe('assessment');
     expect(view.activities).toEqual([{ instruction: 'Write a prompt.', evidence: ['CRITERIA_BASED_PRODUCT'] }]);
     expect(view.rubrics).toEqual([{ name: 'Prompt rubric', criteria: [{ key: 'clarity', description: 'The task is identifiable.',
       levels: [{ key: 'unclear', descriptor: 'Cannot be identified.' }, { key: 'clear', descriptor: 'Explicitly stated.' }] }] }]);
@@ -83,9 +83,58 @@ describe('teacher view', () => {
 
   it('is not an assessment view when no teaching record is proposed', () => {
     const view = teacherView([CONTEXT], []);
-    expect(view.isAssessment).toBe(false);
+    expect(view.kind).toBe('other');
     expect([view.activities, view.rubrics, view.changes, view.outcomes]).toEqual([[], [], [], []]);
     expect(view.otherRecords).toBe(1);
+  });
+});
+
+const material = (version: string, title: string, content: string) =>
+  entity('Resource', `material-${title}`, version, { title, contentOrLocator: content, topics: [], usageConditions: 'Synthetic.' });
+const pack = (version: string, role: string) => entity('Resource', 'package-1', version, {
+  title: `Proposed ${role} package`, topics: [], usageConditions: 'Synthetic.',
+  contentOrLocator: JSON.stringify({ format: 'project-authoring-output', format_version: 1, inputs: { role } }),
+});
+const node = (id: string, version: string, kind: string, name: string, extra: Entity['fields']) =>
+  entity('ProcessNode', id, version, { kind, name, children: [], activities: [], ...extra });
+const rule = (id: string, version: string, purpose: string) =>
+  entity('RuleDefinition', id, version, { purpose, inputs: [], condition: 'Every direct child status equals COMPLETED.' });
+
+describe('teacher view of generated content and completion rules', () => {
+  it('names teacher and trainer content by the role of their package and shows the material texts', () => {
+    const teacher = teacherView([CONTEXT, pack('p1', 'TEACHER_CONTENT'), activity('p1', 'Compare two prompts.', []),
+      material('p1', 'Synthetic EXAMPLE', 'Weak: Write a reminder.')], [OUTCOME]);
+    expect(teacher.kind).toBe('teacher');
+    expect(teacher.materials).toEqual([{ title: 'Synthetic EXAMPLE', text: 'Weak: Write a reminder.' }]);
+    expect(teacher.changes).toContainEqual({ message: 'review.teacher.change.newMaterial', value: 'Synthetic EXAMPLE' });
+    expect(teacherView([pack('p1', 'TRAINER_CONTENT')], []).kind).toBe('trainer');
+    expect(teacherView([pack('p1', 'ASSESSMENT')], []).kind).toBe('assessment');
+  });
+
+  it('compares the text of a material with the one in use', () => {
+    const view = teacherView([material('p2', 'Synthetic WORKSHEET', 'Write your prompt and explain two choices.')],
+      [material('p1', 'Synthetic WORKSHEET', 'Write your prompt.')]);
+    expect(view.changes).toEqual([{ message: 'review.teacher.change.material', value: 'Synthetic WORKSHEET',
+      before: 'Write your prompt.', after: 'Write your prompt and explain two choices.' }]);
+    expect(teacherView([material('p2', 'Synthetic WORKSHEET', 'Same.')], [material('p1', 'Synthetic WORKSHEET', 'Same.')]).changes)
+      .toEqual([]);
+  });
+
+  it('lists every part of the design with its completion rule, from the root', () => {
+    const unitRule = rule('rule-unit', 'r1', 'Complete this process node only when every direct child is COMPLETED.');
+    const phaseRule = rule('rule-phase', 'r1', 'Complete this process node only when every direct child is COMPLETED.');
+    const unit = node('unit-1', 'r1', 'UNIT', 'Prepare a prompt', { completionRule: ref('RuleDefinition', 'rule-unit', 'r1') });
+    const phase = node('phase-1', 'r1', 'PHASE', 'Workshop', {
+      children: [ref('ProcessNode', 'unit-1', 'r1')], completionRule: ref('RuleDefinition', 'rule-phase', 'r1') });
+    const design = entity('LearningDesign', 'design-1', 'r1', { name: 'Design', root: ref('ProcessNode', 'phase-1', 'r1') });
+    // The Trainer package is selected again unchanged: no teaching change.
+    const view = teacherView([CONTEXT, pack('r1', 'TRAINER_CONTENT'), material('p1', 'Synthetic WORKSHEET', 'Same.'),
+      unitRule, unit, phaseRule, phase, design], [material('p1', 'Synthetic WORKSHEET', 'Same.')]);
+    expect(view.kind).toBe('completion');
+    expect(view.rules).toEqual([
+      { node: 'Workshop', nodeKind: 'PHASE', rule: 'Complete this process node only when every direct child is COMPLETED.' },
+      { node: 'Prepare a prompt', nodeKind: 'UNIT', rule: 'Complete this process node only when every direct child is COMPLETED.' }]);
+    expect(view.changes).toEqual([]);
   });
 });
 

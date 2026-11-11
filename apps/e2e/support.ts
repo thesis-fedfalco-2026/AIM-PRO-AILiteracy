@@ -74,6 +74,25 @@ export const test = base.extend<{ seed: SeedManifest }>({
 
 export { expect };
 
+/** Create a course from the studio home page; it opens on its build page. */
+export async function newCourse(page: Page, course: string) {
+  await page.goto('/studio/');
+  await page.getByLabel(en.home.courseLabel).fill(course);
+  await page.getByRole('button', { name: en.home.create }).click();
+  await expect(page).toHaveURL(`/studio/contexts/${course}/build`);
+  await expect(page.getByRole('heading', { name: en.build.title, level: 1 })).toBeVisible();
+}
+
+/** Approve the proposal on screen with a reason, then apply it. */
+export async function approveAndApply(page: Page) {
+  await page.getByRole('radio', { name: en.review.decision.approve }).check();
+  await page.getByLabel(en.review.decision.reason).fill('Synthetic review of the exact payload');
+  await page.getByRole('button', { name: en.review.decision.submit }).click();
+  await expect(page.getByTestId('proposal-status')).toHaveText(en.review.status.approved);
+  await page.getByRole('button', { name: en.review.apply.submit }).click();
+  await expect(page.getByTestId('proposal-status')).toHaveText(en.review.status.applied);
+}
+
 /** WCAG 2.1 A and AA rules of axe on the current page; every violation fails the test. */
 export async function expectAccessible(page: Page) {
   const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();

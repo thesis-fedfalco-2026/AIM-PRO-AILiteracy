@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { selectedProjects } from '../src/features/course-build/projects';
@@ -439,5 +439,113 @@ describe('the review agent on the Evaluator, Teacher and Trainer drafts (S09c)',
     expect(attempts.getByText("The review agent's assessment (model text): “The worksheet lacks its criterion.”")).toBeTruthy();
     expect(attempts.getByText(`Draft 2: ${en.build.reviews.outcome.accepted}`)).toBeTruthy();
     expect(requests.some((request) => request.url.includes('syllabus-reviews'))).toBe(false);
+  });
+});
+
+describe('the Evaluator, Teacher and Trainer forms and the completion rules (S09c2)', () => {
+  const manifest = JSON.stringify({ format: 'authoring-project', project_id: 'main' });
+  const context = (version: string) => entity('ExecutionContext', 'new-course',
+    { status: 'DRAFT', mode: 'PREPARATION', models: [ref('DomainModel', 'p:model')], learningDesign: OUTLINE }, version);
+  const records = [entity('DomainModel', 'p:model', { definitions: [ref('Resource', 'p')] }),
+    entity('Resource', 'p', { contentOrLocator: manifest })];
+  const PROJECT = ref('Resource', 'authoring-project:main', '7');
+  const ASSESSMENT = ref('Resource', 'assessment-package', '2');
+  const artifact = (kind: string, resource: unknown) => ({ key: kind.toLowerCase(), kind, resource, depends_on: [], definitions: [] });
+  const inspection = (artifacts: unknown[], stale: unknown[] = []): Reply => ({ status: 200, body: {
+    project: PROJECT, manifest: { artifacts }, artifacts: [], stale_dependencies: stale } });
+  /** The build page (inbox, jobs) and the forms (inbox again, project inspection), read once each. */
+  const opened = (version: string, project: Reply) => ({
+    'GET /auth/session': [signedIn],
+    'GET /contexts/new-course': [summary(context(version), records), summary(context(version), records)],
+    'GET /contexts/new-course/pending-proposals': [noPending, noPending],
+    'GET /contexts/new-course/jobs': [{ status: 200, body: { jobs: [] } }],
+    'GET /contexts/new-course/projects/main': [project],
+  });
+  const section = async (name: string) => within(await screen.findByRole('region', { name }));
+  const heading = (role: 'evaluator' | 'teacher' | 'trainer', step: number) =>
+    en.build.generators[role].heading.replace('{{step}}', String(step));
+
+  it('shows the exact refs each form sends and queues the Evaluator with them', async () => {
+    const queued = job('QUEUED', { job: { kind: 'generate-project-assessments', command: {} } });
+    const { requests } = await renderStudio({
+      ...opened('5', inspection([artifact('SYLLABUS', ref('Resource', 'syllabus'))])),
+      'POST /contexts/new-course/jobs': [{ status: 200, body: queued }],
+      'GET /contexts/new-course/jobs/request-1': [{ status: 200, body: { ...queued, status: 'PROPOSED',
+        proposal_refs: [ref('ChangeProposal', 'p-assessments', '1')] } }],
+    }, '/studio/contexts/new-course/build');
+    const evaluator = await section(heading('evaluator', 5));
+    const refs = within(evaluator.getByTestId('sent-refs'));
+    expect(refs.getByText('authoring-project:main').parentElement?.textContent).toBe('authoring-project:main (version 7)');
+    expect(refs.getByText('new-course').parentElement?.textContent).toBe('new-course (version 5)');
+    // The Teacher and Trainer build on the applied assessments: none yet.
+    for (const role of ['teacher', 'trainer'] as const) {
+      const form = await section(heading(role, role === 'teacher' ? 6 : 7));
+      expect(form.getByText(en.build.generators.noAssessments)).toBeTruthy();
+      expect(form.getByText(en.build.generators.needsAssessments)).toBeTruthy();
+      expect(form.queryByRole('button')).toBeNull();
+    }
+    expect((await section(en.build.completion.heading)).getByText(en.build.completion.needsTrainer)).toBeTruthy();
+
+    fireEvent.change(evaluator.getByLabelText(en.build.generators.requirements), { target: { value: 'Explain two choices.\n\n' } });
+    fireEvent.click(evaluator.getByRole('button', { name: en.build.generators.evaluator.submit }));
+    const link = await evaluator.findByRole('link', { name: en.build.generators.review });
+    expect(link.getAttribute('href')).toBe('/studio/contexts/new-course/review/p-assessments');
+    const post = requests.find((request) => request.method === 'POST')!;
+    expect(post.headers.get('X-CSRF-Token')).toBe(SESSION.csrf_token);
+    expect(await post.json()).toEqual({ request_id: 'request-1', job: { kind: 'generate-project-assessments', command: {
+      project: PROJECT, base_context: ref('ExecutionContext', 'new-course', '5'), assessments: [],
+      requirements: ['Explain two choices.'], shared_content: [], stimulus_requirements: [] } } });
+  });
+
+  it('reads the form again when the course has changed since it was read, and queues on the new base', async () => {
+    const replies = opened('5', inspection([artifact('ASSESSMENT', ASSESSMENT)]));
+    const queued = job('QUEUED', { request_id: 'request-2', job: { kind: 'generate-project-teacher', command: {} } });
+    const { requests } = await renderStudio({
+      ...replies,
+      'GET /contexts/new-course': [...replies['GET /contexts/new-course'], summary(context('6'), records)],
+      'GET /contexts/new-course/pending-proposals': [noPending, noPending, noPending],
+      'GET /contexts/new-course/projects/main': [...replies['GET /contexts/new-course/projects/main'],
+        inspection([artifact('ASSESSMENT', ASSESSMENT)])],
+      'POST /contexts/new-course/jobs': [
+        { status: 409, body: { error: 'conflict', detail: 'The course has changed since this form was read; reload it', request_id: 'r' } },
+        { status: 200, body: queued }],
+      'GET /contexts/new-course/jobs/request-2': [{ status: 200, body: { ...queued, status: 'RUNNING' } }],
+    }, '/studio/contexts/new-course/build');
+    const teacher = await section(heading('teacher', 6));
+    expect(within(teacher.getByTestId('sent-refs')).getByText('assessment-package').parentElement?.textContent)
+      .toBe('assessment-package (version 2)');
+    fireEvent.click(teacher.getByRole('button', { name: en.build.generators.teacher.submit }));
+    expect(await teacher.findByText(en.build.generators.stale)).toBeTruthy();
+    await waitFor(() => expect(within(teacher.getByTestId('sent-refs')).getByText('new-course').parentElement?.textContent)
+      .toBe('new-course (version 6)'));
+    fireEvent.click(teacher.getByRole('button', { name: en.build.generators.teacher.submit }));
+    expect(await teacher.findByText(en.build.generators.running)).toBeTruthy();
+    const posts = await Promise.all(requests.filter((request) => request.method === 'POST').map((request) => request.json()));
+    expect(posts.map((body) => [body.request_id, body.job.command.base_context.version, body.job.command.assessments]))
+      .toEqual([['request-1', '5', [ASSESSMENT]], ['request-2', '6', [ASSESSMENT]]]);
+  });
+
+  it('proposes the completion rules on the exact project and course version', async () => {
+    const { requests } = await renderStudio({
+      ...opened('9', inspection([artifact('ASSESSMENT', ASSESSMENT), artifact('TRAINER_CONTENT', ref('Resource', 'trainer'))])),
+      'POST /contexts/new-course/completion-rules': [{ status: 200, body: {
+        proposal: ref('ChangeProposal', 'p-rules', '1'), project: PROJECT, domain: ref('DomainModel', 'd'), design: OUTLINE } }],
+    }, '/studio/contexts/new-course/build');
+    const completion = await section(en.build.completion.heading);
+    fireEvent.click(completion.getByRole('button', { name: en.build.completion.submit }));
+    const link = await completion.findByRole('link', { name: en.build.completion.review });
+    expect(link.getAttribute('href')).toBe('/studio/contexts/new-course/review/p-rules');
+    const post = requests.find((request) => request.method === 'POST')!;
+    expect(await post.json()).toEqual({ request_id: 'request-1', project: PROJECT,
+      base_context: ref('ExecutionContext', 'new-course', '9') });
+  });
+
+  it('asks for content made from an earlier version to be generated again before the rules', async () => {
+    await renderStudio(opened('9', inspection([artifact('TRAINER_CONTENT', ref('Resource', 'trainer'))],
+      [{ code: 'STALE_DEPENDENCY', target: 'trainer_content', reason: 'r', resolution: 's' }])), '/studio/contexts/new-course/build');
+    const completion = await section(en.build.completion.heading);
+    expect(completion.getByText(en.build.completion.needsFresh)).toBeTruthy();
+    expect(completion.queryByRole('button')).toBeNull();
+    expect(screen.getByText(en.build.generators.staleContent.replace('{{targets}}', 'Trainer content'))).toBeTruthy();
   });
 });
