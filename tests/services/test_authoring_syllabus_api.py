@@ -11,7 +11,8 @@ from learning.contracts import Entity, EntityRef
 from tests.services.job_fixtures import prepared_syllabus_job, revision_job
 from tests.services.test_authoring_exports_api import COURSE
 from tests.services.test_authoring_sources_api import SourcesApiCase
-from tests.syllabus_fixtures import REJECT_ONCE, REJECTION, revised_syllabus, syllabus, verdict
+from aimpro.syllabus_state import NOT_ACCEPTED
+from tests.syllabus_fixtures import REJECT_EVERY, REJECT_ONCE, REJECTION, revised_syllabus, syllabus, verdict
 
 
 REASON = 'Add a unit where participants explain two choices.'
@@ -184,6 +185,18 @@ class ReviewAttemptsTest(SyllabusApiCase):
                          [(1, REJECTION.model_dump(mode='json'), None), (2, verdict().model_dump(mode='json'), None)])
         # The reviewer's text is shown here only: never in the job's detail or its events.
         self.assertNotIn(REJECTION.reason, str(self.job('revision-1')))
+
+    def test_a_syllabus_no_draft_of_which_was_accepted_is_proposed_with_the_notice(self):
+        # Owner decision (issue #112): the job says so, the syllabus carries the verdict, the teacher decides.
+        proposal = self.curator(job={'kind': 'generate-aimpro-syllabus', 'project': self.export, 'source_scope': 'wp3',
+                                     'query': 'prompting ' + REJECT_EVERY, 'k': 3})
+        self.assertEqual(self.job('curator-1')['detail'], NOT_ACCEPTED)
+        record = self.body(self.view(proposal))['syllabus']
+        self.assertEqual((record['reviewed_by_agent'], record['review']), (True, REJECTION.model_dump(mode='json')))
+        self.assertEqual([a['review'] for a in self.body(self.reviews('curator-1'))['attempts']],
+                         [REJECTION.model_dump(mode='json')] * 3)
+        self.assertNotIn(REJECTION.reason, str(self.job('curator-1')))
+        self.approve_apply(proposal, 'apply-not-accepted')
 
     def test_only_the_subject_of_a_syllabus_request_reads_its_attempts(self):
         self.curator()

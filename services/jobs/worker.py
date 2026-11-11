@@ -59,7 +59,8 @@ class JobEventSink:
 def outcome(response) -> tuple[str, tuple, str | None]:
     """The job status, proposal references and detail of a service response."""
     if response.kind == 'PROPOSAL' and response.proposal_refs:
-        return 'PROPOSED', tuple(response.proposal_refs), None
+        # A syllabus the review agent did not accept is proposed with a fixed notice for the author (issue #112).
+        return 'PROPOSED', tuple(response.proposal_refs), getattr(response, 'notice', None)
     if response.kind == 'SOURCE_DISCOVERY':
         return 'COMPLETED', (), None
     if response.kind == 'SOURCE_PREPARATION':

@@ -9,8 +9,8 @@ from unittest.mock import Mock, patch
 from aimpro.audit import DEFAULT_PROJECT
 from aimpro.lead import prepare_input
 from agent_system import events
-from aimpro.syllabus import ATTEMPTS, SyllabusDraft, SyllabusRevision, checked_syllabus, generate
-from aimpro.syllabus_state import SyllabusArtifact
+from aimpro.syllabus import ATTEMPTS, SyllabusDraft, SyllabusRevision, accepted, checked_syllabus, generate
+from aimpro.syllabus_state import NOT_ACCEPTED, SyllabusArtifact
 from learning.contracts import EntityRef, make_entity
 from learning.decisions import proposal_candidates
 from learning.metamodel import load_contract
@@ -103,11 +103,14 @@ class SyllabusContractTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'corpus evidence'):
             generate(prepare_input(), dispatcher=curator, lead=reviewer)
         self.assertEqual(curator.calls, [])
+        # A verdict that does not accept is never taken for an acceptance; the teacher decides (issue #112).
         for fields in ({'verdict': 'REJECT'}, {'verdict': 'UNCERTAIN'},
                        {'citation_support': False}, {'source_alignment': False}):
             reviewer.value = Reviewer().value.model_copy(update=fields)
-            with self.subTest(fields=fields), self.assertRaisesRegex(ValueError, 'semantic review'):
-                generate(self.data, dispatcher=curator, lead=reviewer)
+            with self.subTest(fields=fields):
+                _, last, attempts = generate(self.data, dispatcher=curator, lead=reviewer)
+                self.assertFalse(accepted(last))
+                self.assertEqual(len(attempts), ATTEMPTS)
 
     def test_review_budget_and_wrong_output_stop_generation(self):
         curator, reviewer = Curator(self.draft), Reviewer()
@@ -121,6 +124,12 @@ class SyllabusContractTest(unittest.TestCase):
 
 def _data(prompt):
     return json.loads(prompt.split('\nDATA\n')[1])
+
+
+def _first_prompt(data, draft):
+    curator = Curator(draft)
+    generate(data, dispatcher=curator, lead=Reviewer())
+    return curator.calls[0][1]
 
 
 class SyllabusAttemptsTest(unittest.TestCase):
@@ -149,19 +158,60 @@ class SyllabusAttemptsTest(unittest.TestCase):
         self.assertNotIn(REJECTION.reason, reviewer.calls[1][0])
         self.assertEqual(_data(reviewer.calls[1][0])['draft'], retried.model_dump(mode='json'))
 
-    def test_after_the_last_rejection_the_verdicts_travel_with_the_error_not_in_its_message(self):
+    def test_after_the_last_rejection_the_last_checked_draft_is_returned_with_its_verdict(self):
+        # Owner decision (issue #112): the teacher may accept a syllabus the review agent did not accept.
         curator, reviewer = Curator(self.draft), Reviewer()
         for rejection in (REJECTION, verdict(verdict='UNCERTAIN', reason='Synthetic reviewer text: unsure.'),
                           verdict(source_alignment=False)):
             reviewer.value, curator.calls, reviewer.calls = rejection, [], []
-            with self.subTest(rejection=rejection.verdict), \
-                    self.assertRaisesRegex(ValueError, '^Syllabus did not pass semantic review$') as raised:
-                generate(self.data, dispatcher=curator, lead=reviewer)
+            with self.subTest(rejection=rejection.verdict):
+                draft, last, attempts = generate(self.data, dispatcher=curator, lead=reviewer)
             self.assertEqual(ATTEMPTS, 3)
+            self.assertEqual((draft, last), (self.draft, rejection))
+            self.assertFalse(accepted(last))
             self.assertEqual((len(curator.calls), len(reviewer.calls)), (ATTEMPTS, ATTEMPTS))
-            self.assertEqual([(a.attempt, a.review) for a in raised.exception.attempts],
-                             [(n, rejection) for n in range(1, ATTEMPTS + 1)])
-            self.assertNotIn(rejection.reason, str(raised.exception))
+            self.assertEqual([(a.attempt, a.review) for a in attempts], [(n, rejection) for n in range(1, ATTEMPTS + 1)])
+
+    def test_the_last_draft_that_passed_the_checks_is_the_one_returned(self):
+        unit = self.draft.units[0]
+        citation = unit.corpus_citations[0].model_copy(update={'document_ids': ('invented',)})
+        invalid = self.draft.model_copy(update={'units': (unit.model_copy(update={'corpus_citations': (citation,)}),)})
+        curator = Curator(self.draft, retry=invalid)
+        draft, last, attempts = generate(self.data, dispatcher=curator, lead=Reviewer(REJECTION))
+        self.assertEqual((draft, last), (self.draft, REJECTION))
+        self.assertEqual([(a.review, a.check is None) for a in attempts], [(REJECTION, True), (None, False), (None, False)])
+
+    def test_the_host_sets_each_units_competencies_from_its_target(self):
+        unit = self.draft.units[0]
+        wrong = self.draft.model_copy(update={'units': (unit.model_copy(update={'source_competency_ids': ('invented',)}),)})
+        curator, reviewer = Curator(wrong), Reviewer()
+        draft, _, attempts = generate(self.data, dispatcher=curator, lead=reviewer)
+        self.assertEqual(draft, self.draft)
+        self.assertEqual(len(curator.calls), 1)
+        self.assertEqual(_data(reviewer.calls[0][0])['draft'], self.draft.model_dump(mode='json'))
+        self.assertIn('the host sets source_competency_ids', curator.calls[0][1].split('\nDATA\n')[0])
+
+    def test_the_curator_receives_the_citable_excerpts_and_the_citations_outside_them(self):
+        self.assertEqual(_data(_first_prompt(self.data, self.draft))['citable_excerpts'],
+                         [{'resource_id': 'wp3:test', 'resource_version': 'v1', 'document_ids': ['chunk-1']}])
+        unit = self.draft.units[0]
+        outside = unit.corpus_citations[0].model_copy(update={'document_ids': ('chunk-1', 'invented')})
+        second = unit.model_copy(update={'key': 'unit-second', 'corpus_citations': (
+            unit.corpus_citations[0].model_copy(update={'resource_version': 'v0'}),)})
+        invalid = self.draft.model_copy(update={'units': (
+            unit.model_copy(update={'corpus_citations': (unit.corpus_citations[0], outside)}), second)})
+        curator = Curator(invalid, retry=self.draft)
+        draft, _, attempts = generate(self.data, dispatcher=curator, lead=Reviewer())
+        check = 'Syllabus citation is outside the retrieved resource/version excerpts'
+        self.assertEqual((draft, attempts[0].check), (self.draft, check))
+        retry = _data(curator.calls[1][1])
+        self.assertEqual(retry['review_feedback'], {'check': check})
+        self.assertEqual(retry['check_details'], {'citations_outside_the_excerpts': [
+            {'unit': unit.key, 'resource_id': 'wp3:test', 'resource_version': 'v1', 'document_ids': ['chunk-1', 'invented']},
+            {'unit': 'unit-second', 'resource_id': 'wp3:test', 'resource_version': 'v0', 'document_ids': ['chunk-1']}]})
+        self.assertIn('check_details', curator.calls[1][1].split('\nDATA\n')[0])
+        with self.assertRaisesRegex(ValueError, '^' + check + '$'):
+            checked_syllabus(self.data, invalid)
 
     def test_a_draft_refused_by_the_checks_is_retried_with_the_fixed_text(self):
         unit = self.draft.units[0]
@@ -326,13 +376,33 @@ class SyllabusServiceTest(unittest.TestCase):
         self.factory.assert_not_called()
         self.assertEqual(self.store.owned('session', 'ChangeProposal'), ())
 
-    def test_rejected_unsupported_or_invalid_draft_leaves_no_partial_candidates(self):
-        self.reviewer.value = self.reviewer.value.model_copy(update={'citation_support': False})
+    def test_a_syllabus_whose_drafts_were_not_accepted_is_proposed_with_the_last_verdict(self):
+        # Owner decision (issue #112): the teacher decides on the last checked draft, told it was not accepted.
+        rejection = self.reviewer.value.model_copy(update={'citation_support': False})
+        self.reviewer.value = rejection
+        response, proposal, saved, design = self.pending()
+        self.assertEqual(response.content, 'Curator syllabus awaits human review; the outline remains a draft.')
+        self.assertEqual(response.notice, NOT_ACCEPTED)
+        self.assertEqual([a.review for a in response.attempts], [rejection] * ATTEMPTS)
+        payload = next(e for e in saved if e.type == 'Resource' and e.id.endswith(':syllabus'))
+        artifact = SyllabusArtifact.model_validate_json(payload.fields['contentOrLocator'])
+        self.assertEqual(artifact.review, rejection)
+        self.assertEqual(self.generate(), response)
+        self.assertEqual(self.factory.call_count, 1)
+        self.approve_apply(proposal)
+        resolved = self.service.approved_aimpro_syllabus('session', 'admin', design.ref)
+        self.assertEqual(resolved.artifact.review, rejection)
+
+    def test_with_no_draft_passing_the_checks_the_request_fails_without_partial_candidates(self):
+        unit = self.curator.value.units[0]
+        self.curator.value = self.curator.value.model_copy(update={'units': (
+            unit.model_copy(update={'source_practice_ids': ('invented',)}),)})
         failed = self.generate()
         self.assertEqual(failed.kind, 'FAILURE')
         # The fixed reason reaches the author; model output never does.
-        self.assertEqual(failed.content, 'Syllabus generation did not complete (Syllabus did not pass semantic review); '
-                                         'no proposal was applied.')
+        self.assertEqual(failed.content, 'Syllabus generation did not complete (Syllabus unit practices are outside '
+                                         'its source target); no proposal was applied.')
+        self.assertIsNone(failed.notice)
         self.assertEqual(self.generate().kind, 'FAILURE')
         self.assertEqual(self.factory.call_count, 1)
         self.assertEqual(self.store.owned('session', 'ChangeProposal'), ())
@@ -355,16 +425,14 @@ class SyllabusServiceTest(unittest.TestCase):
         self.assertEqual(artifact.review, verdict())
         self.assertEqual(self.factory.call_count, 1)
 
-    def test_the_reviewer_text_never_reaches_the_failure_or_the_log(self):
+    def test_the_reviewer_text_never_reaches_the_result_text_or_the_log(self):
         self.reviewer.value = REJECTION
         with self.assertLogs('agent_system', 'WARNING') as logged:
-            failed = self.generate()
-        self.assertEqual(failed.content, 'Syllabus generation did not complete (Syllabus did not pass semantic review); '
-                                         'no proposal was applied.')
-        self.assertEqual([a.review for a in failed.attempts], [REJECTION] * ATTEMPTS)
-        self.assertNotIn(REJECTION.reason, '\n'.join(logged.output))
-        self.assertEqual(self.service.aimpro_syllabus_request('session', 'admin', 'syllabus'), failed)
-        self.assertEqual(self.store.owned('session', 'ChangeProposal'), ())
+            proposed = self.generate()
+        self.assertEqual((proposed.kind, proposed.notice), ('PROPOSAL', NOT_ACCEPTED))
+        self.assertEqual([a.review for a in proposed.attempts], [REJECTION] * ATTEMPTS)
+        self.assertNotIn(REJECTION.reason, '\n'.join(logged.output) + proposed.content + proposed.notice)
+        self.assertEqual(self.service.aimpro_syllabus_request('session', 'admin', 'syllabus'), proposed)
 
     def test_the_attempts_are_read_only_from_a_syllabus_request(self):
         self.generate()

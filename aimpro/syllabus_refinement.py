@@ -22,7 +22,7 @@ import logging
 
 from aimpro.lead import ReviewError
 from aimpro.syllabus import SyllabusDraft, SyllabusRevision, checked_syllabus, generate
-from aimpro.syllabus_state import SyllabusResult, candidates, proposed
+from aimpro.syllabus_state import SyllabusResult, candidates, proposed, proposed_result
 from learning.context import LearningRequest
 from learning.contracts import EntityRef
 from learning.decisions import create_proposal, save_proposal
@@ -67,8 +67,7 @@ def _record(service, context_id, request_id, context, base, draft, verdict, expl
     saved = candidates(base.source, draft, verdict, context, retrieval_trace=base.trace,
                        revises=base.proposal.ref, **refinement)
     proposal = create_proposal(context, (root.ref,), saved, explanation)
-    result = SyllabusResult(kind='PROPOSAL', content='The refined syllabus awaits human review.',
-                            proposal_refs=(proposal.ref,), application_status='pending', attempts=attempts)
+    result = proposed_result('The refined syllabus awaits human review.', proposal, attempts, verdict)
     save_proposal(service.store, context, proposal, saved)
     service.store.finish_request(request_id, context_id, result.model_dump(mode='json'))
     return result

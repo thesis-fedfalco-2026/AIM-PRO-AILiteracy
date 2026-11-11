@@ -23,6 +23,7 @@ from unittest.mock import Mock, patch
 
 from agent_system import events
 from aimpro.syllabus_refinement import NO_REQUEST
+from aimpro.syllabus_state import NOT_ACCEPTED
 from learning.contracts import EntityRef, Record
 from learning.metamodel import load_contract
 from learning.outputs import LearningResponse
@@ -236,13 +237,13 @@ class CuratorJobTest(WorkerCase):
         self.assertEqual(self.agents.searches, [('prompting', 3)])
         self.assertEqual((self.agents.exports / EXPORT).read_bytes(), export)
 
-    def test_a_syllabus_rejected_at_every_attempt_fails_with_the_verdicts_kept(self):
+    def test_a_syllabus_rejected_at_every_attempt_is_proposed_with_the_notice_and_the_verdicts_kept(self):
+        # Owner decision (issue #112): the teacher decides on the last checked draft, told it was not accepted.
         self.agents.reviewer.value = REJECTION
         self.submit('job-curator', self.syllabus_job())
         done = self.worker.run_once()
-        self.assertEqual(done.status, 'FAILED')
-        self.assertEqual(done.detail, 'Syllabus generation did not complete (Syllabus did not pass semantic review); '
-                                      'no proposal was applied.')
+        self.assertEqual((done.status, done.detail), ('PROPOSED', NOT_ACCEPTED))
+        self.assertEqual(self.pending()[0], done.proposal_refs[0])
         self.assertEqual([a['review'] for a in self.request_result('job-curator')['attempts']],
                          [REJECTION.model_dump(mode='json')] * 3)
         reviews = [json.loads(e.data)['data'] for e in self.jobs.events(AUTH, 'job-curator')

@@ -127,6 +127,18 @@ function ComparisonList({ view, comparison, labels }: {
   );
 }
 
+/** Who stands behind the syllabus: the teacher who edited it, or the review agent's verdict on the Curator's draft. */
+function Provenance({ syllabus }: { syllabus: SyllabusProposalView['syllabus'] }) {
+  const { t } = useTranslation();
+  const review = syllabus.review;
+  if (syllabus.edited_by) return <p>{t('review.syllabus.editedBy', { teacher: syllabus.edited_by })}</p>;
+  // Issue #112: when no draft was accepted, the last checked draft is proposed and the teacher decides.
+  if (review && !(review.verdict === 'ACCEPT' && review.source_alignment && review.citation_support)) {
+    return <p data-testid="not-accepted">{t('review.syllabus.notAcceptedByAgent', { reason: review.reason })}</p>;
+  }
+  return <p>{t('review.syllabus.reviewedByAgent', { reason: review?.reason ?? '' })}</p>;
+}
+
 /** A syllabus proposal in words, then compared with the proposal it refines and with the course's syllabus. */
 export function SyllabusView({ view }: { view: SyllabusProposalView }) {
   const { t } = useTranslation();
@@ -135,11 +147,7 @@ export function SyllabusView({ view }: { view: SyllabusProposalView }) {
     <>
       <section aria-labelledby="syllabus-units">
         <h2 id="syllabus-units">{t('review.syllabus.heading', { title: syllabus.draft.title })}</h2>
-        <p>
-          {syllabus.edited_by
-            ? t('review.syllabus.editedBy', { teacher: syllabus.edited_by })
-            : t('review.syllabus.reviewedByAgent', { reason: syllabus.review?.reason ?? '' })}
-        </p>
+        <Provenance syllabus={syllabus} />
         {syllabus.revision_reasons.length > 0 ? (
           <>
             <h3>{t('review.syllabus.reasons')}</h3>

@@ -14,6 +14,7 @@ from unittest.mock import MagicMock, Mock, patch
 from aimpro.audit import DEFAULT_PROJECT
 from aimpro.source_selection import SourcePlan, collect_sources
 from aimpro.source_service import PreparedSources
+from aimpro.syllabus_state import NOT_ACCEPTED
 from document_search.contracts import PreparationDocumentRef, SearchScope, resource_key
 from document_search.postgres import PostgresBackend
 from document_search.backend import SearchError
@@ -220,12 +221,8 @@ class SourceSelectionTest(unittest.TestCase):
         self.assertNotIn('discoveries', json.loads(prompt.split('\nDATA\n')[1])['input']['corpus_evidence'])
         self.assertEqual(self.store.read_context('session'), self.root)
 
-    def test_rejection_uncertainty_atomic_failure_and_abandonment_leave_no_proposal(self):
+    def test_atomic_failure_and_abandonment_leave_no_proposal(self):
         self.prepare()
-        for verdict in ('REJECT','UNCERTAIN'):
-            self.reviewer.value = self.reviewer.value.model_copy(update={'verdict': verdict})
-            self.assertEqual(self.generate(verdict).kind, 'FAILURE')
-        self.reviewer.value = Reviewer().value
         original = self.store._put
         def fail(entity, *args, **kwargs):
             if entity.id.endswith(':retrieval-trace'):
@@ -238,16 +235,18 @@ class SourceSelectionTest(unittest.TestCase):
         self.assertFalse(self.store.owned('session','ChangeProposal'))
         self.assertEqual(self.store.db.execute("SELECT count(*) FROM entities WHERE namespace<>'active'").fetchone()[0],0)
 
-    def test_a_failure_reports_the_fixed_reason_and_keeps_every_attempt(self):
+    def test_a_syllabus_not_accepted_is_proposed_with_the_notice_and_every_attempt(self):
+        # Owner decision (issue #112): rejected or uncertain at every draft, the last checked draft is proposed.
         self.prepare()
-        self.reviewer.value = REJECTION
-        with self.assertLogs('agent_system', 'WARNING') as logged:
-            failed = self.generate()
-        self.assertEqual(failed.content, 'Selected-source authoring did not complete '
-                                         '(Syllabus did not pass semantic review); no proposal was applied.')
-        self.assertEqual([a.review for a in failed.attempts], [REJECTION] * 3)
-        self.assertNotIn(REJECTION.reason, '\n'.join(logged.output))
-        self.assertEqual(self.service.aimpro_syllabus_request('session', 'admin', 'selected'), failed)
+        for value in (REJECTION, verdict(verdict='UNCERTAIN')):
+            self.reviewer.value = value
+            with self.subTest(verdict=value.verdict), self.assertLogs('agent_system', 'WARNING') as logged:
+                proposed = self.generate(value.verdict)
+            self.assertEqual((proposed.kind, proposed.notice), ('PROPOSAL', NOT_ACCEPTED))
+            self.assertEqual(proposed.content, 'Selected-source Curator syllabus awaits human review.')
+            self.assertEqual([a.review for a in proposed.attempts], [value] * 3)
+            self.assertNotIn(value.reason, '\n'.join(logged.output))
+            self.assertEqual(self.service.aimpro_syllabus_request('session', 'admin', value.verdict), proposed)
         self.reviewer.value, self.reviewer.queue = verdict(), [REJECTION]
         accepted = self.generate('accepted')
         self.assertEqual(accepted.kind, 'PROPOSAL')

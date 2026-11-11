@@ -11,7 +11,7 @@ from aimpro.lead import ReviewError
 from aimpro.syllabus import SyllabusDraft, SyllabusUnit
 from aimpro.syllabus_compare import compare
 from aimpro.syllabus_refinement import NO_REQUEST, STALE
-from aimpro.syllabus_state import SyllabusArtifact, proposed
+from aimpro.syllabus_state import NOT_ACCEPTED, SyllabusArtifact, proposed
 from learning.decisions import proposal_candidates
 from learning.metamodel import load_contract
 from learning.policies import ScopeGrant
@@ -219,18 +219,19 @@ class SyllabusRefinementTest(unittest.TestCase):
         self.assertEqual(retry['review_feedback'], {'review': REJECTION.model_dump(mode='json')})
         self.assertEqual(retry['teacher_reasons'], ['First reason', 'Second reason'])
 
-    def test_a_revision_rejected_at_every_attempt_keeps_the_verdicts_and_proposes_nothing(self):
+    def test_a_revision_rejected_at_every_attempt_proposes_its_last_draft_with_the_notice(self):
+        # Owner decision (issue #112): the teacher decides on a revision the review agent did not accept.
         first = self.generate()
         self.request_revision(first, 'Reason')
         self.reviewer.value = REJECTION
         with self.assertLogs('agent_system', 'WARNING') as logged:
             response = self.revise(first)
-        self.assertEqual(response.content, 'Syllabus revision did not complete (Syllabus did not pass semantic review); '
-                                           'no proposal was applied.')
+        self.assertEqual((response.kind, response.content, response.notice),
+                         ('PROPOSAL', 'The refined syllabus awaits human review.', NOT_ACCEPTED))
         self.assertEqual(len(response.attempts), 3)
         self.assertNotIn(REJECTION.reason, '\n'.join(logged.output))
         self.assertEqual(self.revise(first), response)
-        self.assertEqual(len(self.store.owned('session', 'ChangeProposal')), 1)
+        self.assertEqual(len(self.store.owned('session', 'ChangeProposal')), 2)
 
     def edit(self, proposal, value, request_id='edit'):
         return self.service.edit_aimpro_syllabus('session', 'admin', proposal.id, value, request_id=request_id)

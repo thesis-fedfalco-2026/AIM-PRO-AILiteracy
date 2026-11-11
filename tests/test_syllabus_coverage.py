@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 from aimpro.retrieval import SelectedExcerpt, SourceQuery, SourceSelectionSummary
 from aimpro.lead import ReviewError
-from aimpro.syllabus import ATTEMPTS, SyllabusDraft, checked_syllabus, generate
+from aimpro.syllabus import ATTEMPTS, SyllabusDraft, accepted, checked_syllabus, generate
 from aimpro.syllabus_coverage import CoverageRequirement, UnitCoverage, validate_requirements
 from tests.syllabus_fixtures import Curator, Reviewer, source, syllabus
 
@@ -127,6 +127,6 @@ class SyllabusCoverageTest(unittest.TestCase):
         checked_syllabus(self.data, draft)
         reviewer = Reviewer()
         reviewer.value = reviewer.value.model_copy(update={'verdict': 'REJECT', 'source_alignment': False})
-        with self.assertRaisesRegex(ValueError, 'semantic review'):
-            generate(self.data, dispatcher=Curator(draft), lead=reviewer)
+        _, last, _ = generate(self.data, dispatcher=Curator(draft), lead=reviewer)
+        self.assertFalse(accepted(last))
         self.assertEqual(len(reviewer.calls), ATTEMPTS)

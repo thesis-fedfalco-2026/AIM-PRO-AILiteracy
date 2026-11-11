@@ -162,3 +162,68 @@ pull_request run
 [42995582606](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/actions/runs/42995582606): all 7 jobs
 of each passed, `browser` included (`generation.spec.ts`: a draft refused once, then accepted) and
 `store-backends` (the PostgreSQL variants of the worker tests).
+
+## Live run on LPO AI (after PR #111 was merged)
+
+**Authorization** (owner, 11 November 2026): one full cycle (Curator, Evaluator, Teacher, Trainer; at most three
+drafts each, so at most 24 model calls), stopping at the first failure; approvals and applications on the copy by
+this chat, with a reason that names the measurement; the Curator grounded by an OOP query. Setup:
+`/tmp/alm-demo/alm.sqlite` copied with `sqlite3 "file:…?mode=ro" ".backup …"` into the chat's scratchpad, with
+the policy `course-prova-1-1.json` and the uploaded LPO AI export
+`738efebf60e49183976dc654706222f32bf6bffd98b4c7b6007bdd9b775779bc.json` (copied, never edited); context
+`prova-1` (PREPARATION/DRAFT, empty), subject `admin`, scenario `LPO_AI_iSQD`, competencies
+`LPO_AI_Competencies` (48 targets, no finding, no diagnostic); the CLI with `LANGFUSE_ENABLED=false` and the
+configured `openrouter` profile (`nvidia/nemotron-3.5-super-vl:free`). The demo stack was not touched.
+
+| Request | What happened | Model calls |
+| --- | --- | --- |
+| `live-curator-1`, query "object-oriented programming Java", k=5 | FAILURE in 2 s: "The search found no source for this query in this scope" | 0 |
+| `live-discovery-1`, 12 queries, k=3 (model-free) | the wp3 corpus holds little on OOP: "object-oriented programming" finds one resource (a methodology for teaching OOP with generative AI, Zenodo, CC-BY-4.0); "Java" finds two unrelated repositories | 0 |
+| `live-curator-2`, query "object-oriented programming", k=5 | FAILURE after 1255 s: draft 1 refused by the checks ("Syllabus citation is outside the retrieved resource/version excerpts"), drafts 2 and 3 refused ("Syllabus unit competencies do not match its source target"); no draft reached the review agent | 3 (Curator) |
+
+The cycle stopped at the Curator as agreed; the Evaluator, Teacher and Trainer were not run (3 of 24 calls used).
+**Causes**: with 48 units the Curator had to copy each target's competency ids exactly and missed at least one
+in two drafts; each retry received only the fixed check text, so it could not tell which unit to correct; and with
+one OOP source it cited an excerpt it had not received.
+
+## Follow-up: issue #112
+
+Owner decisions (11 November 2026), recorded in issue
+[#112](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/issues/112) and in the guide ("Host-set
+competencies, citable excerpts and syllabi not accepted"):
+
+1. The host sets each unit's competencies from its target.
+2. The Curator receives the citable excerpts; citations outside them are fed back with their units, as data.
+3. A syllabus job whose drafts were not accepted proposes the last draft that passed the checks, with its verdict
+   and a fixed notice as the job's detail; the teacher may accept an imperfect syllabus. Curator only; the
+   generators keep D30 as in this step. This changes D30 for the Curator.
+
+The owner also described a direction for sources, not implemented: the network proposes resources with a
+relevance value and the course author adds prepared sources. It would revise D26 (model-free discovery; a query
+or one prepared set) and needs its own step; open points: an agent's judged relevance or the search score, per
+target or per course, and whether authors upload their own documents (corpus indexing).
+
+| File | Content |
+| --- | --- |
+| `aimpro/syllabus.py` | `with_target_competencies`, `citable_excerpts`, `accepted`, `CheckRefusal`, `NOT_PASSED`; the citation check names every offending unit; the loop returns the last checked draft when none is accepted; `check_details` in the retry; the prompt's competency and citation clauses; `checked_verdict` removed |
+| `aimpro/syllabus_state.py` | `SyllabusResult.notice`, `NOT_ACCEPTED`, `proposed_result`; a non-accepting verdict is kept in the artifact and resolved |
+| `aimpro/syllabus_service.py`, `source_service.py`, `syllabus_refinement.py` | `proposed_result` |
+| `services/jobs/worker.py` | a proposal's `notice` is the job's `detail` |
+| `apps/studio/src/features/review/SyllabusView.tsx`, `i18n/en.json` | "the review agent accepted none of its drafts", reason as model text (labels and data only) |
+| `tests/syllabus_fixtures.py` | `REJECT_EVERY` (dev only) |
+| tests | core, service, worker, API, studio and browser tests (below); tests that expected a failure without an `ACCEPT` now expect the proposal |
+
+Contract tests first: the core and service tests were written before the implementation and failed to import
+(`accepted`); the worker test and the eight tests that encoded the earlier rule were updated after; the API test
+(`test_a_syllabus_no_draft_of_which_was_accepted_is_proposed_with_the_notice`), the studio test and the browser
+test were written after the implementation.
+
+| Check (issue #112) | Result |
+| --- | --- |
+| `unittest discover -q`, telemetry off | 1068 tests, OK, 195 skipped (1063 / 195 before) |
+| `python -m aimpro.generate --check`, `python -m services.api_common.openapi --check` | exit 0, exit 0 (no API schema change) |
+| `npm run check:client`, `typecheck`, `test` (in `apps/`) | OK, OK, 137 tests OK (136 before) |
+| `npx playwright test -c e2e/playwright.config.ts --list` | 14 tests in 7 files; the browser tests run in CI |
+
+Next: the owner decides whether to repeat the authorized live cycle on LPO AI with this change (21 of the 24
+calls are unused), then S09c2.
