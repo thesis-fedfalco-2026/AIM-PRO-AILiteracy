@@ -109,7 +109,7 @@ studio tests were written after the component.
 | `git diff --check` | exit 0 |
 
 **Not verified locally.** The browser tests: running the browser stack was not permitted in this session; the
-CI job `browser` ran them (below).
+CI job `browser` ran them and passed (below).
 
 ## Findings (not changed in this PR)
 
@@ -155,4 +155,10 @@ Still open from the roadmap: D19, D21, D25, D28, D29, D31–D33, G7 / D4.
 
 ## PR and CI
 
-PR and CI: see below.
+PR [#111](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/pull/111), commit `3e81e23` (the change and
+this handoff) and this CI record. CI on `3e81e23`, push run
+[42995574697](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/actions/runs/42995574697) and
+pull_request run
+[42995582606](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/actions/runs/42995582606): all 7 jobs
+of each passed, `browser` included (`generation.spec.ts`: a draft refused once, then accepted) and
+`store-backends` (the PostgreSQL variants of the worker tests).
