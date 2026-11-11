@@ -75,6 +75,31 @@ test('a course is built from an uploaded AIM-PRO model', async ({ page }) => {
   expect(exportsDigests()[`${sha256(uploaded)}.json`]).toBe(sha256(uploaded));
 });
 
+// Issue #112: when the review agent accepts none of the drafts, the last draft that passed the checks is proposed;
+// the job says so, the syllabus shows the review agent's reason as model text, and the teacher may still approve it.
+test('a syllabus the review agent did not accept is proposed for the teacher to decide', async ({ page }) => {
+  await createCourse(page);
+  await page.getByLabel(en.build.upload.file).setInputFiles(AIMPRO_EXPORT);
+  await page.getByRole('button', { name: en.build.upload.submit }).click();
+  await expect(page.getByText(en.build.upload.stored)).toBeVisible();
+  await page.getByLabel(en.build.curator.scope, { exact: true }).fill('wp3');
+  // The marker makes the synthetic review agent refuse every draft (tests/syllabus_fixtures.py).
+  await page.getByLabel(en.build.curator.query).fill('prompting [synthetic reviewer: reject every draft]');
+  await page.getByRole('button', { name: en.build.curator.submit }).click();
+  await expect(page.getByText(en.build.curator.proposed)).toBeVisible({ timeout: 30_000 });
+  await page.getByRole('button', { name: en.build.jobs.reload }).click();
+  await expect(page.getByTestId('course-jobs')).toContainText('The review agent accepted no draft');
+  await expectAccessible(page);
+
+  await page.getByRole('link', { name: en.build.curator.review }).click();
+  await expect(page.getByTestId('not-accepted'))
+    .toContainText('(model text): “Synthetic reviewer text: the cited excerpt does not support the unit claim.”');
+  await expectAccessible(page);
+  await approveAndApply(page);
+  await page.goto(`/studio/contexts/${COURSE}/course`);
+  await expect(page.getByRole('region', { name: en.course.structure.heading })).toBeVisible();
+});
+
 // Acceptance (S09a2): prepare sources with the synthetic retrieval, review them, accept them, run the Curator
 // on them, review and apply the syllabus.
 test('a syllabus is built on sources the teacher prepared and accepted', async ({ page }) => {

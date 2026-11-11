@@ -14,7 +14,7 @@ from aimpro.source_selection import QueryTrace, RetrievalTrace, SourceDiscovery,
 from aimpro.retrieval import SourceSelectionSummary
 from aimpro.syllabus_coverage import validate_requirements
 from aimpro.syllabus import generate
-from aimpro.syllabus_state import SyllabusResult, candidates
+from aimpro.syllabus_state import SyllabusResult, candidates, proposed_result
 from learning.context import LearningRequest
 from learning.contracts import EntityRef
 from learning.decisions import create_proposal, save_proposal
@@ -252,8 +252,7 @@ def generate_selected_syllabus(service, context_id, subject_key, project, *, req
                 canonical({'source_preparation': prepared_sources, 'preparation_sha256': packet.digest,
                     'retrieval_trace_sha256': packet.trace.digest, 'source_diagnostics': data.source.diagnostics,
                     'contract_findings': data.findings, 'syllabus_gaps': draft.gaps}))
-            result = SyllabusResult(kind='PROPOSAL', content='Selected-source Curator syllabus awaits human review.',
-                                    proposal_refs=(proposal.ref,), application_status='pending', attempts=attempts)
+            result = proposed_result('Selected-source Curator syllabus awaits human review.', proposal, attempts, verdict)
             save_proposal(service.store, current, proposal, saved)
             service.store.finish_request(request_id, context_id, result.model_dump(mode='json'))
         return result

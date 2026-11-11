@@ -542,6 +542,7 @@ browser recorded.
 | `build.spec.ts`: a syllabus on accepted sources (S09a2) | upload; search with two queries (synthetic retrieval); the excerpt found by both, with its usage conditions; tick it, write its purpose and limitations, prepare; the prepared sources; axe with every disclosure open; no prepared sources offered to the Curator before the choice; accept; the Curator on the accepted sources ends with a proposal; approve and apply; the course structure; back on the build page, the three jobs listed with their status; axe |
 | `refinement.spec.ts`: a syllabus refined step by step (S09b) | upload; the Curator by a query; the syllabus in words (competency, practice, planned activities) compared with a course without a syllabus, and not the generic "same teaching content" sentence; axe; a revision request with its reason (with the synthetic reviewer's marker, so its first draft is rejected); "Ask the Curator for a revised syllabus" ends with a link to the revision; the review agent's assessments of the two drafts (rejected, then accepted, its reason labelled as model text); axe; compared with the previous proposal (title changed, one unit changed in its purpose, one unit added) and showing the reason; axe; approve and apply: the course shows the revised syllabus; the teacher edits it (syllabus title, a unit title; axe on the form): a new proposal by the teacher, compared with the syllabus in use; approve and apply: the course shows the teacher's syllabus, "Edited by"; axe |
 | `generation.spec.ts`: the review of an Evaluator job's drafts (S09c) | on the seed's authoring context, an Evaluator job queued through the API with the browser's session (no form before S09c2), its requirement holding the synthetic reviewer's marker; the job list shows it proposed; "How the review agent judged the drafts of this job": draft 1 not accepted ("Content complete: no", its reason labelled as model text), draft 2 accepted; the job view does not hold the reason; axe |
+| `build.spec.ts`: a syllabus not accepted (issue #112) | upload; the Curator by a query holding the synthetic reviewer's `REJECT_EVERY` marker ends with a proposal; the job list shows the fixed notice; axe; the syllabus view says the review agent accepted no draft, with its reason as model text; axe; approve and apply; the course shows the structure |
 | `build.spec.ts`: an invalid file | a text file is refused with "The file is not UTF-8 JSON"; no report; the export directory and the database file are unchanged; axe |
 | `accessibility.spec.ts` | axe on the home page (also with its validation error), the inbox with and without pending proposals, the proposal page with every disclosure open, its validation errors, the apply step, a refused application, and an unavailable context |
 
@@ -795,7 +796,8 @@ attempts were refused by the review agent without the teacher seeing why:
    stops at once.
 2. **When the drafts run out, the request fails as before**, with the fixed
    text of the last refusal; a generated syllabus still always carries an
-   `ACCEPT` review, and `SyllabusVerdict` is unchanged.
+   `ACCEPT` review, and `SyllabusVerdict` is unchanged. *Changed by issue
+   #112 (below): the last draft that passed the checks is proposed.*
 3. **Every draft's assessment is kept with the request's result** in the ALM
    requests store (`SyllabusResult`: a `LearningResponse` with `attempts`,
    omitted when empty), for a proposal and for a failure; a replay returns
@@ -826,6 +828,38 @@ list and in the revision step; it is read when opened. Each draft shows how it
 ended, the two checks of the review agent in words and its assessment as
 "The review agent's assessment (model text): “…”", or the check that refused
 it.
+
+### Host-set competencies, citable excerpts and syllabi not accepted (issue #112)
+
+Owner decisions of 11 November 2026, after a live Curator job on LPO AI (48
+targets) failed at the checks three times (handoff
+`docs/plans/handoffs/chat-21.md`, "Live run on LPO AI"):
+
+1. **The host sets each unit's competencies from its target**
+   (`aimpro.syllabus.with_target_competencies`), after each Curator response and
+   before the checks: the export determines them, so the model no longer copies
+   them. A unit whose target is unknown keeps what the Curator wrote and is
+   refused by the checks. A teacher's edit is checked as before.
+2. **Citations.** The Curator request holds `citable_excerpts` (each retrieved
+   resource id, version and excerpt ids), and the prompt asks it to cite only
+   those. A draft with citations outside them is refused with the same fixed
+   text; the check (`CheckRefusal`) also names every offending unit and citation,
+   and the retry receives them as `check_details`, untrusted data, never as an
+   error message.
+3. **A syllabus no draft of which was accepted is still proposed.** When the
+   drafts run out, the last draft that passed the checks is proposed with its
+   verdict (`SyllabusArtifact.review` may now be `REJECT` or `UNCERTAIN`), for
+   the teacher to approve, revise or edit. The result carries the fixed
+   `NOT_ACCEPTED` notice (`SyllabusResult.notice`), which the worker sets as the
+   job's `detail`; the review agent's reason stays model text. If no draft
+   passed the checks, or the review stopped, the request fails as before. This
+   applies to the three Curator paths (by a query, on prepared sources, a
+   revision); the Evaluator, Teacher and Trainer are unchanged.
+
+In the studio the syllabus view says "Generated by the Curator, but the review
+agent accepted none of its drafts…", with the reason labelled as model text.
+The synthetic reviewer refuses every review prompt holding `REJECT_EVERY`
+(dev only), used by `build.spec.ts`.
 
 ## Evaluator, Teacher and Trainer drafts (S09c)
 

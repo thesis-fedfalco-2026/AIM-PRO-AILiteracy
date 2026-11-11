@@ -73,6 +73,22 @@ describe('syllabus proposal', () => {
     expect(screen.getByText('Add a unit where participants explain their choices.')).toBeTruthy();
   });
 
+  it('says when the review agent accepted none of the drafts, with its reason as model text (issue #112)', async () => {
+    const view = firstView();
+    const rejected = { ...view, syllabus: { ...view.syllabus,
+      review: { verdict: 'REJECT', source_alignment: true, citation_support: false, reason: 'A claim exceeds its excerpt.' } } };
+    await renderStudio({
+      'GET /auth/session': [signedIn], 'GET /contexts/ctx': [summary(proposal('p-syllabus', 'AWAITING_DECISION'))],
+      'GET /contexts/ctx/pending-proposals': [pending(proposal('p-syllabus', 'AWAITING_DECISION'))],
+      'GET /contexts/ctx/syllabus-proposals/p-syllabus': [{ status: 200, body: rejected }],
+    }, '/studio/contexts/ctx/review/p-syllabus');
+    const notice = await screen.findByTestId('not-accepted');
+    expect(notice.textContent).toBe(en.review.syllabus.notAcceptedByAgent.replace('{{reason}}', 'A claim exceeds its excerpt.'));
+    expect(screen.queryByText(/reviewed by the review agent:/)).toBeNull();
+    // The decision stays the teacher's: the proposal can still be approved.
+    expect(screen.getByRole('radio', { name: en.review.decision.approve })).toBeTruthy();
+  });
+
   it('after a revision request, asks the Curator for a revised syllabus and opens it', async () => {
     const draft = proposal('p-syllabus', 'DRAFT', { decision: { type: 'HumanDecision', id: 'decision-1', version: 'd1' } });
     const { requests } = await renderStudio({

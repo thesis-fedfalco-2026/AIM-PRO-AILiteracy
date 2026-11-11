@@ -6,7 +6,7 @@ import logging
 from aimpro.lead import ReviewError, prepare_input
 from aimpro.retrieval import evidence_from_response
 from aimpro.syllabus import generate
-from aimpro.syllabus_state import SyllabusResult, candidates
+from aimpro.syllabus_state import SyllabusResult, candidates, proposed_result
 from document_search.contracts import SearchScope
 from learning.context import LearningRequest
 from learning.decisions import create_proposal, save_proposal
@@ -65,8 +65,8 @@ def generate_syllabus(service, context_id, subject_key, project, *, request_id, 
             'remaining_work': ['Generate and review assessments and teaching materials',
                                'Approve exact resource bindings', 'Configure execution before activation']})
         proposal = create_proposal(context, (root.ref,), saved, explanation)
-        result = SyllabusResult(kind='PROPOSAL', content='Curator syllabus awaits human review; the outline remains a draft.',
-                                proposal_refs=(proposal.ref,), application_status='pending', attempts=attempts)
+        result = proposed_result('Curator syllabus awaits human review; the outline remains a draft.',
+                                 proposal, attempts, verdict)
         with service.store.write_transaction():
             if service.store.read_context(context_id).version != root.version:
                 raise StateConflict('Context changed during syllabus generation')

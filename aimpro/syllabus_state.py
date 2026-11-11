@@ -2,6 +2,7 @@
 
 from dataclasses import replace
 import json
+import logging
 from typing import Literal
 from uuid import uuid4
 
@@ -11,8 +12,8 @@ from aimpro.contracts import encoded
 from aimpro.lead import LeadInput, ReviewError
 from aimpro.lead_types import Record, Text
 from aimpro.source_selection import RetrievalTrace
-from aimpro.syllabus import (CURATOR, SyllabusAttempt, SyllabusDraft, SyllabusVerdict, checked_syllabus,
-                             checked_verdict)
+from aimpro.syllabus import (CURATOR, NOT_PASSED, SyllabusAttempt, SyllabusDraft, SyllabusVerdict, accepted,
+                             checked_syllabus)
 from learning.contracts import Entity, EntityRef, Provenance, entity_data, make_entity
 from learning.decisions import approval_valid, proposal_candidates, review_payload_key
 from learning.metamodel import validate_entity
@@ -27,6 +28,24 @@ class SyllabusResult(LearningResponse):
     keep their exact shape. ``content`` stays fixed application text; the reviewer's own words are in ``attempts``.
     """
     attempts: tuple[SyllabusAttempt, ...] = Field((), exclude_if=lambda value: not value)
+    # Fixed application text for the author when the proposal was not accepted by the review agent (issue #112).
+    notice: Text | None = Field(None, exclude_if=lambda value: value is None)
+
+
+NOT_ACCEPTED = (f'The review agent accepted no draft ({NOT_PASSED}); the last draft that passed the checks is '
+                'proposed with its assessment, for the teacher to decide.')
+
+
+def proposed_result(content, proposal, attempts, verdict) -> SyllabusResult:
+    """The result of a syllabus proposal, with :data:`NOT_ACCEPTED` when the review agent did not accept it.
+
+    ``verdict`` is ``None`` for a teacher's edit, which the review agent does not review.
+    """
+    notice = None if verdict is None or accepted(verdict) else NOT_ACCEPTED
+    if notice is not None:
+        logging.getLogger('agent_system').warning('Syllabus proposed without the review agent\'s acceptance')
+    return SyllabusResult(kind='PROPOSAL', content=content, proposal_refs=(proposal.ref,),
+                          application_status='pending', attempts=attempts, notice=notice)
 
 
 class UnitLink(Record):
@@ -124,7 +143,9 @@ def candidates(data, draft, verdict, context, *, retrieval_trace=None, revises=N
                edited_by=None):
     """The ALM records of a syllabus proposal; ``verdict`` is ``None`` only for a teacher's edit (``edited_by``)."""
     draft = checked_syllabus(data, draft)
-    verdict = None if verdict is None and edited_by is not None else checked_verdict(verdict)
+    # The verdict is kept as given: a syllabus the review agent did not accept may be proposed (issue #112).
+    verdict = None if verdict is None and edited_by is not None else SyllabusVerdict.model_validate(
+        verdict.model_dump(mode='json'))
     root = context.snapshot.context
     if (root.fields['mode'], root.fields['status']) != ('PREPARATION', 'DRAFT'):
         raise ReviewError('Syllabus import requires a PREPARATION DRAFT context')
@@ -299,8 +320,6 @@ def resolve_artifact(store, context, syllabus_ref):
     source = context.snapshot.get(artifact.source_snapshot)
     data = LeadInput.model_validate_json(source.fields['contentOrLocator'])
     checked_syllabus(data, artifact.draft)
-    if artifact.review is not None:
-        checked_verdict(artifact.review)
     phase = context.snapshot.get(design.fields['root'])
     if (tuple(u.key for u in artifact.units) != tuple(u.key for u in artifact.draft.units) or
             phase.fields['children'] != [u.node.model_dump() for u in artifact.units] or

@@ -72,13 +72,16 @@ class Curator:
 
 # A teacher's reason holding this text makes the synthetic reviewer reject each review prompt once (dev only).
 REJECT_ONCE = '[synthetic reviewer: reject the first draft]'
+# A review prompt holding this text (a teacher's reason, or a search query) is always rejected (dev only, issue #112).
+REJECT_EVERY = '[synthetic reviewer: reject every draft]'
 
 
 class Reviewer:
     """Returns the ``first`` verdicts in order, then ``value``: ``Reviewer(REJECTION)`` rejects once, then accepts.
 
     A review prompt holding :data:`REJECT_ONCE` (in the reasons of a revision) is rejected the first time it is
-    seen, so the synthetic worker and the browser tests can show a rejected attempt followed by an accepted one.
+    seen, so the synthetic worker and the browser tests can show a rejected attempt followed by an accepted one;
+    one holding :data:`REJECT_EVERY` is always rejected.
     """
 
     def __init__(self, *first):
@@ -91,6 +94,6 @@ class Reviewer:
         self.calls.append((prompt, response_format))
         if self.callback:
             self.callback()
-        if REJECT_ONCE in prompt and [p for p, _ in self.calls].count(prompt) == 1:
+        if REJECT_EVERY in prompt or REJECT_ONCE in prompt and [p for p, _ in self.calls].count(prompt) == 1:
             return SimpleNamespace(pydantic=REJECTION)
         return SimpleNamespace(pydantic=self.queue.pop(0) if self.queue else self.value)
