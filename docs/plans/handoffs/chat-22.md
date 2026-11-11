@@ -145,4 +145,9 @@ Then S10.
 
 ## PR and CI
 
-PENDING
+PR [#116](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/pull/116), commit `d4fb4ea` (the change and
+this handoff) and this CI record. CI on `d4fb4ea`, push run
+[43030458539](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/actions/runs/43030458539) and pull_request
+run [43030493980](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/actions/runs/43030493980): all 7 jobs of
+each passed, `browser` included (`cycle.spec.ts`: the cycle from the studio, the stale form refused and read again)
+and `store-backends` (the PostgreSQL variants of `test_completion_rules.py`).
