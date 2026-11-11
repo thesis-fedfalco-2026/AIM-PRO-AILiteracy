@@ -10,6 +10,7 @@ from agent_system.config import load_category_catalog, load_model_catalog
 from agent_system.registry import AgentRegistry
 from aimpro.generators import (CONTRACTS, AssessmentDraft, GenerationInput,
                                GenerationVerdict, TeacherDraft, TrainerDraft)
+from tests.syllabus_fixtures import REJECT_ONCE
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -58,9 +59,24 @@ def synthetic_draft(data):
     return output_type(**values)
 
 
+# The review agent's synthetic refusal of a generated draft: model text, never an error message.
+GENERATION_REJECTION = GenerationVerdict(verdict='REJECT', source_alignment=True, citation_support=True,
+    intent_correct=True, content_complete=False,
+    reason='Synthetic refusal: the worksheet names a criterion it does not supply.')
+
+
 class SyntheticModels:
-    def __init__(self):
+    """Synthetic generators and review agent: ``verdicts`` are returned in order, then ``verdict``.
+
+    A review prompt holding :data:`REJECT_ONCE` (in a command requirement) is refused the first time it is seen,
+    so the synthetic worker and the browser tests can show a refused draft followed by an accepted one.
+    """
+
+    def __init__(self, *verdicts):
         self.calls = []
+        self.prompts = []
+        self.reviews = []
+        self.verdicts = list(verdicts)
         self.agent_configs = []
         self.inputs = []
         self.callback = None
@@ -87,6 +103,7 @@ class SyntheticModels:
             payload = json.loads(prompt.split('\nDATA\n')[1])
             data = GenerationInput.model_validate(payload['input'])
             self.calls.append(name)
+            self.prompts.append(prompt)
             self.inputs.append(data)
             if self.callback:
                 self.callback(data)
@@ -101,4 +118,7 @@ class SyntheticModels:
     def review(self, prompt, response_format):
         assert response_format is GenerationVerdict
         self.calls.append('LEAD_REVIEW')
-        return SimpleNamespace(pydantic=self.verdict)
+        self.reviews.append(prompt)
+        if REJECT_ONCE in prompt and self.reviews.count(prompt) == 1:
+            return SimpleNamespace(pydantic=GENERATION_REJECTION)
+        return SimpleNamespace(pydantic=self.verdicts.pop(0) if self.verdicts else self.verdict)

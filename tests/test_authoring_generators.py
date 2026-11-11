@@ -8,8 +8,9 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import Mock, patch
 
+from agent_system import events
 from aimpro.generation_state import GeneratedArtifact
-from aimpro.generators import (AssessmentStimulus, GenerationCommand, GenerationInput,
+from aimpro.generators import (ATTEMPTS, AssessmentStimulus, GenerationCommand, GenerationInput,
                                StimulusRequirement, generate)
 from learning.__main__ import main
 from learning.authoring import ProjectManifest
@@ -19,7 +20,8 @@ from learning.metamodel import load_contract
 from learning.service import LearningService
 from learning.store import LearningStore, StateConflict
 from tests.authoring_cycle_fixtures import AUTH, SimulatedAuthoring, trusted_policy
-from tests.generator_fixtures import SyntheticModels
+from tests.generator_fixtures import GENERATION_REJECTION, SyntheticModels
+from tests.store_backends import block_network
 
 
 class AuthoringGeneratorTest(unittest.TestCase):
@@ -120,7 +122,8 @@ class AuthoringGeneratorTest(unittest.TestCase):
             self.models.calls.clear()
             with self.subTest(case=case):
                 self.assertEqual(self.run_generator(command=command, request_id='stimulus-' + case).kind, 'FAILURE')
-                self.assertEqual(self.models.calls, ['assessment-designer'])
+                # A draft refused by the checks is retried (S09c); one that is not the typed contract stops at once.
+                self.assertEqual(self.models.calls, ['assessment-designer'] * (1 if case == 'blank' else ATTEMPTS))
         self.assertEqual(self.store.owned(AUTH, 'ChangeProposal'), before)
 
     def test_unknown_stimulus_unit_fails_before_reservation_or_models(self):
@@ -219,6 +222,84 @@ class AuthoringGeneratorTest(unittest.TestCase):
         self.assertEqual(self.run_generator(request_id='wrong-review').kind, 'FAILURE')
         self.assertEqual(self.store.owned(AUTH, 'ChangeProposal'), before)
 
+    def test_a_draft_refused_by_the_review_agent_is_retried_with_its_feedback(self):
+        self.models.verdicts = [GENERATION_REJECTION]
+        log = events.MemoryEventLog()
+        with events.run(log, request_id='assessment', context_id=AUTH):
+            result = self.run_generator()
+        self.assertEqual(result.kind, 'PROPOSAL')
+        self.assertEqual(self.models.calls, ['assessment-designer', 'LEAD_REVIEW'] * 2)
+        first, retry = self.models.prompts
+        self.assertNotIn('PROJECT_AUTHORING_RETRY', first)
+        instructions, data = retry.split('\nDATA\n')
+        self.assertIn('PROJECT_AUTHORING_RETRY', instructions)
+        data = json.loads(data)
+        # The generator receives only its last draft and why it was refused, as untrusted data.
+        self.assertEqual(data['review_feedback'], {'review': GENERATION_REJECTION.model_dump(mode='json')})
+        self.assertEqual(data['rejected_draft']['input_digest'], self.models.inputs[0].digest)
+        # The review agent judges each draft on its own.
+        self.assertNotIn(GENERATION_REJECTION.reason, self.models.reviews[1])
+        self.assertEqual([(a.attempt, a.review, a.check) for a in result.attempts],
+                         [(1, GENERATION_REJECTION, None), (2, self.models.verdict, None)])
+        self.assertEqual(self.service.project_generation_request(AUTH, 'admin', 'assessment'), result)
+        reviews = [e.data for e in log.events if e.type == 'review']
+        self.assertEqual([(r['attempt'], r['verdict']) for r in reviews], [(1, 'REJECT'), (2, 'ACCEPT')])
+        self.assertNotIn(GENERATION_REJECTION.reason, json.dumps([e.model_dump(mode='json') for e in log.events]))
+        package = GeneratedArtifact.model_validate_json(next(e for e in self.accept(result)
+            if e.type == 'Resource' and e.id.startswith('authoring-output:')).fields['contentOrLocator'])
+        self.assertEqual(package.review, self.models.verdict)
+
+    def test_drafts_refused_at_every_attempt_fail_with_every_verdict_kept(self):
+        self.models.verdict = GENERATION_REJECTION
+        before = self.store.owned(AUTH, 'ChangeProposal')
+        with self.assertLogs('agent_system', 'WARNING') as logs:
+            result = self.run_generator()
+        self.assertEqual(result.kind, 'FAILURE')
+        self.assertEqual(result.content, 'Authoring generation did not complete (Authoring output did not pass '
+                         'separate Lead review); no accepted proposal was persisted.')
+        self.assertEqual([(a.attempt, a.review) for a in result.attempts],
+                         [(n, GENERATION_REJECTION) for n in range(1, ATTEMPTS + 1)])
+        self.assertEqual(self.models.calls, ['assessment-designer', 'LEAD_REVIEW'] * ATTEMPTS)
+        self.assertNotIn(GENERATION_REJECTION.reason, '\n'.join(logs.output))
+        self.assertEqual(self.store.owned(AUTH, 'ChangeProposal'), before)
+        self.assertEqual(self.service.project_generation_request(AUTH, 'admin', 'assessment'), result)
+        calls = len(self.models.calls)
+        self.assertEqual(self.run_generator(), result)
+        self.assertEqual(len(self.models.calls), calls)
+
+    def test_a_draft_refused_by_the_checks_is_an_attempt_fed_back_with_the_fixed_text(self):
+        drafts = []
+        def once(data, draft):
+            drafts.append(draft)
+            return draft.model_copy(update={'input_digest': 'invented'}) if len(drafts) == 1 else draft
+        self.models.transform = once
+        result = self.run_generator()
+        self.assertEqual(result.kind, 'PROPOSAL')
+        self.assertEqual(self.models.calls, ['assessment-designer', 'assessment-designer', 'LEAD_REVIEW'])
+        check = 'Generated output does not identify the exact host input snapshot'
+        self.assertEqual([(a.attempt, a.review, a.check) for a in result.attempts],
+                         [(1, None, check), (2, self.models.verdict, None)])
+        retry = json.loads(self.models.prompts[1].split('\nDATA\n')[1])
+        self.assertEqual(retry['review_feedback'], {'check': check})
+        self.assertEqual(retry['rejected_draft']['input_digest'], 'invented')
+
+    def test_a_review_that_cannot_be_judged_stops_at_once_and_keeps_earlier_attempts(self):
+        self.models.verdicts = [GENERATION_REJECTION, self.author.initial_receipt.artifact.review]
+        result = self.run_generator()
+        self.assertEqual(result.kind, 'FAILURE')
+        self.assertEqual(result.content, 'Authoring generation did not complete (Invalid structured Lead authoring '
+                         'review); no accepted proposal was persisted.')
+        self.assertEqual(self.models.calls, ['assessment-designer', 'LEAD_REVIEW'] * 2)
+        self.assertEqual([a.review for a in result.attempts], [GENERATION_REJECTION])
+
+    def test_only_the_subject_reads_its_ended_generation_request(self):
+        self.run_generator()
+        self.assertIsNone(self.service.project_generation_request(AUTH, 'admin', 'unknown'))
+        # A syllabus request is not a project generation.
+        self.assertIsNone(self.service.project_generation_request(AUTH, 'admin', 'architecture-curator'))
+        with self.assertRaises(ValueError):
+            self.service.project_generation_request(AUTH, 'learner', 'assessment')
+
     def test_invalid_assessment_outputs_fail_before_lead_review(self):
         def mutate(data, draft):
             item = draft.units[0].items[0]
@@ -241,7 +322,9 @@ class AuthoringGeneratorTest(unittest.TestCase):
             self.models.calls.clear()
             with self.subTest(case=self.case):
                 self.assertEqual(self.run_generator(request_id='invalid-' + str(self.case)).kind, 'FAILURE')
-                self.assertEqual(self.models.calls, ['assessment-designer'])
+                # Each draft refused by the checks is an attempt; none reaches the review agent. A draft that is not
+                # the typed contract (an assessment item with another intent) stops at once.
+                self.assertEqual(self.models.calls, ['assessment-designer'] * (1 if self.case == 8 else ATTEMPTS))
 
     def test_completed_replay_after_application_is_exact_and_conflicting_reuse_fails(self):
         command = self.command()
@@ -600,6 +683,40 @@ class AuthoringGeneratorTest(unittest.TestCase):
 
 def selection_project(service):
     return service.inspect_authoring_project(AUTH, 'admin', 'synthetic-course').project
+
+
+class SyllabusSizeTest(unittest.TestCase):
+    """A syllabus holds up to 96 units (S09a); the generators take as many (S09c, owner decision 1a)."""
+
+    command = AuthoringGeneratorTest.command
+    run_generator = AuthoringGeneratorTest.run_generator
+    accept = AuthoringGeneratorTest.accept
+
+    def setUp(self):
+        block_network(self, 'Generator tests must not use the network')
+        self.temp = TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.store = LearningStore(Path(self.temp.name) / 'large.sqlite')
+        self.addCleanup(self.store.close)
+        self.service = LearningService(self.store, load_contract(), trusted_policy(), Mock())
+        self.service.bootstrap(AUTH, 'admin')
+        self.author = SimulatedAuthoring(self.service)
+        self.author.curator(units=48)
+        self.models = SyntheticModels()
+        self.factory = Mock(side_effect=self.models.factory)
+
+    def test_a_48_unit_syllabus_reaches_assessment_teacher_and_trainer_proposals(self):
+        syllabus = self.service.approved_project_syllabus(AUTH, 'admin', self.author.project.ref)
+        self.assertEqual(len(syllabus.artifact.units), 48)
+        for role in ('ASSESSMENT', 'TEACHER_CONTENT', 'TRAINER_CONTENT'):
+            with self.subTest(role=role):
+                saved = self.accept(self.run_generator(role, request_id=role), role)
+                package = GeneratedArtifact.model_validate_json(next(e for e in saved
+                    if e.type == 'Resource' and e.id.startswith('authoring-output:')).fields['contentOrLocator'])
+                self.assertEqual(len(package.draft.units), 48)
+        # 48 Teacher items, each with an explanation, a transcript and an example: more than the former 96 materials.
+        teacher = next(d for d in self.models.inputs if d.role == 'TEACHER_CONTENT')
+        self.assertEqual(len(teacher.target_units), 48)
 
 
 def replace_item(draft, item):

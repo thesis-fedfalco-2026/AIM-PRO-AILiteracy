@@ -286,6 +286,11 @@ class LearningService:
         from learning.generation import generate_project
         return generate_project(self, context_id, subject_key, 'TRAINER_CONTENT', command, **kwargs)
 
+    def project_generation_request(self, context_id, subject_key, request_id):
+        """The subject's ended Evaluator, Teacher or Trainer request under the request id, with every attempt, or ``None``."""
+        from learning.generation import generation_request
+        return generation_request(self, context_id, subject_key, request_id)
+
     def prepare_aimpro_execution(self, context_id, subject_key, *, learner, scope_name=None):
         from aimpro.execution_setup import prepare_execution
         return prepare_execution(self.store, self._context(context_id, subject_key),

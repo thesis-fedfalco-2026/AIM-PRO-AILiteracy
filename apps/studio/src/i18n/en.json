@@ -576,10 +576,15 @@
         "checks": "refused by the application's checks before the review agent saw it"
       },
       "flags": "Fits the course model and its sources: {{alignment}}. Citations support the claims: {{citations}}.",
+      "generationFlags": "Fits the approved syllabus and its sources: {{alignment}}. Citations support the claims: {{citations}}. Right intent (explain, practice or assess): {{intent}}. Content complete: {{complete}}.",
       "yes": "yes",
       "no": "no",
       "reason": "The review agent's assessment (model text): “{{reason}}”",
-      "check": "Reason: {{check}}"
+      "check": "Reason: {{check}}",
+      "generation": {
+        "summary": "How the review agent judged the drafts of this job",
+        "intro": "The review agent checks each draft of the assessments, teacher or trainer content against the approved syllabus and the cited excerpts. A draft it does not accept goes back to the generator, at most three drafts per job. Its assessments are its own words: model text, not a decision of the application or of a person."
+      }
     }
   }
 }

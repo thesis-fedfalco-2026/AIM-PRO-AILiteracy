@@ -15,7 +15,7 @@ from services.authoring_api import context_summary, courses, exports, jobs, proj
 
 
 TITLE = 'ALM Authoring API'
-VERSION = '0.8.0'
+VERSION = '0.9.0'
 REGISTRY = ModuleRegistry((context_summary.MODULE, review.MODULE, projects.MODULE, releases.MODULE, jobs.MODULE,
                            courses.MODULE, exports.MODULE, sources.MODULE, syllabus.MODULE))
 

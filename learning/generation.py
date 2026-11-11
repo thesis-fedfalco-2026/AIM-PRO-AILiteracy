@@ -3,13 +3,13 @@
 import json
 import logging
 
-from aimpro.generators import (ArtifactInput, GenerationCommand, GenerationInput,
+from aimpro.generators import (ArtifactInput, GenerationCommand, GenerationInput, GenerationResult,
     UnitInput, generate)
+from aimpro.lead import ReviewError
 from aimpro.syllabus_state import resolve_artifact
 from aimpro.teacher_contracts import ApprovedReview, RecordedTeacherOutput
 from learning.authoring import dependency_findings, review_receipt
 from learning.context import LearningRequest
-from learning.outputs import LearningResponse
 from learning.projects import (_authorize, _coverage, _draft, _persist, _project,
                                _revision_manifest)
 from learning.store import StateConflict, canonical
@@ -91,7 +91,7 @@ def _cached(store, request_id, context_id, identity):
     saved = json.loads(row.payload)
     if saved.get('identity') != identity or row.result is None:
         raise StateConflict('Generation request conflicts or has no confirmed result')
-    return LearningResponse.model_validate_json(row.result)
+    return GenerationResult.model_validate_json(row.result)
 
 
 def _recorded_origin(store, context_id, recorded, identity, snapshot):
@@ -101,7 +101,7 @@ def _recorded_origin(store, context_id, recorded, identity, snapshot):
     origin = {k: v for k, v in identity.items() if k != 'recorded_teacher'}
     if (row is None or row.result is None or saved.get('identity') != origin or
             canonical(saved.get('input_snapshot')) != canonical(snapshot) or
-            LearningResponse.model_validate_json(row.result).kind != 'FAILURE'):
+            GenerationResult.model_validate_json(row.result).kind != 'FAILURE'):
         raise StateConflict('Recorded Teacher output has no matching failed origin request')
 
 
@@ -129,10 +129,11 @@ def generate_project(service, context_id, subject_key, role, command, *, request
             saved['recorded_teacher_text'] = recorded.text
         payload = canonical(saved)
         service.store.reserve_request(request_id, context_id, payload)
+    attempts = ()
     try:
         dispatcher, lead, budget = authoring_factory()
-        draft, verdict = generate(data, dispatcher=dispatcher, lead=lead, max_context_chars=budget,
-                                  recorded_text=None if recorded is None else recorded.text)
+        draft, verdict, attempts = generate(data, dispatcher=dispatcher, lead=lead, max_context_chars=budget,
+                                            recorded_text=None if recorded is None else recorded.text)
         from aimpro.generation_state import revision
         bundle = revision(context, manifest, data, draft, verdict)
         with service.store.write_transaction():
@@ -147,16 +148,37 @@ def generate_project(service, context_id, subject_key, role, command, *, request
                 raise StateConflict('Generation input approvals or exact dependencies changed')
             current, selected, candidates = _revision_manifest(service.store, current, bundle)
             proposed = _persist(service, current, selected, candidates, bundle.explanation)
-            result = LearningResponse(kind='PROPOSAL', content='Authoring output awaits explicit human review and application.',
-                proposal_refs=(proposed.proposal,), application_status='pending')
+            result = GenerationResult(kind='PROPOSAL', content='Authoring output awaits explicit human review and application.',
+                proposal_refs=(proposed.proposal,), application_status='pending', attempts=attempts)
             service.store.finish_request(request_id, context_id, result.model_dump(mode='json'))
         return result
     except Exception as error:
-        logging.getLogger('agent_system').warning('Project generation failed (%s)', type(error).__name__)
-        result = LearningResponse(kind='FAILURE', content='Authoring generation did not complete; no accepted proposal was persisted.')
+        # ReviewError messages are fixed application text, never model or course content: the author may read them.
+        reason = f' ({error})' if isinstance(error, ReviewError) else ''
+        logging.getLogger('agent_system').warning('Project generation failed (%s)%s', type(error).__name__, reason)
+        result = GenerationResult(kind='FAILURE', attempts=getattr(error, 'attempts', attempts),
+            content=f'Authoring generation did not complete{reason}; no accepted proposal was persisted.')
     try:
         service.store.finish_request(request_id, context_id, result.model_dump(mode='json'))
     except StateConflict:
         # Return an explicit administrative abandonment, never resurrect work.
         return _cached(service.store, request_id, context_id, identity)
     return result
+
+
+# The operations of the project generators, whose drafts the review agent judged (S09c).
+OPERATIONS = frozenset('PROJECT_GENERATE_' + role for role in ('ASSESSMENT', 'TEACHER_CONTENT', 'TRAINER_CONTENT'))
+
+
+def generation_request(service, context_id, subject_key, request_id):
+    """The subject's ended project generation request under ``request_id``, with its attempts; ``None`` otherwise."""
+    with service.store.read_transaction():
+        context = service._context(context_id, subject_key)
+        _authorize(context)
+        row = service.store.request_record(request_id, context_id)
+    if row is None or row.result is None:
+        return None
+    identity = json.loads(row.payload).get('identity', {})
+    if identity.get('operation') not in OPERATIONS or identity.get('subject_key') != subject_key:
+        return None
+    return GenerationResult.model_validate_json(row.result)

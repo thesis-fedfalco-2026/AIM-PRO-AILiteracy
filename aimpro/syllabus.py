@@ -13,6 +13,8 @@ from agent_system import events, telemetry
 
 
 CURATOR = 'syllabus-designer'
+# The units of a syllabus (S09a); the project generators take as many (S09c).
+UNITS = 96
 # Curator drafts per request (owner decision, Chat 20): a rejected draft is retried with the reason it was refused.
 ATTEMPTS = 3
 
@@ -35,7 +37,7 @@ class SyllabusDraft(Record):
     metamodel_fingerprint: Text
     title: Text
     # One unit or more per target: a 48-target scenario (LPO AI) needs at least 48.
-    units: tuple[SyllabusUnit, ...] = Field(min_length=1, max_length=96)
+    units: tuple[SyllabusUnit, ...] = Field(min_length=1, max_length=UNITS)
     gaps: tuple[Text, ...] = ()
 
 

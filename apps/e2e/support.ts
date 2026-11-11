@@ -19,6 +19,7 @@ export interface SeedManifest {
   delivery_context: string;
   pending_delivery_context: string;
   staff: string;
+  project: EntityRef;
   pending_proposals: Record<string, EntityRef[]>;
 }
 

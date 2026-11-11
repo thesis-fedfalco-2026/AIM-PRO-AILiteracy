@@ -1090,6 +1090,45 @@
         "title": "Finding",
         "type": "object"
       },
+      "GenerationAttempt": {
+        "additionalProperties": false,
+        "description": "One generated draft and why it was or was not accepted: the review agent's verdict, or the check that refused it.\n\n``review.reason`` is model text: it is shown to the author as the review agent's assessment and never becomes an\nerror message, a log line or an event. ``check`` is the fixed text of a deterministic check.",
+        "properties": {
+          "attempt": {
+            "maximum": 3.0,
+            "minimum": 1.0,
+            "title": "Attempt",
+            "type": "integer"
+          },
+          "check": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Check"
+          },
+          "review": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GenerationVerdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "attempt"
+        ],
+        "title": "GenerationAttempt",
+        "type": "object"
+      },
       "GenerationCommand-Input": {
         "additionalProperties": false,
         "properties": {
@@ -1208,6 +1247,84 @@
           "base_context"
         ],
         "title": "GenerationCommand",
+        "type": "object"
+      },
+      "GenerationReviews": {
+        "additionalProperties": false,
+        "description": "The drafts of an ended Evaluator, Teacher or Trainer job, first to last; ``review.reason`` is the review agent's text.",
+        "properties": {
+          "attempts": {
+            "items": {
+              "$ref": "#/components/schemas/GenerationAttempt"
+            },
+            "title": "Attempts",
+            "type": "array"
+          },
+          "outcome": {
+            "enum": [
+              "PROPOSAL",
+              "FAILURE"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          },
+          "request_id": {
+            "minLength": 1,
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "request_id",
+          "outcome",
+          "attempts"
+        ],
+        "title": "GenerationReviews",
+        "type": "object"
+      },
+      "GenerationVerdict": {
+        "additionalProperties": false,
+        "properties": {
+          "citation_support": {
+            "title": "Citation Support",
+            "type": "boolean"
+          },
+          "content_complete": {
+            "title": "Content Complete",
+            "type": "boolean"
+          },
+          "intent_correct": {
+            "title": "Intent Correct",
+            "type": "boolean"
+          },
+          "reason": {
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "source_alignment": {
+            "title": "Source Alignment",
+            "type": "boolean"
+          },
+          "verdict": {
+            "enum": [
+              "ACCEPT",
+              "REJECT",
+              "UNCERTAIN"
+            ],
+            "title": "Verdict",
+            "type": "string"
+          }
+        },
+        "required": [
+          "verdict",
+          "source_alignment",
+          "citation_support",
+          "intent_correct",
+          "content_complete",
+          "reason"
+        ],
+        "title": "GenerationVerdict",
         "type": "object"
       },
       "HealthView": {
@@ -3798,7 +3915,7 @@
   },
   "info": {
     "title": "ALM Authoring API",
-    "version": "0.8.0"
+    "version": "0.9.0"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -4772,6 +4889,107 @@
           }
         },
         "summary": "The approved syllabus of the current Curator outline (CLI show-aimpro-syllabus)",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/contexts/{context_id}/generation-reviews/{request_id}": {
+      "get": {
+        "operationId": "generation_reviews_contexts__context_id__generation_reviews__request_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "context_id",
+            "required": true,
+            "schema": {
+              "title": "Context Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerationReviews"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "No valid session"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not authorized, unmapped identity or missing CSRF token"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or the context is unavailable"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict with the current state; reload and retry"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Invalid request or data"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Internal error"
+          }
+        },
+        "summary": "How the review agent judged each draft of the subject's Evaluator, Teacher or Trainer job",
         "tags": [
           "projects"
         ]

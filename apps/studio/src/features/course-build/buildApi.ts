@@ -18,6 +18,8 @@ export type CoverageRequirement = Schemas['CoverageRequirement'];
 export type AimproExport = ExportReport['export'];
 export type SyllabusReviews = Schemas['SyllabusReviews'];
 export type SyllabusAttempt = SyllabusReviews['attempts'][number];
+export type GenerationReviews = Schemas['GenerationReviews'];
+export type GenerationAttempt = GenerationReviews['attempts'][number];
 
 /** The statuses after which a job never changes again. */
 export const FINAL_STATUSES: readonly JobStatus[] = [
@@ -30,6 +32,10 @@ export const DISCOVERY = 'discover-aimpro-syllabus-sources';
 export const PREPARATION = 'prepare-aimpro-syllabus-sources';
 export const CURATOR = 'generate-aimpro-syllabus';
 export const REVISION = 'revise-aimpro-syllabus';
+/** The Evaluator, Teacher and Trainer job kinds, whose drafts the review agent judges (S09c). */
+export const GENERATORS: readonly string[] = [
+  'generate-project-assessments', 'generate-project-teacher', 'generate-project-trainer',
+];
 
 /** The Curator grounded by a search query, or by prepared sources that the teacher accepted. */
 export type CuratorCommand = {
@@ -68,6 +74,8 @@ export interface BuildApi {
   readPreparation(contextId: string, requestId: string): Promise<SourcePreparation>;
   /** How the review agent judged each draft of an ended Curator job, first to last. */
   readSyllabusReviews(contextId: string, requestId: string): Promise<SyllabusReviews>;
+  /** How the review agent judged each draft of an ended Evaluator, Teacher or Trainer job, first to last. */
+  readGenerationReviews(contextId: string, requestId: string): Promise<GenerationReviews>;
   /** Accept or decline prepared sources; only accepted sources ground a Curator job. */
   chooseSources(contextId: string, csrfToken: string, requestId: string, choice: 'ACCEPTED' | 'DECLINED'): Promise<JobView>;
   /** The learning targets and practices of an uploaded export, for coverage requirements. */
@@ -189,6 +197,12 @@ export function createBuildApi(client: AuthoringClient): BuildApi {
 
     async readSyllabusReviews(contextId, requestId) {
       return settle(() => client.GET('/contexts/{context_id}/syllabus-reviews/{request_id}', {
+        params: { path: { context_id: contextId, request_id: requestId } },
+      }));
+    },
+
+    async readGenerationReviews(contextId, requestId) {
+      return settle(() => client.GET('/contexts/{context_id}/generation-reviews/{request_id}', {
         params: { path: { context_id: contextId, request_id: requestId } },
       }));
     },

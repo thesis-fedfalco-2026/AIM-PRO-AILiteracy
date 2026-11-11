@@ -541,6 +541,7 @@ browser recorded.
 | `build.spec.ts`: a course from an uploaded AIM-PRO model | create a course (one new policy file next to the seed's); upload the AIM-PRO export the fixtures use: the stored file has the uploaded bytes and digest; the Curator job with the synthetic model ends with a link to the proposal; approve and apply the syllabus; the course page shows the structure; propose, approve and apply the project; the build page shows the project; axe on the build page with every disclosure open |
 | `build.spec.ts`: a syllabus on accepted sources (S09a2) | upload; search with two queries (synthetic retrieval); the excerpt found by both, with its usage conditions; tick it, write its purpose and limitations, prepare; the prepared sources; axe with every disclosure open; no prepared sources offered to the Curator before the choice; accept; the Curator on the accepted sources ends with a proposal; approve and apply; the course structure; back on the build page, the three jobs listed with their status; axe |
 | `refinement.spec.ts`: a syllabus refined step by step (S09b) | upload; the Curator by a query; the syllabus in words (competency, practice, planned activities) compared with a course without a syllabus, and not the generic "same teaching content" sentence; axe; a revision request with its reason (with the synthetic reviewer's marker, so its first draft is rejected); "Ask the Curator for a revised syllabus" ends with a link to the revision; the review agent's assessments of the two drafts (rejected, then accepted, its reason labelled as model text); axe; compared with the previous proposal (title changed, one unit changed in its purpose, one unit added) and showing the reason; axe; approve and apply: the course shows the revised syllabus; the teacher edits it (syllabus title, a unit title; axe on the form): a new proposal by the teacher, compared with the syllabus in use; approve and apply: the course shows the teacher's syllabus, "Edited by"; axe |
+| `generation.spec.ts`: the review of an Evaluator job's drafts (S09c) | on the seed's authoring context, an Evaluator job queued through the API with the browser's session (no form before S09c2), its requirement holding the synthetic reviewer's marker; the job list shows it proposed; "How the review agent judged the drafts of this job": draft 1 not accepted ("Content complete: no", its reason labelled as model text), draft 2 accepted; the job view does not hold the reason; axe |
 | `build.spec.ts`: an invalid file | a text file is refused with "The file is not UTF-8 JSON"; no report; the export directory and the database file are unchanged; axe |
 | `accessibility.spec.ts` | axe on the home page (also with its validation error), the inbox with and without pending proposals, the proposal page with every disclosure open, its validation errors, the apply step, a refused application, and an unavailable context |
 
@@ -825,6 +826,54 @@ list and in the revision step; it is read when opened. Each draft shows how it
 ended, the two checks of the review agent in words and its assessment as
 "The review agent's assessment (model text): “…”", or the check that refused
 it.
+
+## Evaluator, Teacher and Trainer drafts (S09c)
+
+Owner decisions of 10 and 11 November 2026 (issue #110). S09c was split: this
+part changes the project generators; the studio forms, the teacher view of every
+proposal kind and the completion rules follow in S09c2.
+
+1. **The generators take a whole syllabus.** Units and items of
+   `AssessmentDraft`, `TeacherDraft`, `TrainerDraft` and
+   `StructuredTeacherDraft` (and its explanations, comparisons, peers and
+   transcripts) go from 24 to `aimpro.syllabus.UNITS` (96), the units of a
+   syllabus; materials go from 96 to `aimpro.teacher_contracts.MATERIALS`
+   (3 × 96: a Teacher item needs an explanation, a transcript and an
+   example). `DidacticDraft` (the earlier `generate-aimpro` path, not used by
+   the studio) keeps 24. A 48-unit synthetic syllabus reaches the three
+   proposals; whether a live model writes that much in one response is not
+   measured.
+2. **D30 applies to the generators.** At most three drafts per request
+   (`aimpro.generators.ATTEMPTS`). A draft refused by `checked_draft` (and,
+   for a structured Teacher, by its rendering) or not accepted by the review
+   agent (`REJECT`, `UNCERTAIN`, or one of the four flags false) goes back to
+   the generator with `PROJECT_AUTHORING_RETRY`: its own output
+   (`rejected_draft`) and why (`review_feedback`), as untrusted data. The
+   review agent judges each draft on its own. A draft that is not the typed
+   contract, a context over the budget or a review that is not a verdict stops
+   at once; the drafts judged before it are kept. A recorded Teacher response
+   (`--recorded`) is the first draft; a retry asks the model.
+3. **When the drafts run out, the request fails as before**, now with the
+   fixed `ReviewError` text: "Authoring generation did not complete (Authoring
+   output did not pass separate Lead review); no accepted proposal was
+   persisted." Other errors keep only their type. A generated proposal always
+   carries an `ACCEPT` review.
+4. **Every draft's assessment is kept with the request's result**
+   (`GenerationResult`: a `LearningResponse` with `attempts`, omitted when
+   empty) and read with `GET
+   /contexts/{context_id}/generation-reviews/{request_id}` (`propose`, the
+   subject who ran the request; `GenerationReviews` `{request_id, outcome,
+   attempts}`; 404 for an unknown or unended request, another kind or another
+   subject). The review agent's `reason` never becomes an error message, the
+   job `detail`, a log line or an event; each draft emits one content-free
+   `review` event (`stage` `PROJECT` or `PROJECT_CHECKS`, `role`, `attempt`,
+   `verdict` and the four flags). The review prompts are not calibrated in
+   this step.
+
+In the studio, an ended Evaluator, Teacher or Trainer job of the signed-in
+teacher offers "How the review agent judged the drafts of this job" in the job
+list, read when opened: each draft, how it ended, the four checks in words and
+the reason as model text, or the check that refused it.
 
 ## Local identity smoke test
 
