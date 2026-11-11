@@ -44,7 +44,7 @@ them and names what is new.
 | Review in plain words | S07 | teacher view done for assessments (reaching `main` through PR #92); other proposal kinds in S09c |
 | AIM-PRO upload starts a build | S09a | done: PR #98 (course created from the studio, upload, Curator job, project initialization) |
 | Sources prepared, then accepted by the teacher | S09a2 | done: PR #103 (discovery and preparation jobs, the teacher's choice, job list) |
-| Progressive refinement with agents | S09b | done: PR #105 (syllabus in words, Curator revisions and teacher edits, compared by learning target) |
+| Progressive refinement with agents | S09b | done: PR #105 (syllabus in words, Curator revisions and teacher edits, compared by learning target); the review of each Curator draft made visible, retried and calibrated in Chat 20 (PR #108) |
 | Rubrics, assessments, teacher and trainer content | S09c (was S09) | needs S08 |
 | Course validation | S10 | activation blocked by D4 until S11 |
 | Learner: my courses, material, syllabus | S12, S13 (extended) | needs S11 and D19; D20 decided |
@@ -83,6 +83,7 @@ Facts in this table are a snapshot. Every chat re-verifies the ones it uses.
 | D24 | Uploaded AIM-PRO exports are stored unchanged in the worker's export directory (`ALM_AIMPRO_EXPORTS`) as `<sha256>.json`. An upload is refused when it is not JSON, is over the size limit (10 MiB, configurable), is not a jjodel megamodel 1.0 export, its metamodels cannot be read, or the chosen scenario and competency catalogue cannot be resolved. Findings against the generated contracts do not refuse it: they are diagnostics shown in plain words (Chat 16 owner answer 2, Chat 17) | 9 Nov 2026 |
 | D26 | Source preparation (S09a2) is two jobs. A model-free discovery job runs the teacher's queries and records what they found (in the ALM requests store, replayed without a new search); the teacher picks excerpts with their purpose and limitations; the preparation job fetches them exactly (`SourcePlan` unchanged). The teacher's acceptance is recorded in the jobs store: a preparation job ends `AWAITING_CHOICE` and the teacher moves it to `ACCEPTED` or `DECLINED`; the API and the worker refuse a Curator job on a preparation that is not accepted, while the CLI `--prepared-sources` stays an operator path without acceptance. A minimal job list is on the build page. Coverage requirements are an optional form guided by the uploaded export (Chat 18, issue #101) | 10 Nov 2026 |
 | D27 | Syllabus refinement (S09b, refines D18). Units of two syllabi are paired by learning target (`source_target_id`), in their order when several share a target. The Curator holds the conversation (no separate Design Agent): a revision request is one turn, and the revision job gives the Curator the previous syllabus and the reasons of the whole chain. A teacher's edit is complete (every field; units added, removed and reordered), passes the same checks as a generated syllabus and is a proposal by that teacher, declared not reviewed by the agent; the agent's review of an edit is optional and does not block (its form is D29). A refinement reuses the input of the proposal it refines, accepted sources included, while the course is still at that proposal's step; otherwise the sources are prepared again (Chat 19, issue #104) | 10 Nov 2026 |
+| D30 | The review of a Curator syllabus (Chat 20, issue #107, refines D27). A request makes at most three drafts: a draft refused by the deterministic checks or not accepted by the review agent (`REJECT`, `UNCERTAIN`, a flag false) goes back to the Curator with its draft and the reason, as untrusted data; the review agent judges each draft on its own. When the drafts run out the request fails as before, so a generated syllabus always carries an `ACCEPT` review. Every attempt's verdict, or the fixed text of the check that refused it, is kept with the request's result in the ALM requests store, read through the API and shown in the studio; the review agent's reason is shown as model text and never becomes an error message, a log line or an event. The review of a revision receives the previous syllabus and the teacher's reasons. The review prompt was calibrated on 4 + 4 owner-authorized live jobs, in three clauses only: source diagnostics are not by themselves grounds for rejection, uncited excerpts are not grounds for rejection, and a claim is judged as worded. The configured models are unchanged | 10 Nov 2026 |
 | D20 | A learner sees everything needed to follow and learn from the course: syllabus, material, activities, exercises and the rest of the learning content. What the learner sees comes from the validated course, never from drafts or other learners' records; the exact projection (for example rubrics and assessment criteria) is defined in S12 with the owner | 9 Nov 2026 |
 | Earlier | Socratic option b; live model runs only with owner authorization; never edit AIM-PRO/jjodel exports | see `docs/architecture/agentic-network-decisions.md` |
 
@@ -113,6 +114,9 @@ Open decisions that block later steps, not decided here:
 | D25 | Course membership: how other teachers, trainers and learners join a course created from the studio (D23 gives its policy one subject, the creator). Options include new policy versions written by the API, a change of a context's `policies` reference, or an enrolment record (related to D19) | S10 for learners in delivery; any course with more than one author |
 | D28 | A Curator revision of the syllabus in use. Today an applied syllabus can be edited by the teacher but not revised by the Curator: a revision needs a revision request, and a decision on an applied proposal is not one. Options: a revision job that carries its own reason, or a new decision kind (Chat 19 finding 2) | when a course is refined after it is applied |
 | D29 | The form of the optional agent review of a teacher's edit (D27): a job that records a new proposal with the review agent's verdict, or a review record beside the edited proposal. Needs a model call (Chat 19 finding 3) | before the review of an edit is offered |
+| D31 | Whether a citation that is true but only loosely relevant to its unit may stand when the draft declares the transfer to the audience as a gap. Since D30 the review agent accepts it and the teacher judges its relevance from the gaps and the excerpts in the syllabus view; the alternative is a further calibration that asks for relevance to the unit's purpose (Chat 20 finding 5) | before the syllabus review is relied on without a teacher reading the gaps |
+| D32 | Details of the review loop (D30): whether the drafts the review agent refused are kept beside their verdicts (up to three syllabi per request), and whether an administrator's abandonment stops the loop between drafts instead of at the final write (Chat 20 findings 2 and 3) | none; when the review of a draft is audited, or long jobs are abandoned |
+| D33 | A measurement of the syllabus review with another `lead` model than the free `nvidia/nemotron-3.5-super-vl:free`, with the owner's authorization for the live runs; the configured models are not changed without the owner (Chat 20 finding 6) | none; before a shared deployment chooses its models |
 | D17 | Deployment owner and shared environment | any shared deployment |
 | D6 | Sending the convergence draft to `rik99` | nothing in this roadmap |
 | Decision 6 details | Organisation documents and guidance | S15 |
@@ -433,6 +437,14 @@ view, and the course overview after each applied step.
 D27 taken when the step started: the Curator holds the conversation for the
 syllabus. Refinement of the design beyond the syllabus (activities and content)
 comes with the proposal kinds of S09c; D28 and D29 stay open.
+
+**Follow-up (Chat 20).** Real Curator drafts were mostly refused by the review
+agent and the teacher could not see why. PR #108 (issue #107, handoff
+`docs/plans/handoffs/chat-20.md`) took D30: the review of every draft is kept
+and shown, a refused draft is retried within the job, the review of a revision
+receives what the teacher asked, and three review clauses were calibrated on
+live verdicts (before: 3 of 4 jobs proposed, 2 over-strict refusals; after: 4
+of 4 at the first review). D31–D33 stay open.
 
 **Acceptance** (confirmed by the owner):
 
