@@ -32,6 +32,7 @@ from services.jobs.kinds import KINDS, JobKind
 from services.jobs.store import JobStore, StatusEvent
 from services.jobs.worker import JobEventSink
 from tests.authoring_cycle_fixtures import AUTH, trusted_policy
+from tests.generator_fixtures import GENERATION_REJECTION
 from tests.seed import build_seed
 from tests.services.job_fixtures import (EXPORT, REQUIREMENT, SyntheticAgents, discovery_job, evaluator_command,
                                          evaluator_job, export_directory, export_ref, new_jobs_location,
@@ -159,14 +160,30 @@ class RefusedJobTest(WorkerCase):
         self.assertEqual(self.worker.run_once().detail, 'Unknown job kind')
 
     def test_generation_that_does_not_complete_fails_without_a_proposal(self):
-        self.agents.models.verdict = self.agents.models.verdict.model_copy(update={'verdict': 'REJECT'})
+        self.agents.models.verdict = GENERATION_REJECTION
         before = self.pending()
         self.submit('job-failed', evaluator_job(evaluator_command(self.location, self.seed.project)))
         done = self.worker.run_once()
         self.assertEqual(done.status, 'FAILED')
-        self.assertEqual(done.detail, 'Authoring generation did not complete; no accepted proposal was persisted.')
+        self.assertEqual(done.detail, 'Authoring generation did not complete (Authoring output did not pass separate '
+                                      'Lead review); no accepted proposal was persisted.')
         self.assertEqual((done.proposal_refs, self.pending()), ((), before))
-        self.assertEqual(self.request_result('job-failed')['kind'], 'FAILURE')
+        result = self.request_result('job-failed')
+        self.assertEqual(result['kind'], 'FAILURE')
+        # S09c (D30): every draft's verdict is kept with the result; the events carry no reason.
+        self.assertEqual([a['review'] for a in result['attempts']], [GENERATION_REJECTION.model_dump(mode='json')] * 3)
+        reviews = [json.loads(e.data)['data'] for e in self.jobs.events(AUTH, 'job-failed')
+                   if e.name == 'progress' and json.loads(e.data)['type'] == 'review']
+        self.assertEqual([(r['attempt'], r['verdict']) for r in reviews], [(1, 'REJECT'), (2, 'REJECT'), (3, 'REJECT')])
+        stored = json.dumps([e.data for e in self.jobs.events(AUTH, 'job-failed')]) + done.model_dump_json()
+        self.assertNotIn(GENERATION_REJECTION.reason, stored)
+
+    def test_a_draft_refused_once_is_proposed_on_the_next_attempt(self):
+        self.agents.models.verdicts.append(GENERATION_REJECTION)
+        self.submit('job-retried', evaluator_job(evaluator_command(self.location, self.seed.project)))
+        done = self.worker.run_once()
+        self.assertEqual(done.status, 'PROPOSED', done.detail)
+        self.assertEqual([a['attempt'] for a in self.request_result('job-retried')['attempts']], [1, 2])
 
     def test_an_unexpected_error_fails_the_job_and_the_worker_goes_on(self):
         self.submit('job-broken', evaluator_job(evaluator_command(self.location, self.seed.project)))

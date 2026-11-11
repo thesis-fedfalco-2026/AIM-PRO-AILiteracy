@@ -396,3 +396,48 @@ describe('the review agent on the Curator drafts (Chat 20)', () => {
     expect(attempts.getByText(`Draft 3: ${en.build.reviews.outcome.uncertain}`)).toBeTruthy();
   });
 });
+
+describe('the review agent on the Evaluator, Teacher and Trainer drafts (S09c)', () => {
+  const verdict = (changes: Record<string, unknown> = {}) => ({ verdict: 'ACCEPT', source_alignment: true,
+    citation_support: true, intent_correct: true, content_complete: true, reason: 'Complete and supported.', ...changes });
+  const command = { project: { type: 'Resource', id: 'project', version: '1' },
+    base_context: { type: 'ExecutionContext', id: 'new-course', version: '3' } };
+  const generator = (kind: string, extra: Record<string, unknown> = {}) =>
+    job('PROPOSED', { job: { kind, command }, ...extra });
+  const REVIEWS = { request_id: 'request-1', outcome: 'PROPOSAL', attempts: [
+    { attempt: 1, review: verdict({ verdict: 'REJECT', content_complete: false, reason: 'The worksheet lacks its criterion.' }),
+      check: null },
+    { attempt: 2, review: verdict(), check: null }] };
+
+  it('names a draft not accepted when any of the four checks failed', () => {
+    expect(REVIEWS.attempts.map((attempt) => attemptOutcome(attempt as never))).toEqual(['rejected', 'accepted']);
+    expect(attemptOutcome({ attempt: 1, review: verdict({ intent_correct: false }), check: null } as never)).toBe('rejected');
+  });
+
+  it('shows the assessments of an ended generator job when the teacher opens them, as model text', async () => {
+    const { requests } = await renderStudio({
+      ...page(EMPTY),
+      'GET /contexts/new-course/jobs': [{ status: 200, body: { jobs: [
+        generator('generate-project-trainer'),
+        generator('generate-project-teacher', { request_id: 'request-2', status: 'RUNNING' }),
+        generator('generate-project-assessments', { request_id: 'request-3', subject_key: 'someone-else' })] } }],
+      'GET /contexts/new-course/generation-reviews/request-1': [{ status: 200, body: REVIEWS }],
+    }, '/studio/contexts/new-course/build');
+    const list = within(await screen.findByTestId('course-jobs'));
+    // Only the teacher's own ended job offers them, and nothing is read before they are opened.
+    const summaries = list.getAllByText(en.build.reviews.generation.summary);
+    expect(summaries).toHaveLength(1);
+    expect(list.queryByText(en.build.reviews.summary)).toBeNull();
+    expect(requests.some((request) => request.url.includes('generation-reviews'))).toBe(false);
+    const details = summaries[0]!.closest('details')! as HTMLDetailsElement;
+    details.open = true;
+    fireEvent(details, new Event('toggle'));
+    const attempts = within(await screen.findByTestId('review-attempts'));
+    expect(attempts.getByText(`Draft 1: ${en.build.reviews.outcome.rejected}`)).toBeTruthy();
+    expect(attempts.getByText('Fits the approved syllabus and its sources: yes. Citations support the claims: yes. '
+      + 'Right intent (explain, practice or assess): yes. Content complete: no.')).toBeTruthy();
+    expect(attempts.getByText("The review agent's assessment (model text): “The worksheet lacks its criterion.”")).toBeTruthy();
+    expect(attempts.getByText(`Draft 2: ${en.build.reviews.outcome.accepted}`)).toBeTruthy();
+    expect(requests.some((request) => request.url.includes('syllabus-reviews'))).toBe(false);
+  });
+});

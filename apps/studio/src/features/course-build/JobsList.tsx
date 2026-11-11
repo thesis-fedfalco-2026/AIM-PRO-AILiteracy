@@ -4,9 +4,10 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
 import { proposalPath } from '../review/paths';
-import { CURATOR, DISCOVERY, PREPARATION, REVISION } from './buildApi';
+import { CURATOR, DISCOVERY, GENERATORS, PREPARATION, REVISION } from './buildApi';
 import type { JobView } from './buildApi';
 import { ReviewAttempts } from './ReviewAttempts';
+import type { AttemptSource } from './ReviewAttempts';
 
 type KindKey = `build.jobs.kind.${'discovery' | 'preparation' | 'curator' | 'revision' | 'assessments' | 'teacher' | 'trainer' | 'other'}`;
 
@@ -20,10 +21,14 @@ const KINDS: Record<string, KindKey> = {
   'generate-project-trainer': 'build.jobs.kind.trainer',
 };
 
-/** Whether the review agent judged drafts of this job: an ended Curator job of the signed-in teacher. */
-export function hasReviewAttempts(job: JobView, own: boolean): boolean {
-  return own && (job.job.kind === CURATOR || job.job.kind === REVISION) &&
-    (job.status === 'PROPOSED' || job.status === 'FAILED');
+/**
+ * Whose drafts the review agent judged in this job, if the signed-in teacher may read them: an ended Curator,
+ * Evaluator, Teacher or Trainer job of that teacher.
+ */
+export function reviewAttemptsOf(job: JobView, own: boolean): AttemptSource | null {
+  if (!own || (job.status !== 'PROPOSED' && job.status !== 'FAILED')) return null;
+  if (job.job.kind === CURATOR || job.job.kind === REVISION) return 'syllabus';
+  return GENERATORS.includes(job.job.kind) ? 'generation' : null;
 }
 
 /** What a teacher can do next with a job of the list, if anything. */
@@ -41,6 +46,11 @@ function NextAction({ contextId, job, own, onOpen }: {
     return <Button variant="secondary" onClick={() => onOpen(job)}>{t('build.jobs.choose')}</Button>;
   }
   return null;
+}
+
+function JobAttempts({ contextId, job, own }: { contextId: string; job: JobView; own: boolean }) {
+  const source = reviewAttemptsOf(job, own);
+  return source ? <ReviewAttempts contextId={contextId} requestId={job.request_id} source={source} /> : null;
 }
 
 /** The jobs of the course, newest first: what runs, what ended and what waits for the teacher. */
@@ -68,8 +78,7 @@ export function JobsList({ contextId, jobs, failed, subjectKey, onReload, onOpen
             </p>
             {job.detail ? <p className="alm-muted">{t('build.jobs.detail', { detail: job.detail })}</p> : null}
             <NextAction contextId={contextId} job={job} own={job.subject_key === subjectKey} onOpen={onOpen} />
-            {hasReviewAttempts(job, job.subject_key === subjectKey)
-              ? <ReviewAttempts contextId={contextId} requestId={job.request_id} /> : null}
+            <JobAttempts contextId={contextId} job={job} own={job.subject_key === subjectKey} />
           </li>
         ))}
       </ul>

@@ -6,7 +6,13 @@ from typing import Annotated, ClassVar, Literal
 from pydantic import Field, StringConstraints, field_validator, model_validator
 
 from aimpro.didactic import CorpusCitation
+from aimpro.syllabus import UNITS
 from learning.contracts import EntityRef, Record, Text
+
+
+# A generated draft covers up to every unit of a syllabus (S09c, owner decision): items and the Teacher's
+# components follow the units, and a Teacher item needs an explanation, a transcript and an example.
+MATERIALS = 3 * UNITS
 
 
 Verbatim = Annotated[str, StringConstraints(strict=True, min_length=1)]
@@ -153,7 +159,7 @@ class StructuredTeacherItem(Part):
 
 class StructuredTeacherUnit(Record):
     key: Text
-    items: tuple[StructuredTeacherItem, ...] = Field(min_length=1, max_length=24)
+    items: tuple[StructuredTeacherItem, ...] = Field(min_length=1, max_length=UNITS)
 
 
 class StructuredTeacherDraft(Record):
@@ -163,11 +169,11 @@ class StructuredTeacherDraft(Record):
 
     kind: Literal['STRUCTURED_TEACHER_DRAFT'] = 'STRUCTURED_TEACHER_DRAFT'
     input_digest: Text
-    units: tuple[StructuredTeacherUnit, ...] = Field(min_length=1, max_length=24)
-    explanations: tuple[ProseMaterial, ...] = Field(min_length=1, max_length=24)
-    comparisons: tuple[PromptComparison, ...] = Field(max_length=24)
-    peers: tuple[PeerExample, ...] = Field(max_length=24)
-    transcripts: tuple[TeachingTranscript, ...] = Field(min_length=1, max_length=24)
+    units: tuple[StructuredTeacherUnit, ...] = Field(min_length=1, max_length=UNITS)
+    explanations: tuple[ProseMaterial, ...] = Field(min_length=1, max_length=UNITS)
+    comparisons: tuple[PromptComparison, ...] = Field(max_length=UNITS)
+    peers: tuple[PeerExample, ...] = Field(max_length=UNITS)
+    transcripts: tuple[TeachingTranscript, ...] = Field(min_length=1, max_length=UNITS)
     new_gaps: tuple[Verbatim, ...] = ()
 
     @field_validator('new_gaps')

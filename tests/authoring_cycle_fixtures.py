@@ -76,11 +76,12 @@ class SimulatedAuthoring:
             'Explicit synthetic test decision after inspecting the exact candidate payload')
         return service.apply(context_id, 'admin', proposal.ref, operation)
 
-    def curator(self):
+    def curator(self, units=1):
+        """Apply a Curator syllabus of ``units`` units on the first target and initialize the project."""
         curator, reviewer = Curator(), Reviewer()
-        unit = curator.value.units[0]
-        curator.value = curator.value.model_copy(update={'units': (
-            unit.model_copy(update={'planned_intents': ('EXPLAIN', 'PRACTICE', 'ASSESS')}),)})
+        unit = curator.value.units[0].model_copy(update={'planned_intents': ('EXPLAIN', 'PRACTICE', 'ASSESS')})
+        curator.value = curator.value.model_copy(update={'units': tuple(
+            unit.model_copy(update={'key': f'{unit.key}-{n:02d}'}) if n else unit for n in range(units))})
         result = self.service.generate_aimpro_syllabus(AUTH, 'admin', DEFAULT_PROJECT,
             request_id='architecture-curator', authoring_factory=lambda: (curator, reviewer, None),
             source_scope='wp3', query='prompting', k=3, search_factory=lambda: lambda *a, **kw: corpus_response())

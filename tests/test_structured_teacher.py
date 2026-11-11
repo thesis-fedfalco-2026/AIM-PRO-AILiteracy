@@ -9,7 +9,7 @@ from unittest.mock import Mock
 from pydantic import ValidationError
 
 from aimpro.generation_state import GeneratedArtifact
-from aimpro.generators import GenerationCommand, GenerationInput, checked_draft
+from aimpro.generators import ATTEMPTS, GenerationCommand, GenerationInput, checked_draft
 from aimpro.lead import ReviewError
 from aimpro.teacher import render_teacher
 from aimpro.teacher_contracts import (IllustrativeEmail, ProtectedCaseFact, TeacherPlan,
@@ -127,7 +127,9 @@ class StructuredTeacherTest(unittest.TestCase):
                 self.models.calls.clear()
                 result = self.run_generator('TEACHER_CONTENT', command=self.teacher_command(), request_id=case)
                 self.assertEqual(result.kind, 'FAILURE')
-                self.assertEqual(self.models.calls, ['teaching-designer-structured'])
+                # A draft refused by the checks is retried (S09c); one that is not the typed contract stops at once.
+                self.assertEqual(self.models.calls, ['teaching-designer-structured'] *
+                                 (1 if case == 'missing-email' else ATTEMPTS))
 
     def test_prompt_schema_transport_validates_text_before_lead_and_replays_without_http(self):
         import httpx
@@ -247,6 +249,29 @@ class StructuredTeacherTest(unittest.TestCase):
         # A reused request is never itself an origin for further reuse.
         with self.assertRaises(StateConflict):
             run('reuse-again', dict(recorded, request_id='reuse'))
+
+    def test_a_recorded_output_is_the_first_attempt_and_a_retry_calls_the_teacher(self):
+        import hashlib
+        from tests.generator_fixtures import GENERATION_REJECTION
+        from tests.teacher_fixtures import structured_draft
+
+        accepted = self.models.verdict
+        self.models.verdict = GENERATION_REJECTION
+        self.assertEqual(self.run_generator('TEACHER_CONTENT', command=self.teacher_command(),
+                                            request_id='origin').kind, 'FAILURE')
+        text = structured_draft(self.models.inputs[-1]).model_dump_json()
+        recorded = {'request_id': 'origin', 'sha256': hashlib.sha256(text.encode()).hexdigest(), 'text': text}
+        self.models.verdict, self.models.verdicts = accepted, [GENERATION_REJECTION]
+        self.models.calls.clear()
+        self.models.prompts.clear()
+        result = self.service.generate_project_teacher(AUTH, 'admin', self.teacher_command(), request_id='reuse',
+                                                       authoring_factory=self.factory, recorded=recorded)
+        self.assertEqual(result.kind, 'PROPOSAL')
+        self.assertEqual(self.models.calls, ['LEAD_REVIEW', 'teaching-designer-structured', 'LEAD_REVIEW'])
+        instructions, data = self.models.prompts[0].split('\nDATA\n', 1)
+        self.assertIn('PROJECT_AUTHORING_RETRY', instructions)
+        self.assertEqual(json.loads(data)['rejected_draft'], json.loads(text))
+        self.assertEqual([a.review for a in result.attempts], [GENERATION_REJECTION, accepted])
 
     def test_negative_case_disclaimer_is_allowed_and_rendered_metadata_cannot_be_forged(self):
         def transform(data, draft):

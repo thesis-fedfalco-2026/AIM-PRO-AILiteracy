@@ -19,6 +19,7 @@ from services.authoring_api.app import create_app
 from services.jobs.store import JobStore, StatusEvent
 from agent_system.events import Event
 from tests.authoring_cycle_fixtures import AUTH, DELIVERY_TWO
+from tests.generator_fixtures import GENERATION_REJECTION
 from tests.seed import build_seed
 from tests.services.job_fixtures import (REQUIREMENT, SyntheticAgents, evaluator_command, evaluator_job,
                                          export_directory, worker)
@@ -26,6 +27,7 @@ from tests.services.course_fixtures import module_settings
 from tests.services.oidc_fixtures import ISSUER, MAPPED_SUBJECT, NO_NETWORK, FakeProvider, auth_settings, write_identity_map
 from tests.services.test_authoring_review_api import LEARNER_SUBJECT, ReviewApiCase
 from tests.store_backends import block_network
+from tests.syllabus_fixtures import REJECT_ONCE
 
 
 class Interrupted(BaseException):
@@ -213,9 +215,12 @@ class JobsApiTest(ReviewApiCase):
         self.worker.run_once()
         text = self.stream('job-1')
         events = parse_stream(text)
-        self.assertEqual([name for _, name, _ in events], ['status', 'status', 'status'])
-        self.assertEqual([StatusEvent.model_validate_json(data).status for _, _, data in events],
+        # The review of each draft is one content-free progress event (S09c).
+        self.assertEqual([name for _, name, _ in events], ['status', 'status', 'progress', 'status'])
+        self.assertEqual([StatusEvent.model_validate_json(data).status for _, name, data in events if name == 'status'],
                          ['QUEUED', 'RUNNING', 'PROPOSED'])
+        review = Event.model_validate_json(events[2][2])
+        self.assertEqual((review.type, review.data['attempt'], review.data['verdict']), ('review', 1, 'ACCEPT'))
         ids = [int(event_id) for event_id, _, _ in events]
         self.assertEqual(ids, sorted(set(ids)))
         for private in (REQUIREMENT, 'Submit a fictional business reminder prompt', 'clarity'):
@@ -254,6 +259,31 @@ class JobsApiTest(ReviewApiCase):
         self.job(self.queue('job-1'))
         self.refused(self.learner.get(f'/contexts/{AUTH}/jobs/job-1/events'), 403, 'forbidden')
         self.refused(self.staff.get(f'/contexts/{AUTH}/jobs/no-such-job/events'), 404, 'not_found')
+
+    # S09c (D30): the review agent's verdict of every draft of a generator job, read by its subject.
+    def reviews(self, request_id, client=None):
+        return (client or self.staff).get(f'/contexts/{AUTH}/generation-reviews/{request_id}')
+
+    def test_every_draft_of_a_generator_job_is_read_with_the_review_agents_text(self):
+        self.job(self.queue('job-1', self.evaluator((REQUIREMENT, REJECT_ONCE))))
+        self.worker.run_once()
+        done = self.job(self.staff.get(f'/contexts/{AUTH}/jobs/job-1'), 'PROPOSED')
+        response = self.reviews('job-1')
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(response.json(), {'request_id': 'job-1', 'outcome': 'PROPOSAL', 'attempts': [
+            {'attempt': 1, 'review': GENERATION_REJECTION.model_dump(mode='json'), 'check': None},
+            {'attempt': 2, 'review': self.agents.models.verdict.model_dump(mode='json'), 'check': None}]})
+        # The review agent's text is shown here only: never in the job's detail or its events.
+        self.assertNotIn(GENERATION_REJECTION.reason, json.dumps(done) + self.stream('job-1'))
+
+    def test_only_the_subject_of_an_ended_generator_job_reads_its_drafts(self):
+        self.job(self.queue('job-1'))
+        self.refused(self.reviews('job-1'), 404, 'not_found')
+        self.worker.run_once()
+        self.refused(self.reviews('job-1', self.learner), 403, 'forbidden')
+        self.refused(self.reviews('unknown'), 404, 'not_found')
+        # A request of the seed that is not a project generation.
+        self.refused(self.reviews('architecture-curator'), 404, 'not_found')
 
 
 class JobsConfigurationTest(unittest.TestCase):

@@ -3,14 +3,22 @@
 A project is initialized from the approved Curator syllabus of the course's
 current outline (S09a); the result is a pending proposal that a person decides
 and applies through the review endpoints.
+
+The Evaluator, Teacher and Trainer jobs (S09c) keep the review agent's verdict
+of each of their drafts with the request's result; the subject who ran the
+job reads them here. The review agent's reason is model text.
 """
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Request
+from typing import Literal
 
+from fastapi import APIRouter, Depends, Request
+from starlette.exceptions import HTTPException
+
+from aimpro.generators import GenerationAttempt
 from aimpro.syllabus_state import ApprovedSyllabus
-from learning.contracts import EntityRef, Text
+from learning.contracts import EntityRef, Record, Text
 from learning.projects import ProjectInitialization, ProjectInspection, ProjectProposal
 from services.api_common.auth import Principal
 from services.api_common.contexts import READ_ERRORS, WRITE_ERRORS, context_reader, context_writer, open_context
@@ -20,6 +28,13 @@ from services.api_common.registry import ApiModule
 class ProjectInitializationRequest(ProjectInitialization):
     """``init-authoring-project``: the exact approved syllabus and base context, with the ALM request id."""
     request_id: Text
+
+
+class GenerationReviews(Record):
+    """The drafts of an ended Evaluator, Teacher or Trainer job, first to last; ``review.reason`` is the review agent's text."""
+    request_id: Text
+    outcome: Literal['PROPOSAL', 'FAILURE']
+    attempts: tuple[GenerationAttempt, ...]
 
 
 router = APIRouter(tags=['projects'])
@@ -61,6 +76,18 @@ def project_syllabus(context_id: str, resource_id: str, version: str, request: R
     project = EntityRef(type='Resource', id=resource_id, version=version)
     with open_context(request, context_id) as service:
         return service.approved_project_syllabus(context_id, principal.subject_key, project)
+
+
+
+@router.get('/contexts/{context_id}/generation-reviews/{request_id}', response_model=GenerationReviews,
+            responses=READ_ERRORS, summary="How the review agent judged each draft of the subject's Evaluator, Teacher or Trainer job")
+def generation_reviews(context_id: str, request_id: str, request: Request, principal: Principal = Depends(context_reader)):
+    with open_context(request, context_id) as service:
+        service.authorize_jobs(context_id, principal.subject_key)
+        result = service.project_generation_request(context_id, principal.subject_key, request_id)
+    if result is None or result.kind not in ('PROPOSAL', 'FAILURE'):
+        raise HTTPException(404, 'No ended generator job of this subject under this id')
+    return GenerationReviews(request_id=request_id, outcome=result.kind, attempts=result.attempts)
 
 
 MODULE = ApiModule('projects', router)
