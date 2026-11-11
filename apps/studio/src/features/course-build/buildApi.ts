@@ -10,6 +10,7 @@ export type ExportReport = Schemas['ExportReport'];
 export type JobView = Schemas['JobView'];
 export type JobStatus = JobView['status'];
 export type ProjectProposal = Schemas['ProjectProposal'];
+export type ProjectInspection = Schemas['ProjectInspection'];
 export type SourceDiscovery = Schemas['SourceDiscoveryView'];
 export type SourcePreparation = Schemas['SourcePreparationView'];
 export type SourcePlan = Schemas['SourcePlan'];
@@ -36,6 +37,17 @@ export const REVISION = 'revise-aimpro-syllabus';
 export const GENERATORS: readonly string[] = [
   'generate-project-assessments', 'generate-project-teacher', 'generate-project-trainer',
 ];
+
+export type GeneratorKind = 'generate-project-assessments' | 'generate-project-teacher' | 'generate-project-trainer';
+
+/** What an Evaluator, Teacher or Trainer job receives: exact refs, and the author's requirements. */
+export interface GeneratorCommand {
+  project: EntityRef;
+  baseContext: EntityRef;
+  /** The applied assessments the Teacher and Trainer build on; none for the Evaluator. */
+  assessments: EntityRef[];
+  requirements: string[];
+}
 
 /** The Curator grounded by a search query, or by prepared sources that the teacher accepted. */
 export type CuratorCommand = {
@@ -85,6 +97,15 @@ export interface BuildApi {
   /** Propose a project from that syllabus; the same request id replays the same proposal. */
   initializeProject(contextId: string, csrfToken: string, command: {
     requestId: string; projectId: string; syllabus: EntityRef; baseContext: EntityRef;
+  }): Promise<ProjectProposal>;
+  /** The project's current selections, their approval receipts and stale dependencies. */
+  inspectProject(contextId: string, projectId: string): Promise<ProjectInspection>;
+  /** Queue the Evaluator, Teacher or Trainer; a base that is no longer current is a `conflict`. */
+  queueGenerator(contextId: string, csrfToken: string, requestId: string, kind: GeneratorKind,
+    command: GeneratorCommand): Promise<JobView>;
+  /** Propose the fixed completion rule on every part of the project's design; the same request id replays. */
+  proposeCompletionRules(contextId: string, csrfToken: string, command: {
+    requestId: string; project: EntityRef; baseContext: EntityRef;
   }): Promise<ProjectProposal>;
 }
 
@@ -233,6 +254,30 @@ export function createBuildApi(client: AuthoringClient): BuildApi {
         params: { path: { context_id: contextId } },
         headers: writing(csrfToken),
         body: { request_id: requestId, project_id: projectId, syllabus, base_context: baseContext },
+      }));
+    },
+
+    async inspectProject(contextId, projectId) {
+      return settle(() => client.GET('/contexts/{context_id}/projects/{project_id}', {
+        params: { path: { context_id: contextId, project_id: projectId } },
+      }));
+    },
+
+    async queueGenerator(contextId, csrfToken, requestId, kind, { project, baseContext, assessments, requirements }) {
+      return settle(() => client.POST('/contexts/{context_id}/jobs', {
+        params: { path: { context_id: contextId } },
+        headers: writing(csrfToken),
+        body: { request_id: requestId, job: { kind, command: {
+          project, base_context: baseContext, assessments, requirements, shared_content: [], stimulus_requirements: [],
+        } } },
+      }));
+    },
+
+    async proposeCompletionRules(contextId, csrfToken, { requestId, project, baseContext }) {
+      return settle(() => client.POST('/contexts/{context_id}/completion-rules', {
+        params: { path: { context_id: contextId } },
+        headers: writing(csrfToken),
+        body: { request_id: requestId, project, base_context: baseContext },
       }));
     },
   };

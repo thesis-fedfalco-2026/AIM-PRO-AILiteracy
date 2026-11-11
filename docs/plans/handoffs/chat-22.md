@@ -1,0 +1,148 @@
+# Chat 22 handoff — S09c2 part 1: generator forms, completion rules and their teacher views
+
+Date: 11 November 2026. Base: `main` at `4679859` (PR #113 merged). PR #114 (the Chat 21 handoff record of the
+owner trial) was open and is not part of this branch.
+Step: **S09c2** of the [prototype roadmap](../prototype-roadmap.md), first of two PRs (split with the owner, below).
+Issue: [#115](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/issues/115).
+Branch `feat/s09c2-generator-forms`, PR: see the end of this file.
+
+No ALM metamodel, ALM store schema, jobs store schema, realm file, identity map or AIM-PRO/jjodel export changed.
+No model was called and no live run was made. The owner's demo stack (58000/58001, `/tmp/alm-demo`) was running;
+it was not touched, so the browser tests were not run locally (they run in CI).
+
+## Objective
+
+An author runs the rest of the authoring cycle from the studio: the Evaluator, Teacher and Trainer from their
+forms, each proposal read in its teacher view, then the completion rules.
+
+## Baseline verified before any change
+
+| Check | Result |
+| --- | --- |
+| `git status` | branch `docs/chat21-owner-trial` (PR #114 open); someone else's changes as before (`README.md`, untracked `docs/architecture/system-overview.md`, `docs/plans/handoffs/chat-01.md`, `docs/plans/sequential-chat-plan.md`, `examples/lpo-ai/`), not part of this PR |
+| `git log --oneline -3` (`origin/main`) | `4679859` merge of #113, `521882f`, `ab95fbf`: as the Chat 21 handoff |
+| `gh pr list --state open` | #114 only |
+| `unittest discover -q`, telemetry off | 1068 tests, OK, 195 skipped (as Chat 21) |
+| `python -m aimpro.generate --check`, `python -m services.api_common.openapi --check` | exit 0, exit 0 |
+| `npm run check:client`, `typecheck`, `test` (in `apps/`) | OK, OK, 137 tests OK (as Chat 21) |
+
+The chat prompt says "the Python suite"; the repository runs it with `python -m unittest discover` (pytest is not
+installed).
+
+**What was found** (read before asking the owner):
+
+- The pending-proposals route returns candidates for pending proposals only; in the seed every proposal kind but
+  the Evaluator revision and the second import is already applied, so a teacher view of every seeded kind needs
+  the candidates of proposals that are no longer pending.
+- `ProductionAuthoring.configure_completion` built the rules in the test fixture: one rule per unit (over its
+  activities) and one for the phase (over its units), in a project revision that selects the Trainer content again
+  at a new version with unchanged fields, because a revision selects at least one artifact.
+- The job worker's synthetic Curator (the one the browser tests use) plans EXPLAIN and PRACTICE units; the
+  Evaluator covers every unit, the Teacher the EXPLAIN units and the Trainer the PRACTICE units, so a course built
+  from the uploaded model reaches the three proposals.
+
+## Owner decisions taken in this chat (11 November 2026)
+
+Asked before the issue was opened; recorded in issue #115.
+
+1. **The teacher view is also shown for proposals that are no longer pending** (approved, applied, rejected).
+2. **Chat 21 trial finding 1 stays open with D28** (a DRAFT proposal after a revision request gets neither a new
+   request nor an approval in the studio).
+3. **The roadmap record is proposed in this handoff**; the owner applies it (below).
+4. **S09c2 is two PRs.** This PR (part 1): the generator forms, the refusal of a stale base at queue time, the
+   completion rules command, and the teacher views of the kinds the cycle produces (teacher content, trainer
+   content, completion rules). Part 2: the teacher views of project initialization, release and delivery import,
+   and of proposals that are no longer pending. The acceptance agreed in Chat 21 was confirmed, split this way.
+
+Defaults taken without a question, stated here and in the guide:
+
+- The forms send only the requirements (one per line) beyond the exact refs; `shared_content`,
+  `stimulus_requirements` and `teacher_plan` stay out of the studio.
+- The build page works on the course's one project (the first selected); the refs it sends are shown.
+- The completion rules are refused (422) without Trainer content and (409) when the Trainer content is stale,
+  as `revise-authoring-project` refuses stale updates. The rule ids are `completion-rule:<node id>` (the fixture
+  used `course:completion:`); the versions are new UUIDs, as the project's.
+- The stale-base check at queue time compares the command's `base_context` with the context's current version;
+  a request id already queued returns its job unchanged (a retry is not a new command).
+- A CLI command `propose-completion-rules` mirrors the route, as for the other project commands.
+- API version 0.10.0 (one route added).
+
+## Changes
+
+| File | Content |
+| --- | --- |
+| `learning/projects.py` | `CompletionRules`, `COMPLETION_RULE`, `COMPLETION_EXPLANATION`, `_completion_revision`; `propose_project` turns the command into a project revision inside its write transaction, after the replay check |
+| `learning/service.py`, `learning/__main__.py` | `propose_completion_rules`; CLI `propose-completion-rules` |
+| `services/authoring_api/projects.py`, `app.py` | `POST /contexts/{context_id}/completion-rules` (`CompletionRulesRequest` → `ProjectProposal`); version 0.10.0 |
+| `services/authoring_api/jobs.py` | a generator command on a stale base is refused at queue time (409, `STALE_BASE`) |
+| `services/openapi/authoring.json`, `apps/packages/api-client/src/generated/authoring.ts` | regenerated |
+| `apps/studio/src/features/course-build/GeneratorsStep.tsx` (new), `BuildPage.tsx`, `buildApi.ts` | the Evaluator, Teacher and Trainer forms with the refs they send, the completion rules step, the stale-content notice; `inspectProject`, `queueGenerator`, `proposeCompletionRules` |
+| `apps/studio/src/features/review/teacher.ts`, `TeacherView.tsx`, `ProposalPage.tsx`, `ReviewInboxPage.tsx` | `ProposalKind` and `KIND_TITLES` (replacing `isAssessment`); materials (texts for students) and their changes; completion rules part by part |
+| `apps/studio/src/i18n/en.json` | labels and texts of the above; `build.project.next` points to the new steps (labels and data only, no styling) |
+| `tests/authoring_cycle_fixtures.py`, `tests/test_releases.py` | `configure_completion` uses the production command; delivery-import handlers bind `completion-rule:` rules |
+| `tests/test_completion_rules.py`, `tests/services/test_authoring_cycle_api.py` (new), `tests/services/test_authoring_jobs_api.py`, `test_api_openapi.py` | contract tests (below) |
+| `apps/studio/test/build.test.tsx`, `review.test.tsx`, `teacher-view.test.ts` | studio unit tests |
+| `apps/e2e/cycle.spec.ts` (new), `support.ts`, `build.spec.ts` | the browser test of the cycle; `newCourse` and `approveAndApply` moved to `support.ts` |
+| `docs/architecture/role-applications.md` | "Generator forms and completion rules (S09c2, part 1)", the teacher view of the new kinds, the browser test row |
+
+## Verification
+
+**Contract tests first.** `tests/test_completion_rules.py`, `tests/services/test_authoring_cycle_api.py`, the
+stale-base test of `test_authoring_jobs_api.py` and the route list of `test_api_openapi.py` were written before the
+implementation: the first two failed to import (`COMPLETION_RULE`, `CompletionRules`), the stale-base test failed
+(200 instead of 409) and the route list failed until the snapshot was regenerated. The studio tests were written
+after the components.
+
+| Check | Result |
+| --- | --- |
+| `unittest discover -q`, telemetry off, final tree | 1081 tests, OK, 200 skipped (1068 / 195 before: 13 new tests; the 5 new skips are the PostgreSQL variants of `test_completion_rules.py`) |
+| `python -m aimpro.generate --check`, `python -m services.api_common.openapi --check` | exit 0, exit 0 |
+| `npm run check:client`, `typecheck`, `test` (in `apps/`) | OK, OK, 146 tests OK (137 before) |
+| `npx playwright test -c e2e/playwright.config.ts --list` | 15 tests in 8 files; compiles (typecheck includes `e2e/`) |
+| `git diff --check` | exit 0 |
+
+**Not verified locally.** The browser tests: the owner's demo stack held their ports; the CI job `browser` runs
+them (below).
+
+## Findings (not changed in this PR)
+
+1. **The completion rules select the Trainer content again.** A project revision must select at least one
+   artifact, so the rules travel with an unchanged copy of the Trainer package at a new version. The teacher view
+   says the teaching content does not change; the technical details list the copy. A revision kind that carries
+   only design definitions would avoid it (a core change, not proposed for this step).
+2. **A second Evaluator revision after the Teacher and Trainer makes both stale**, as before; the build page now
+   says so and the completion rules are refused until they are generated again. No "regenerate all" exists.
+3. **The forms show refs, not names.** The project and course version are identifiers; the assessments a Teacher
+   job builds on are listed by resource id. A name per assessment would need the generated package's title.
+4. **Still open:** Chat 21 findings (a 96-unit live run not measured; generator review prompts not calibrated;
+   unparseable drafts not retried; retry prompt grows; rejected drafts not kept) and trial findings 1–4.
+
+## Open decisions
+
+Proposed for the owner to record in the roadmap (a chat does not edit it, working protocol rule 9):
+
+- under S09c: the split into S09c (PRs #111, #113) and S09c2 (two PRs: this one, and part 2 with the teacher
+  views of project initialization, release, delivery import and non-pending proposals); binding proposals moved
+  to S10; S09c2's acceptance as agreed in Chat 21 and split in Chat 22;
+- a D-row for Chat 21 decisions 1–2 (caps tied to the syllabus, 96 units and 288 materials; D30 for the
+  generators) and issue #112 (unit competencies set by the host, citable excerpts, a syllabus proposed when no
+  draft is accepted: D30 changed for the Curator);
+- a D-row for this chat: completion rules are a host command with one fixed rule (`COMPLETION_RULE`) proposed
+  from the studio and reviewed; the teacher view covers non-pending proposals (part 2);
+- the owner's direction for sources (Chat 21, issue #112 follow-up), as a future step that revises D26.
+
+Still open from the roadmap: D19, D21, D25, D28 (now also Chat 21 trial finding 1), D29, D31–D33, G7 / D4.
+
+## Next step
+
+**S09c2 part 2 — the remaining teacher views.** Acceptance (from issue #115):
+
+- a read route for one proposal with its candidates, whatever its status, for subjects who may read proposals;
+- a teacher view in words for project initialization, release and delivery import, and for proposals that are no
+  longer pending (approved, applied, rejected), with a browser test on each seeded proposal kind and axe.
+
+Then S10.
+
+## PR and CI
+
+PENDING

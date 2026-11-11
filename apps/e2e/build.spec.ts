@@ -4,31 +4,14 @@ import { readdirSync, readFileSync } from 'node:fs';
 import type { Page } from '@playwright/test';
 
 import { AIMPRO_EXPORT, DATABASE, EXPORTS, SEED } from './stack/paths.mjs';
-import { en, expect, expectAccessible, test } from './support';
+import { approveAndApply, en, expect, expectAccessible, newCourse, test } from './support';
 
 const COURSE = 'prompting-from-aimpro';
-const REASON = 'Synthetic review of the exact payload';
 
 const sha256 = (bytes: Buffer) => createHash('sha256').update(bytes).digest('hex');
 const exportsDigests = () => Object.fromEntries(readdirSync(EXPORTS).map((name) => [name, sha256(readFileSync(`${EXPORTS}${name}`))]));
 
-async function createCourse(page: Page) {
-  await page.goto('/studio/');
-  await page.getByLabel(en.home.courseLabel).fill(COURSE);
-  await page.getByRole('button', { name: en.home.create }).click();
-  await expect(page).toHaveURL(`/studio/contexts/${COURSE}/build`);
-  await expect(page.getByRole('heading', { name: en.build.title, level: 1 })).toBeVisible();
-}
-
-/** Approve the proposal on screen with a reason, then apply it. */
-async function approveAndApply(page: Page) {
-  await page.getByRole('radio', { name: en.review.decision.approve }).check();
-  await page.getByLabel(en.review.decision.reason).fill(REASON);
-  await page.getByRole('button', { name: en.review.decision.submit }).click();
-  await expect(page.getByTestId('proposal-status')).toHaveText(en.review.status.approved);
-  await page.getByRole('button', { name: en.review.apply.submit }).click();
-  await expect(page.getByTestId('proposal-status')).toHaveText(en.review.status.applied);
-}
+const createCourse = (page: Page) => newCourse(page, COURSE);
 
 // Acceptance (S09a): upload the AIM-PRO export, run the Curator job with the synthetic model,
 // review and apply the syllabus, initialize the project.

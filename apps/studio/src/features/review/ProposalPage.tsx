@@ -19,7 +19,7 @@ import { RevisionStep } from './RevisionStep';
 import { coursePath, inboxPath, syllabusEditPath } from './paths';
 import { isSyllabusProposal } from './syllabus';
 import { SyllabusView } from './SyllabusView';
-import { plainIssues, teacherView } from './teacher';
+import { KIND_TITLES, plainIssues, teacherView } from './teacher';
 import { Issues, TeacherView } from './TeacherView';
 import { useInbox } from './useInbox';
 
@@ -151,8 +151,7 @@ function ProposalContent({ inbox, proposalId, busy, onDecide, onApply }: {
   const issues = plainIssues(explanation.details, findings, inbox.findings);
   const syllabus = isSyllabusProposal(proposal);
   const view = pending && !syllabus ? teacherView(pending.candidates, [inbox.context, ...inbox.entities]) : null;
-  const title = syllabus ? t('review.teacher.titleSyllabus')
-    : view?.isAssessment ? t('review.teacher.titleAssessment') : t('review.teacher.titleOther');
+  const title = syllabus ? t('review.teacher.titleSyllabus') : t(KIND_TITLES[view?.kind ?? 'other']);
   return (
     <>
       <p className="alm-lead">
@@ -163,7 +162,7 @@ function ProposalContent({ inbox, proposalId, busy, onDecide, onApply }: {
         {' · '}
         <span data-testid="proposal-status">{statusLabel(status)}</span>
       </p>
-      {view?.isAssessment ? null : <p>{explanation.summary}</p>}
+      {view && view.kind !== 'other' ? null : <p>{explanation.summary}</p>}
       {pending || status === 'APPROVED' ? null : <p>{t('review.proposal.notPending', { status: statusLabel(status) })}</p>}
       {status === 'APPROVED' ? <ApplyStep busy={busy} onApply={() => onApply(proposal)} /> : null}
       {view ? <TeacherView view={view} issues={issues} /> : null}

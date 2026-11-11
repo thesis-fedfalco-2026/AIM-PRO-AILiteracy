@@ -33,6 +33,11 @@ def parse_args(argv=None):
     revise = commands.add_parser('revise-authoring-project', help='Propose exact artifact selections and design definitions')
     revise.add_argument('bundle', type=Path, help='ProjectRevision JSON: project, base_context, design, artifacts, candidates, explanation')
     revise.add_argument('--request-id', required=True)
+    completion = commands.add_parser('propose-completion-rules',
+        help='Propose the fixed completion rule on every process node of the exact project design')
+    completion.add_argument('--project', required=True, help='Exact selected project Resource EntityRef JSON')
+    completion.add_argument('--base-context', required=True, help='Exact base ExecutionContext EntityRef JSON')
+    completion.add_argument('--request-id', required=True)
     inspect = commands.add_parser('show-authoring-project', help='Inspect current selections, approval receipts and stale dependencies')
     inspect.add_argument('project_id')
     pinned = commands.add_parser('show-project-syllabus', help='Resolve the approved syllabus through an exact current project revision')
@@ -193,6 +198,11 @@ def main(argv=None):
             elif command == 'revise-authoring-project':
                 result = service.revise_authoring_project(args.context, args.subject,
                     json.loads(args.bundle.read_text()), request_id=args.request_id).model_dump(mode='json')
+            elif command == 'propose-completion-rules':
+                result = service.propose_completion_rules(args.context, args.subject, {
+                    'project': EntityRef.model_validate_json(args.project),
+                    'base_context': EntityRef.model_validate_json(args.base_context)},
+                    request_id=args.request_id).model_dump(mode='json')
             elif command == 'show-authoring-project':
                 result = service.inspect_authoring_project(args.context, args.subject, args.project_id).model_dump(mode='json')
             elif command == 'show-project-syllabus':

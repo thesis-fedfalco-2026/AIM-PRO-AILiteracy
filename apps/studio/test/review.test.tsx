@@ -262,3 +262,51 @@ describe('proposal review', () => {
     expect(screen.getByRole('link', { name: en.review.proposal.back }).getAttribute('href')).toBe('/studio/contexts/ctx/review');
   });
 });
+
+describe('teacher views of generated content and completion rules (S09c2)', () => {
+  const ref = (type: string, id: string, version: string) => ({ type, id, version });
+  const pack = (role: string) => entity('Resource', 'package', 'k1', { title: `Proposed ${role} package`,
+    contentOrLocator: JSON.stringify({ format: 'project-authoring-output', format_version: 1, inputs: { role } }) });
+  const proposal = (proposedChange: string) =>
+    entity('ChangeProposal', 'p-1', '1', { status: 'AWAITING_DECISION', proposedChange, findings: [], baseContextVersion: 'c1' });
+  const open = (change: string, candidates: unknown[]) => {
+    const item = proposal(change);
+    return renderStudio({
+      'GET /auth/session': [signedIn],
+      [SUMMARY]: [{ status: 200, body: { context: CONTEXT, entities: [CONTEXT, item], findings: [] } }],
+      [PENDING_LIST]: [{ status: 200, body: { proposals: [{ proposal: item, candidates, review_payload_key: KEY }] } }],
+    }, '/studio/contexts/ctx/review/p-1');
+  };
+  const section = (name: string) => within(screen.getByRole('heading', { name }).closest('section')!);
+
+  it('shows teacher content with what students do and the text of each material', async () => {
+    await open('Review the exact TEACHER_CONTENT output and host-composed project revision. {}', [CONTEXT, pack('TEACHER_CONTENT'),
+      entity('ActivityDefinition', 'explain', 'e1', { instruction: 'Compare the weak and improved prompts.', expectedEvidence: [] }),
+      entity('Resource', 'example', 'e1', { title: 'Synthetic EXAMPLE', contentOrLocator: 'Weak: Write a reminder.' })]);
+    expect(await screen.findByText(en.review.teacher.titleTeacher)).toBeTruthy();
+    // The generator's technical summary is not the teacher's text.
+    expect(screen.queryByText('Review the exact TEACHER_CONTENT output and host-composed project revision.')).toBeNull();
+    expect(section(en.review.teacher.students.heading).getByText('Compare the weak and improved prompts.')).toBeTruthy();
+    const material = within(section(en.review.teacher.materials.heading).getByTestId('material'));
+    expect(material.getByRole('heading', { name: 'Synthetic EXAMPLE', level: 3 })).toBeTruthy();
+    expect(material.getByText('Weak: Write a reminder.')).toBeTruthy();
+    expect(section(en.review.teacher.changes.heading).getByText('New material: “Synthetic EXAMPLE”')).toBeTruthy();
+  });
+
+  it('shows completion rules part by part, and that the teaching content does not change', async () => {
+    const purpose = 'Complete this process node only when every direct child is COMPLETED.';
+    await open('Explicit reviewed completion rules for the composite design; generated content unchanged.', [CONTEXT,
+      pack('TRAINER_CONTENT'),
+      entity('RuleDefinition', 'rule-unit', 'r1', { purpose }), entity('RuleDefinition', 'rule-phase', 'r1', { purpose }),
+      entity('ProcessNode', 'unit', 'r1', { kind: 'UNIT', name: 'Prepare a prompt', children: [], activities: [],
+        completionRule: ref('RuleDefinition', 'rule-unit', 'r1') }),
+      entity('ProcessNode', 'phase', 'r1', { kind: 'PHASE', name: 'Workshop', children: [ref('ProcessNode', 'unit', 'r1')],
+        activities: [], completionRule: ref('RuleDefinition', 'rule-phase', 'r1') }),
+      entity('LearningDesign', 'design', 'r1', { root: ref('ProcessNode', 'phase', 'r1') })]);
+    expect(await screen.findByText(en.review.teacher.titleCompletion)).toBeTruthy();
+    expect(within(screen.getByTestId('completion-rules')).getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+      `Phase “Workshop”: ${purpose}`, `Unit “Prepare a prompt”: ${purpose}`]);
+    expect(section(en.review.teacher.changes.heading).getByText(en.review.teacher.changes.none)).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: en.review.teacher.students.heading })).toBeNull();
+  });
+});

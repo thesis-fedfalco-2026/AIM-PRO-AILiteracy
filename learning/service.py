@@ -250,6 +250,11 @@ class LearningService:
         return propose_project(self, context_id, subject_key,
             ProjectRevision.model_validate(command), request_id)
 
+    def propose_completion_rules(self, context_id, subject_key, command, *, request_id):
+        from learning.projects import CompletionRules, propose_project
+        return propose_project(self, context_id, subject_key,
+            CompletionRules.model_validate(command), request_id)
+
     def inspect_authoring_project(self, context_id, subject_key, project_id):
         from learning.projects import inspect_project
         return inspect_project(self, context_id, subject_key, project_id)

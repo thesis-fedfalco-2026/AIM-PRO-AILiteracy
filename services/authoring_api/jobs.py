@@ -18,6 +18,10 @@ An administrator abandons a job: a queued job is never started; a running job
 whose worker was interrupted has its ALM request abandoned, as the CLI
 ``abandon`` does.
 
+An Evaluator, Teacher or Trainer command names its base context; one that is
+no longer the context's current version is refused when it is queued (409), so
+the form is read again (S09c2). A request id already queued returns its job.
+
 Source jobs (S09a2, D22) propose nothing. A source preparation awaits the
 choice of the teacher who prepared it: accepted or declined, once. A Curator
 job naming prepared sources is refused unless that teacher accepted them.
@@ -38,8 +42,12 @@ from services.api_common.auth import Principal
 from services.api_common.contexts import READ_ERRORS, WRITE_ERRORS, context_reader, context_writer, open_context
 from services.api_common.errors import stream_error_responses
 from services.api_common.registry import ApiModule
-from services.jobs.kinds import JobCommand, unaccepted_sources
+from services.jobs.kinds import AssessmentJob, JobCommand, TeacherJob, TrainerJob, unaccepted_sources
 from services.jobs.store import ENDED, JobRecord, JobStatus, JobStore, StatusEvent
+
+
+STALE_BASE = 'The course has changed since this form was read; reload it'
+GENERATORS = (AssessmentJob, TeacherJob, TrainerJob)
 
 
 class JobRequest(Record):
@@ -112,10 +120,14 @@ router = APIRouter(tags=['jobs'])
 def queue(context_id: str, body: JobRequest, request: Request, principal: Principal = Depends(context_writer)):
     with open_context(request, context_id) as service:
         service.authorize_jobs(context_id, principal.subject_key)
+        current = service.store.read_context(context_id).ref
     with _jobs(request) as jobs:
         refused = unaccepted_sources(jobs, context_id, principal.subject_key, body.job)
         if refused is not None:
             raise HTTPException(409, refused)
+        if (isinstance(body.job, GENERATORS) and body.job.command.base_context != current
+                and jobs.get(context_id, body.request_id) is None):
+            raise HTTPException(409, STALE_BASE)
         job, _ = jobs.submit(context_id, body.request_id, principal.subject_key, body.job.kind,
                              body.job.model_dump(mode='json'))
     return _view(job)

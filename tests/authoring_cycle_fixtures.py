@@ -13,7 +13,7 @@ from types import SimpleNamespace
 
 from aimpro.audit import DEFAULT_PROJECT
 from learning.authoring import ArtifactSelection, review_receipt
-from learning.projects import ProjectInitialization, ProjectRevision
+from learning.projects import CompletionRules, ProjectInitialization, ProjectRevision
 from learning.releases import BindingSelection, DeliveryImport, ReleaseCommand
 from learning.context import LearningRequest
 from learning.contracts import EntityRef, entity_data, make_entity
@@ -266,48 +266,21 @@ class ProductionAuthoring(SimulatedAuthoring):
         return proposal
 
     def configure_completion(self, version='1'):
-        """Author explicit completion rules in a reviewed project revision.
+        """Propose and apply the completion rules with the production command (S09c2).
 
         Generators never infer completion rules, so a frozen release can only carry
-        them through an explicit operator revision of the composite design.
+        them through an explicit, reviewed revision of the composite design.
         """
-        view = self.service.inspect_authoring_project(AUTH, 'admin', 'synthetic-course')
-        trainer = next(a for a in view.manifest.artifacts if a.kind == 'TRAINER_CONTENT')
-        context = self.context()
-        tag = 'completion-' + version
-        artifact = context.snapshot.get(trainer.resource).model_copy(update={'version': tag})
-        definitions = [context.snapshot.get(r) for r in trainer.definitions]
-        design = context.snapshot.get(view.manifest.design)
-        phase = context.snapshot.get(design.fields['root'])
-        def rule(node, children):
-            return entity('RuleDefinition', 'course:completion:' + node.id, {
-                'purpose': 'Complete this process node only when every direct child is COMPLETED.',
-                'inputs': [r['id'] for r in children], 'condition': 'Every direct child status equals COMPLETED.',
-                'outcome': 'Process completion only; no acquisition, grade or verification.',
-                'unknownBehavior': 'Missing statuses remain UNKNOWN.',
-                'approvalRequirement': 'Explicit human-reviewed configuration'}, tag)
-        rules, units = [], []
-        for unit_ref in phase.fields['children']:
-            unit = context.snapshot.get(unit_ref)
-            rules.append(rule(unit, unit.fields['activities']))
-            units.append(entity('ProcessNode', unit.id, {**unit.fields, 'completionRule': ref(rules[-1])}, tag))
-        rules.append(rule(phase, phase.fields['children']))
-        phase = entity('ProcessNode', phase.id, {**phase.fields, 'children': [ref(u) for u in units],
-                                                  'completionRule': ref(rules[-1])}, tag)
-        design = entity('LearningDesign', design.id, {**design.fields, 'root': ref(phase)}, tag)
-        result = self.service.revise_authoring_project(AUTH, 'admin', ProjectRevision(
-            project=self.project.ref, base_context=self.service.store.read_context(AUTH).ref, design=design.ref,
-            artifacts=(trainer.model_copy(update={'resource': artifact.ref}),),
-            candidates=(artifact, *definitions, *rules, *units, phase, design),
-            explanation='Explicit reviewed completion rules for the composite design; generated content unchanged.'),
+        result = self.service.propose_completion_rules(AUTH, 'admin', CompletionRules(
+            project=self.project.ref, base_context=self.service.store.read_context(AUTH).ref),
             request_id='completion-' + version)
         proposal = self.service.store.read(result.proposal, owner=AUTH)
         saved = proposal_candidates(self.service.store, proposal)
         self.review_and_apply(AUTH, proposal, 'completion-' + version)
         self.project = next(c for c in saved if c.ref == result.project)
         self.domain = next(c for c in saved if c.ref == result.domain)
-        self.design = design
-        self.rules = rules
+        self.design = next(c for c in saved if c.ref == result.design)
+        self.rules = [c for c in saved if c.type == 'RuleDefinition']
         return proposal
 
     def selections(self, release, scope, omit=()):
@@ -327,7 +300,7 @@ class ProductionAuthoring(SimulatedAuthoring):
         service = service or self.service
         scope = scope or context_id + ':' + request_id
         view = self.service.inspect_release(AUTH, 'admin', release.ref)
-        rules = [r for r in view.closure if r.type == 'RuleDefinition' and r.id.startswith('course:completion:')]
+        rules = [r for r in view.closure if r.type == 'RuleDefinition' and r.id.startswith('completion-rule:')]
         command = DeliveryImport(release=release.ref, authoring_context=AUTH,
             base_context=service.store.read_context(context_id).ref, scope_name=scope,
             bindings=self.selections(release, scope, omit),

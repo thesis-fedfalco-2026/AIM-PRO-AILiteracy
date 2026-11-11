@@ -134,6 +134,26 @@ class JobsApiTest(ReviewApiCase):
         self.refused(self.queue('job-1', teacher), 409, 'conflict')
         self.assertEqual(self.jobs.get(AUTH, 'job-1').command, self.evaluator())
 
+    # Acceptance (S09c2): a generator command on a base that is no longer current is refused when it is queued.
+    def test_a_generator_job_on_a_stale_base_is_refused_at_queue_time(self):
+        stale = self.evaluator()
+        queued = self.job(self.queue('job-1', stale))
+        self.worker.run_once()
+        proposal = EntityRef.model_validate(self.job(self.staff.get(f'/contexts/{AUTH}/jobs/job-1'))['proposal_refs'][0])
+        key = next(item['review_payload_key'] for item in self.staff.get(f'/contexts/{AUTH}/pending-proposals').json()['proposals']
+                   if Entity.model_validate(item['proposal']).ref == proposal)
+        self.ok(self.decide(self.staff, AUTH, proposal, key))
+        self.ok(self.apply(self.staff, AUTH, proposal, 'apply-job-1'))
+        before = self.digests()
+        for kind in ('generate-project-assessments', 'generate-project-teacher', 'generate-project-trainer'):
+            with self.subTest(kind):
+                detail = self.refused(self.queue('job-2', {**stale, 'kind': kind}), 409, 'conflict')
+                self.assertEqual(detail, 'The course has changed since this form was read; reload it')
+                self.assertIsNone(self.jobs.get(AUTH, 'job-2'))
+        self.assertEqual(self.digests(), before)
+        # The job already queued under its request id is still returned: a retry is not a new command.
+        self.assertEqual(self.job(self.queue('job-1', stale))['request_id'], queued['request_id'])
+
     def test_queuing_needs_csrf_and_the_authority_to_propose(self):
         self.refused(self.queue('job-1', csrf=False), 403, 'forbidden')
         self.refused(self.queue('job-1', client=self.learner), 403, 'forbidden')

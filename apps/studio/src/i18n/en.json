@@ -178,7 +178,9 @@
         "constraintAdded": "Resource condition added: “{{value}}”",
         "constraintRemoved": "Resource condition removed: “{{value}}”",
         "requirementRequired": "A resource becomes required.",
-        "requirementOptional": "A resource becomes optional."
+        "requirementOptional": "A resource becomes optional.",
+        "newMaterial": "New material: “{{value}}”",
+        "material": "The text of the material “{{value}}” changes."
       },
       "students": {
         "heading": "What students would be asked to do",
@@ -218,7 +220,18 @@
         "show": "Show the technical details",
         "intro": "The exact records, their identifiers and a field-by-field comparison, for administrators. The decision covers exactly this payload."
       },
-      "titleSyllabus": "Proposed syllabus"
+      "titleSyllabus": "Proposed syllabus",
+      "titleTeacher": "Proposed teacher content",
+      "titleTrainer": "Proposed trainer content",
+      "titleCompletion": "Proposed completion rules",
+      "materials": {
+        "heading": "Material for students"
+      },
+      "completion": {
+        "heading": "When each part counts as completed",
+        "intro": "Each part of the course gets this rule. It records completion only, never a grade or a verified competence. The teaching content does not change.",
+        "rule": "{{kind}} “{{node}}”: {{rule}}"
+      }
     },
     "syllabus": {
       "loading": "Reading the syllabus…",
@@ -561,7 +574,7 @@
       "proposed": "The project is proposed and waits for your review.",
       "review": "Review the proposed project",
       "selected": "Project “{{project}}” is initialized.",
-      "next": "The studio ends here for now: assessments, materials and the release are prepared in later steps, not available in the studio yet."
+      "next": "Next, the steps below: the assessments, the teacher and trainer content, and the completion rules."
     },
     "reviews": {
       "summary": "How the review agent judged the Curator's drafts",
@@ -586,6 +599,52 @@
         "summary": "How the review agent judged the drafts of this job",
         "intro": "The review agent checks each draft of the assessments, teacher or trainer content against the approved syllabus and the cited excerpts. A draft it does not accept goes back to the generator, at most three drafts per job. Its assessments are its own words: model text, not a decision of the application or of a person."
       }
+    },
+    "generators": {
+      "loading": "Reading the project…",
+      "failed": "The project could not be read.",
+      "reload": "Read the project again",
+      "sends": "What this sends",
+      "project": "Project",
+      "base": "Course version",
+      "assessments": "Assessments it builds on",
+      "noAssessments": "None applied yet",
+      "version": "(version {{version}})",
+      "needsAssessments": "Apply the assessments of step 5 first: this content builds on them.",
+      "requirements": "Requirements (optional)",
+      "requirementsHint": "One per line, for example “Explain two prompting choices.” They are passed to the agent as they are.",
+      "stale": "The course has changed since this form was read. It has been read again: check what it sends and queue the job again.",
+      "staleContent": "Some content was made from an earlier version of what it depends on ({{targets}}). Generate it again before proposing the completion rules.",
+      "queued": "Waiting for the agent worker… If this does not change, the worker is not running.",
+      "running": "The agent is working… With a large model this takes several minutes. You can leave this page: the proposal will appear in the review inbox.",
+      "proposed": "The proposal is ready and waits for your review.",
+      "review": "Open the proposal for review",
+      "abandoned": "The job was abandoned by an administrator.",
+      "ended": "No proposal was made: {{detail}} Nothing was changed; you can queue the job again.",
+      "evaluator": {
+        "heading": "{{step}}. Assessments with the Evaluator",
+        "intro": "The Evaluator proposes the assessments and rubrics of the syllabus units. Nothing changes until you approve and apply them.",
+        "submit": "Ask the Evaluator"
+      },
+      "teacher": {
+        "heading": "{{step}}. Teacher content",
+        "intro": "The Teacher proposes the explanations, examples and other material of the units that explain, built on the applied assessments.",
+        "submit": "Ask the Teacher"
+      },
+      "trainer": {
+        "heading": "{{step}}. Trainer content",
+        "intro": "The Trainer proposes the practice material of the units that practise, built on the applied assessments.",
+        "submit": "Ask the Trainer"
+      }
+    },
+    "completion": {
+      "heading": "8. Completion rules",
+      "intro": "Every part of the course gets one rule: it is complete when every part directly inside it is complete. The rule records completion only, never a grade or a verified competence. The generated content does not change.",
+      "needsTrainer": "Apply the trainer content of step 7 first.",
+      "needsFresh": "Generate the content listed above again first: the rules are proposed on a project whose content is up to date.",
+      "submit": "Propose the completion rules",
+      "proposed": "The completion rules are proposed and wait for your review.",
+      "review": "Review the proposed completion rules"
     }
   }
 }
