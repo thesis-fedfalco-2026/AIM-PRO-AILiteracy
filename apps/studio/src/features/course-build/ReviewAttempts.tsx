@@ -22,6 +22,17 @@ export function attemptOutcome(attempt: Attempt): AttemptOutcome {
   return review.verdict === 'UNCERTAIN' ? 'uncertain' : 'rejected';
 }
 
+/** Which draft: of a block of units or of the assembled draft (S09d), or of the whole job before blocks. */
+function AttemptHeading({ attempt }: { attempt: Attempt }) {
+  const { t } = useTranslation();
+  const outcome = t(`build.reviews.outcome.${attemptOutcome(attempt)}`);
+  const block = 'block' in attempt ? attempt.block : undefined;
+  if ('reused' in attempt && attempt.reused) return <p>{t('build.reviews.reused', { block })}</p>;
+  if ('final' in attempt && attempt.final) return <p>{t('build.reviews.final', { outcome })}</p>;
+  if (block) return <p>{t('build.reviews.blockAttempt', { block, attempt: attempt.attempt, outcome })}</p>;
+  return <p>{t('build.reviews.attempt', { attempt: attempt.attempt, outcome })}</p>;
+}
+
 /** The review agent's checks of one draft, as a sentence. */
 function Flags({ review }: { review: NonNullable<Attempt['review']> }) {
   const { t } = useTranslation();
@@ -63,10 +74,9 @@ export function ReviewAttempts({ contextId, requestId, source = 'syllabus' }: {
   else {
     body = (
       <ol data-testid="review-attempts">
-        {attempts.map((attempt) => (
-          <li key={attempt.attempt}>
-            <p>{t('build.reviews.attempt', { attempt: attempt.attempt,
-              outcome: t(`build.reviews.outcome.${attemptOutcome(attempt)}`) })}</p>
+        {attempts.map((attempt, index) => (
+          <li key={index}>
+            <AttemptHeading attempt={attempt} />
             {attempt.review ? (
               <>
                 <Flags review={attempt.review} />

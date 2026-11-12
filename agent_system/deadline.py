@@ -16,8 +16,23 @@ from crewai.llms.hooks.base import BaseInterceptor
 _pending: ContextVar[tuple[httpx.Request, float]] = ContextVar("llm_request_deadline")
 
 
-def _expired(request: httpx.Request, seconds: float) -> httpx.ReadTimeout:
-    return httpx.ReadTimeout(f"LLM request exceeded its {seconds:g}s wall-clock deadline", request=request)
+class DeadlineExceeded(httpx.ReadTimeout):
+    """An LLM request that reached its wall-clock deadline; callers name it with their own fixed text."""
+
+
+def expired(request: httpx.Request, seconds: float) -> DeadlineExceeded:
+    return DeadlineExceeded(f"LLM request exceeded its {seconds:g}s wall-clock deadline", request=request)
+
+
+def reached(error: BaseException) -> bool:
+    """Whether ``error`` is, or was raised while handling, a request past its deadline (SDKs wrap it)."""
+    seen = set()
+    while error is not None and id(error) not in seen:
+        if isinstance(error, DeadlineExceeded):
+            return True
+        seen.add(id(error))
+        error = error.__cause__ or error.__context__
+    return False
 
 
 class _DeadlineStream(httpx.SyncByteStream):
@@ -27,7 +42,7 @@ class _DeadlineStream(httpx.SyncByteStream):
     def __iter__(self):
         for chunk in self._stream:
             if time.monotonic() > self._deadline:
-                raise _expired(self._request, self._seconds)
+                raise expired(self._request, self._seconds)
             yield chunk
 
     def close(self):
@@ -41,7 +56,7 @@ class _AsyncDeadlineStream(httpx.AsyncByteStream):
     async def __aiter__(self):
         async for chunk in self._stream:
             if time.monotonic() > self._deadline:
-                raise _expired(self._request, self._seconds)
+                raise expired(self._request, self._seconds)
             yield chunk
 
     async def aclose(self):

@@ -197,6 +197,26 @@
         "title": "AssessmentJob",
         "type": "object"
       },
+      "BlockProgress": {
+        "additionalProperties": false,
+        "description": "How many blocks of units a generator job has written (accepted or reused), of how many (S09d).",
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "written": {
+            "title": "Written",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "written",
+          "count"
+        ],
+        "title": "BlockProgress",
+        "type": "object"
+      },
       "CitedExcerpt": {
         "additionalProperties": false,
         "description": "An excerpt a unit may cite; ``purpose`` and ``limitations`` exist for prepared sources only.",
@@ -1116,13 +1136,25 @@
       },
       "GenerationAttempt": {
         "additionalProperties": false,
-        "description": "One generated draft and why it was or was not accepted: the review agent's verdict, or the check that refused it.\n\n``review.reason`` is model text: it is shown to the author as the review agent's assessment and never becomes an\nerror message, a log line or an event. ``check`` is the fixed text of a deterministic check.",
+        "description": "One generated draft and why it was or was not accepted: the review agent's verdict, or the check that refused it.\n\n``review.reason`` is model text: it is shown to the author as the review agent's assessment and never becomes an\nerror message, a log line or an event. ``check`` is the fixed text of a deterministic check.\n\n``block`` is the block of units the draft wrote, ``final`` the review of the assembled draft (S09d); ``reused`` a\nblock accepted by an earlier request over the same exact inputs. All three are omitted when unset, so attempts\nrecorded before S09d keep their exact shape.",
         "properties": {
           "attempt": {
             "maximum": 3.0,
             "minimum": 1.0,
             "title": "Attempt",
             "type": "integer"
+          },
+          "block": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Block"
           },
           "check": {
             "anyOf": [
@@ -1135,6 +1167,16 @@
               }
             ],
             "title": "Check"
+          },
+          "final": {
+            "default": false,
+            "title": "Final",
+            "type": "boolean"
+          },
+          "reused": {
+            "default": false,
+            "title": "Reused",
+            "type": "boolean"
           },
           "review": {
             "anyOf": [
@@ -1442,6 +1484,16 @@
         "additionalProperties": false,
         "description": "A job: its exact command, its status and, once ended, its pending proposal or the reason it ended.",
         "properties": {
+          "blocks": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BlockProgress"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "context_id": {
             "minLength": 1,
             "title": "Context Id",
@@ -3939,7 +3991,7 @@
   },
   "info": {
     "title": "ALM Authoring API",
-    "version": "0.10.0"
+    "version": "0.11.0"
   },
   "openapi": "3.1.0",
   "paths": {

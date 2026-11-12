@@ -311,7 +311,8 @@ class StructuredTeacherTest(unittest.TestCase):
         package = self.package(result)
         self.assertEqual(package.format_version, 1)
         self.assertNotIn('approved_review', package.inputs.inputs[0].model_dump())
-        self.assertEqual(self.models.calls, ['teaching-designer', 'LEAD_REVIEW'])
+        # The unstructured Teacher writes in blocks and its assembled draft is judged once more (S09d).
+        self.assertEqual(self.models.calls, ['teaching-designer', 'LEAD_REVIEW', 'LEAD_REVIEW'])
 
     def test_explicit_synthetic_application_can_feed_trainer_without_learning_activation(self):
         result = self.run_teacher()

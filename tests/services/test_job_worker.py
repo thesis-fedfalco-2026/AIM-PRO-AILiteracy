@@ -184,7 +184,8 @@ class RefusedJobTest(WorkerCase):
         self.submit('job-retried', evaluator_job(evaluator_command(self.location, self.seed.project)))
         done = self.worker.run_once()
         self.assertEqual(done.status, 'PROPOSED', done.detail)
-        self.assertEqual([a['attempt'] for a in self.request_result('job-retried')['attempts']], [1, 2])
+        self.assertEqual([(a['attempt'], a.get('block'), a.get('final', False))
+                          for a in self.request_result('job-retried')['attempts']], [(1, 1, False), (2, 1, False), (1, None, True)])
 
     def test_an_unexpected_error_fails_the_job_and_the_worker_goes_on(self):
         self.submit('job-broken', evaluator_job(evaluator_command(self.location, self.seed.project)))

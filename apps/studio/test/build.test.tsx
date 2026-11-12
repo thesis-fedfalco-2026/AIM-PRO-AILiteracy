@@ -440,6 +440,33 @@ describe('the review agent on the Evaluator, Teacher and Trainer drafts (S09c)',
     expect(attempts.getByText(`Draft 2: ${en.build.reviews.outcome.accepted}`)).toBeTruthy();
     expect(requests.some((request) => request.url.includes('syllabus-reviews'))).toBe(false);
   });
+
+  it('shows the blocks of units a job has written and the draft of each block (S09d)', async () => {
+    const blocks = { request_id: 'request-1', outcome: 'FAILURE', attempts: [
+      { attempt: 1, block: 1, reused: true, review: verdict(), check: null },
+      { attempt: 1, block: 2, review: verdict({ verdict: 'REJECT', content_complete: false, reason: 'Unit 14 lacks a rubric.' }),
+        check: null },
+      { attempt: 2, block: 2, review: verdict(), check: null },
+      { attempt: 1, final: true, review: verdict({ verdict: 'UNCERTAIN', reason: 'Units repeat across blocks.' }), check: null }] };
+    await renderStudio({
+      ...page(EMPTY),
+      'GET /contexts/new-course/jobs': [{ status: 200, body: { jobs: [
+        generator('generate-project-assessments', { status: 'FAILED', blocks: { written: 2, count: 4 } })] } }],
+      'GET /contexts/new-course/generation-reviews/request-1': [{ status: 200, body: blocks }],
+    }, '/studio/contexts/new-course/build');
+    const list = within(await screen.findByTestId('course-jobs'));
+    expect(list.getByText('Blocks of units written: 2 of 4')).toBeTruthy();
+    const details = list.getByText(en.build.reviews.generation.summary).closest('details')! as HTMLDetailsElement;
+    details.open = true;
+    fireEvent(details, new Event('toggle'));
+    const attempts = within(await screen.findByTestId('review-attempts'));
+    expect(attempts.getByText('Block 1: accepted in an earlier job over the same inputs, used again without a new draft'))
+      .toBeTruthy();
+    expect(attempts.getByText(`Block 2, draft 1: ${en.build.reviews.outcome.rejected}`)).toBeTruthy();
+    expect(attempts.getByText(`Block 2, draft 2: ${en.build.reviews.outcome.accepted}`)).toBeTruthy();
+    expect(attempts.getByText(`The assembled draft of every block: ${en.build.reviews.outcome.uncertain}`)).toBeTruthy();
+    expect(attempts.getByText("The review agent's assessment (model text): “Units repeat across blocks.”")).toBeTruthy();
+  });
 });
 
 describe('the Evaluator, Teacher and Trainer forms and the completion rules (S09c2)', () => {

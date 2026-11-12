@@ -404,6 +404,7 @@
       "reload": "Reload the list",
       "item": "{{kind}}: {{status}} (started {{created}})",
       "detail": "Reason: {{detail}}",
+      "blocks": "Blocks of units written: {{written}} of {{count}}",
       "review": "Review the proposal",
       "pick": "Pick excerpts from this search",
       "choose": "Review and choose these sources",
@@ -583,6 +584,9 @@
       "failed": "The assessments could not be read.",
       "none": "No draft of this job reached the checks or the review agent.",
       "attempt": "Draft {{attempt}}: {{outcome}}",
+      "blockAttempt": "Block {{block}}, draft {{attempt}}: {{outcome}}",
+      "final": "The assembled draft of every block: {{outcome}}",
+      "reused": "Block {{block}}: accepted in an earlier job over the same inputs, used again without a new draft",
       "outcome": {
         "accepted": "accepted by the review agent",
         "rejected": "not accepted by the review agent",
@@ -597,7 +601,7 @@
       "check": "Reason: {{check}}",
       "generation": {
         "summary": "How the review agent judged the drafts of this job",
-        "intro": "The review agent checks each draft of the assessments, teacher or trainer content against the approved syllabus and the cited excerpts. A draft it does not accept goes back to the generator, at most three drafts per job. Its assessments are its own words: model text, not a decision of the application or of a person."
+        "intro": "The generator writes the assessments, teacher or trainer content in blocks of up to 12 units. The review agent checks each draft of a block against the approved syllabus and the cited excerpts; a draft it does not accept goes back to the generator, at most three drafts per block. It then judges the draft assembled from every block once. Its assessments are its own words: model text, not a decision of the application or of a person."
       }
     },
     "generators": {
