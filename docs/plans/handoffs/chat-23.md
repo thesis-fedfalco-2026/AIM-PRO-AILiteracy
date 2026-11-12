@@ -146,4 +146,51 @@ Still open from the roadmap: D19, D21, D25, D28, D29, D31–D33, G7 / D4.
 status; a teacher view in words for project initialization, release and delivery import, and for proposals that are
 no longer pending, with a browser test on each seeded proposal kind and axe.
 
-<!-- PR AND LIVE RUN -->
+## PR and CI
+
+PR [#119](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/pull/119), commit `e631bee` (the change and
+this handoff), then this record. CI on `e631bee`, push run
+[43184892421](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/actions/runs/43184892421) and pull_request
+run [43184901818](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/actions/runs/43184901818): all 7 jobs of
+each passed, `browser` included (`generation.spec.ts`: "Blocks of units written: 1 of 1", block 1 refused once, then
+accepted, the assembled draft accepted) and `store-backends`.
+
+## Live measurement on antonio-lpo (after CI)
+
+**Authorization** (owner, 12 November 2026, decision 10): one Evaluator job on a copy of `antonio-lpo`, CLI,
+`LANGFUSE_ENABLED=false`, the configured model, at most 25 model calls, stopping at the first failure. Setup:
+`/tmp/alm-demo/alm.sqlite` copied with `sqlite3 "file:…?mode=ro" ".backup …"` into the chat's scratchpad, with the
+policy `course-antonio-lpo-1.json`; context at `fac0368087f649219194faaf6130041e` (the state of the Chat 22 trial:
+project `main` applied, syllabus of 48 units, no requirement), subject `admin`, the configured `openrouter` profile
+(`nvidia/nemotron-3.5-super-vl:free`). The CLI ran through a wrapper that bound a content-free JSONL event log (the
+CLI has none). A first start failed at import (the wrapper was outside the repository and the repository was not
+on `PYTHONPATH`) before any request was reserved or model called; it is not counted. The demo stack was not
+touched.
+
+| Request | What happened | Model calls |
+| --- | --- | --- |
+| `live-evaluator-blocks-1`, 48 units = 4 blocks of 12 | **FAILURE after 872 s** (08:53:55–09:08:27 UTC) at block 1: draft 1 refused by the checks after 195 s ("Output must preserve exact syllabus unit coverage and ordering"), draft 2 after 267 s ("Citation is outside the exact supplied source/version/excerpts"), draft 3 after 410 s (coverage and ordering again); no draft reached the review agent; no block kept; the course copy unchanged | 3 (`assessment-designer`) |
+
+The job stopped at the first failure as agreed; 3 of 25 calls were used. The job detail is the fixed text of the last
+check; the three attempts carry `block: 1`; the events were three `review` (`PROJECT_CHECKS`, block 1) and one
+`block` (`NOT_ACCEPTED`). Token counts were not measured: the CLI does not record `provider.call` events.
+
+**What it shows.** Each block response fitted the 600 s deadline (195–410 s for 12 units, where one response for 48
+units had not finished in 600 s), so blocks remove the timeout of the trial. The drafts then failed the deterministic
+checks: two did not cover exactly the 12 units of the block in order, one cited an excerpt outside the supplied
+ones. Why is not known: the refused drafts are not kept (D32), and the check text names no unit, so the retry could
+not tell the model which units were wrong. A likely cause, not verified: the request carries the whole syllabus
+(`input.units`, 48 units) beside the 12 `target_units`.
+
+### Findings of the measurement (not changed)
+
+1. **The coverage check does not say which units are missing, extra or out of order**, for the generators as it did
+   for the Curator before issue #112 (where the citation check now names the units). A retry receives only the fixed
+   text. Naming the expected host unit keys (never the model's own keys) in the check is a possible change; an owner
+   decision.
+2. **The generator sees every unit of the syllabus.** Restricting `input` to the block's units, or saying more
+   plainly that only `target_units` are written, would change the prompt; an owner decision, measured live before
+   it is relied on.
+3. **The citation check of the generators does not name the offending items or excerpts**, and the generators do
+   not receive the citable excerpts as the Curator does since issue #112.
+4. **Token use of a block is not measured**: the CLI binds no provider event listener.
