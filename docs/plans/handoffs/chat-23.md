@@ -272,3 +272,27 @@ complete"); the guide, the event log and D34 (PR #120).
 
 6. **A later job starts again from blocks of 12 units.** Halves accepted by a job are kept and reused, but a new job
    first tries the whole block of 12 again, which may reach the deadline once more before it is split.
+
+## Third live measurement (13 November 2026)
+
+**Authorization**: the owner asked to try the last two changes live ("prova dal vivo le ultime 2 modifiche", 13
+November 2026): one Evaluator job under the terms of decision 10, at most about 40 calls (the bound of the halving
+rule), after CI on `9e46ae7` (push run 43415339432, pull_request run 43415347665: every job passed). A fresh read-only
+backup of `/tmp/alm-demo/alm.sqlite` (context `fac0368087f649219194faaf6130041e`), the same command and model,
+`[llm] timeout = 1200`.
+
+| Request | What happened | Model calls |
+| --- | --- | --- |
+| `live-evaluator-blocks-3`, 48 units = 4 blocks of 12 | **FAILURE after 1013 s** (11:28:47–11:45:40 UTC): the first `assessment-designer` call of block 1 ended with the provider's output length limit (`LengthFinishReasonError` of the OpenAI SDK: "the length limit was reached"), before the deadline; the job detail is the generic "Authoring generation did not complete; no accepted proposal was persisted."; no attempt, no event, no block kept, the course copy unchanged | 1 |
+
+Neither of the last two changes was exercised: the response was cut by the output limit, not by the deadline, and
+no draft reached the checks. No `max_tokens` is configured (`model.properties`, `categories/`), so the limit is the
+provider's or the model's default.
+
+### Findings of the third measurement (not changed)
+
+7. **A 12-unit Evaluator block can exceed the model's output limit.** A truncated response is not split as a
+   timed-out one is, and it stops the job at once. Treating an output cut by the length limit like a call past the
+   deadline (write the block in two halves) would keep the approach independent of the model; an owner decision.
+8. **The job detail does not say the response was cut**: `LengthFinishReasonError` is not a `ReviewError`, so only
+   its type reaches the log.
