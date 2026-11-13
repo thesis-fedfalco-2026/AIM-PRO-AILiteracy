@@ -216,3 +216,26 @@ makes a 48-unit Evaluator job pass is measured below (the owner asked to try aga
 | --- | --- |
 | `unittest discover -q`, telemetry off | 1094 tests, OK, 200 skipped (1092 before: 2 new tests) |
 | `python -m aimpro.generate --check`, `python -m services.api_common.openapi --check`, `git diff --check` | exit 0 (no API schema change) |
+
+## Second live measurement (13 November 2026)
+
+**Authorization**: the owner asked to try again ("riprova", 13 November 2026), read as one more Evaluator job under
+the terms of decision 10 (copy of `antonio-lpo`, CLI, `LANGFUSE_ENABLED=false`, at most 25 calls, stopping at the
+first failure), after CI on `5e1ddf4` (push run 43408933164 and pull_request run 43408941408: every job passed).
+A fresh read-only backup of `/tmp/alm-demo/alm.sqlite` (the context still at `fac0368087f649219194faaf6130041e`),
+the same command and model.
+
+| Request | What happened | Model calls |
+| --- | --- | --- |
+| `live-evaluator-blocks-2`, 48 units = 4 blocks of 12 | **FAILURE after 605 s** (10:38:26–10:48:31 UTC): the first `assessment-designer` call of block 1 reached the 600 s deadline while still writing; the job detail is "Authoring generation did not complete (A model call reached its time limit); no accepted proposal was persisted."; no attempt, no block kept, the course copy unchanged | 1 |
+
+The fixed timeout text works as intended (the job detail and the warning log carry it, not the provider's message).
+No content-free event was written: the call ended before any check or review. The coverage text of the change above
+was therefore not exercised live.
+
+### Finding of the second measurement (not changed)
+
+5. **The free model's time for one block varies widely.** The same 12-unit block took 195, 267 and 410 s in the first
+   measurement and over 600 s here. A block of 12 units does not reliably fit the deadline with
+   `nvidia/nemotron-3.5-super-vl:free`. Options for the owner, none decided: smaller blocks (a change of D34), a
+   longer `[llm] timeout` (`runtime.properties`, owner only), or another model (D33).
