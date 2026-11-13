@@ -151,6 +151,47 @@ class GenerationBlocksTest(unittest.TestCase):
         self.assertEqual([d.block.index for d in self.models.inputs[first:]], [1, 2, 2, 3, 4])
         self.assertEqual(blocks_of(result)[1], (2, 1, False, False, 'Material keys must be unique across blocks'))
 
+    def refuse_once(self, block, change):
+        """``change`` the first draft of ``block`` only."""
+        changed = []
+
+        def transform(data, draft):
+            if data.block.index != block or changed:
+                return draft
+            changed.append(block)
+            return draft.model_copy(update={'units': change(draft.units)})
+        self.models.transform = transform
+
+    def test_missing_and_unrequested_units_are_named_by_syllabus_position_and_their_keys_fed_back(self):
+        invented = None
+
+        def change(units):
+            nonlocal invented
+            invented = units[0].model_copy(update={'key': 'invented-unit'})
+            return (units[0], *units[3:], invented)
+        self.refuse_once(2, change)
+        result = self.run_generator()
+        self.assertEqual(result.kind, 'PROPOSAL')
+        check = ('The draft must cover each unit it was asked to write once, in the order of the syllabus: units 14 '
+                 'and 15 of the syllabus are missing; 1 unit it was not asked to write was added.')
+        self.assertEqual(blocks_of(result)[1], (2, 1, False, False, check))
+        # The model's own keys never reach the author; the retry receives the keys, as data.
+        retry = data_of(self.models.prompts[2])
+        self.assertEqual(retry['review_feedback'], {'check': check})
+        block = [u.key for u in self.models.inputs[1].target_units]
+        self.assertEqual(retry['check_details'], {'expected_unit_keys': block, 'missing_unit_keys': block[1:3],
+                                                  'unexpected_unit_keys': ['invented-unit']})
+
+    def test_repeated_and_reordered_units_are_refused_in_words(self):
+        self.refuse_once(1, lambda units: (*units, units[4]))
+        self.assertEqual(blocks_of(self.run_generator())[0][4], 'The draft must cover each unit it was asked to '
+                         'write once, in the order of the syllabus: 1 unit is written more than once.')
+        self.refuse_once(1, lambda units: tuple(reversed(units)))
+        command = self.command(requirements=('Another command.',))
+        self.assertEqual(blocks_of(self.run_generator(command=command, request_id='reordered'))[0][4],
+                         'The draft must cover each unit it was asked to write once, in the order of the syllabus: '
+                         'its units are not in the order of the syllabus.')
+
     def test_a_block_whose_drafts_run_out_fails_and_a_new_job_resumes_after_the_accepted_blocks(self):
         before = self.store.owned(AUTH, 'ChangeProposal')
         self.models.verdicts = [self.accept_verdict] + [GENERATION_REJECTION] * ATTEMPTS

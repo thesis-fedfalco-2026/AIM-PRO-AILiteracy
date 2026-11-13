@@ -194,3 +194,25 @@ not tell the model which units were wrong. A likely cause, not verified: the req
 3. **The citation check of the generators does not name the offending items or excerpts**, and the generators do
    not receive the citable excerpts as the Curator does since issue #112.
 4. **Token use of a block is not measured**: the CLI binds no provider event listener.
+
+### Owner decisions after the measurement (13 November 2026)
+
+1. **Finding 1: the coverage check names the units, in words the author can read**, since its text reaches the
+   author (the job detail and "How the review agent judged the drafts of this job"). Done in this PR (below).
+2. **Finding 2: the generator keeps receiving the whole syllabus.** No change.
+3. **The roadmap records S09d and its D-row**, in a separate documentation PR (below).
+
+Change, contract tests first (`test_missing_and_unrequested_units_are_named_by_syllabus_position_and_their_keys_fed_back`
+and `test_repeated_and_reordered_units_are_refused_in_words` failed with the former text until the change):
+`aimpro.generators._coverage` raises `CheckRefusal` (`aimpro.syllabus`, as the Curator's citation check since issue
+#112) with "The draft must cover each unit it was asked to write once, in the order of the syllabus: …" and the
+missing units by their position in the syllabus, the count of units it was not asked to write, of units written
+more than once, or "its units are not in the order of the syllabus"; never the draft's own keys. The retry receives
+`check_details` (`expected_unit_keys`, `missing_unit_keys`, `unexpected_unit_keys`) as data, and
+`PROJECT_AUTHORING_RETRY` says so. Findings 3 (the citation check names no item) and 4 stay open. Whether the change
+makes a 48-unit Evaluator job pass is measured below (the owner asked to try again, 13 November 2026).
+
+| Check (coverage text) | Result |
+| --- | --- |
+| `unittest discover -q`, telemetry off | 1094 tests, OK, 200 skipped (1092 before: 2 new tests) |
+| `python -m aimpro.generate --check`, `python -m services.api_common.openapi --check`, `git diff --check` | exit 0 (no API schema change) |

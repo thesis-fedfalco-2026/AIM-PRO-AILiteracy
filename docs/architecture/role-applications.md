@@ -987,6 +987,14 @@ Evaluator, Teacher and Trainer now write a request in several responses.
    `checked_draft` and is judged once by the review agent with the usual
    prompt, also when there is one block. One proposal per job, carrying that
    final `ACCEPT`, as before.
+   A draft that does not write each requested unit once, in syllabus order, is
+   refused in words the author can read, naming the units by their position in
+   the syllabus (owner decision of 13 November 2026), for example "The draft
+   must cover each unit it was asked to write once, in the order of the
+   syllabus: units 14 and 15 of the syllabus are missing; 1 unit it was not
+   asked to write was added."; the retry receives the expected, missing and
+   unexpected unit keys as `check_details` (data). The generator still receives
+   the whole syllabus.
 3. **A job that fails keeps its accepted blocks.** A block whose drafts run
    out, or a final review that is not `ACCEPT`, fails the job with no proposal
    and no automatic regeneration. Each accepted block is recorded once in the
