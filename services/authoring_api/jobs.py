@@ -94,8 +94,8 @@ def _blocks(jobs: JobStore, job: JobRecord) -> BlockProgress | None:
              if e.name == 'progress' and json.loads(e.data)['type'] == 'block']
     if not found:
         return None
-    written = {e['block'] for e in found if e['outcome'] in ('ACCEPTED', 'REUSED')}
-    return BlockProgress(written=len(written), count=found[-1]['blocks'])
+    written = sum(1 for e in found if e['outcome'] in ('ACCEPTED', 'REUSED', 'KEPT'))
+    return BlockProgress(written=written, count=found[-1]['blocks'])
 
 
 def _view(job: JobRecord, jobs: JobStore) -> JobView:

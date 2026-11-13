@@ -58,7 +58,7 @@ operator: do not encode personal data in them.
 | `step.finished` | `step_id`, `agent`, `role`, `status` (`SUCCEEDED`, `FAILED`, `SKIPPED`), `finding_codes`, `duration_ms` |
 | `final.checked` | `synthesis` (`lead`, or `pass_through` for a single accepted step delivered as is), `verdict` (final review; `null` for a pass-through), `proposed_kind`, `response_kind` (after the admissibility check), `application_status` (as proposed), `finding_codes`, `violations` (failed admissibility conditions: `review_not_accepted`, `proposal_kind`, `proposal_refs`, `state_change_refs`, `application_claim`, `citation_not_from_results`, `coverage_not_from_results`) |
 | `provider.call` | `agent` (CrewAI role), `model`, `status`, `call_type`, `input_tokens`, `output_tokens`, `duration_ms` |
-| `block` | A block of units of a project generator request (S09d): `role`, `block` (1-based), `blocks` (count), `outcome` (`ACCEPTED`, `REUSED`, `NOT_ACCEPTED`, `SPLIT`, `TIMED_OUT`) |
+| `block` | A block of units of a project generator request (S09d): `role`, `block` (1-based), `blocks` (count), `outcome` (`ACCEPTED`, `REUSED`, `KEPT`, `SPLIT`, `NOT_ACCEPTED`, `TIMED_OUT`, `CUT`) |
 | `run.finished` | `response_kind` (or `ERROR`), `error_type`, `duration_ms` |
 | `evaluation.config` | Evaluation only: model mode, `planning_mode`, source commit/dirty flag, implementation and configuration hashes when supplied by the CLI. |
 | `evaluation.injected` | Evaluation only: `component` (`plan`, `document`, `worker`, `synthesis`); emitted after an actual substitution, never its text. |

@@ -24,15 +24,25 @@ def expired(request: httpx.Request, seconds: float) -> DeadlineExceeded:
     return DeadlineExceeded(f"LLM request exceeded its {seconds:g}s wall-clock deadline", request=request)
 
 
-def reached(error: BaseException) -> bool:
-    """Whether ``error`` is, or was raised while handling, a request past its deadline (SDKs wrap it)."""
+def _caused_by(error: BaseException, kind) -> bool:
     seen = set()
     while error is not None and id(error) not in seen:
-        if isinstance(error, DeadlineExceeded):
+        if isinstance(error, kind):
             return True
         seen.add(id(error))
         error = error.__cause__ or error.__context__
     return False
+
+
+def reached(error: BaseException) -> bool:
+    """Whether ``error`` is, or was raised while handling, a request past its deadline (SDKs wrap it)."""
+    return _caused_by(error, DeadlineExceeded)
+
+
+def cut(error: BaseException) -> bool:
+    """Whether ``error`` comes from a response the provider cut at its output length limit."""
+    from openai import LengthFinishReasonError
+    return _caused_by(error, LengthFinishReasonError)
 
 
 class _DeadlineStream(httpx.SyncByteStream):

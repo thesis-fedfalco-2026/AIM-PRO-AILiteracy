@@ -944,8 +944,8 @@ export interface components {
          *     error message, a log line or an event. ``check`` is the fixed text of a deterministic check.
          *
          *     ``block`` is the block of units the draft wrote, ``final`` the review of the assembled draft (S09d); ``reused`` a
-         *     block accepted by an earlier request over the same exact inputs; ``timed_out`` a call that reached its deadline.
-         *     All four are omitted when unset, so attempts recorded before S09d keep their exact shape.
+         *     block accepted by an earlier request over the same exact inputs; ``timed_out`` a call that reached its deadline,
+         *     ``truncated`` a response cut at its length limit. All are omitted when unset, so attempts recorded before S09d keep their exact shape.
          */
         GenerationAttempt: {
             /** Attempt */
@@ -970,6 +970,11 @@ export interface components {
              * @default false
              */
             timed_out: boolean;
+            /**
+             * Truncated
+             * @default false
+             */
+            truncated: boolean;
         };
         /** GenerationCommand */
         "GenerationCommand-Input": {

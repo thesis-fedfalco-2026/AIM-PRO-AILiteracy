@@ -1136,7 +1136,7 @@
       },
       "GenerationAttempt": {
         "additionalProperties": false,
-        "description": "One generated draft and why it was or was not accepted: the review agent's verdict, or the check that refused it.\n\n``review.reason`` is model text: it is shown to the author as the review agent's assessment and never becomes an\nerror message, a log line or an event. ``check`` is the fixed text of a deterministic check.\n\n``block`` is the block of units the draft wrote, ``final`` the review of the assembled draft (S09d); ``reused`` a\nblock accepted by an earlier request over the same exact inputs; ``timed_out`` a call that reached its deadline.\nAll four are omitted when unset, so attempts recorded before S09d keep their exact shape.",
+        "description": "One generated draft and why it was or was not accepted: the review agent's verdict, or the check that refused it.\n\n``review.reason`` is model text: it is shown to the author as the review agent's assessment and never becomes an\nerror message, a log line or an event. ``check`` is the fixed text of a deterministic check.\n\n``block`` is the block of units the draft wrote, ``final`` the review of the assembled draft (S09d); ``reused`` a\nblock accepted by an earlier request over the same exact inputs; ``timed_out`` a call that reached its deadline,\n``truncated`` a response cut at its length limit. All are omitted when unset, so attempts recorded before S09d keep their exact shape.",
         "properties": {
           "attempt": {
             "maximum": 3.0,
@@ -1191,6 +1191,11 @@
           "timed_out": {
             "default": false,
             "title": "Timed Out",
+            "type": "boolean"
+          },
+          "truncated": {
+            "default": false,
+            "title": "Truncated",
             "type": "boolean"
           }
         },

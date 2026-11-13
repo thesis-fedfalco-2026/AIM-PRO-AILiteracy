@@ -449,6 +449,8 @@ describe('the review agent on the Evaluator, Teacher and Trainer drafts (S09c)',
       { attempt: 2, block: 2, review: verdict(), check: null },
       { attempt: 1, block: 3, timed_out: true, review: null,
         check: 'A model call reached its time limit; the units of this block are written in two smaller blocks' },
+      { attempt: 1, block: 4, truncated: true, review: null,
+        check: "The model's response was cut at its length limit; the units of this block are written in two smaller blocks" },
       { attempt: 1, final: true, review: verdict({ verdict: 'UNCERTAIN', reason: 'Units repeat across blocks.' }), check: null }] };
     await renderStudio({
       ...page(EMPTY),
@@ -467,6 +469,7 @@ describe('the review agent on the Evaluator, Teacher and Trainer drafts (S09c)',
     expect(attempts.getByText(`Block 2, draft 1: ${en.build.reviews.outcome.rejected}`)).toBeTruthy();
     expect(attempts.getByText(`Block 2, draft 2: ${en.build.reviews.outcome.accepted}`)).toBeTruthy();
     expect(attempts.getByText(`Block 3, draft 1: ${en.build.reviews.outcome.timedOut}`)).toBeTruthy();
+    expect(attempts.getByText(`Block 4, draft 1: ${en.build.reviews.outcome.truncated}`)).toBeTruthy();
     expect(attempts.getByText('Reason: A model call reached its time limit; the units of this block are written in two '
       + 'smaller blocks')).toBeTruthy();
     expect(attempts.getByText(`The assembled draft of every block: ${en.build.reviews.outcome.uncertain}`)).toBeTruthy();

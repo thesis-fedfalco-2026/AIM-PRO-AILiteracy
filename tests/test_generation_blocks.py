@@ -4,14 +4,17 @@ import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
+from types import SimpleNamespace
 from unittest.mock import Mock
 
 import httpx
+import openai
 
 from agent_system import events
 from agent_system.deadline import expired
 from aimpro.generation_state import GeneratedArtifact
-from aimpro.generators import ATTEMPTS, BLOCK_UNITS, SPLIT, TIMED_OUT, TIMEOUTS, GenerationInput
+from aimpro.generators import (ATTEMPTS, BLOCK_UNITS, CUT, CUT_SPLIT, NOT_ACCEPTED, SPLIT, TIMED_OUT,
+                               GenerationInput)
 from learning.metamodel import load_contract
 from learning.service import LearningService
 from learning.store import LearningStore
@@ -197,42 +200,71 @@ class GenerationBlocksTest(unittest.TestCase):
                          'The draft must cover each unit it was asked to write once, in the order of the syllabus: '
                          'its units are not in the order of the syllabus.')
 
-    def test_a_block_whose_drafts_run_out_fails_and_a_new_job_resumes_after_the_accepted_blocks(self):
-        before = self.store.owned(AUTH, 'ChangeProposal')
+    def test_a_block_the_review_agent_does_not_accept_is_kept_and_the_job_proposed_with_a_notice(self):
+        self.assertEqual(NOT_ACCEPTED, 'The review agent did not accept every block or the assembled draft; the last '
+                         'drafts that passed the checks are proposed with its assessments, for the teacher to decide.')
         self.models.verdicts = [self.accept_verdict] + [GENERATION_REJECTION] * ATTEMPTS
+        log = events.MemoryEventLog()
+        with events.run(log, request_id='assessment', context_id=AUTH):
+            result = self.run_generator()
+        # Owner decision of 13 November 2026: a flow ends with something for the teacher to decide.
+        self.assertEqual(result.kind, 'PROPOSAL')
+        self.assertEqual(result.notice, NOT_ACCEPTED)
+        self.assertEqual(blocks_of(result), [(1, 1, False, False, 'ACCEPT')] +
+                         [(2, n, False, False, 'REJECT') for n in range(1, ATTEMPTS + 1)] +
+                         [(3, 1, False, False, 'ACCEPT'), (4, 1, False, False, 'ACCEPT'), (None, 1, True, False, 'ACCEPT')])
+        self.assertEqual(self.models.calls, [DESIGNER, REVIEW] * (3 + ATTEMPTS) + [REVIEW])
+        progress = [(e.data['block'], e.data['outcome']) for e in log.events if e.type == 'block']
+        self.assertEqual(progress, [(1, 'ACCEPTED'), (2, 'KEPT'), (3, 'ACCEPTED'), (4, 'ACCEPTED')])
+        self.assertEqual(len(package_of(self.accept(result)).draft.units), 48)
+
+    def test_a_final_review_that_is_not_accept_is_proposed_with_a_notice(self):
+        self.models.verdicts = [self.accept_verdict] * 4 + [GENERATION_REJECTION]
+        result = self.run_generator()
+        self.assertEqual((result.kind, result.notice), ('PROPOSAL', NOT_ACCEPTED))
+        self.assertEqual(blocks_of(result)[-1], (None, 1, True, False, 'REJECT'))
+        # Every block was accepted and is reused by a new job over the same exact inputs.
+        calls = len(self.models.calls)
+        resumed = self.run_generator(request_id='assessment-again')
+        self.assertEqual(self.models.calls[calls:], [REVIEW])
+        self.assertEqual(blocks_of(resumed), [(n, 1, False, True, 'ACCEPT') for n in range(1, 5)] +
+                         [(None, 1, True, False, 'ACCEPT')])
+        self.assertIsNone(resumed.notice)
+        # The proposal keeps the review agent's verdict for the teacher.
+        self.assertEqual(package_of(self.accept(result)).review, GENERATION_REJECTION)
+
+    def test_a_block_whose_drafts_all_fail_the_checks_is_written_in_two_halves(self):
+        def invalid(data, draft):
+            if number(data) == 2 and len(data.block.unit_keys) == BLOCK_UNITS:
+                return draft.model_copy(update={'input_digest': 'invented'})
+            return draft
+        self.models.transform = invalid
+        result = self.run_generator()
+        self.assertEqual((result.kind, result.notice), ('PROPOSAL', None))
+        self.assertEqual(self.models.calls, [DESIGNER, REVIEW] + [DESIGNER] * ATTEMPTS + [DESIGNER, REVIEW] * 4 + [REVIEW])
+        self.assertEqual([len(d.block.unit_keys) for d in self.models.inputs], [12, 12, 12, 12, 6, 6, 12, 12])
+
+    def test_a_block_of_one_unit_whose_drafts_fail_the_checks_fails_the_job_and_a_new_job_resumes(self):
+        before = self.store.owned(AUTH, 'ChangeProposal')
+        self.models.transform = lambda data, draft: (draft.model_copy(update={'input_digest': 'invented'})
+                                                     if number(data) == 2 else draft)
         result = self.run_generator()
         self.assertEqual(result.kind, 'FAILURE')
-        self.assertEqual(result.content, 'Authoring generation did not complete (Authoring output did not pass '
-                         'separate Lead review); no accepted proposal was persisted.')
-        self.assertEqual(blocks_of(result), [(1, 1, False, False, 'ACCEPT')] +
-                         [(2, n, False, False, 'REJECT') for n in range(1, ATTEMPTS + 1)])
-        self.assertEqual(self.models.calls, [DESIGNER, REVIEW] * (1 + ATTEMPTS))
+        self.assertEqual(result.content, 'Authoring generation did not complete (Generated output does not identify '
+                         'the exact host input snapshot); no accepted proposal was persisted.')
+        # Block 2 of 12 units, then halves of 6, 3, 2 and 1: three drafts each.
+        sizes = [len(d.block.unit_keys) for d in self.models.inputs[1:]]
+        self.assertEqual(sizes, [n for n in (12, 6, 3, 2, 1) for _ in range(ATTEMPTS)])
         self.assertEqual(self.store.owned(AUTH, 'ChangeProposal'), before)
-        self.assertEqual(self.service.project_generation_request(AUTH, 'admin', 'assessment'), result)
-        # A new job with the same command on the same exact inputs reuses block 1 without a model call.
+        self.models.transform = None
         calls = len(self.models.calls)
         resumed = self.run_generator(request_id='assessment-again')
         self.assertEqual(resumed.kind, 'PROPOSAL')
         self.assertEqual(self.models.calls[calls:], [DESIGNER, REVIEW] * 3 + [REVIEW])
-        self.assertEqual([number(d) for d in self.models.inputs[-3:]], [2, 3, 4])
         self.assertEqual(blocks_of(resumed)[0], (1, 1, False, True, 'ACCEPT'))
-        self.assertEqual(len(package_of(self.accept(resumed)).draft.units), 48)
-
-    def test_a_final_review_that_is_not_accept_fails_and_a_new_job_reuses_every_block(self):
-        self.models.verdicts = [self.accept_verdict] * 4 + [GENERATION_REJECTION]
-        result = self.run_generator()
-        self.assertEqual(result.kind, 'FAILURE')
-        self.assertEqual(blocks_of(result)[-1], (None, 1, True, False, 'REJECT'))
-        calls = len(self.models.calls)
-        resumed = self.run_generator(request_id='assessment-again')
-        self.assertEqual(resumed.kind, 'PROPOSAL')
-        self.assertEqual(self.models.calls[calls:], [REVIEW])
-        self.assertEqual(blocks_of(resumed), [(n, 1, False, True, 'ACCEPT') for n in range(1, 5)] +
-                         [(None, 1, True, False, 'ACCEPT')])
 
     def test_blocks_are_reused_only_over_the_same_exact_inputs(self):
-        self.models.verdicts = [self.accept_verdict] * 4 + [GENERATION_REJECTION]
-        self.assertEqual(self.run_generator().kind, 'FAILURE')
+        self.assertEqual(self.run_generator().kind, 'PROPOSAL')
         calls = len(self.models.calls)
         other = self.command(requirements=('Prefer case analyses.',))
         self.assertEqual(self.run_generator(command=other, request_id='other').kind, 'PROPOSAL')
@@ -276,8 +308,7 @@ class GenerationBlocksTest(unittest.TestCase):
         self.assertEqual(progress, [(1, 4, 'ACCEPTED'), (2, 4, 'SPLIT')] + [(n, 5, 'ACCEPTED') for n in range(2, 6)])
         self.assertEqual(len(package_of(self.accept(result)).draft.units), 48)
 
-    def test_a_request_stops_at_its_third_call_past_the_deadline_and_keeps_the_accepted_blocks(self):
-        self.assertEqual(TIMEOUTS, 3)
+    def test_a_block_of_one_unit_past_the_deadline_stops_the_request_and_keeps_the_accepted_blocks(self):
         sizes = self.time_out(lambda data: number(data) == 2)
         with self.assertLogs('agent_system', 'WARNING') as logs:
             result = self.run_generator()
@@ -286,15 +317,45 @@ class GenerationBlocksTest(unittest.TestCase):
         self.assertEqual(result.content, 'Authoring generation did not complete (A model call reached its time '
                          'limit); no accepted proposal was persisted.')
         self.assertNotIn('provider text', '\n'.join(logs.output))
-        # Block 2 of 12 units, then its first half of 6, then that half's first half of 3.
-        self.assertEqual(sizes, [12, 12, 6, 3])
-        self.assertEqual(blocks_of(result), [(1, 1, False, False, 'ACCEPT'), (2, 1, False, False, SPLIT),
-                                             (2, 1, False, False, SPLIT), (2, 1, False, False, TIMED_OUT)])
-        self.assertEqual([a.timed_out for a in result.attempts], [False, True, True, True])
+        # Block 2 of 12 units, then the first half each time: 6, 3, 2 and 1.
+        self.assertEqual(sizes, [12, 12, 6, 3, 2, 1])
+        self.assertEqual(blocks_of(result), [(1, 1, False, False, 'ACCEPT')] + [(2, 1, False, False, SPLIT)] * 4 +
+                         [(2, 1, False, False, TIMED_OUT)])
+        self.assertEqual([a.timed_out for a in result.attempts], [False] + [True] * 5)
         self.models.transform = None
         calls = len(self.models.calls)
         self.assertEqual(self.run_generator(request_id='assessment-again').kind, 'PROPOSAL')
         self.assertEqual(self.models.calls[calls:], [DESIGNER, REVIEW] * 3 + [REVIEW])
+
+    def test_a_response_cut_at_its_length_limit_is_written_in_two_halves(self):
+        self.assertEqual(CUT, "The model's response was cut at its length limit")
+        self.assertEqual(CUT_SPLIT, CUT + '; the units of this block are written in two smaller blocks')
+        cut = []
+
+        def transform(data, draft):
+            if number(data) == 1 and len(data.block.unit_keys) == BLOCK_UNITS and not cut:
+                cut.append(data)
+                raise RuntimeError('provider text') from openai.LengthFinishReasonError(
+                    completion=SimpleNamespace(usage=None))
+            return draft
+        self.models.transform = transform
+        result = self.run_generator()
+        self.assertEqual(result.kind, 'PROPOSAL')
+        self.assertEqual(blocks_of(result)[:3], [(1, 1, False, False, CUT_SPLIT), (1, 1, False, False, 'ACCEPT'),
+                                                 (2, 1, False, False, 'ACCEPT')])
+        self.assertTrue(result.attempts[0].truncated)
+        self.assertEqual([len(d.block.unit_keys) for d in self.models.inputs], [12, 6, 6, 12, 12, 12])
+
+    def test_a_block_of_one_unit_cut_at_its_length_limit_stops_the_request(self):
+        def transform(data, draft):
+            raise RuntimeError('provider text') from openai.LengthFinishReasonError(completion=SimpleNamespace(usage=None))
+        self.models.transform = transform
+        with self.assertLogs('agent_system', 'WARNING') as logs:
+            result = self.run_generator()
+        self.assertEqual(result.content, "Authoring generation did not complete (The model's response was cut at its "
+                         "length limit); no accepted proposal was persisted.")
+        self.assertNotIn('provider text', '\n'.join(logs.output))
+        self.assertEqual([len(d.block.unit_keys) for d in self.models.inputs], [12, 6, 3, 2, 1])
 
 
 class SmallSyllabusBlockTest(unittest.TestCase):

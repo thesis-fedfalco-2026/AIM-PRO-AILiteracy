@@ -592,7 +592,8 @@
         "rejected": "not accepted by the review agent",
         "uncertain": "the review agent was uncertain, so it was not accepted",
         "checks": "refused by the application's checks before the review agent saw it",
-        "timedOut": "its model call reached the time limit before the draft was complete"
+        "timedOut": "its model call reached the time limit before the draft was complete",
+        "truncated": "the model's response was cut at its length limit before the draft was complete"
       },
       "flags": "Fits the course model and its sources: {{alignment}}. Citations support the claims: {{citations}}.",
       "generationFlags": "Fits the approved syllabus and its sources: {{alignment}}. Citations support the claims: {{citations}}. Right intent (explain, practice or assess): {{intent}}. Content complete: {{complete}}.",

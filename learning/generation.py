@@ -4,7 +4,7 @@ import hashlib
 import json
 import logging
 
-from aimpro.generators import (CONTRACTS, DISPATCH, ArtifactInput, GenerationAttempt, GenerationCommand,
+from aimpro.generators import (CONTRACTS, DISPATCH, NOT_ACCEPTED, ArtifactInput, GenerationAttempt, GenerationCommand,
     GenerationInput, GenerationResult, UnitInput, generate)
 from aimpro.lead import ReviewError
 from aimpro.syllabus_state import resolve_artifact
@@ -171,9 +171,11 @@ def generate_project(service, context_id, subject_key, role, command, *, request
     attempts = ()
     try:
         dispatcher, lead, budget = authoring_factory()
-        draft, verdict, attempts = generate(data, dispatcher=dispatcher, lead=lead, max_context_chars=budget,
+        draft, verdict, attempts, accepted = generate(data, dispatcher=dispatcher, lead=lead, max_context_chars=budget,
                                             recorded_text=None if recorded is None else recorded.text,
                                             kept=KeptBlocks(service.store, context_id, subject_key))
+        if not accepted:
+            logging.getLogger('agent_system').warning('Generated content proposed without the review agent\'s acceptance')
         from aimpro.generation_state import revision
         bundle = revision(context, manifest, data, draft, verdict)
         with service.store.write_transaction():
@@ -189,7 +191,8 @@ def generate_project(service, context_id, subject_key, role, command, *, request
             current, selected, candidates = _revision_manifest(service.store, current, bundle)
             proposed = _persist(service, current, selected, candidates, bundle.explanation)
             result = GenerationResult(kind='PROPOSAL', content='Authoring output awaits explicit human review and application.',
-                proposal_refs=(proposed.proposal,), application_status='pending', attempts=attempts)
+                proposal_refs=(proposed.proposal,), application_status='pending', attempts=attempts,
+                notice=None if accepted else NOT_ACCEPTED)
             service.store.finish_request(request_id, context_id, result.model_dump(mode='json'))
         return result
     except Exception as error:

@@ -22,6 +22,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from agent_system import events
+from aimpro.generators import NOT_ACCEPTED as GENERATION_NOT_ACCEPTED
 from aimpro.syllabus_refinement import NO_REQUEST
 from aimpro.syllabus_state import NOT_ACCEPTED
 from learning.contracts import EntityRef, Record
@@ -160,24 +161,33 @@ class RefusedJobTest(WorkerCase):
         self.submit('job-unknown', {'kind': 'generate-everything'})
         self.assertEqual(self.worker.run_once().detail, 'Unknown job kind')
 
-    def test_generation_that_does_not_complete_fails_without_a_proposal(self):
+    def test_generation_the_review_agent_never_accepts_is_proposed_with_the_notice_as_detail(self):
+        # Owner decision of 13 November 2026 (S09d): a flow ends with something for the teacher to decide.
         self.agents.models.verdict = GENERATION_REJECTION
+        self.submit('job-not-accepted', evaluator_job(evaluator_command(self.location, self.seed.project)))
+        done = self.worker.run_once()
+        self.assertEqual((done.status, done.detail), ('PROPOSED', GENERATION_NOT_ACCEPTED))
+        result = self.request_result('job-not-accepted')
+        # S09c (D30): every draft's verdict is kept with the result; the events carry no reason.
+        self.assertEqual([a['review'] for a in result['attempts']], [GENERATION_REJECTION.model_dump(mode='json')] * 4)
+        reviews = [json.loads(e.data)['data'] for e in self.jobs.events(AUTH, 'job-not-accepted')
+                   if e.name == 'progress' and json.loads(e.data)['type'] == 'review']
+        self.assertEqual([(r['stage'], r['attempt'], r['verdict']) for r in reviews],
+                         [('PROJECT', n, 'REJECT') for n in (1, 2, 3)] + [('PROJECT_FINAL', 1, 'REJECT')])
+        stored = json.dumps([e.data for e in self.jobs.events(AUTH, 'job-not-accepted')]) + done.model_dump_json()
+        self.assertNotIn(GENERATION_REJECTION.reason, stored)
+
+    def test_generation_that_does_not_complete_fails_without_a_proposal(self):
+        self.agents.models.transform = lambda data, draft: draft.model_copy(update={'input_digest': 'invented'})
         before = self.pending()
         self.submit('job-failed', evaluator_job(evaluator_command(self.location, self.seed.project)))
         done = self.worker.run_once()
         self.assertEqual(done.status, 'FAILED')
-        self.assertEqual(done.detail, 'Authoring generation did not complete (Authoring output did not pass separate '
-                                      'Lead review); no accepted proposal was persisted.')
+        self.assertEqual(done.detail, 'Authoring generation did not complete (Generated output does not identify the '
+                                      'exact host input snapshot); no accepted proposal was persisted.')
         self.assertEqual((done.proposal_refs, self.pending()), ((), before))
-        result = self.request_result('job-failed')
-        self.assertEqual(result['kind'], 'FAILURE')
-        # S09c (D30): every draft's verdict is kept with the result; the events carry no reason.
-        self.assertEqual([a['review'] for a in result['attempts']], [GENERATION_REJECTION.model_dump(mode='json')] * 3)
-        reviews = [json.loads(e.data)['data'] for e in self.jobs.events(AUTH, 'job-failed')
-                   if e.name == 'progress' and json.loads(e.data)['type'] == 'review']
-        self.assertEqual([(r['attempt'], r['verdict']) for r in reviews], [(1, 'REJECT'), (2, 'REJECT'), (3, 'REJECT')])
-        stored = json.dumps([e.data for e in self.jobs.events(AUTH, 'job-failed')]) + done.model_dump_json()
-        self.assertNotIn(GENERATION_REJECTION.reason, stored)
+        self.assertEqual([a['check'] for a in self.request_result('job-failed')['attempts']],
+                         ['Generated output does not identify the exact host input snapshot'] * 3)
 
     def test_a_draft_refused_once_is_proposed_on_the_next_attempt(self):
         self.agents.models.verdicts.append(GENERATION_REJECTION)

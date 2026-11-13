@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import type { GenerationAttempt, SyllabusAttempt } from './buildApi';
 import { useBuildServices } from './BuildServices';
 
-export type AttemptOutcome = 'accepted' | 'rejected' | 'uncertain' | 'checks' | 'timedOut';
+export type AttemptOutcome = 'accepted' | 'rejected' | 'uncertain' | 'checks' | 'timedOut' | 'truncated';
 
 /** Whose drafts: the Curator's syllabus (Chat 20), or the Evaluator's, Teacher's or Trainer's content (S09c). */
 export type AttemptSource = 'syllabus' | 'generation';
@@ -16,6 +16,7 @@ type Attempt = SyllabusAttempt | GenerationAttempt;
 /** How one draft ended: accepted only with an ACCEPT verdict and every check of the review agent passed. */
 export function attemptOutcome(attempt: Attempt): AttemptOutcome {
   if ('timed_out' in attempt && attempt.timed_out) return 'timedOut';
+  if ('truncated' in attempt && attempt.truncated) return 'truncated';
   const review = attempt.review;
   if (!review) return 'checks';
   const passed = Object.values(review).every((value) => value !== false);

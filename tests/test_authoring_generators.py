@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch
 
 from agent_system import events
 from aimpro.generation_state import GeneratedArtifact
-from aimpro.generators import (ATTEMPTS, AssessmentStimulus, GenerationCommand, GenerationInput,
+from aimpro.generators import (ATTEMPTS, NOT_ACCEPTED, AssessmentStimulus, GenerationCommand, GenerationInput,
                                StimulusRequirement, generate)
 from learning.__main__ import main
 from learning.authoring import ProjectManifest
@@ -210,18 +210,21 @@ class AuthoringGeneratorTest(unittest.TestCase):
         self.factory.assert_not_called()
         self.assertEqual(self.store.db.total_changes, before)
 
-    def test_rejection_uncertainty_false_flags_and_wrong_review_type_leave_no_proposal(self):
-        before = self.store.owned(AUTH, 'ChangeProposal')
+    def test_rejection_uncertainty_and_false_flags_are_proposed_with_a_notice_but_a_wrong_review_type_is_not(self):
+        # Owner decision of 13 November 2026 (S09d): a flow ends with something for the teacher to decide.
+        before = len(self.store.owned(AUTH, 'ChangeProposal'))
         for i, fields in enumerate(({'verdict': 'REJECT'}, {'verdict': 'UNCERTAIN'},
             {'source_alignment': False}, {'citation_support': False},
             {'intent_correct': False}, {'content_complete': False})):
             original = self.models.verdict
             self.models.verdict = original.model_copy(update=fields)
-            self.assertEqual(self.run_generator(request_id='review-' + str(i)).kind, 'FAILURE')
+            result = self.run_generator(request_id='review-' + str(i))
+            self.assertEqual((result.kind, result.notice), ('PROPOSAL', NOT_ACCEPTED))
             self.models.verdict = original
+        self.assertEqual(len(self.store.owned(AUTH, 'ChangeProposal')), before + 6)
         self.models.verdict = self.author.initial_receipt.artifact.review
         self.assertEqual(self.run_generator(request_id='wrong-review').kind, 'FAILURE')
-        self.assertEqual(self.store.owned(AUTH, 'ChangeProposal'), before)
+        self.assertEqual(len(self.store.owned(AUTH, 'ChangeProposal')), before + 6)
 
     def test_a_draft_refused_by_the_review_agent_is_retried_with_its_feedback(self):
         self.models.verdicts = [GENERATION_REJECTION]
@@ -252,19 +255,19 @@ class AuthoringGeneratorTest(unittest.TestCase):
             if e.type == 'Resource' and e.id.startswith('authoring-output:')).fields['contentOrLocator'])
         self.assertEqual(package.review, self.models.verdict)
 
-    def test_drafts_refused_at_every_attempt_fail_with_every_verdict_kept(self):
+    def test_drafts_refused_at_every_attempt_are_proposed_with_every_verdict_kept_and_a_notice(self):
         self.models.verdict = GENERATION_REJECTION
-        before = self.store.owned(AUTH, 'ChangeProposal')
+        before = len(self.store.owned(AUTH, 'ChangeProposal'))
         with self.assertLogs('agent_system', 'WARNING') as logs:
             result = self.run_generator()
-        self.assertEqual(result.kind, 'FAILURE')
-        self.assertEqual(result.content, 'Authoring generation did not complete (Authoring output did not pass '
-                         'separate Lead review); no accepted proposal was persisted.')
-        self.assertEqual([(a.attempt, a.review) for a in result.attempts],
-                         [(n, GENERATION_REJECTION) for n in range(1, ATTEMPTS + 1)])
-        self.assertEqual(self.models.calls, ['assessment-designer', 'LEAD_REVIEW'] * ATTEMPTS)
+        # The last draft that passed the checks is proposed for the teacher to decide (S09d).
+        self.assertEqual((result.kind, result.notice), ('PROPOSAL', NOT_ACCEPTED))
+        self.assertEqual([(a.attempt, a.review, a.final) for a in result.attempts],
+                         [(n, GENERATION_REJECTION, False) for n in range(1, ATTEMPTS + 1)] +
+                         [(1, GENERATION_REJECTION, True)])
+        self.assertEqual(self.models.calls, ['assessment-designer', 'LEAD_REVIEW'] * ATTEMPTS + ['LEAD_REVIEW'])
         self.assertNotIn(GENERATION_REJECTION.reason, '\n'.join(logs.output))
-        self.assertEqual(self.store.owned(AUTH, 'ChangeProposal'), before)
+        self.assertEqual(len(self.store.owned(AUTH, 'ChangeProposal')), before + 1)
         self.assertEqual(self.service.project_generation_request(AUTH, 'admin', 'assessment'), result)
         calls = len(self.models.calls)
         self.assertEqual(self.run_generator(), result)
@@ -497,8 +500,9 @@ class AuthoringGeneratorTest(unittest.TestCase):
                 original = self.models.verdict
                 self.models.verdict = original.model_copy(update={'verdict': verdict})
                 before = len(self.store.owned(AUTH, 'ChangeProposal'))
-                self.assertEqual(self.run_generator(role, request_id=role + verdict).kind, 'FAILURE')
-                self.assertEqual(len(self.store.owned(AUTH, 'ChangeProposal')), before)
+                result = self.run_generator(role, request_id=role + verdict)
+                self.assertEqual((result.kind, result.notice), ('PROPOSAL', NOT_ACCEPTED))
+                self.assertEqual(len(self.store.owned(AUTH, 'ChangeProposal')), before + 1)
                 self.models.verdict = original
             command = self.command(role)
             result = self.run_generator(role, command, request_id=role)

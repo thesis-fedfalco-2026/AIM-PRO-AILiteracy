@@ -296,3 +296,39 @@ provider's or the model's default.
    deadline (write the block in two halves) would keep the approach independent of the model; an owner decision.
 8. **The job detail does not say the response was cut**: `LengthFinishReasonError` is not a `ReviewError`, so only
    its type reaches the log.
+
+## Owner decisions after the third measurement (13 November 2026)
+
+"I would like the flows to end by producing something." Asked as three questions, answered with the recommended
+options:
+
+1. **A response that does not fit** (a call past the deadline, or a response cut at its output length limit) splits
+   its block in two halves, down to one unit, with no cap; only a one-unit block that does not fit stops the job.
+2. **A block whose checked drafts the review agent accepts none of** keeps its last checked draft and the job goes
+   on; the proposal carries a fixed notice and the teacher decides (as the Curator since issue #112). This changes
+   D30 for the Evaluator, Teacher and Trainer; the structured Teacher keeps D30.
+3. **A block whose three drafts all fail the checks** is written in two halves (down to one unit); **a final review
+   that is not `ACCEPT`** proposes the assembled draft with its verdict and the notice.
+
+Changes, contract tests first (`test_generation_blocks.py` failed to import `CUT`, `CUT_SPLIT`, `NOT_ACCEPTED` until
+the change): `agent_system.deadline.cut`; `CUT`, `CUT_SPLIT`, `NOT_ACCEPTED` (`TIMEOUTS` removed);
+`GenerationAttempt.truncated`; `Generated.accepted`; `GenerationResult.notice` (the job's detail, through the worker
+as for the Curator); `NotAccepted.checked`; `revision` keeps a non-accepting verdict in the package; a warning log
+line (no reason) when a proposal is not accepted; `block` events `KEPT` and `CUT`; `JobView.blocks` counts kept
+blocks as written; the studio names a cut response. Tests that encoded the failure of D30 now expect the proposal
+with the notice (`test_authoring_generators.py`, `test_job_worker.py`); a worker test keeps a failure by checks on a
+one-unit syllabus.
+
+| Check (flows that end with a proposal) | Result |
+| --- | --- |
+| `unittest discover -q`, telemetry off | 1101 tests, OK, 201 skipped (1095 / 200 before: 6 new tests; the new skip is the PostgreSQL variant of the new worker test) |
+| `python -m aimpro.generate --check`, `python -m services.api_common.openapi --check`, `git diff --check` | exit 0 (`GenerationAttempt.truncated` in the snapshot and the client) |
+| `npm run check:client`, `typecheck`, `test` (in `apps/`) | OK, OK, 147 tests OK |
+
+### Findings (not changed)
+
+9. **The proposal page does not show that the review agent did not accept it**: the notice is the job's detail and
+   the verdicts are in "How the review agent judged the drafts of this job"; the teacher view of generated content
+   reads no verdict (the Curator's syllabus view does, since issue #112). A label for S09c2 part 2.
+10. **No cap on calls**: a request may now make many calls when blocks are split down to one unit (each block up to
+    three drafts and three reviews); an administrator's abandonment is noticed only at the end (D32).

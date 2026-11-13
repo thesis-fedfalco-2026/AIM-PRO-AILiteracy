@@ -986,8 +986,8 @@ Evaluator, Teacher and Trainer now write a request in several responses.
    accepted blocks are assembled (units in order, materials, gaps without
    repeats) into one draft over the request's input, which passes
    `checked_draft` and is judged once by the review agent with the usual
-   prompt, also when there is one block. One proposal per job, carrying that
-   final `ACCEPT`, as before.
+   prompt, also when there is one block. One proposal per job, carrying the
+   final verdict.
    A draft that does not write each requested unit once, in syllabus order, is
    refused in words the author can read, naming the units by their position in
    the syllabus (owner decision of 13 November 2026), for example "The draft
@@ -996,9 +996,18 @@ Evaluator, Teacher and Trainer now write a request in several responses.
    asked to write was added."; the retry receives the expected, missing and
    unexpected unit keys as `check_details` (data). The generator still receives
    the whole syllabus.
-3. **A job that fails keeps its accepted blocks.** A block whose drafts run
-   out, or a final review that is not `ACCEPT`, fails the job with no proposal
-   and no automatic regeneration. Each accepted block is recorded once in the
+3. **A flow ends with something for the teacher to decide** (owner, 13
+   November 2026; this changes D30 for these generators, the structured
+   Teacher keeps it). A block whose checked drafts the review agent accepts
+   none of keeps its last checked draft (`block` event `KEPT`), and a final
+   review that is not `ACCEPT` does not stop the job: the assembled draft is
+   proposed with its verdict and the fixed notice `NOT_ACCEPTED` ("The review
+   agent did not accept every block or the assembled draft; the last drafts
+   that passed the checks are proposed with its assessments, for the teacher to
+   decide."), which is the job's detail, as for the Curator since issue #112.
+   A block whose three drafts all fail the checks is written in two halves; a
+   block of one unit that fails them fails the job.
+   **A job that fails keeps its accepted blocks.** Each accepted block is recorded once in the
    ALM requests store (`learning.generation.KeptBlocks`, request id
    `generation-block:<sha256>` of the block's input digest, the subject and
    the drafts of the blocks before it; operation `PROJECT_GENERATE_BLOCK`), so
@@ -1009,29 +1018,33 @@ Evaluator, Teacher and Trainer now write a request in several responses.
    `final` (the review of the assembled draft) and `reused` (a block accepted
    by an earlier job), each omitted when unset, so attempts recorded before
    S09d keep their shape; `GET …/generation-reviews/{request_id}` returns them.
-5. **A block whose call reaches its deadline is written in two halves**
-   (owner, 13 November 2026: the approach must not depend on the model). The
-   deadline interceptor raises `agent_system.deadline.DeadlineExceeded`; when a
-   call of a block (a draft or its review) reaches it, whatever the SDK wraps
-   it in, the block's units are written as two smaller blocks instead (the
-   attempt has `timed_out` and the fixed text `SPLIT`). The request stops at
-   its third call past the deadline (`TIMEOUTS`), or when a block of one unit
-   reaches it, with the fixed text `TIMED_OUT`: "Authoring generation did not
-   complete (A model call reached its time limit); no accepted proposal was
-   persisted." The provider's message is never shown or logged. The deadline
+5. **A block whose response does not fit is written in two halves**, down to
+   one unit (owner, 13 November 2026: the approach must not depend on the
+   model). The deadline interceptor raises
+   `agent_system.deadline.DeadlineExceeded`, and the OpenAI SDK raises
+   `LengthFinishReasonError` for a response cut at its output length limit;
+   when a call of a block (a draft or its review) ends with either, whatever
+   the SDK wraps it in, the block's units are written as two smaller blocks
+   instead (the attempt has `timed_out` or `truncated` and the fixed text
+   `SPLIT` or `CUT_SPLIT`). Only a block of one unit that does not fit stops
+   the request, with `TIMED_OUT` ("Authoring generation did not complete (A
+   model call reached its time limit); no accepted proposal was persisted.")
+   or `CUT` ("The model's response was cut at its length limit"). The
+   provider's message is never shown or logged. The deadline
    of a model call (`runtime.properties` `[llm] timeout`) is 1200 s (was 600,
    owner decision of 13 November 2026).
 6. **Content-free progress.** One `block` event per block (`role`, `block`,
-   `blocks`, `outcome` `ACCEPTED`, `REUSED`, `NOT_ACCEPTED`, `SPLIT` or
-   `TIMED_OUT`; `blocks` grows when a block is split); `review` events
+   `blocks`, `outcome` `ACCEPTED`, `REUSED`, `KEPT`, `SPLIT`, `NOT_ACCEPTED`,
+   `TIMED_OUT` or `CUT`; `blocks` grows when a block is split); `review` events
    of a block carry `block`, and the final review has stage `PROJECT_FINAL`.
    `JobView.blocks` (`{written, count}`, or `null`) counts the blocks written so
    far from those events. API version 0.11.0.
 
 In the studio, the job list shows "Blocks of units written: 2 of 4", and "How
 the review agent judged the drafts of this job" names each draft's block, a
-block reused from an earlier job, a call that reached the time limit and the
-review of the assembled draft (labels and data only).
+block reused from an earlier job, a call that reached the time limit, a
+response cut at its length limit and the review of the assembled draft (labels
+and data only).
 
 ## Local identity smoke test
 

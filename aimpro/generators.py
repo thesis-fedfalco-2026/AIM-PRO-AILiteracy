@@ -30,10 +30,17 @@ ATTEMPTS = 3
 BLOCK_UNITS = 12
 # The fixed text of a model call that reached its wall-clock deadline; never the provider's message.
 TIMED_OUT = 'A model call reached its time limit'
-# A block whose call reaches the deadline is written in two halves instead, whatever the model (owner, 13 Nov 2026);
-# a request stops at its TIMEOUTS-th call past the deadline.
-SPLIT = TIMED_OUT + '; the units of this block are written in two smaller blocks'
-TIMEOUTS = 3
+# The fixed text of a response the provider cut at its output length limit.
+CUT = "The model's response was cut at its length limit"
+# A block whose response does not fit (past the deadline, or cut), or whose drafts all fail the checks, is written in
+# two halves instead, down to one unit, whatever the model (owner, 13 Nov 2026).
+_HALVES = '; the units of this block are written in two smaller blocks'
+SPLIT = TIMED_OUT + _HALVES
+CUT_SPLIT = CUT + _HALVES
+# A flow ends with something for the teacher to decide (owner, 13 Nov 2026): the notice of a proposal whose blocks or
+# assembled draft the review agent did not accept.
+NOT_ACCEPTED = ('The review agent did not accept every block or the assembled draft; the last drafts that passed the '
+                'checks are proposed with its assessments, for the teacher to decide.')
 EvidenceKind = Literal['OBJECTIVE_RESPONSE', 'CASE_RESULT', 'CRITERIA_BASED_PRODUCT',
                        'TOOL_TRACE', 'REFLECTIVE_RECORD', 'PEER_REVIEW', 'INTEGRITY_CHECK']
 StimulusKind = Literal['PROMPT_VARIANT', 'PEER_FAILURE', 'PROMPT_MOVE_CARD', 'TRANSCRIPT', 'OTHER']
@@ -286,8 +293,8 @@ class GenerationAttempt(Record):
     error message, a log line or an event. ``check`` is the fixed text of a deterministic check.
 
     ``block`` is the block of units the draft wrote, ``final`` the review of the assembled draft (S09d); ``reused`` a
-    block accepted by an earlier request over the same exact inputs; ``timed_out`` a call that reached its deadline.
-    All four are omitted when unset, so attempts recorded before S09d keep their exact shape.
+    block accepted by an earlier request over the same exact inputs; ``timed_out`` a call that reached its deadline,
+    ``truncated`` a response cut at its length limit. All are omitted when unset, so attempts recorded before S09d keep their exact shape.
     """
     attempt: int = Field(ge=1, le=ATTEMPTS)
     review: GenerationVerdict | None = None
@@ -296,22 +303,28 @@ class GenerationAttempt(Record):
     final: bool = Field(False, exclude_if=lambda value: not value)
     reused: bool = Field(False, exclude_if=lambda value: not value)
     timed_out: bool = Field(False, exclude_if=lambda value: not value)
+    truncated: bool = Field(False, exclude_if=lambda value: not value)
 
     @model_validator(mode='after')
     def reviewed_or_checked(self):
         if (self.review is None) == (self.check is None):
             raise ValueError('An attempt has either a review or a check')
         if (self.final and self.block is not None or self.reused and (self.block is None or self.review is None)
-                or self.timed_out and self.check is None):
+                or (self.timed_out or self.truncated) and self.check is None):
             raise ValueError('A final review has no block; a reused attempt is a reviewed block; a timed-out one checked')
         return self
 
 
 class Generated(NamedTuple):
-    """An accepted draft, its accepting verdict and every attempt that led to it, the accepted one last."""
+    """A draft, its final verdict and every attempt that led to it, the final one last.
+
+    ``accepted`` is false when the review agent did not accept a block or the assembled draft (S09d): the draft is
+    proposed with :data:`NOT_ACCEPTED`.
+    """
     draft: Record
     verdict: GenerationVerdict
     attempts: tuple[GenerationAttempt, ...]
+    accepted: bool = True
 
 
 class GenerationResult(LearningResponse):
@@ -321,14 +334,20 @@ class GenerationResult(LearningResponse):
     keep their exact shape. ``content`` stays fixed application text; the review agent's own words are in ``attempts``.
     """
     attempts: tuple[GenerationAttempt, ...] = Field((), exclude_if=lambda value: not value)
+    # Fixed application text for the author when the review agent did not accept the proposal (S09d).
+    notice: Text | None = Field(None, exclude_if=lambda value: value is None)
 
 
 class NotAccepted(ReviewError):
-    """No draft was accepted: the message is the fixed text that ended the request, never model text."""
+    """No draft was accepted: the message is the fixed text that ended the request, never model text.
 
-    def __init__(self, message, attempts):
+    ``checked`` is the last draft that passed the checks and its verdict, or ``None``.
+    """
+
+    def __init__(self, message, attempts, checked=None):
         super().__init__(message)
         self.attempts = attempts
+        self.checked = checked
 
 
 CONTRACTS = {
@@ -505,7 +524,9 @@ def generate(data, *, dispatcher, lead, max_context_chars=None, recorded_text=No
     :func:`learning.generation.KeptBlocks`) returns a block accepted earlier over the same exact inputs and keeps
     each newly accepted one. ``recorded_text`` (a structured Teacher response) is the first draft; a retry asks the
     model. A context over the budget, or a review that is not a verdict, stops at once: another draft would not
-    change it. A model call past its deadline stops with :data:`TIMED_OUT`.
+    change it. A block whose response does not fit, or whose drafts all fail the checks, is written in two halves;
+    a block the review agent does not accept keeps its last checked draft, and the request is proposed with
+    :data:`NOT_ACCEPTED`, as when the final review does not accept. A structured Teacher keeps D30.
     """
     data = GenerationInput.model_validate(data.model_dump(mode='json'))
     if recorded_text is not None and data.command.teacher_plan is None:
@@ -525,9 +546,9 @@ def generate(data, *, dispatcher, lead, max_context_chars=None, recorded_text=No
         raise
     except Exception as error:
         # Imported here: the deadline interceptor loads the model client, which the API process never imports.
-        from agent_system.deadline import reached
-        if reached(error):
-            raise NotAccepted(TIMED_OUT, tuple(attempts)) from error
+        from agent_system.deadline import cut, reached
+        if reached(error) or cut(error):
+            raise NotAccepted(TIMED_OUT if reached(error) else CUT, tuple(attempts)) from error
         raise
 
 
@@ -607,7 +628,7 @@ def _drafts(data, dispatcher, lead, max_context_chars, attempts, *, recorded_tex
                'target_units': [u.model_dump(mode='json') for u in data.target_units]}
     if previous:
         request['previous_blocks'] = [d.model_dump(mode='json') for d in previous]
-    retry = None
+    retry, checked = None, None
     for attempt in range(1, ATTEMPTS + 1):
         sent = ((prompt if retry is None else prompt + _RETRY) + schema + '\nDATA\n' +
                 canonical(request if retry is None else {**request, **retry}))
@@ -633,7 +654,7 @@ def _drafts(data, dispatcher, lead, max_context_chars, attempts, *, recorded_tex
                         intent_correct=verdict.intent_correct, content_complete=verdict.content_complete,
                         **_where(block))
             attempts.append(GenerationAttempt(attempt=attempt, block=block, review=verdict))
-            details = None
+            details, checked = None, (draft, verdict)
             try:
                 return draft, checked_verdict(verdict)
             except ReviewError:
@@ -642,7 +663,8 @@ def _drafts(data, dispatcher, lead, max_context_chars, attempts, *, recorded_tex
                  'review_feedback': attempts[-1].model_dump(mode='json', include={'review', 'check'},
                                                             exclude_none=True),
                  **({} if details is None else {'check_details': details})}
-    raise NotAccepted(attempts[-1].check or 'Authoring output did not pass separate Lead review', tuple(attempts))
+    raise NotAccepted(attempts[-1].check or 'Authoring output did not pass separate Lead review', tuple(attempts),
+                      checked)
 
 
 def _across_blocks(previous, draft):
@@ -669,13 +691,20 @@ def _reused(kept, part, previous):
 def _blocks(data, dispatcher, lead, max_context_chars, attempts, kept):
     """Every block of the request in order, then the assembled draft checked and reviewed once (S09d).
 
-    A block whose model call reaches its deadline is written in two halves instead, until the request's
-    :data:`TIMEOUTS`-th call past the deadline, which stops it with :data:`TIMED_OUT`.
+    A block whose response does not fit (a call past its deadline, or a response cut at its length limit), or whose
+    drafts all fail the checks, is written in two halves instead; a block of one unit that fails stops the request.
+    A block the review agent does not accept keeps its last checked draft, and so does the final review.
     """
-    from agent_system.deadline import reached
+    from agent_system.deadline import cut, reached
     units = data.target_units
     plan = [units[i:i + BLOCK_UNITS] for i in range(0, len(units), BLOCK_UNITS)]
-    previous, timeouts, index = [], 0, 0
+    previous, accepted, index = [], True, 0
+
+    def split(number):
+        events.emit('block', role=data.role, block=number, blocks=len(plan), outcome='SPLIT')
+        chunk, half = plan[index], (len(plan[index]) + 1) // 2
+        plan[index:index + 1] = [chunk[:half], chunk[half:]]
+
     while index < len(plan):
         chunk, number = plan[index], index + 1
         part = GenerationInput.model_validate({**data.model_dump(mode='json'), 'block': UnitBlock(
@@ -690,26 +719,34 @@ def _blocks(data, dispatcher, lead, max_context_chars, attempts, kept):
             try:
                 draft, _ = _drafts(part, dispatcher, lead, max_context_chars, attempts, previous=tuple(previous),
                                    block=number)
-            except NotAccepted:
-                events.emit('block', role=data.role, block=number, blocks=len(plan), outcome='NOT_ACCEPTED')
-                raise
-            except Exception as error:
-                if not reached(error):
+            except NotAccepted as error:
+                if error.checked is not None:
+                    # The review agent accepted none of the block's checked drafts: keep the last one (owner decision).
+                    draft, accepted, outcome = error.checked[0], False, 'KEPT'
+                elif len(chunk) > 1:
+                    split(number)
+                    continue
+                else:
+                    events.emit('block', role=data.role, block=number, blocks=len(plan), outcome='NOT_ACCEPTED')
                     raise
-                timeouts += 1
-                split = timeouts < TIMEOUTS and len(chunk) > 1
-                attempts.append(GenerationAttempt(attempt=len(attempts) - before + 1, block=number, timed_out=True,
-                                                  check=SPLIT if split else TIMED_OUT))
-                events.emit('block', role=data.role, block=number, blocks=len(plan),
-                            outcome='SPLIT' if split else 'TIMED_OUT')
-                if not split:
-                    raise NotAccepted(TIMED_OUT, tuple(attempts)) from error
-                half = (len(chunk) + 1) // 2
-                plan[index:index + 1] = [chunk[:half], chunk[half:]]
+            except Exception as error:
+                timed_out, truncated = reached(error), cut(error)
+                if not (timed_out or truncated):
+                    raise
+                stop = TIMED_OUT if timed_out else CUT
+                attempts.append(GenerationAttempt(attempt=len(attempts) - before + 1, block=number,
+                    timed_out=timed_out, truncated=not timed_out,
+                    check=stop if len(chunk) == 1 else (SPLIT if timed_out else CUT_SPLIT)))
+                if len(chunk) == 1:
+                    events.emit('block', role=data.role, block=number, blocks=len(plan),
+                                outcome='TIMED_OUT' if timed_out else 'CUT')
+                    raise NotAccepted(stop, tuple(attempts)) from error
+                split(number)
                 continue
-            if kept is not None:
-                kept.keep(part, tuple(previous), draft, attempts[-1])
-            outcome = 'ACCEPTED'
+            else:
+                if kept is not None:
+                    kept.keep(part, tuple(previous), draft, attempts[-1])
+                outcome = 'ACCEPTED'
         events.emit('block', role=data.role, block=number, blocks=len(plan), outcome=outcome)
         previous.append(draft)
         index += 1
@@ -731,9 +768,10 @@ def _blocks(data, dispatcher, lead, max_context_chars, attempts, kept):
                 intent_correct=verdict.intent_correct, content_complete=verdict.content_complete)
     attempts.append(GenerationAttempt(attempt=1, final=True, review=verdict))
     try:
-        return Generated(assembled, checked_verdict(verdict), tuple(attempts))
-    except ReviewError as error:
-        raise NotAccepted(str(error), tuple(attempts)) from error
+        checked_verdict(verdict)
+    except ReviewError:
+        accepted = False
+    return Generated(assembled, verdict, tuple(attempts), accepted)
 
 
 _BLOCK = (
