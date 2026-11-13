@@ -695,13 +695,13 @@ def _blocks(data, dispatcher, lead, max_context_chars, attempts, kept):
     drafts all fail the checks, is written in two halves instead; a block of one unit that fails stops the request.
     A block the review agent does not accept keeps its last checked draft, and so does the final review.
     """
-    from agent_system.deadline import cut, reached
+    from agent_system.deadline import cut, cut_tokens, reached
     units = data.target_units
     plan = [units[i:i + BLOCK_UNITS] for i in range(0, len(units), BLOCK_UNITS)]
     previous, accepted, index = [], True, 0
 
-    def split(number):
-        events.emit('block', role=data.role, block=number, blocks=len(plan), outcome='SPLIT')
+    def split(number, **tokens):
+        events.emit('block', role=data.role, block=number, blocks=len(plan), outcome='SPLIT', **tokens)
         chunk, half = plan[index], (len(plan[index]) + 1) // 2
         plan[index:index + 1] = [chunk[:half], chunk[half:]]
 
@@ -737,11 +737,12 @@ def _blocks(data, dispatcher, lead, max_context_chars, attempts, kept):
                 attempts.append(GenerationAttempt(attempt=len(attempts) - before + 1, block=number,
                     timed_out=timed_out, truncated=not timed_out,
                     check=stop if len(chunk) == 1 else (SPLIT if timed_out else CUT_SPLIT)))
+                tokens = {} if timed_out else cut_tokens(error)
                 if len(chunk) == 1:
                     events.emit('block', role=data.role, block=number, blocks=len(plan),
-                                outcome='TIMED_OUT' if timed_out else 'CUT')
+                                outcome='TIMED_OUT' if timed_out else 'CUT', **tokens)
                     raise NotAccepted(stop, tuple(attempts)) from error
-                split(number)
+                split(number, **tokens)
                 continue
             else:
                 if kept is not None:

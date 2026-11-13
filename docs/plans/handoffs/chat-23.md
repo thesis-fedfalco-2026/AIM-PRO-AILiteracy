@@ -332,3 +332,44 @@ one-unit syllabus.
    reads no verdict (the Curator's syllabus view does, since issue #112). A label for S09c2 part 2.
 10. **No cap on calls**: a request may now make many calls when blocks are split down to one unit (each block up to
     three drafts and three reviews); an administrator's abandonment is noticed only at the end (D32).
+
+## Fourth live measurement (13 November 2026)
+
+**Authorization**: the owner's "sì" (13 November 2026) to one more Evaluator job under the terms of decision 10, with
+no cap on calls, after CI on `3a62e29` (push run 43430820783, pull_request run 43430830410: every job passed). A fresh
+read-only backup of `/tmp/alm-demo/alm.sqlite` (context `fac0368087f649219194faaf6130041e`). **Stopped by the owner**
+after 69 minutes (13:20:12–14:29:19 UTC), to understand the problem first.
+
+| Request | What happened | Model calls |
+| --- | --- | --- |
+| `live-evaluator-blocks-4` | block 1 (12 units) cut at the output length limit after ~22 min (13:41:53, `SPLIT`), its first half (6 units) cut after ~20 min (14:01:46, `SPLIT`), its first half (3 units) cut after ~27 min (14:29:02, `SPLIT`); stopped while writing 2 units; no block accepted; the request stays reserved in the copy only | 3 (+1 interrupted) |
+
+### What was found (no model call)
+
+- The free variant `nvidia/nemotron-3.5-super-vl:free` allows **131,072 output tokens** per response (OpenRouter's
+  public model list); it supports `reasoning`, which the runtime does not set, and no `max_tokens` is configured. At
+  the speed of the Chat 21 Curator call (about 100 output tokens per second), 20–27 minutes is about the whole
+  allowance, for 12, 6 and 3 units alike: the size of the block is not the cause.
+- **A block's prompt is about 665,000 characters (about 166,000 tokens) for 3 units.** 534,000 of them are
+  `syllabus.source`: the AIM-PRO model's objects twice (`objects` 260,000 and `validated_objects` 232,000, 254
+  objects each), its `domain_schemas` (22,000) and the corpus evidence (16,000); the syllabus itself (`artifact`)
+  is 78,000, the 3 units to write 2,900, the `AssessmentDraft` schema 4,000.
+- The Evaluator's category sets `temperature: 0.1` (the Curator's 0.2).
+
+Hypotheses, not verified: the model spends the allowance on reasoning tokens, or loops in its JSON output (repeated
+items or text, which a low temperature makes likelier); the very large context may contribute. Telling them apart
+needs the token counts of one call: the reasoning tokens of a cut response are now recorded (below), and OpenRouter's
+activity page shows the native token counts of the calls already made.
+
+### Token counts recorded from now on (this PR)
+
+`agent_system.deadline.cut_tokens` reads the output and reasoning token counts of a cut response from the SDK error
+(numbers only); the `block` event of a cut block carries them (`output_tokens`, `reasoning_tokens`).
+`provider.call` events carry `reasoning_tokens` when the provider reports them. Contract tests first
+(`test_reasoning_tokens_are_counted_when_the_provider_reports_them`, and the cut test of `test_generation_blocks.py`,
+which failed until the change).
+
+| Check (token counts) | Result |
+| --- | --- |
+| `unittest discover -q`, telemetry off | 1102 tests, OK, 201 skipped (1 new test) |
+| `python -m aimpro.generate --check`, `python -m services.api_common.openapi --check`, `git diff --check` | exit 0 |

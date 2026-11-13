@@ -335,12 +335,19 @@ class GenerationBlocksTest(unittest.TestCase):
         def transform(data, draft):
             if number(data) == 1 and len(data.block.unit_keys) == BLOCK_UNITS and not cut:
                 cut.append(data)
+                usage = SimpleNamespace(completion_tokens=131072,
+                                        completion_tokens_details=SimpleNamespace(reasoning_tokens=120000))
                 raise RuntimeError('provider text') from openai.LengthFinishReasonError(
-                    completion=SimpleNamespace(usage=None))
+                    completion=SimpleNamespace(usage=usage))
             return draft
         self.models.transform = transform
-        result = self.run_generator()
+        log = events.MemoryEventLog()
+        with events.run(log, request_id='assessment', context_id=AUTH):
+            result = self.run_generator()
         self.assertEqual(result.kind, 'PROPOSAL')
+        # The token counts of the cut response, numbers only: how much of it was the model's reasoning.
+        split = next(e.data for e in log.events if e.type == 'block' and e.data['outcome'] == 'SPLIT')
+        self.assertEqual((split['output_tokens'], split['reasoning_tokens']), (131072, 120000))
         self.assertEqual(blocks_of(result)[:3], [(1, 1, False, False, CUT_SPLIT), (1, 1, False, False, 'ACCEPT'),
                                                  (2, 1, False, False, 'ACCEPT')])
         self.assertTrue(result.attempts[0].truncated)

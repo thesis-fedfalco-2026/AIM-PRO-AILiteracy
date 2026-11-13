@@ -45,6 +45,22 @@ def cut(error: BaseException) -> bool:
     return _caused_by(error, LengthFinishReasonError)
 
 
+def cut_tokens(error: BaseException) -> dict:
+    """The output and reasoning token counts of a cut response, when the provider reported them; numbers only."""
+    from openai import LengthFinishReasonError
+    seen = set()
+    while error is not None and id(error) not in seen:
+        if isinstance(error, LengthFinishReasonError):
+            usage = getattr(error.completion, 'usage', None)
+            details = getattr(usage, 'completion_tokens_details', None)
+            found = {'output_tokens': getattr(usage, 'completion_tokens', None),
+                     'reasoning_tokens': getattr(details, 'reasoning_tokens', None)}
+            return {k: v for k, v in found.items() if isinstance(v, int)}
+        seen.add(id(error))
+        error = error.__cause__ or error.__context__
+    return {}
+
+
 class _DeadlineStream(httpx.SyncByteStream):
     def __init__(self, stream, request, deadline, seconds):
         self._stream, self._request, self._deadline, self._seconds = stream, request, deadline, seconds

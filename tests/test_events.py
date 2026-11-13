@@ -83,6 +83,12 @@ class EventLogTest(unittest.TestCase):
         self.assertIsNotNone(calls[0]["duration_ms"])
         self.assertNotIn("boom", json.dumps(calls[1]))
 
+    def test_reasoning_tokens_are_counted_when_the_provider_reports_them(self):
+        usage = {"prompt_tokens": 7, "completion_tokens": 30, "completion_tokens_details": {"reasoning_tokens": 25}}
+        self.assertEqual(events._tokens(usage), {"input_tokens": 7, "output_tokens": 30, "reasoning_tokens": 25})
+        self.assertEqual(events._tokens({"prompt_tokens": 7, "completion_tokens": 3}),
+                         {"input_tokens": 7, "output_tokens": 3})
+
 
 class OrchestratorEventsTest(unittest.TestCase):
     def ask(self, **options):
