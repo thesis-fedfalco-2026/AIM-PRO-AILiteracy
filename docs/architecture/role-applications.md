@@ -1026,7 +1026,9 @@ Evaluator, Teacher and Trainer now write a request in several responses.
    when a call of a block (a draft or its review) ends with either, whatever
    the SDK wraps it in, the block's units are written as two smaller blocks
    instead (the attempt has `timed_out` or `truncated` and the fixed text
-   `SPLIT` or `CUT_SPLIT`). Only a block of one unit that does not fit stops
+   `SPLIT` or `CUT_SPLIT`), and every later block of the request takes the
+   smaller size too: the request learns how much the model writes in one
+   response (a block split by the checks changes no other block). Only a block of one unit that does not fit stops
    the request, with `TIMED_OUT` ("Authoring generation did not complete (A
    model call reached its time limit); no accepted proposal was persisted.")
    or `CUT` ("The model's response was cut at its length limit"). The

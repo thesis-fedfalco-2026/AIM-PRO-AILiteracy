@@ -298,15 +298,30 @@ class GenerationBlocksTest(unittest.TestCase):
         with events.run(log, request_id='assessment', context_id=AUTH):
             result = self.run_generator()
         self.assertEqual(result.kind, 'PROPOSAL')
-        self.assertEqual(sizes, [12, 12, 6, 6, 12, 12])
-        self.assertEqual(self.models.calls, [DESIGNER, REVIEW, DESIGNER] + [DESIGNER, REVIEW] * 4 + [REVIEW])
+        # Block 2 did not fit: it and every later block are written in blocks of 6.
+        self.assertEqual(sizes, [12, 12, 6, 6, 6, 6, 6, 6])
+        self.assertEqual(self.models.calls, [DESIGNER, REVIEW, DESIGNER] + [DESIGNER, REVIEW] * 6 + [REVIEW])
         self.assertEqual(blocks_of(result), [(1, 1, False, False, 'ACCEPT'), (2, 1, False, False, SPLIT)] +
-                         [(n, 1, False, False, 'ACCEPT') for n in range(2, 6)] + [(None, 1, True, False, 'ACCEPT')])
+                         [(n, 1, False, False, 'ACCEPT') for n in range(2, 8)] + [(None, 1, True, False, 'ACCEPT')])
         self.assertTrue(result.attempts[1].timed_out)
         self.assertFalse(any(a.timed_out for a in result.attempts if a is not result.attempts[1]))
         progress = [(e.data['block'], e.data['blocks'], e.data['outcome']) for e in log.events if e.type == 'block']
-        self.assertEqual(progress, [(1, 4, 'ACCEPTED'), (2, 4, 'SPLIT')] + [(n, 5, 'ACCEPTED') for n in range(2, 6)])
+        self.assertEqual(progress, [(1, 4, 'ACCEPTED'), (2, 4, 'SPLIT')] + [(n, 7, 'ACCEPTED') for n in range(2, 8)])
         self.assertEqual(len(package_of(self.accept(result)).draft.units), 48)
+
+    def test_after_a_block_does_not_fit_the_rest_of_the_request_is_written_in_blocks_of_the_size_that_fitted(self):
+        # Owner, 13 November 2026: the request learns how much the model writes in one response, whatever the model.
+        sizes = self.time_out(lambda data: len(data.block.unit_keys) > 3)
+        result = self.run_generator()
+        self.assertEqual(result.kind, 'PROPOSAL')
+        self.assertEqual(sizes, [12, 6] + [3] * 16)
+        self.assertEqual(len(package_of(self.accept(result)).draft.units), 48)
+
+    def test_blocks_split_by_the_checks_do_not_change_the_size_of_the_others(self):
+        self.models.transform = lambda data, draft: (draft.model_copy(update={'input_digest': 'invented'})
+                                                     if number(data) == 1 and len(data.block.unit_keys) == 12 else draft)
+        self.assertEqual(self.run_generator().kind, 'PROPOSAL')
+        self.assertEqual([len(d.block.unit_keys) for d in self.models.inputs], [12] * ATTEMPTS + [6, 6, 12, 12, 12])
 
     def test_a_block_of_one_unit_past_the_deadline_stops_the_request_and_keeps_the_accepted_blocks(self):
         sizes = self.time_out(lambda data: number(data) == 2)
@@ -351,7 +366,7 @@ class GenerationBlocksTest(unittest.TestCase):
         self.assertEqual(blocks_of(result)[:3], [(1, 1, False, False, CUT_SPLIT), (1, 1, False, False, 'ACCEPT'),
                                                  (2, 1, False, False, 'ACCEPT')])
         self.assertTrue(result.attempts[0].truncated)
-        self.assertEqual([len(d.block.unit_keys) for d in self.models.inputs], [12, 6, 6, 12, 12, 12])
+        self.assertEqual([len(d.block.unit_keys) for d in self.models.inputs], [12] + [6] * 8)
 
     def test_a_block_of_one_unit_cut_at_its_length_limit_stops_the_request(self):
         def transform(data, draft):

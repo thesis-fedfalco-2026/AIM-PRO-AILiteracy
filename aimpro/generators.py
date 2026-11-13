@@ -692,7 +692,8 @@ def _blocks(data, dispatcher, lead, max_context_chars, attempts, kept):
     """Every block of the request in order, then the assembled draft checked and reviewed once (S09d).
 
     A block whose response does not fit (a call past its deadline, or a response cut at its length limit), or whose
-    drafts all fail the checks, is written in two halves instead; a block of one unit that fails stops the request.
+    drafts all fail the checks, is written in two halves instead; after a response that does not fit, every later
+    block takes the smaller size too. A block of one unit that fails stops the request.
     A block the review agent does not accept keeps its last checked draft, and so does the final review.
     """
     from agent_system.deadline import cut, cut_tokens, reached
@@ -700,10 +701,17 @@ def _blocks(data, dispatcher, lead, max_context_chars, attempts, kept):
     plan = [units[i:i + BLOCK_UNITS] for i in range(0, len(units), BLOCK_UNITS)]
     previous, accepted, index = [], True, 0
 
-    def split(number, **tokens):
+    def split(number, *, fit=False, **tokens):
+        """Write the block's units in two halves; after a response that did not ``fit``, the rest of the request too.
+
+        A response that does not fit says how much the model writes in one response, so every later block takes the
+        smaller size (owner, 13 November 2026); a block refused by the checks changes no other block.
+        """
         events.emit('block', role=data.role, block=number, blocks=len(plan), outcome='SPLIT', **tokens)
-        chunk, half = plan[index], (len(plan[index]) + 1) // 2
-        plan[index:index + 1] = [chunk[:half], chunk[half:]]
+        half = (len(plan[index]) + 1) // 2
+        rest = [u for chunk in plan[index:] for u in chunk] if fit else plan[index]
+        chunks = [rest[i:i + half] for i in range(0, len(rest), half)]
+        plan[index:len(plan) if fit else index + 1] = chunks
 
     while index < len(plan):
         chunk, number = plan[index], index + 1
@@ -742,7 +750,7 @@ def _blocks(data, dispatcher, lead, max_context_chars, attempts, kept):
                     events.emit('block', role=data.role, block=number, blocks=len(plan),
                                 outcome='TIMED_OUT' if timed_out else 'CUT', **tokens)
                     raise NotAccepted(stop, tuple(attempts)) from error
-                split(number, **tokens)
+                split(number, fit=True, **tokens)
                 continue
             else:
                 if kept is not None:

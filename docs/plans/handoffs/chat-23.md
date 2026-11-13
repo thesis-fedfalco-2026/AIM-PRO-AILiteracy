@@ -418,3 +418,23 @@ chiave di antropic", 13 November 2026). Two calls with the same script and input
 The drafts were parsed into the typed contract by the dispatcher; they were not passed through `checked_draft` or
 the review agent. **The output limit is a property of the free model**, not of the approach or the input: with
 Claude Sonnet 4.6 a 12-unit block fits in one response of about 6 minutes, so 48 units would take four blocks.
+
+## Owner decisions after the diagnosis (13 November 2026)
+
+"Implement 3" (both: the block size the request learns, and Anthropic for the current tests); Anthropic "only for the
+current tests: generators and review agent. The system must be as independent of the models as possible."
+
+1. **The request remembers the size that fitted.** After a response that does not fit (past the deadline, or cut),
+   the block and every later block of the request are written in blocks of half its size; a block split by the checks
+   changes no other block. With the free model a 48-unit request goes 12 → 6 → 3 … once, instead of for every block.
+   Contract tests first (`test_after_a_block_does_not_fit_the_rest_of_the_request_is_written_in_blocks_of_the_size_that_fitted`
+   failed until the change; `test_blocks_split_by_the_checks_do_not_change_the_size_of_the_others` passed before and
+   after); the two split tests now expect the later blocks at the smaller size.
+2. **No configured model changes.** `model.properties` and the agents' profiles stay as they are; the live measurement
+   below overrides, in its own process only, the profile of the Evaluator, Teacher and Trainer agents and of the
+   review agent to `anthropic` (`claude-sonnet-4-6`), with paid use allowed there.
+
+| Check (remembered block size) | Result |
+| --- | --- |
+| `unittest discover -q`, telemetry off | 1104 tests, OK, 201 skipped (2 new tests) |
+| `python -m aimpro.generate --check`, `python -m services.api_common.openapi --check`, `git diff --check` | exit 0 |
