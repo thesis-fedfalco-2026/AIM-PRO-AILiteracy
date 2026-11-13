@@ -84,6 +84,7 @@ Facts in this table are a snapshot. Every chat re-verifies the ones it uses.
 | D26 | Source preparation (S09a2) is two jobs. A model-free discovery job runs the teacher's queries and records what they found (in the ALM requests store, replayed without a new search); the teacher picks excerpts with their purpose and limitations; the preparation job fetches them exactly (`SourcePlan` unchanged). The teacher's acceptance is recorded in the jobs store: a preparation job ends `AWAITING_CHOICE` and the teacher moves it to `ACCEPTED` or `DECLINED`; the API and the worker refuse a Curator job on a preparation that is not accepted, while the CLI `--prepared-sources` stays an operator path without acceptance. A minimal job list is on the build page. Coverage requirements are an optional form guided by the uploaded export (Chat 18, issue #101) | 10 Nov 2026 |
 | D27 | Syllabus refinement (S09b, refines D18). Units of two syllabi are paired by learning target (`source_target_id`), in their order when several share a target. The Curator holds the conversation (no separate Design Agent): a revision request is one turn, and the revision job gives the Curator the previous syllabus and the reasons of the whole chain. A teacher's edit is complete (every field; units added, removed and reordered), passes the same checks as a generated syllabus and is a proposal by that teacher, declared not reviewed by the agent; the agent's review of an edit is optional and does not block (its form is D29). A refinement reuses the input of the proposal it refines, accepted sources included, while the course is still at that proposal's step; otherwise the sources are prepared again (Chat 19, issue #104) | 10 Nov 2026 |
 | D30 | The review of a Curator syllabus (Chat 20, issue #107, refines D27). A request makes at most three drafts: a draft refused by the deterministic checks or not accepted by the review agent (`REJECT`, `UNCERTAIN`, a flag false) goes back to the Curator with its draft and the reason, as untrusted data; the review agent judges each draft on its own. When the drafts run out the request fails as before, so a generated syllabus always carries an `ACCEPT` review. Every attempt's verdict, or the fixed text of the check that refused it, is kept with the request's result in the ALM requests store, read through the API and shown in the studio; the review agent's reason is shown as model text and never becomes an error message, a log line or an event. The review of a revision receives the previous syllabus and the teacher's reasons. The review prompt was calibrated on 4 + 4 owner-authorized live jobs, in three clauses only: source diagnostics are not by themselves grounds for rejection, uncited excerpts are not grounds for rejection, and a claim is judged as worded. The configured models are unchanged | 10 Nov 2026 |
+| D34 | Generation by blocks of units (S09d, issue #118, refines D30 for the generators). The Evaluator, Teacher (unstructured) and Trainer write a request in blocks of 12 target units; the generator of a block receives the whole input (the whole syllabus included), its units and the accepted drafts of the earlier blocks, as untrusted data. Each block is judged by the review agent on its own, with the full input and that block only, up to three drafts per block; the assembled draft is judged once at the end, also for one block. One proposal per job. A block whose drafts run out, or a final review that is not `ACCEPT`, fails the job; the accepted blocks are kept and reused, without a model call, by a new job over the same exact inputs. The structured Teacher and the Curator keep one response. A model call past its deadline fails with a fixed text, never the provider's message; block progress is a content-free event shown in the studio job list. A draft that does not cover its units is refused in words the author can read, naming the units by their position in the syllabus; the retry receives the unit keys as data (Chat 23, 12–13 November 2026) | 12 Nov 2026 |
 | D20 | A learner sees everything needed to follow and learn from the course: syllabus, material, activities, exercises and the rest of the learning content. What the learner sees comes from the validated course, never from drafts or other learners' records; the exact projection (for example rubrics and assessment criteria) is defined in S12 with the owner | 9 Nov 2026 |
 | Earlier | Socratic option b; live model runs only with owner authorization; never edit AIM-PRO/jjodel exports | see `docs/architecture/agentic-network-decisions.md` |
 
@@ -179,6 +180,7 @@ metamodel.
 | S09a2 | 4 | Source preparation as a job; the teacher reviews and accepts the prepared sources for the Curator (done: PR #103) | S09a, D22 |
 | S09b | 4 | Progressive refinement of the syllabus with the Curator and the teacher (done: PR #105) | S09a, D18 |
 | S09c | 4 | Rubrics, assessments, teacher and trainer content from the studio; teacher view for every proposal kind | S09a (S09a2 for prepared sources) |
+| S09d | 4 | Generation by blocks of units: a 48-unit course gets its assessments and content with the configured model (owner, 11 Nov 2026; before S09c2 part 2) | S09c, D34 |
 | S10 | 8 | Course validation: release and delivery views — **milestone M2: authoring to delivery** | S09c |
 | S11 | — | Runtime assessor role and evaluation adapter (G7) | S10, owner decision |
 | S12 | 5 | Learner API, including the learner's own courses | S11, D19, D20 |
@@ -468,6 +470,21 @@ for assessments.
 - [ ] Browser test: the synthetic authoring cycle reaches the same project state as `tests/test_authoring_cycle.py`.
 - [ ] Each form shows the exact refs it sends; a stale base is refused and reloaded.
 - [ ] Every proposal kind of the seed has a teacher view (browser test).
+
+### S09d — Generation by blocks of units
+
+**Goal.** A 48-unit course gets its assessments, teacher and trainer content
+with the configured model. In the owner's trial of 11 November 2026 one
+Evaluator response for 48 units reached the wall-clock deadline of a model call
+(Chat 22 handoff). Decisions: D34.
+
+**Acceptance** (issue #118).
+
+- [ ] The Evaluator, Teacher (unstructured) and Trainer write a request in blocks of 12 target units; each block is reviewed on its own (D30, up to three drafts), the assembled draft once; one proposal per job.
+- [ ] A failed block or final review fails the job; accepted blocks are reused by a new job over the same exact inputs without a model call.
+- [ ] Every attempt names its block (or the final review) and is shown in the studio; the job list shows the block progress.
+- [ ] A model call past its deadline fails with a fixed text; the structured Teacher and the Curator are unchanged.
+- [ ] One owner-authorized live Evaluator job on `antonio-lpo`, recorded in the handoff.
 
 ### S10 — Course validation: release and delivery views (M2)
 
