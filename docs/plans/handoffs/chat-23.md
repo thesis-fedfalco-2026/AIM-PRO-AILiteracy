@@ -373,3 +373,48 @@ which failed until the change).
 | --- | --- |
 | `unittest discover -q`, telemetry off | 1102 tests, OK, 201 skipped (1 new test) |
 | `python -m aimpro.generate --check`, `python -m services.api_common.openapi --check`, `git diff --check` | exit 0 |
+
+## Diagnosis of the output limit (13 November 2026)
+
+**Authorization**: the owner asked for a test to understand which solution to take ("procedi con il fare un test per
+capire la possibile soluzione da intraprendere", 13 November 2026). Five single Evaluator calls, outside the CLI and
+any store: a scratch script built the exact block input from the fourth measurement's copy (read only), called the
+configured `assessment-designer` through the production dispatcher with the provider listener bound, and kept numbers
+only (the text of a cut response would have been kept in the scratchpad for local statistics; none was cut).
+
+| Call | Block | Variant | Outcome | Input tokens | Output tokens | Draft | Time |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| A | 1 unit | as configured (temperature 0.1) | completed, 1 item, 1 criterion | 220,166 | 10,356 | 4,152 chars | 136 s |
+| B | 1 unit | without `validated_objects` (prompt 432,000 chars) | completed, but 2 units for a 1-unit block (the coverage check would refuse it) | 149,254 | 13,995 | 15,943 chars | 190 s |
+| C | 1 unit | temperature 0.4 | completed, 2 items | 220,166 | 14,556 | 7,371 chars | 132 s |
+| D | 3 units | OpenRouter `reasoning: {effort: "low"}` | reached the 1200 s deadline | — | — | — | 1201 s |
+| E | 12 units | OpenRouter `reasoning: {effort: "low"}` | reached the 1200 s deadline | — | — | — | 1201 s |
+
+**What it shows.**
+
+- One unit fits: 10,000–15,000 output tokens in 2–3 minutes, about 90% of them not in the draft (A: 4,152 characters,
+  about 1,200 tokens, for 10,356 output tokens). The provider reported no `reasoning_tokens`, so the split between
+  reasoning and answer is inferred, not measured.
+- Three units do not fit, with or without the reasoning setting: cut at 131,072 tokens after ~27 minutes in the fourth
+  measurement, past 1200 s in D. Proportionally 3 units would need ~35,000 tokens: the growth is not linear.
+- Neither the temperature (C), nor a smaller input (B), nor the reasoning effort (D, E; the free provider may ignore
+  it) explains or removes it. Removing the duplicated objects made the model write a unit it was not asked for (B).
+
+**Not known**: whether the long responses are reasoning or a loop in the JSON output; a cut response's text would
+tell, and none was cut in this diagnosis.
+
+### Comparison with the configured Anthropic profile (13 November 2026)
+
+**Authorization**: the owner asked for a test with the Anthropic key ("giusto per essere sicuri fai un test con la
+chiave di antropic", 13 November 2026). Two calls with the same script and inputs, the configured `anthropic` profile
+(`claude-sonnet-4-6`, CrewAI's default of 128,000 output tokens), paid use allowed in the script's process only:
+`model.properties` (`allow_paid = false`) and the agents' profiles are unchanged.
+
+| Call | Block | Outcome | Input tokens | Output tokens | Draft | Time |
+| --- | --- | --- | --- | --- | --- | --- |
+| F | 3 units | completed: 3 units, 6 items, 2–3 criteria each | 194,272 | 9,028 | 34,622 chars | 160 s |
+| G | 12 units | completed: 12 units, 15 items, 2–4 criteria each | 197,655 | 22,630 | 86,908 chars | 363 s |
+
+The drafts were parsed into the typed contract by the dispatcher; they were not passed through `checked_draft` or
+the review agent. **The output limit is a property of the free model**, not of the approach or the input: with
+Claude Sonnet 4.6 a 12-unit block fits in one response of about 6 minutes, so 48 units would take four blocks.
