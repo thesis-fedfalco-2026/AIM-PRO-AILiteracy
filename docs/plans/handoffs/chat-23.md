@@ -438,3 +438,36 @@ current tests: generators and review agent. The system must be as independent of
 | --- | --- |
 | `unittest discover -q`, telemetry off | 1104 tests, OK, 201 skipped (2 new tests) |
 | `python -m aimpro.generate --check`, `python -m services.api_common.openapi --check`, `git diff --check` | exit 0 |
+
+## Live measurement with Anthropic for the generators and the review agent (13 November 2026)
+
+**Authorization**: the owner's decision above (Anthropic for the current tests, generators and review agent), after CI
+on `a39deb4` (push run 43452522924, pull_request run 43452536199: every job passed). A fresh read-only backup of
+`/tmp/alm-demo/alm.sqlite` (context `fac0368087f649219194faaf6130041e`, 48 units, no requirement); the CLI through a
+wrapper that overrides, in its process only, the profile of the generators and of the review agent to `anthropic`
+(`claude-sonnet-4-6`, paid use allowed there) and records content-free events, provider calls included;
+`LANGFUSE_ENABLED=false`. The Curator's profile was not used. The demo stack was not touched.
+
+| Request | What happened | Calls (input / output tokens) |
+| --- | --- | --- |
+| `live-evaluator-anthropic-1` (15:39:20–15:50:30 UTC) | block 1 (12 units) drafted in 279 s and accepted at its first review; block 2 drafted in 324 s and accepted; block 3's first call failed after 25 s with "Anthropic API call failed: Connection error." (`APIConnectionError`, a network error); the job failed with the generic detail, blocks 1–2 kept | 5 (833,887 / 39,250) |
+| `live-evaluator-anthropic-2`, the same command (15:51:09–16:03:26 UTC) | **PROPOSED**: blocks 1–2 reused without a model call (`REUSED`), blocks 3 and 4 drafted in 340 s and 347 s and accepted at their first review, the assembled draft accepted by the final review (all four flags true); no notice | 5 (1,186,629 / 42,472) |
+
+**The proposal** (`proposal-489fa3d0ee7b4eb6b98b9d9fa70de1e8`, awaiting a decision, in the copy only): 48 units, 48
+assessment items (12 each of `BINARY_DECISION`, `SHORT_STRUCTURED`, `CASE_ANALYSIS`, `CRITERIA_BASED_PRODUCT`), 120
+rubric criteria, 6 gaps; candidates: 48 `ActivityDefinition`, 48 `AssessmentSpecification`, 48 `Rubric`, 96
+`ResourceRequirement`, 49 `ProcessNode`, the design, the domain and the package. Nobody has read or reviewed its
+content; the teacher decides.
+
+**What it shows.** With a model whose responses fit, a 48-unit Evaluator job takes four blocks of about 5–6 minutes
+plus a review of 15–20 s each and a final review of 19 s: about 24 minutes of model time, 10 calls, about 2 million
+input tokens (each call reads the whole syllabus input, about 200,000–270,000 tokens) and 82,000 output tokens. The
+accepted blocks made the network error cost nothing but the failed call.
+
+### Findings of the measurement (not changed)
+
+11. **A network error stops the job at once** with the generic detail ("Authoring generation did not complete; no
+    accepted proposal was persisted."); the SDK's own retries did not recover it. Kept blocks made a new job cheap;
+    an automatic retry of a failed call, or a fixed text naming a connection error, would be owner decisions.
+12. **Every call reads the whole input** (about 200,000 tokens and growing with the earlier blocks: 197,655 for
+    block 1, 257,116 for block 4); the cost is mostly input. The owner wants the whole syllabus kept.
