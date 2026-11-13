@@ -27,7 +27,7 @@ MAX_TEXT = 200
 EventType = Literal[
     "run.started", "run.finished", "lead.call", "plan.decided", "retrieval",
     "review", "worker.call", "step.finished", "final.checked", "provider.call",
-    "evaluation.config", "evaluation.injected",
+    "evaluation.config", "evaluation.injected", "block",
 ]
 _logger = logging.getLogger("agent_system.events")
 
@@ -166,8 +166,13 @@ _provider_starts: dict[str, float] = {}
 
 def _tokens(usage):
     usage = usage or {}
-    return {"input_tokens": usage.get("prompt_tokens", usage.get("input_tokens")),
-            "output_tokens": usage.get("completion_tokens", usage.get("output_tokens"))}
+    tokens = {"input_tokens": usage.get("prompt_tokens", usage.get("input_tokens")),
+              "output_tokens": usage.get("completion_tokens", usage.get("output_tokens"))}
+    # Reasoning tokens count within the output tokens, when the provider reports them.
+    reasoning = (usage.get("completion_tokens_details") or {}).get("reasoning_tokens")
+    if reasoning is not None:
+        tokens["reasoning_tokens"] = reasoning
+    return tokens
 
 
 def install_provider_listener() -> None:

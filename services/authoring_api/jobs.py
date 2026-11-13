@@ -21,6 +21,8 @@ whose worker was interrupted has its ALM request abandoned, as the CLI
 An Evaluator, Teacher or Trainer command names its base context; one that is
 no longer the context's current version is refused when it is queued (409), so
 the form is read again (S09c2). A request id already queued returns its job.
+Such a job writes its syllabus in blocks of units (S09d); its view counts the
+blocks written so far from its content-free ``block`` events.
 
 Source jobs (S09a2, D22) propose nothing. A source preparation awaits the
 choice of the teacher who prepared it: accepted or declined, once. A Curator
@@ -29,6 +31,7 @@ job naming prepared sources is refused unless that teacher accepted them.
 
 from __future__ import annotations
 
+import json
 import time
 
 from typing import Literal
@@ -56,6 +59,12 @@ class JobRequest(Record):
     job: JobCommand
 
 
+class BlockProgress(Record):
+    """How many blocks of units a generator job has written (accepted or reused), of how many (S09d)."""
+    written: int
+    count: int
+
+
 class JobView(Record):
     """A job: its exact command, its status and, once ended, its pending proposal or the reason it ended."""
     context_id: Text
@@ -67,6 +76,7 @@ class JobView(Record):
     detail: Text | None = None
     created: Text
     updated: Text
+    blocks: BlockProgress | None = None
 
 
 class JobList(Record):
@@ -79,10 +89,19 @@ class SourceChoice(Record):
     choice: Literal['ACCEPTED', 'DECLINED']
 
 
-def _view(job: JobRecord) -> JobView:
+def _blocks(jobs: JobStore, job: JobRecord) -> BlockProgress | None:
+    found = [json.loads(e.data)['data'] for e in jobs.events(job.context_id, job.request_id)
+             if e.name == 'progress' and json.loads(e.data)['type'] == 'block']
+    if not found:
+        return None
+    written = sum(1 for e in found if e['outcome'] in ('ACCEPTED', 'REUSED', 'KEPT'))
+    return BlockProgress(written=written, count=found[-1]['blocks'])
+
+
+def _view(job: JobRecord, jobs: JobStore) -> JobView:
     return JobView(context_id=job.context_id, request_id=job.request_id, subject_key=job.subject_key,
                    job=job.command, status=job.status, proposal_refs=job.proposal_refs, detail=job.detail,
-                   created=job.created, updated=job.updated)
+                   created=job.created, updated=job.updated, blocks=_blocks(jobs, job))
 
 
 def configure(app, settings) -> None:
@@ -130,7 +149,7 @@ def queue(context_id: str, body: JobRequest, request: Request, principal: Princi
             raise HTTPException(409, STALE_BASE)
         job, _ = jobs.submit(context_id, body.request_id, principal.subject_key, body.job.kind,
                              body.job.model_dump(mode='json'))
-    return _view(job)
+        return _view(job, jobs)
 
 
 @router.get('/contexts/{context_id}/jobs', response_model=JobList, responses=READ_ERRORS,
@@ -140,13 +159,14 @@ def listing(context_id: str, request: Request, limit: int = Query(50, ge=1, le=2
     with open_context(request, context_id) as service:
         service.authorize_jobs(context_id, principal.subject_key)
     with _jobs(request) as jobs:
-        return JobList(jobs=tuple(_view(job) for job in jobs.list(context_id, limit)))
+        return JobList(jobs=tuple(_view(job, jobs) for job in jobs.list(context_id, limit)))
 
 
 @router.get('/contexts/{context_id}/jobs/{request_id}', response_model=JobView, responses=READ_ERRORS,
             summary='A job with its status and, once ended, its pending proposal or the reason it ended')
-def read(job: JobRecord = Depends(job_follower)):
-    return _view(job)
+def read(request: Request, job: JobRecord = Depends(job_follower)):
+    with _jobs(request) as jobs:
+        return _view(job, jobs)
 
 
 @router.get('/contexts/{context_id}/jobs/{request_id}/events', response_class=EventSourceResponse,
@@ -190,9 +210,9 @@ def abandon(context_id: str, request_id: str, request: Request, principal: Princ
         if done is None:
             current = jobs.get(context_id, request_id)
             if job.status == 'RUNNING' and current.status == 'ABANDONED':
-                return _view(current)
+                return _view(current, jobs)
             raise HTTPException(409, 'The job has ended or changed; reload it')
-    return _view(done)
+        return _view(done, jobs)
 
 
 @router.post('/contexts/{context_id}/jobs/{request_id}/choice', response_model=JobView, responses=WRITE_ERRORS,
@@ -206,11 +226,11 @@ def choose(context_id: str, request_id: str, body: SourceChoice, request: Reques
         if job.subject_key != principal.subject_key:
             raise HTTPException(403, 'Only the teacher who prepared the sources chooses them')
         if job.status == body.choice:
-            return _view(job)
+            return _view(job, jobs)
         done = jobs.transition(context_id, request_id, {'AWAITING_CHOICE'}, body.choice)
         if done is None:
             raise HTTPException(409, 'The job does not await a choice; reload it')
-    return _view(done)
+        return _view(done, jobs)
 
 
 MODULE = ApiModule('jobs', router)

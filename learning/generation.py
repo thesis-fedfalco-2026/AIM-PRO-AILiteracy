@@ -1,10 +1,11 @@
 """Reserve exact authoring inputs, generate outside locks, then propose atomically."""
 
+import hashlib
 import json
 import logging
 
-from aimpro.generators import (ArtifactInput, GenerationCommand, GenerationInput, GenerationResult,
-    UnitInput, generate)
+from aimpro.generators import (CONTRACTS, DISPATCH, NOT_ACCEPTED, ArtifactInput, GenerationAttempt, GenerationCommand,
+    GenerationInput, GenerationResult, UnitInput, generate)
 from aimpro.lead import ReviewError
 from aimpro.syllabus_state import resolve_artifact
 from aimpro.teacher_contracts import ApprovedReview, RecordedTeacherOutput
@@ -105,6 +106,44 @@ def _recorded_origin(store, context_id, recorded, identity, snapshot):
         raise StateConflict('Recorded Teacher output has no matching failed origin request')
 
 
+class KeptBlocks:
+    """The blocks of units a subject's requests accepted, kept for a later request over the same exact inputs (S09d).
+
+    A block is recorded in the ALM requests store under an id derived from its exact input (the request's input
+    and its block, whose digest names the command and its base context) and the accepted drafts of the blocks
+    before it, so it is reused only when everything it was written from is unchanged. Its result is the draft and
+    its accepting attempt; it is written once, outside the request's reservation, and never changes.
+    """
+
+    def __init__(self, store, context_id, subject_key):
+        self.store, self.context_id, self.subject_key = store, context_id, subject_key
+
+    def _identity(self, part, previous):
+        key = hashlib.sha256(canonical({'input_digest': part.digest, 'subject_key': self.subject_key,
+            'previous': [d.model_dump(mode='json') for d in previous]}).encode()).hexdigest()
+        return 'generation-block:' + key, canonical({'identity': {'operation': 'PROJECT_GENERATE_BLOCK',
+            'subject_key': self.subject_key, 'role': part.role, 'block': key}})
+
+    def accepted(self, part, previous):
+        request_id, payload = self._identity(part, previous)
+        with self.store.read_transaction():
+            row = self.store.request_record(request_id, self.context_id)
+        if row is None or row.payload != payload or row.result is None:
+            return None
+        saved = json.loads(row.result)
+        draft = CONTRACTS[DISPATCH[part.role]][1].model_validate(saved['draft'])
+        return draft, GenerationAttempt.model_validate(saved['attempt'])
+
+    def keep(self, part, previous, draft, attempt):
+        request_id, payload = self._identity(part, previous)
+        with self.store.write_transaction():
+            if self.store.request_record(request_id, self.context_id) is not None:
+                return
+            self.store.reserve_request(request_id, self.context_id, payload)
+            self.store.finish_request(request_id, self.context_id, {
+                'draft': draft.model_dump(mode='json'), 'attempt': attempt.model_dump(mode='json')})
+
+
 def generate_project(service, context_id, subject_key, role, command, *, request_id, authoring_factory,
                      recorded=None):
     command = GenerationCommand.model_validate(command)
@@ -132,8 +171,11 @@ def generate_project(service, context_id, subject_key, role, command, *, request
     attempts = ()
     try:
         dispatcher, lead, budget = authoring_factory()
-        draft, verdict, attempts = generate(data, dispatcher=dispatcher, lead=lead, max_context_chars=budget,
-                                            recorded_text=None if recorded is None else recorded.text)
+        draft, verdict, attempts, accepted = generate(data, dispatcher=dispatcher, lead=lead, max_context_chars=budget,
+                                            recorded_text=None if recorded is None else recorded.text,
+                                            kept=KeptBlocks(service.store, context_id, subject_key))
+        if not accepted:
+            logging.getLogger('agent_system').warning('Generated content proposed without the review agent\'s acceptance')
         from aimpro.generation_state import revision
         bundle = revision(context, manifest, data, draft, verdict)
         with service.store.write_transaction():
@@ -149,7 +191,8 @@ def generate_project(service, context_id, subject_key, role, command, *, request
             current, selected, candidates = _revision_manifest(service.store, current, bundle)
             proposed = _persist(service, current, selected, candidates, bundle.explanation)
             result = GenerationResult(kind='PROPOSAL', content='Authoring output awaits explicit human review and application.',
-                proposal_refs=(proposed.proposal,), application_status='pending', attempts=attempts)
+                proposal_refs=(proposed.proposal,), application_status='pending', attempts=attempts,
+                notice=None if accepted else NOT_ACCEPTED)
             service.store.finish_request(request_id, context_id, result.model_dump(mode='json'))
         return result
     except Exception as error:

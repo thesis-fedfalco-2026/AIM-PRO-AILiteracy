@@ -67,7 +67,8 @@ class ConfigurationTest(TemporaryFilesTestCase):
 
         self.assertEqual(
             catalog.settings,
-            LLMSettings(temperature=0.2, top_p=0.9, timeout=600),
+            # The deadline of a model call went from 600 to 1200 s (owner, 13 November 2026, S09d).
+            LLMSettings(temperature=0.2, top_p=0.9, timeout=1200),
         )
         self.assertEqual(
             catalog.orchestrator,

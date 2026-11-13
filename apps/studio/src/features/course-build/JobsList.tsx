@@ -76,6 +76,7 @@ export function JobsList({ contextId, jobs, failed, subjectKey, onReload, onOpen
                 created: new Date(job.created).toLocaleString(),
               })}
             </p>
+            {job.blocks ? <p>{t('build.jobs.blocks', { written: job.blocks.written, count: job.blocks.count })}</p> : null}
             {job.detail ? <p className="alm-muted">{t('build.jobs.detail', { detail: job.detail })}</p> : null}
             <NextAction contextId={contextId} job={job} own={job.subject_key === subjectKey} onOpen={onOpen} />
             <JobAttempts contextId={contextId} job={job} own={job.subject_key === subjectKey} />

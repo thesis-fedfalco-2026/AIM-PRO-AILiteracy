@@ -582,6 +582,16 @@ export interface components {
             kind: "generate-project-assessments";
         };
         /**
+         * BlockProgress
+         * @description How many blocks of units a generator job has written (accepted or reused), of how many (S09d).
+         */
+        BlockProgress: {
+            /** Count */
+            count: number;
+            /** Written */
+            written: number;
+        };
+        /**
          * CitedExcerpt
          * @description An excerpt a unit may cite; ``purpose`` and ``limitations`` exist for prepared sources only.
          */
@@ -932,13 +942,39 @@ export interface components {
          *
          *     ``review.reason`` is model text: it is shown to the author as the review agent's assessment and never becomes an
          *     error message, a log line or an event. ``check`` is the fixed text of a deterministic check.
+         *
+         *     ``block`` is the block of units the draft wrote, ``final`` the review of the assembled draft (S09d); ``reused`` a
+         *     block accepted by an earlier request over the same exact inputs; ``timed_out`` a call that reached its deadline,
+         *     ``truncated`` a response cut at its length limit. All are omitted when unset, so attempts recorded before S09d keep their exact shape.
          */
         GenerationAttempt: {
             /** Attempt */
             attempt: number;
+            /** Block */
+            block?: number | null;
             /** Check */
             check?: string | null;
+            /**
+             * Final
+             * @default false
+             */
+            final: boolean;
+            /**
+             * Reused
+             * @default false
+             */
+            reused: boolean;
             review?: components["schemas"]["GenerationVerdict"] | null;
+            /**
+             * Timed Out
+             * @default false
+             */
+            timed_out: boolean;
+            /**
+             * Truncated
+             * @default false
+             */
+            truncated: boolean;
         };
         /** GenerationCommand */
         "GenerationCommand-Input": {
@@ -1056,6 +1092,7 @@ export interface components {
          * @description A job: its exact command, its status and, once ended, its pending proposal or the reason it ended.
          */
         JobView: {
+            blocks?: components["schemas"]["BlockProgress"] | null;
             /** Context Id */
             context_id: string;
             /** Created */

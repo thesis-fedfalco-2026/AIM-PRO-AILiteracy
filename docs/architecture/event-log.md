@@ -54,10 +54,11 @@ operator: do not encode personal data in them.
 | `plan.decided` | `status` (`AUTHORIZED`, `EMPTY`, `REJECTED`, `OVER_BUDGET`); `steps` with `id`, `agent`, `role`, `depends_on`, `retrieval`; or `error_type` with the plan-rule `reason` (fixed text, truncated to 160 characters) and `will_retry` when one corrected attempt follows, or `prompt_chars` |
 | `retrieval` | `step_id`, `k`, `documents`, `duration_ms` |
 | `worker.call` | `step_id`, `agent`, `status`, `brief_chars`, `duration_ms` |
-| `review` | `stage` (`WORKER`, `FINAL`), `step_id`, `verdict` |
+| `review` | `stage` (`WORKER`, `FINAL`), `step_id`, `verdict`; for a project generator draft (S09c, S09d) `stage` (`PROJECT`, `PROJECT_CHECKS`, `PROJECT_FINAL`, `PROJECT_FINAL_CHECKS`), `role`, `attempt`, the four review flags and, for the draft of a block, `block` |
 | `step.finished` | `step_id`, `agent`, `role`, `status` (`SUCCEEDED`, `FAILED`, `SKIPPED`), `finding_codes`, `duration_ms` |
 | `final.checked` | `synthesis` (`lead`, or `pass_through` for a single accepted step delivered as is), `verdict` (final review; `null` for a pass-through), `proposed_kind`, `response_kind` (after the admissibility check), `application_status` (as proposed), `finding_codes`, `violations` (failed admissibility conditions: `review_not_accepted`, `proposal_kind`, `proposal_refs`, `state_change_refs`, `application_claim`, `citation_not_from_results`, `coverage_not_from_results`) |
-| `provider.call` | `agent` (CrewAI role), `model`, `status`, `call_type`, `input_tokens`, `output_tokens`, `duration_ms` |
+| `provider.call` | `agent` (CrewAI role), `model`, `status`, `call_type`, `input_tokens`, `output_tokens`, `reasoning_tokens` (when the provider reports them, counted within `output_tokens`), `duration_ms` |
+| `block` | A block of units of a project generator request (S09d): `role`, `block` (1-based), `blocks` (count), `outcome` (`ACCEPTED`, `REUSED`, `KEPT`, `SPLIT`, `NOT_ACCEPTED`, `TIMED_OUT`, `CUT`); for a response cut at its length limit, `output_tokens` and `reasoning_tokens` when the provider reported them |
 | `run.finished` | `response_kind` (or `ERROR`), `error_type`, `duration_ms` |
 | `evaluation.config` | Evaluation only: model mode, `planning_mode`, source commit/dirty flag, implementation and configuration hashes when supplied by the CLI. |
 | `evaluation.injected` | Evaluation only: `component` (`plan`, `document`, `worker`, `synthesis`); emitted after an actual substitution, never its text. |

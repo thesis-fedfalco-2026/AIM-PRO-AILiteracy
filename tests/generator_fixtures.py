@@ -59,6 +59,11 @@ def synthetic_draft(data):
     return output_type(**values)
 
 
+def whole(data):
+    """The request input a block was cut from (S09d): the same input without its block."""
+    return GenerationInput.model_validate({k: v for k, v in data.model_dump(mode='json').items() if k != 'block'})
+
+
 # The review agent's synthetic refusal of a generated draft: model text, never an error message.
 GENERATION_REJECTION = GenerationVerdict(verdict='REJECT', source_alignment=True, citation_support=True,
     intent_correct=True, content_complete=False,
@@ -69,7 +74,8 @@ class SyntheticModels:
     """Synthetic generators and review agent: ``verdicts`` are returned in order, then ``verdict``.
 
     A review prompt holding :data:`REJECT_ONCE` (in a command requirement) is refused the first time it is seen,
-    so the synthetic worker and the browser tests can show a refused draft followed by an accepted one.
+    so the synthetic worker and the browser tests can show a refused draft followed by an accepted one. Only the
+    review of a block is refused: the review of the assembled draft judges blocks already accepted (S09d).
     """
 
     def __init__(self, *verdicts):
@@ -119,6 +125,6 @@ class SyntheticModels:
         assert response_format is GenerationVerdict
         self.calls.append('LEAD_REVIEW')
         self.reviews.append(prompt)
-        if REJECT_ONCE in prompt and self.reviews.count(prompt) == 1:
+        if REJECT_ONCE in prompt and 'PROJECT_AUTHORING_BLOCK_REVIEW' in prompt and self.reviews.count(prompt) == 1:
             return SimpleNamespace(pydantic=GENERATION_REJECTION)
         return SimpleNamespace(pydantic=self.verdicts.pop(0) if self.verdicts else self.verdict)

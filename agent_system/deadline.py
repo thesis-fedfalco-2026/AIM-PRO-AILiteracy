@@ -16,8 +16,49 @@ from crewai.llms.hooks.base import BaseInterceptor
 _pending: ContextVar[tuple[httpx.Request, float]] = ContextVar("llm_request_deadline")
 
 
-def _expired(request: httpx.Request, seconds: float) -> httpx.ReadTimeout:
-    return httpx.ReadTimeout(f"LLM request exceeded its {seconds:g}s wall-clock deadline", request=request)
+class DeadlineExceeded(httpx.ReadTimeout):
+    """An LLM request that reached its wall-clock deadline; callers name it with their own fixed text."""
+
+
+def expired(request: httpx.Request, seconds: float) -> DeadlineExceeded:
+    return DeadlineExceeded(f"LLM request exceeded its {seconds:g}s wall-clock deadline", request=request)
+
+
+def _caused_by(error: BaseException, kind) -> bool:
+    seen = set()
+    while error is not None and id(error) not in seen:
+        if isinstance(error, kind):
+            return True
+        seen.add(id(error))
+        error = error.__cause__ or error.__context__
+    return False
+
+
+def reached(error: BaseException) -> bool:
+    """Whether ``error`` is, or was raised while handling, a request past its deadline (SDKs wrap it)."""
+    return _caused_by(error, DeadlineExceeded)
+
+
+def cut(error: BaseException) -> bool:
+    """Whether ``error`` comes from a response the provider cut at its output length limit."""
+    from openai import LengthFinishReasonError
+    return _caused_by(error, LengthFinishReasonError)
+
+
+def cut_tokens(error: BaseException) -> dict:
+    """The output and reasoning token counts of a cut response, when the provider reported them; numbers only."""
+    from openai import LengthFinishReasonError
+    seen = set()
+    while error is not None and id(error) not in seen:
+        if isinstance(error, LengthFinishReasonError):
+            usage = getattr(error.completion, 'usage', None)
+            details = getattr(usage, 'completion_tokens_details', None)
+            found = {'output_tokens': getattr(usage, 'completion_tokens', None),
+                     'reasoning_tokens': getattr(details, 'reasoning_tokens', None)}
+            return {k: v for k, v in found.items() if isinstance(v, int)}
+        seen.add(id(error))
+        error = error.__cause__ or error.__context__
+    return {}
 
 
 class _DeadlineStream(httpx.SyncByteStream):
@@ -27,7 +68,7 @@ class _DeadlineStream(httpx.SyncByteStream):
     def __iter__(self):
         for chunk in self._stream:
             if time.monotonic() > self._deadline:
-                raise _expired(self._request, self._seconds)
+                raise expired(self._request, self._seconds)
             yield chunk
 
     def close(self):
@@ -41,7 +82,7 @@ class _AsyncDeadlineStream(httpx.AsyncByteStream):
     async def __aiter__(self):
         async for chunk in self._stream:
             if time.monotonic() > self._deadline:
-                raise _expired(self._request, self._seconds)
+                raise expired(self._request, self._seconds)
             yield chunk
 
     async def aclose(self):

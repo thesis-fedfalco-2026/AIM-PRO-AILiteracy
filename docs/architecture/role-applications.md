@@ -547,7 +547,7 @@ browser recorded.
 | `build.spec.ts`: a course from an uploaded AIM-PRO model | create a course (one new policy file next to the seed's); upload the AIM-PRO export the fixtures use: the stored file has the uploaded bytes and digest; the Curator job with the synthetic model ends with a link to the proposal; approve and apply the syllabus; the course page shows the structure; propose, approve and apply the project; the build page shows the project; axe on the build page with every disclosure open |
 | `build.spec.ts`: a syllabus on accepted sources (S09a2) | upload; search with two queries (synthetic retrieval); the excerpt found by both, with its usage conditions; tick it, write its purpose and limitations, prepare; the prepared sources; axe with every disclosure open; no prepared sources offered to the Curator before the choice; accept; the Curator on the accepted sources ends with a proposal; approve and apply; the course structure; back on the build page, the three jobs listed with their status; axe |
 | `refinement.spec.ts`: a syllabus refined step by step (S09b) | upload; the Curator by a query; the syllabus in words (competency, practice, planned activities) compared with a course without a syllabus, and not the generic "same teaching content" sentence; axe; a revision request with its reason (with the synthetic reviewer's marker, so its first draft is rejected); "Ask the Curator for a revised syllabus" ends with a link to the revision; the review agent's assessments of the two drafts (rejected, then accepted, its reason labelled as model text); axe; compared with the previous proposal (title changed, one unit changed in its purpose, one unit added) and showing the reason; axe; approve and apply: the course shows the revised syllabus; the teacher edits it (syllabus title, a unit title; axe on the form): a new proposal by the teacher, compared with the syllabus in use; approve and apply: the course shows the teacher's syllabus, "Edited by"; axe |
-| `generation.spec.ts`: the review of an Evaluator job's drafts (S09c) | on the seed's authoring context, an Evaluator job queued through the API with the browser's session (no form before S09c2), its requirement holding the synthetic reviewer's marker; the job list shows it proposed; "How the review agent judged the drafts of this job": draft 1 not accepted ("Content complete: no", its reason labelled as model text), draft 2 accepted; the job view does not hold the reason; axe |
+| `generation.spec.ts`: the review of an Evaluator job's drafts (S09c, S09d) | on the seed's authoring context, an Evaluator job queued through the API with the browser's session (no form before S09c2), its requirement holding the synthetic reviewer's marker; the job list shows it proposed with "Blocks of units written: 1 of 1"; "How the review agent judged the drafts of this job": block 1 draft 1 not accepted ("Content complete: no", its reason labelled as model text), block 1 draft 2 accepted, the assembled draft accepted; the job view does not hold the reason; axe |
 | `cycle.spec.ts`: the rest of the authoring cycle (S09c2) | a new course: upload, Curator, approve and apply the syllabus, initialize and apply the project; the Evaluator form shows the project and course version it sends (read back through the API), the Teacher form says it needs the assessments; axe; another author applies an Evaluator proposal through the API, so the form's job is refused at queue time (409): the form says the course changed and shows the new course version; the Evaluator queued again, its proposal read in its teacher view (rubric; axe), approved and applied; the Teacher form shows the applied assessment it sends; the Teacher and Trainer proposals read with their material texts (axe), approved and applied; the completion rules proposed from the build page, read part by part (axe), approved and applied; the project inspection lists the five artifacts with their receipts and no stale dependency, and every node of the design has a rule |
 | `build.spec.ts`: a syllabus not accepted (issue #112) | upload; the Curator by a query holding the synthetic reviewer's `REJECT_EVERY` marker ends with a proposal; the job list shows the fixed notice; axe; the syllabus view says the review agent accepted no draft, with its reason as model text; axe; approve and apply; the course shows the structure |
 | `build.spec.ts`: an invalid file | a text file is refused with "The file is not UTF-8 JSON"; no report; the export directory and the database file are unchanged; axe |
@@ -960,6 +960,93 @@ longer pending. Chat 21 trial finding 1 stays open with D28.
 The build page lists content made from an earlier version of what it depends
 on (the project's stale dependencies) and asks for it to be generated again
 before the completion rules.
+
+## Generation by blocks of units (S09d)
+
+Owner decisions of 12 November 2026 (issue #118). In the owner's trial of
+11 November one Evaluator response for 48 units reached the wall-clock
+deadline of a model call (`[llm] timeout = 600`) while still writing. The
+Evaluator, Teacher and Trainer now write a request in several responses.
+
+1. **Blocks of 12 target units.** `aimpro.generators.BLOCK_UNITS = 12`. The
+   request's target units are cut, in order, into consecutive blocks; a
+   48-unit syllabus is four. Each block is a `GenerationInput` with a
+   `UnitBlock` (`index`, `count`, `unit_keys`) that restricts its
+   `target_units`; the request's own input has no block and keeps its exact
+   shape and digest. A block is named by its units only (`unit_keys`), not by
+   its place among the blocks. The generator of block N receives the full input, its own
+   units (`PROJECT_AUTHORING_BLOCK`) and, as `previous_blocks`, the accepted
+   drafts of blocks 1..N-1, as untrusted data. The structured Teacher and the
+   Curator are unchanged: one response.
+2. **Each block is reviewed under D30, then the assembled draft once.** A block
+   draft passes `checked_draft` for its units, and its material keys must not
+   repeat those of an earlier block ("Material keys must be unique across
+   blocks"); the review agent judges it with the full input and that block only
+   (`PROJECT_AUTHORING_BLOCK_REVIEW`), with up to three drafts per block. The
+   accepted blocks are assembled (units in order, materials, gaps without
+   repeats) into one draft over the request's input, which passes
+   `checked_draft` and is judged once by the review agent with the usual
+   prompt, also when there is one block. One proposal per job, carrying the
+   final verdict.
+   A draft that does not write each requested unit once, in syllabus order, is
+   refused in words the author can read, naming the units by their position in
+   the syllabus (owner decision of 13 November 2026), for example "The draft
+   must cover each unit it was asked to write once, in the order of the
+   syllabus: units 14 and 15 of the syllabus are missing; 1 unit it was not
+   asked to write was added."; the retry receives the expected, missing and
+   unexpected unit keys as `check_details` (data). The generator still receives
+   the whole syllabus.
+3. **A flow ends with something for the teacher to decide** (owner, 13
+   November 2026; this changes D30 for these generators, the structured
+   Teacher keeps it). A block whose checked drafts the review agent accepts
+   none of keeps its last checked draft (`block` event `KEPT`), and a final
+   review that is not `ACCEPT` does not stop the job: the assembled draft is
+   proposed with its verdict and the fixed notice `NOT_ACCEPTED` ("The review
+   agent did not accept every block or the assembled draft; the last drafts
+   that passed the checks are proposed with its assessments, for the teacher to
+   decide."), which is the job's detail, as for the Curator since issue #112.
+   A block whose three drafts all fail the checks is written in two halves; a
+   block of one unit that fails them fails the job.
+   **A job that fails keeps its accepted blocks.** Each accepted block is recorded once in the
+   ALM requests store (`learning.generation.KeptBlocks`, request id
+   `generation-block:<sha256>` of the block's input digest, the subject and
+   the drafts of the blocks before it; operation `PROJECT_GENERATE_BLOCK`), so
+   a new job with the same command on the same exact inputs reuses it without
+   a model call, after checking it again. Any change applied to the course
+   changes the base context, and so every block's input.
+4. **Every attempt names its block.** `GenerationAttempt` gains `block`,
+   `final` (the review of the assembled draft) and `reused` (a block accepted
+   by an earlier job), each omitted when unset, so attempts recorded before
+   S09d keep their shape; `GET …/generation-reviews/{request_id}` returns them.
+5. **A block whose response does not fit is written in two halves**, down to
+   one unit (owner, 13 November 2026: the approach must not depend on the
+   model). The deadline interceptor raises
+   `agent_system.deadline.DeadlineExceeded`, and the OpenAI SDK raises
+   `LengthFinishReasonError` for a response cut at its output length limit;
+   when a call of a block (a draft or its review) ends with either, whatever
+   the SDK wraps it in, the block's units are written as two smaller blocks
+   instead (the attempt has `timed_out` or `truncated` and the fixed text
+   `SPLIT` or `CUT_SPLIT`), and every later block of the request takes the
+   smaller size too: the request learns how much the model writes in one
+   response (a block split by the checks changes no other block). Only a block of one unit that does not fit stops
+   the request, with `TIMED_OUT` ("Authoring generation did not complete (A
+   model call reached its time limit); no accepted proposal was persisted.")
+   or `CUT` ("The model's response was cut at its length limit"). The
+   provider's message is never shown or logged. The deadline
+   of a model call (`runtime.properties` `[llm] timeout`) is 1200 s (was 600,
+   owner decision of 13 November 2026).
+6. **Content-free progress.** One `block` event per block (`role`, `block`,
+   `blocks`, `outcome` `ACCEPTED`, `REUSED`, `KEPT`, `SPLIT`, `NOT_ACCEPTED`,
+   `TIMED_OUT` or `CUT`; `blocks` grows when a block is split); `review` events
+   of a block carry `block`, and the final review has stage `PROJECT_FINAL`.
+   `JobView.blocks` (`{written, count}`, or `null`) counts the blocks written so
+   far from those events. API version 0.11.0.
+
+In the studio, the job list shows "Blocks of units written: 2 of 4", and "How
+the review agent judged the drafts of this job" names each draft's block, a
+block reused from an earlier job, a call that reached the time limit, a
+response cut at its length limit and the review of the assembled draft (labels
+and data only).
 
 ## Local identity smoke test
 

@@ -121,8 +121,8 @@ class JobsApiTest(ReviewApiCase):
         self.worker.run_once()
         calls = list(self.agents.models.calls)
         done = self.job(self.queue('job-1'), 'PROPOSED')
-        self.assertEqual({k: v for k, v in done.items() if k not in ('status', 'proposal_refs', 'updated')},
-                         {k: v for k, v in first.items() if k not in ('status', 'proposal_refs', 'updated')})
+        ran = ('status', 'proposal_refs', 'updated', 'blocks')
+        self.assertEqual({k: v for k, v in done.items() if k not in ran}, {k: v for k, v in first.items() if k not in ran})
         self.assertIsNone(self.worker.run_once())
         self.assertEqual(self.agents.built, ['authoring'])
         self.assertEqual(self.agents.models.calls, calls)
@@ -235,12 +235,17 @@ class JobsApiTest(ReviewApiCase):
         self.worker.run_once()
         text = self.stream('job-1')
         events = parse_stream(text)
-        # The review of each draft is one content-free progress event (S09c).
-        self.assertEqual([name for _, name, _ in events], ['status', 'status', 'progress', 'status'])
+        # The review of each draft, each block and the review of the assembled draft are content-free progress
+        # events (S09c, S09d).
+        self.assertEqual([name for _, name, _ in events], ['status', 'status', 'progress', 'progress', 'progress', 'status'])
         self.assertEqual([StatusEvent.model_validate_json(data).status for _, name, data in events if name == 'status'],
                          ['QUEUED', 'RUNNING', 'PROPOSED'])
-        review = Event.model_validate_json(events[2][2])
-        self.assertEqual((review.type, review.data['attempt'], review.data['verdict']), ('review', 1, 'ACCEPT'))
+        review, block, final = (Event.model_validate_json(data) for _, name, data in events if name == 'progress')
+        self.assertEqual((review.type, review.data['attempt'], review.data['verdict'], review.data['block']),
+                         ('review', 1, 'ACCEPT', 1))
+        self.assertEqual((block.type, block.data['block'], block.data['blocks'], block.data['outcome']),
+                         ('block', 1, 1, 'ACCEPTED'))
+        self.assertEqual((final.type, final.data['stage'], final.data['verdict']), ('review', 'PROJECT_FINAL', 'ACCEPT'))
         ids = [int(event_id) for event_id, _, _ in events]
         self.assertEqual(ids, sorted(set(ids)))
         for private in (REQUIREMENT, 'Submit a fictional business reminder prompt', 'clarity'):
@@ -253,6 +258,22 @@ class JobsApiTest(ReviewApiCase):
         self.app.state.job_wait = waits.append
         self.assertEqual(parse_stream(self.stream('job-1', **{'Last-Event-ID': str(ids[-1])})), [])
         self.assertEqual(waits, [])
+
+    # S09d: a generator job written in blocks of units shows how many blocks are written, from its content-free events.
+    def test_a_job_shows_how_many_of_its_blocks_are_written(self):
+        queued = self.job(self.queue('job-1'))
+        self.assertIsNone(queued['blocks'])
+        for n, outcome in ((1, 'REUSED'), (2, 'ACCEPTED'), (3, 'NOT_ACCEPTED')):
+            self.jobs.add_progress(AUTH, 'job-1', Event(event_id=f'e{n}', run_id='run', seq=n, time='t', type='block',
+                data={'role': 'ASSESSMENT', 'block': n, 'blocks': 4, 'outcome': outcome}))
+        self.assertEqual(self.job(self.staff.get(f'/contexts/{AUTH}/jobs/job-1'))['blocks'], {'written': 2, 'count': 4})
+        listed = self.staff.get(f'/contexts/{AUTH}/jobs').json()['jobs']
+        self.assertEqual(listed[0]['blocks'], {'written': 2, 'count': 4})
+        # A job that ran to its proposal wrote its one block.
+        self.job(self.queue('job-2'))
+        self.worker.run_once()
+        self.worker.run_once()
+        self.assertEqual(self.job(self.staff.get(f'/contexts/{AUTH}/jobs/job-2'))['blocks'], {'written': 1, 'count': 1})
 
     def test_the_stream_reports_progress_while_the_job_runs_and_ends_with_it(self):
         from tests.services.test_job_worker import emitting_kind
@@ -290,9 +311,11 @@ class JobsApiTest(ReviewApiCase):
         done = self.job(self.staff.get(f'/contexts/{AUTH}/jobs/job-1'), 'PROPOSED')
         response = self.reviews('job-1')
         self.assertEqual(response.status_code, 200, response.text)
+        # Each draft names its block; the review of the assembled draft is final (S09d).
         self.assertEqual(response.json(), {'request_id': 'job-1', 'outcome': 'PROPOSAL', 'attempts': [
-            {'attempt': 1, 'review': GENERATION_REJECTION.model_dump(mode='json'), 'check': None},
-            {'attempt': 2, 'review': self.agents.models.verdict.model_dump(mode='json'), 'check': None}]})
+            {'attempt': 1, 'block': 1, 'review': GENERATION_REJECTION.model_dump(mode='json'), 'check': None},
+            {'attempt': 2, 'block': 1, 'review': self.agents.models.verdict.model_dump(mode='json'), 'check': None},
+            {'attempt': 1, 'final': True, 'review': self.agents.models.verdict.model_dump(mode='json'), 'check': None}]})
         # The review agent's text is shown here only: never in the job's detail or its events.
         self.assertNotIn(GENERATION_REJECTION.reason, json.dumps(done) + self.stream('job-1'))
 

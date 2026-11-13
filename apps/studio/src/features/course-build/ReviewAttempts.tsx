@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import type { GenerationAttempt, SyllabusAttempt } from './buildApi';
 import { useBuildServices } from './BuildServices';
 
-export type AttemptOutcome = 'accepted' | 'rejected' | 'uncertain' | 'checks';
+export type AttemptOutcome = 'accepted' | 'rejected' | 'uncertain' | 'checks' | 'timedOut' | 'truncated';
 
 /** Whose drafts: the Curator's syllabus (Chat 20), or the Evaluator's, Teacher's or Trainer's content (S09c). */
 export type AttemptSource = 'syllabus' | 'generation';
@@ -15,11 +15,24 @@ type Attempt = SyllabusAttempt | GenerationAttempt;
 
 /** How one draft ended: accepted only with an ACCEPT verdict and every check of the review agent passed. */
 export function attemptOutcome(attempt: Attempt): AttemptOutcome {
+  if ('timed_out' in attempt && attempt.timed_out) return 'timedOut';
+  if ('truncated' in attempt && attempt.truncated) return 'truncated';
   const review = attempt.review;
   if (!review) return 'checks';
   const passed = Object.values(review).every((value) => value !== false);
   if (review.verdict === 'ACCEPT' && passed) return 'accepted';
   return review.verdict === 'UNCERTAIN' ? 'uncertain' : 'rejected';
+}
+
+/** Which draft: of a block of units or of the assembled draft (S09d), or of the whole job before blocks. */
+function AttemptHeading({ attempt }: { attempt: Attempt }) {
+  const { t } = useTranslation();
+  const outcome = t(`build.reviews.outcome.${attemptOutcome(attempt)}`);
+  const block = 'block' in attempt ? attempt.block : undefined;
+  if ('reused' in attempt && attempt.reused) return <p>{t('build.reviews.reused', { block })}</p>;
+  if ('final' in attempt && attempt.final) return <p>{t('build.reviews.final', { outcome })}</p>;
+  if (block) return <p>{t('build.reviews.blockAttempt', { block, attempt: attempt.attempt, outcome })}</p>;
+  return <p>{t('build.reviews.attempt', { attempt: attempt.attempt, outcome })}</p>;
 }
 
 /** The review agent's checks of one draft, as a sentence. */
@@ -63,10 +76,9 @@ export function ReviewAttempts({ contextId, requestId, source = 'syllabus' }: {
   else {
     body = (
       <ol data-testid="review-attempts">
-        {attempts.map((attempt) => (
-          <li key={attempt.attempt}>
-            <p>{t('build.reviews.attempt', { attempt: attempt.attempt,
-              outcome: t(`build.reviews.outcome.${attemptOutcome(attempt)}`) })}</p>
+        {attempts.map((attempt, index) => (
+          <li key={index}>
+            <AttemptHeading attempt={attempt} />
             {attempt.review ? (
               <>
                 <Flags review={attempt.review} />

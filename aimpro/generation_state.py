@@ -7,7 +7,7 @@ from uuid import uuid4
 from pydantic import Field, model_validator
 
 from aimpro.generators import (AssessmentDraft, AssessmentItem, GenerationInput,
-    GenerationVerdict, RenderedTeacherDraft, TeacherDraft, TrainerDraft, checked_draft, checked_verdict)
+    GenerationVerdict, RenderedTeacherDraft, TeacherDraft, TrainerDraft, _typed_verdict, checked_draft)
 from learning.authoring import ArtifactSelection, dependency_findings
 from learning.contracts import EntityRef, Provenance, Record, Text, entity_data, make_entity
 from learning.metamodel import validate_entity
@@ -38,7 +38,8 @@ class GeneratedArtifact(Record):
 
 
 def revision(context, manifest, data, draft, verdict):
-    draft, verdict = checked_draft(data, draft), checked_verdict(verdict)
+    # The verdict is kept as given: a draft the review agent did not accept is proposed with a notice (S09d).
+    draft, verdict = checked_draft(data, draft), _typed_verdict(verdict)
     version = uuid4().hex
     slot = data.role.lower()
     identity = 'authoring-output:' + hashlib.sha256(canonical([context.snapshot.context.id, manifest.project_id, slot]).encode()).hexdigest()
