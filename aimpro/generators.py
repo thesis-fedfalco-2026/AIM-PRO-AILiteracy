@@ -30,6 +30,10 @@ ATTEMPTS = 3
 BLOCK_UNITS = 12
 # The fixed text of a model call that reached its wall-clock deadline; never the provider's message.
 TIMED_OUT = 'A model call reached its time limit'
+# A block whose call reaches the deadline is written in two halves instead, whatever the model (owner, 13 Nov 2026);
+# a request stops at its TIMEOUTS-th call past the deadline.
+SPLIT = TIMED_OUT + '; the units of this block are written in two smaller blocks'
+TIMEOUTS = 3
 EvidenceKind = Literal['OBJECTIVE_RESPONSE', 'CASE_RESULT', 'CRITERIA_BASED_PRODUCT',
                        'TOOL_TRACE', 'REFLECTIVE_RECORD', 'PEER_REVIEW', 'INTEGRITY_CHECK']
 StimulusKind = Literal['PROMPT_VARIANT', 'PEER_FAILURE', 'PROMPT_MOVE_CARD', 'TRANSCRIPT', 'OTHER']
@@ -96,15 +100,16 @@ class ArtifactInput(Record):
 
 
 class UnitBlock(Record):
-    """One block of a request's target units, written in its own model response (S09d)."""
-    index: int = Field(ge=1)
-    count: int = Field(ge=1)
+    """One block of a request's target units, written in its own model response (S09d).
+
+    A block is named by its units only, so a block written after a split is the same block in a later request.
+    """
     unit_keys: tuple[Text, ...] = Field(min_length=1, max_length=BLOCK_UNITS)
 
     @model_validator(mode='after')
-    def within(self):
-        if self.index > self.count or len(set(self.unit_keys)) != len(self.unit_keys):
-            raise ValueError('A block names unique units within its count')
+    def unique(self):
+        if len(set(self.unit_keys)) != len(self.unit_keys):
+            raise ValueError('A block names unique units')
         return self
 
 
@@ -281,8 +286,8 @@ class GenerationAttempt(Record):
     error message, a log line or an event. ``check`` is the fixed text of a deterministic check.
 
     ``block`` is the block of units the draft wrote, ``final`` the review of the assembled draft (S09d); ``reused`` a
-    block accepted by an earlier request over the same exact inputs. All three are omitted when unset, so attempts
-    recorded before S09d keep their exact shape.
+    block accepted by an earlier request over the same exact inputs; ``timed_out`` a call that reached its deadline.
+    All four are omitted when unset, so attempts recorded before S09d keep their exact shape.
     """
     attempt: int = Field(ge=1, le=ATTEMPTS)
     review: GenerationVerdict | None = None
@@ -290,13 +295,15 @@ class GenerationAttempt(Record):
     block: int | None = Field(None, ge=1, exclude_if=lambda value: value is None)
     final: bool = Field(False, exclude_if=lambda value: not value)
     reused: bool = Field(False, exclude_if=lambda value: not value)
+    timed_out: bool = Field(False, exclude_if=lambda value: not value)
 
     @model_validator(mode='after')
     def reviewed_or_checked(self):
         if (self.review is None) == (self.check is None):
             raise ValueError('An attempt has either a review or a check')
-        if self.final and self.block is not None or self.reused and (self.block is None or self.review is None):
-            raise ValueError('A final review has no block; a reused attempt is a reviewed block')
+        if (self.final and self.block is not None or self.reused and (self.block is None or self.review is None)
+                or self.timed_out and self.check is None):
+            raise ValueError('A final review has no block; a reused attempt is a reviewed block; a timed-out one checked')
         return self
 
 
@@ -586,16 +593,16 @@ def _where(block):
     return {} if block is None else {'block': block}
 
 
-def _drafts(data, dispatcher, lead, max_context_chars, attempts, *, recorded_text=None, previous=()):
+def _drafts(data, dispatcher, lead, max_context_chars, attempts, *, recorded_text=None, previous=(), block=None):
     """Drafts of one input, each checked and reviewed, until one is accepted or :data:`ATTEMPTS` are spent.
 
     Appends every attempt to ``attempts`` and returns the accepted draft and its verdict; raises
-    :class:`NotAccepted` when the drafts run out. ``previous`` holds the accepted drafts of the earlier blocks.
+    :class:`NotAccepted` when the drafts run out. ``previous`` holds the accepted drafts of the earlier blocks;
+    ``block`` is the number of the block the attempts are shown under.
     """
     from aimpro.teacher import render_teacher
     name, prompt, schema = _instructions(data)
     structured = data.command.teacher_plan is not None
-    block = None if data.block is None else data.block.index
     request = {'input_digest': data.digest, 'input': data.model_dump(mode='json'),
                'target_units': [u.model_dump(mode='json') for u in data.target_units]}
     if previous:
@@ -660,29 +667,52 @@ def _reused(kept, part, previous):
 
 
 def _blocks(data, dispatcher, lead, max_context_chars, attempts, kept):
-    """Every block of the request in order, then the assembled draft checked and reviewed once (S09d)."""
+    """Every block of the request in order, then the assembled draft checked and reviewed once (S09d).
+
+    A block whose model call reaches its deadline is written in two halves instead, until the request's
+    :data:`TIMEOUTS`-th call past the deadline, which stops it with :data:`TIMED_OUT`.
+    """
+    from agent_system.deadline import reached
     units = data.target_units
-    chunks = [units[i:i + BLOCK_UNITS] for i in range(0, len(units), BLOCK_UNITS)]
-    previous = []
-    for index, chunk in enumerate(chunks, 1):
+    plan = [units[i:i + BLOCK_UNITS] for i in range(0, len(units), BLOCK_UNITS)]
+    previous, timeouts, index = [], 0, 0
+    while index < len(plan):
+        chunk, number = plan[index], index + 1
         part = GenerationInput.model_validate({**data.model_dump(mode='json'), 'block': UnitBlock(
-            index=index, count=len(chunks), unit_keys=tuple(u.key for u in chunk)).model_dump(mode='json')})
+            unit_keys=tuple(u.key for u in chunk)).model_dump(mode='json')})
         reused = _reused(kept, part, tuple(previous))
         if reused is not None:
             draft, attempt = reused
-            attempts.append(attempt)
+            attempts.append(attempt.model_copy(update={'block': number}))
             outcome = 'REUSED'
         else:
+            before = len(attempts)
             try:
-                draft, _ = _drafts(part, dispatcher, lead, max_context_chars, attempts, previous=tuple(previous))
+                draft, _ = _drafts(part, dispatcher, lead, max_context_chars, attempts, previous=tuple(previous),
+                                   block=number)
             except NotAccepted:
-                events.emit('block', role=data.role, block=index, blocks=len(chunks), outcome='NOT_ACCEPTED')
+                events.emit('block', role=data.role, block=number, blocks=len(plan), outcome='NOT_ACCEPTED')
                 raise
+            except Exception as error:
+                if not reached(error):
+                    raise
+                timeouts += 1
+                split = timeouts < TIMEOUTS and len(chunk) > 1
+                attempts.append(GenerationAttempt(attempt=len(attempts) - before + 1, block=number, timed_out=True,
+                                                  check=SPLIT if split else TIMED_OUT))
+                events.emit('block', role=data.role, block=number, blocks=len(plan),
+                            outcome='SPLIT' if split else 'TIMED_OUT')
+                if not split:
+                    raise NotAccepted(TIMED_OUT, tuple(attempts)) from error
+                half = (len(chunk) + 1) // 2
+                plan[index:index + 1] = [chunk[:half], chunk[half:]]
+                continue
             if kept is not None:
                 kept.keep(part, tuple(previous), draft, attempts[-1])
             outcome = 'ACCEPTED'
-        events.emit('block', role=data.role, block=index, blocks=len(chunks), outcome=outcome)
+        events.emit('block', role=data.role, block=number, blocks=len(plan), outcome=outcome)
         previous.append(draft)
+        index += 1
     contract = CONTRACTS[DISPATCH[data.role]][1]
     values = {'input_digest': data.digest, 'units': tuple(u for d in previous for u in d.units),
               'gaps': tuple(dict.fromkeys(g for d in previous for g in d.gaps))}

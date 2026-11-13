@@ -239,3 +239,36 @@ was therefore not exercised live.
    measurement and over 600 s here. A block of 12 units does not reliably fit the deadline with
    `nvidia/nemotron-3.5-super-vl:free`. Options for the owner, none decided: smaller blocks (a change of D34), a
    longer `[llm] timeout` (`runtime.properties`, owner only), or another model (D33).
+
+## Owner decisions after the second measurement (13 November 2026)
+
+"Lengthen the timeout and see whether the blocks should be smaller. The approach must not depend on the model."
+
+1. **`runtime.properties` `[llm] timeout` = 1200** (was 600). It bounds every model call of the configured runtime,
+   the Curator's included; the tests build their own settings.
+2. **Blocks are halved when a call reaches the deadline, instead of a smaller fixed size.** A fixed size tuned to the
+   free model's speed would tie the approach to that model; the rule below adapts to whatever the model takes. Blocks
+   start at 12 units (D34 unchanged); a block whose call (a draft or its review) reaches the deadline is written as
+   two halves; the third call past the deadline in a request, or a block of one unit that reaches it, stops the
+   request with `TIMED_OUT`. At most two extra calls are spent on splits.
+
+Changes, contract tests first (`test_a_block_whose_call_reaches_its_deadline_is_written_in_two_halves` and
+`test_a_request_stops_at_its_third_call_past_the_deadline_and_keeps_the_accepted_blocks` failed to import `SPLIT`
+and `TIMEOUTS` until the change): `UnitBlock` holds only `unit_keys` (so a block written after a split is the same
+block for `KeptBlocks` in a later request; its place among the blocks is the attempt's and the event's `block`);
+`GenerationAttempt.timed_out`; `SPLIT`, `TIMEOUTS`; `block` events `SPLIT` and `TIMED_OUT`, whose `blocks` grows
+after a split; the studio names a timed-out draft ("its model call reached the time limit before the draft was
+complete"); the guide, the event log and D34 (PR #120).
+
+`tests/test_system.py` pins the checked-in model settings; its timeout went from 600 to 1200 with the decision.
+
+| Check (halving and timeout) | Result |
+| --- | --- |
+| `unittest discover -q`, telemetry off | 1095 tests, OK, 200 skipped (1094 before: 1 new test; the former timeout test now covers the third call) |
+| `python -m aimpro.generate --check`, `python -m services.api_common.openapi --check`, `git diff --check` | exit 0 (`GenerationAttempt.timed_out` in the snapshot and the client) |
+| `npm run check:client`, `typecheck`, `test` (in `apps/`) | OK, OK, 147 tests OK |
+
+### Finding (not changed)
+
+6. **A later job starts again from blocks of 12 units.** Halves accepted by a job are kept and reused, but a new job
+   first tries the whole block of 12 again, which may reach the deadline once more before it is split.

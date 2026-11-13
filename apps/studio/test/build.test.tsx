@@ -447,6 +447,8 @@ describe('the review agent on the Evaluator, Teacher and Trainer drafts (S09c)',
       { attempt: 1, block: 2, review: verdict({ verdict: 'REJECT', content_complete: false, reason: 'Unit 14 lacks a rubric.' }),
         check: null },
       { attempt: 2, block: 2, review: verdict(), check: null },
+      { attempt: 1, block: 3, timed_out: true, review: null,
+        check: 'A model call reached its time limit; the units of this block are written in two smaller blocks' },
       { attempt: 1, final: true, review: verdict({ verdict: 'UNCERTAIN', reason: 'Units repeat across blocks.' }), check: null }] };
     await renderStudio({
       ...page(EMPTY),
@@ -464,6 +466,9 @@ describe('the review agent on the Evaluator, Teacher and Trainer drafts (S09c)',
       .toBeTruthy();
     expect(attempts.getByText(`Block 2, draft 1: ${en.build.reviews.outcome.rejected}`)).toBeTruthy();
     expect(attempts.getByText(`Block 2, draft 2: ${en.build.reviews.outcome.accepted}`)).toBeTruthy();
+    expect(attempts.getByText(`Block 3, draft 1: ${en.build.reviews.outcome.timedOut}`)).toBeTruthy();
+    expect(attempts.getByText('Reason: A model call reached its time limit; the units of this block are written in two '
+      + 'smaller blocks')).toBeTruthy();
     expect(attempts.getByText(`The assembled draft of every block: ${en.build.reviews.outcome.uncertain}`)).toBeTruthy();
     expect(attempts.getByText("The review agent's assessment (model text): “Units repeat across blocks.”")).toBeTruthy();
   });

@@ -973,7 +973,8 @@ Evaluator, Teacher and Trainer now write a request in several responses.
    48-unit syllabus is four. Each block is a `GenerationInput` with a
    `UnitBlock` (`index`, `count`, `unit_keys`) that restricts its
    `target_units`; the request's own input has no block and keeps its exact
-   shape and digest. The generator of block N receives the full input, its own
+   shape and digest. A block is named by its units only (`unit_keys`), not by
+   its place among the blocks. The generator of block N receives the full input, its own
    units (`PROJECT_AUTHORING_BLOCK`) and, as `previous_blocks`, the accepted
    drafts of blocks 1..N-1, as untrusted data. The structured Teacher and the
    Curator are unchanged: one response.
@@ -1008,22 +1009,29 @@ Evaluator, Teacher and Trainer now write a request in several responses.
    `final` (the review of the assembled draft) and `reused` (a block accepted
    by an earlier job), each omitted when unset, so attempts recorded before
    S09d keep their shape; `GET …/generation-reviews/{request_id}` returns them.
-5. **A model call past its deadline is named.** The deadline interceptor
-   raises `agent_system.deadline.DeadlineExceeded`; a generator request that
-   fails with it (whatever the SDK wraps it in) fails with the fixed text
-   `TIMED_OUT`: "Authoring generation did not complete (A model call reached
-   its time limit); no accepted proposal was persisted." The provider's message
-   is never shown or logged.
+5. **A block whose call reaches its deadline is written in two halves**
+   (owner, 13 November 2026: the approach must not depend on the model). The
+   deadline interceptor raises `agent_system.deadline.DeadlineExceeded`; when a
+   call of a block (a draft or its review) reaches it, whatever the SDK wraps
+   it in, the block's units are written as two smaller blocks instead (the
+   attempt has `timed_out` and the fixed text `SPLIT`). The request stops at
+   its third call past the deadline (`TIMEOUTS`), or when a block of one unit
+   reaches it, with the fixed text `TIMED_OUT`: "Authoring generation did not
+   complete (A model call reached its time limit); no accepted proposal was
+   persisted." The provider's message is never shown or logged. The deadline
+   of a model call (`runtime.properties` `[llm] timeout`) is 1200 s (was 600,
+   owner decision of 13 November 2026).
 6. **Content-free progress.** One `block` event per block (`role`, `block`,
-   `blocks`, `outcome` `ACCEPTED`, `REUSED` or `NOT_ACCEPTED`); `review` events
+   `blocks`, `outcome` `ACCEPTED`, `REUSED`, `NOT_ACCEPTED`, `SPLIT` or
+   `TIMED_OUT`; `blocks` grows when a block is split); `review` events
    of a block carry `block`, and the final review has stage `PROJECT_FINAL`.
    `JobView.blocks` (`{written, count}`, or `null`) counts the blocks written so
    far from those events. API version 0.11.0.
 
 In the studio, the job list shows "Blocks of units written: 2 of 4", and "How
 the review agent judged the drafts of this job" names each draft's block, a
-block reused from an earlier job and the review of the assembled draft (labels
-and data only).
+block reused from an earlier job, a call that reached the time limit and the
+review of the assembled draft (labels and data only).
 
 ## Local identity smoke test
 

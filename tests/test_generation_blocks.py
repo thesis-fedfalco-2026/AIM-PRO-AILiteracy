@@ -11,7 +11,7 @@ import httpx
 from agent_system import events
 from agent_system.deadline import expired
 from aimpro.generation_state import GeneratedArtifact
-from aimpro.generators import ATTEMPTS, BLOCK_UNITS, TIMED_OUT, GenerationInput
+from aimpro.generators import ATTEMPTS, BLOCK_UNITS, SPLIT, TIMED_OUT, TIMEOUTS, GenerationInput
 from learning.metamodel import load_contract
 from learning.service import LearningService
 from learning.store import LearningStore
@@ -32,6 +32,11 @@ def package_of(saved):
 
 def data_of(prompt):
     return json.loads(prompt.split('\nDATA\n')[1])
+
+
+def number(data):
+    """The block of a model input before any split: its first unit's place in the syllabus, by 12."""
+    return [u.key for u in data.units].index(data.block.unit_keys[0]) // BLOCK_UNITS + 1
 
 
 def blocks_of(result):
@@ -68,7 +73,7 @@ class GenerationBlocksTest(unittest.TestCase):
         self.assertEqual(self.models.calls, [DESIGNER, REVIEW] * 4 + [REVIEW])
         # Block N writes its own 12 units and receives the accepted drafts of the blocks before it, as data.
         for n, (data, prompt) in enumerate(zip(self.models.inputs, self.models.prompts), 1):
-            self.assertEqual((data.block.index, data.block.count), (n, 4))
+            self.assertEqual((number(data), len(data.block.unit_keys)), (n, BLOCK_UNITS))
             self.assertEqual(len(data.target_units), BLOCK_UNITS)
             self.assertIn('PROJECT_AUTHORING_BLOCK', prompt.split('\nDATA\n')[0])
             previous = data_of(prompt).get('previous_blocks', [])
@@ -79,7 +84,7 @@ class GenerationBlocksTest(unittest.TestCase):
         # The review of a block sees the full input and that block only; the final review sees the assembled draft.
         *block_reviews, final = [data_of(r) for r in self.models.reviews]
         for n, review in enumerate(block_reviews, 1):
-            self.assertEqual(review['input']['block']['index'], n)
+            self.assertEqual(review['input']['block'], self.models.inputs[n - 1].block.model_dump(mode='json'))
             self.assertEqual(len(review['draft']['units']), BLOCK_UNITS)
             self.assertNotIn('previous_blocks', review)
         self.assertNotIn('block', final['input'])
@@ -119,7 +124,7 @@ class GenerationBlocksTest(unittest.TestCase):
         retry = self.models.prompts[2]
         self.assertIn('PROJECT_AUTHORING_RETRY', retry.split('\nDATA\n')[0])
         data = data_of(retry)
-        self.assertEqual(data['input']['block']['index'], 2)
+        self.assertEqual(data['input']['block'], self.models.inputs[1].block.model_dump(mode='json'))
         self.assertEqual(data['review_feedback'], {'review': GENERATION_REJECTION.model_dump(mode='json')})
         self.assertEqual(data['rejected_draft']['input_digest'], self.models.inputs[1].digest)
         self.assertEqual(len(data['previous_blocks']), 1)
@@ -133,9 +138,9 @@ class GenerationBlocksTest(unittest.TestCase):
         refused = []
 
         def collide(data, draft):
-            if data.block.index != 2 or refused:
+            if number(data) != 2 or refused:
                 return draft
-            refused.append(data.block.index)
+            refused.append(number(data))
             # Reuse the first material key of block 1 for a material of block 2.
             taken = data.units[0].key + ':explanation'
             old = draft.materials[0].key
@@ -148,7 +153,7 @@ class GenerationBlocksTest(unittest.TestCase):
         self.models.transform = collide
         result = self.run_generator('TEACHER_CONTENT', request_id='teacher')
         self.assertEqual(result.kind, 'PROPOSAL')
-        self.assertEqual([d.block.index for d in self.models.inputs[first:]], [1, 2, 2, 3, 4])
+        self.assertEqual([number(d) for d in self.models.inputs[first:]], [1, 2, 2, 3, 4])
         self.assertEqual(blocks_of(result)[1], (2, 1, False, False, 'Material keys must be unique across blocks'))
 
     def refuse_once(self, block, change):
@@ -156,7 +161,7 @@ class GenerationBlocksTest(unittest.TestCase):
         changed = []
 
         def transform(data, draft):
-            if data.block.index != block or changed:
+            if number(data) != block or changed:
                 return draft
             changed.append(block)
             return draft.model_copy(update={'units': change(draft.units)})
@@ -209,7 +214,7 @@ class GenerationBlocksTest(unittest.TestCase):
         resumed = self.run_generator(request_id='assessment-again')
         self.assertEqual(resumed.kind, 'PROPOSAL')
         self.assertEqual(self.models.calls[calls:], [DESIGNER, REVIEW] * 3 + [REVIEW])
-        self.assertEqual([d.block.index for d in self.models.inputs[-3:]], [2, 3, 4])
+        self.assertEqual([number(d) for d in self.models.inputs[-3:]], [2, 3, 4])
         self.assertEqual(blocks_of(resumed)[0], (1, 1, False, True, 'ACCEPT'))
         self.assertEqual(len(package_of(self.accept(resumed)).draft.units), 48)
 
@@ -233,13 +238,47 @@ class GenerationBlocksTest(unittest.TestCase):
         self.assertEqual(self.run_generator(command=other, request_id='other').kind, 'PROPOSAL')
         self.assertEqual(self.models.calls[calls:], [DESIGNER, REVIEW] * 4 + [REVIEW])
 
-    def test_a_model_call_past_its_deadline_fails_with_a_fixed_text_and_keeps_the_accepted_blocks(self):
-        def late(data, draft):
-            if data.block.index == 2:
+    def time_out(self, when):
+        """Make the model calls for which ``when(data)`` holds reach their deadline, as an SDK wraps it."""
+        sizes = []
+
+        def transform(data, draft):
+            sizes.append(len(data.block.unit_keys))
+            if when(data):
                 deadline = expired(httpx.Request('POST', 'https://model.invalid/v1/chat'), 600)
                 raise RuntimeError('provider text that must not be shown') from deadline
             return draft
-        self.models.transform = late
+        self.models.transform = transform
+        return sizes
+
+    def test_a_block_whose_call_reaches_its_deadline_is_written_in_two_halves(self):
+        self.assertEqual(SPLIT, 'A model call reached its time limit; the units of this block are written in two '
+                         'smaller blocks')
+        timed_out = []
+        log = events.MemoryEventLog()
+
+        def when(data):
+            if number(data) == 2 and len(data.block.unit_keys) == BLOCK_UNITS and not timed_out:
+                timed_out.append(data)
+                return True
+            return False
+        sizes = self.time_out(when)
+        with events.run(log, request_id='assessment', context_id=AUTH):
+            result = self.run_generator()
+        self.assertEqual(result.kind, 'PROPOSAL')
+        self.assertEqual(sizes, [12, 12, 6, 6, 12, 12])
+        self.assertEqual(self.models.calls, [DESIGNER, REVIEW, DESIGNER] + [DESIGNER, REVIEW] * 4 + [REVIEW])
+        self.assertEqual(blocks_of(result), [(1, 1, False, False, 'ACCEPT'), (2, 1, False, False, SPLIT)] +
+                         [(n, 1, False, False, 'ACCEPT') for n in range(2, 6)] + [(None, 1, True, False, 'ACCEPT')])
+        self.assertTrue(result.attempts[1].timed_out)
+        self.assertFalse(any(a.timed_out for a in result.attempts if a is not result.attempts[1]))
+        progress = [(e.data['block'], e.data['blocks'], e.data['outcome']) for e in log.events if e.type == 'block']
+        self.assertEqual(progress, [(1, 4, 'ACCEPTED'), (2, 4, 'SPLIT')] + [(n, 5, 'ACCEPTED') for n in range(2, 6)])
+        self.assertEqual(len(package_of(self.accept(result)).draft.units), 48)
+
+    def test_a_request_stops_at_its_third_call_past_the_deadline_and_keeps_the_accepted_blocks(self):
+        self.assertEqual(TIMEOUTS, 3)
+        sizes = self.time_out(lambda data: number(data) == 2)
         with self.assertLogs('agent_system', 'WARNING') as logs:
             result = self.run_generator()
         self.assertEqual(result.kind, 'FAILURE')
@@ -247,7 +286,11 @@ class GenerationBlocksTest(unittest.TestCase):
         self.assertEqual(result.content, 'Authoring generation did not complete (A model call reached its time '
                          'limit); no accepted proposal was persisted.')
         self.assertNotIn('provider text', '\n'.join(logs.output))
-        self.assertEqual(blocks_of(result), [(1, 1, False, False, 'ACCEPT')])
+        # Block 2 of 12 units, then its first half of 6, then that half's first half of 3.
+        self.assertEqual(sizes, [12, 12, 6, 3])
+        self.assertEqual(blocks_of(result), [(1, 1, False, False, 'ACCEPT'), (2, 1, False, False, SPLIT),
+                                             (2, 1, False, False, SPLIT), (2, 1, False, False, TIMED_OUT)])
+        self.assertEqual([a.timed_out for a in result.attempts], [False, True, True, True])
         self.models.transform = None
         calls = len(self.models.calls)
         self.assertEqual(self.run_generator(request_id='assessment-again').kind, 'PROPOSAL')
@@ -266,7 +309,7 @@ class SmallSyllabusBlockTest(unittest.TestCase):
         result = self.run_generator()
         self.assertEqual(result.kind, 'PROPOSAL')
         self.assertEqual(self.models.calls, [DESIGNER, REVIEW, REVIEW])
-        self.assertEqual((self.models.inputs[0].block.index, self.models.inputs[0].block.count), (1, 1))
+        self.assertEqual(len(self.models.inputs[0].block.unit_keys), 1)
         self.assertEqual(blocks_of(result), [(1, 1, False, False, 'ACCEPT'), (None, 1, True, False, 'ACCEPT')])
 
     def test_an_input_without_a_block_keeps_its_historical_shape(self):
