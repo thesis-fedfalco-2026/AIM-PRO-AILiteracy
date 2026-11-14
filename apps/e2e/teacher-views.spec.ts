@@ -1,5 +1,9 @@
+import { copyFileSync, rmSync } from 'node:fs';
+import { basename } from 'node:path';
+
 import type { Page } from '@playwright/test';
 
+import { SEED } from './stack/paths.mjs';
 import { en, expect, expectAccessible, test } from './support';
 import type { Entity } from './support';
 
@@ -54,15 +58,23 @@ test('every proposal kind of the seed is read in words, whatever its status', as
     await expectAccessible(page);
   }
 
-  for (const context of [seed.delivery_context, seed.pending_delivery_context]) {
-    for (const proposal of (await proposals(page, context)).filter((p) => p.fields.status !== 'SUPERSEDED')) {
-      if (await open(context, proposal) !== teacher.titleImport) continue;
-      const delivery = page.getByRole('region', { name: teacher.delivery.heading });
-      await expect(delivery).toContainText('Approving brings the frozen release into this delivery course');
-      await expect(delivery).toContainText('Synthetic prompting guide');
-      await expect(delivery).toContainText('guided-practice-coach');
-      await expectAccessible(page);
+  // The applied import gave its delivery context the policy of its preview: installing it is the operator's action
+  // that makes the context available (D10). It is removed afterwards, so later tests see the seed as built.
+  const installed = `${SEED}${seed.policy_dir}/${basename(seed.delivery_policy_preview)}`;
+  copyFileSync(`${SEED}${seed.delivery_policy_preview}`, installed);
+  try {
+    for (const context of [seed.delivery_context, seed.pending_delivery_context]) {
+      for (const proposal of (await proposals(page, context)).filter((p) => p.fields.status !== 'SUPERSEDED')) {
+        if (await open(context, proposal) !== teacher.titleImport) continue;
+        const delivery = page.getByRole('region', { name: teacher.delivery.heading });
+        await expect(delivery).toContainText('Approving brings the frozen release into this delivery course');
+        await expect(delivery).toContainText('Synthetic prompting guide');
+        await expect(delivery).toContainText('guided-practice-coach');
+        await expectAccessible(page);
+      }
     }
+  } finally {
+    rmSync(installed, { force: true });
   }
 
   expect(new Set(titles)).toEqual(new Set([teacher.titleSyllabus, teacher.titleInitialization, teacher.titleAssessment,
