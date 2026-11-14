@@ -32,7 +32,9 @@ A teacher reads every proposal of a course in words, whatever its status.
   proposal showed its summary and "other proposal".
 - The seed holds eight proposal kinds: the syllabus, the project initialization, the assessments (one pending), the
   teacher and trainer content, the completion rules, the release, and the delivery import (one applied, one pending).
-- A delivery import carries completion rules, so the studio titled it "Proposed completion rules".
+- A delivery import carries completion rules and the frozen syllabus of its release, so the studio would have
+  titled it "Proposed completion rules", and its page showed the syllabus view ("Proposed syllabus"); the first CI run
+  of the new browser test found the second.
 - The course page linked only pending and approved proposals.
 
 ## Decisions
@@ -57,10 +59,11 @@ Defaults taken without a question, stated in the issue and the guide:
 | `services/openapi/authoring.json`, `apps/packages/api-client/src/generated/authoring.ts` | regenerated |
 | `apps/studio/src/features/review/teacher.ts` | kinds `initialization`, `release`, `import` (an import first, so its completion rules do not title it); `project`, `release`, `delivery`, `notAccepted`, `compared` in the view; `teacherView(candidates, applied, compare)` |
 | `apps/studio/src/features/review/TeacherView.tsx`, `ProposalPage.tsx`, `reviewApi.ts` | the three new sections and the notice; a decided proposal's candidates read through the route; "What changes" only when compared |
+| `apps/studio/src/features/review/syllabus.ts` | a proposal with bindings, a policy or agents is not a syllabus proposal |
 | `apps/studio/src/features/course/CoursePage.tsx`, `i18n/en.json` | every proposal linked; the labels above (labels and data only, no styling) |
 | `tests/services/test_authoring_review_api.py`, `test_api_openapi.py` | contract tests (below) |
-| `apps/studio/test/teacher-view.test.ts`, `review.test.tsx` | studio unit tests; the page tests of decided proposals answer the new route |
-| `apps/e2e/teacher-views.spec.ts` (new), `support.ts` | the browser test of every seeded kind; `SeedManifest.project_id` |
+| `apps/studio/test/teacher-view.test.ts`, `review.test.tsx`, `syllabus-model.test.ts` | studio unit tests; the page tests of decided proposals answer the new route |
+| `apps/e2e/teacher-views.spec.ts` (new), `support.ts` | the browser test of every seeded kind (the delivery contexts' proposals read through the API; the delivery policy preview installed while the applied import is read, as `test_authoring_read_api.py` does, then removed); `SeedManifest` fields |
 | `docs/architecture/role-applications.md` | "Teacher views of every proposal kind (S09c2, part 2)", the browser test row |
 
 ## Verification
@@ -73,7 +76,7 @@ failed until `teacher.ts`; the page tests were written after the components.
 | --- | --- |
 | `unittest discover -q`, telemetry off, final tree | 1106 tests, OK, 202 skipped (1104 / 201 before: the route test on both store backends; its PostgreSQL variant is the new skip) |
 | `python -m aimpro.generate --check`, `python -m services.api_common.openapi --check` | exit 0, exit 0 |
-| `npm run check:client`, `typecheck`, `test` (in `apps/`) | OK, OK, 153 tests OK (147 before) |
+| `npm run check:client`, `typecheck`, `test` (in `apps/`) | OK, OK, 154 tests OK (147 before) |
 | `npx playwright test -c e2e/playwright.config.ts --list` | 17 tests in 9 files; compiles (typecheck includes `e2e/`) |
 | `git diff --check` | exit 0 |
 
