@@ -1,12 +1,16 @@
-import { en, expect, expectAccessible, shown, test } from './support';
+import type { Page } from '@playwright/test';
+
+import { en, expect, expectAccessible, test } from './support';
 import type { Entity } from './support';
 
 const teacher = en.review.teacher;
 
-/** The latest revision of every proposal of a context. */
-function proposals(context: string): Entity[] {
+/** The latest revision of every proposal of a context, read through the API with the browser's session. */
+async function proposals(page: Page, context: string): Promise<Entity[]> {
+  const response = await page.request.get(`/contexts/${context}`);
+  expect(response.status(), await response.text()).toBe(200);
   const latest = new Map<string, Entity>();
-  for (const entity of shown(context)) {
+  for (const entity of (await response.json() as { entities: Entity[] }).entities) {
     if (entity.type !== 'ChangeProposal') continue;
     const known = latest.get(entity.id);
     if (!known || Number(entity.version) > Number(known.version)) latest.set(entity.id, entity);
@@ -27,7 +31,7 @@ test('every proposal kind of the seed is read in words, whatever its status', as
     return (await title.textContent()) ?? '';
   };
 
-  for (const proposal of proposals(seed.authoring_context)) {
+  for (const proposal of await proposals(page, seed.authoring_context)) {
     const title = await open(seed.authoring_context, proposal);
     if (title === teacher.titleInitialization) {
       await expect(page.getByRole('region', { name: teacher.project.heading })).toContainText(
@@ -51,7 +55,7 @@ test('every proposal kind of the seed is read in words, whatever its status', as
   }
 
   for (const context of [seed.delivery_context, seed.pending_delivery_context]) {
-    for (const proposal of proposals(context).filter((p) => p.fields.status !== 'SUPERSEDED')) {
+    for (const proposal of (await proposals(page, context)).filter((p) => p.fields.status !== 'SUPERSEDED')) {
       if (await open(context, proposal) !== teacher.titleImport) continue;
       const delivery = page.getByRole('region', { name: teacher.delivery.heading });
       await expect(delivery).toContainText('Approving brings the frozen release into this delivery course');
