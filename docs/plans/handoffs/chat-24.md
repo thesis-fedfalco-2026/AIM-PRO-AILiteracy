@@ -106,4 +106,12 @@ Still open from the roadmap: D19, D21, D25, D28, D29, D31–D33, G7 / D4.
 **S10 — Course validation: release and delivery views (M2)**, with binding proposals moved there in Chat 21. Its
 scope and acceptance are to be agreed with the owner.
 
-<!-- PR -->
+## PR and CI
+
+PR [#122](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/pull/122). The first three CI runs failed in
+the `browser` job only, on the new test: the CLI helper could not open the delivery contexts (their proposals are now
+read through the API), the applied import's context needs its policy preview installed (done in the test, then
+removed), and the import was shown as a syllabus proposal (fixed in `syllabus.ts`, `f258a86`). CI on `f258a86`, push
+run [43572871811](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/actions/runs/43572871811) and
+pull_request run [43572876947](https://github.com/thesis-fedfalco-2026/AIM-PRO-AILiteracy/actions/runs/43572876947):
+all 7 jobs of each passed, `browser` included (`teacher-views.spec.ts`: every seeded kind in words, axe on each).
