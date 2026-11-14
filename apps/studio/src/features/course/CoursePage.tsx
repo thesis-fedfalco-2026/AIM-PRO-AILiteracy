@@ -81,8 +81,11 @@ function History({ contextId, history }: { contextId: string; history: HistoryEn
               ))}
             </ul>
           )}
-          {entry.status === 'AWAITING_DECISION' || entry.status === 'APPROVED'
-            ? <p><Link to={proposalPath(contextId, entry.proposalId)}>{t('course.history.review')}</Link></p> : null}
+          <p>
+            <Link to={proposalPath(contextId, entry.proposalId)}>
+              {t(entry.status === 'AWAITING_DECISION' || entry.status === 'APPROVED' ? 'course.history.review' : 'course.history.read')}
+            </Link>
+          </p>
         </li>
       ))}
     </ol>

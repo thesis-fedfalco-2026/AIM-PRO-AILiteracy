@@ -2,15 +2,24 @@ import type { Entity, Finding, JsonValue } from './reviewApi';
 
 /**
  * What a proposal is, for its title and its view: generated assessments, teacher or
- * trainer content (the role of its generated package), completion rules, or another change.
+ * trainer content (the role of its generated package), completion rules, the
+ * initialization of the authoring project, a release, a delivery import, or another change.
  */
-export type ProposalKind = 'assessment' | 'teacher' | 'trainer' | 'completion' | 'other';
+export type ProposalKind =
+  'assessment' | 'teacher' | 'trainer' | 'completion' | 'initialization' | 'release' | 'import' | 'other';
 
 /** The title of a proposal of each kind, a catalogue key. */
 export const KIND_TITLES = {
   assessment: 'review.teacher.titleAssessment', teacher: 'review.teacher.titleTeacher', trainer: 'review.teacher.titleTrainer',
-  completion: 'review.teacher.titleCompletion', other: 'review.teacher.titleOther',
+  completion: 'review.teacher.titleCompletion', initialization: 'review.teacher.titleInitialization',
+  release: 'review.teacher.titleRelease', import: 'review.teacher.titleImport', other: 'review.teacher.titleOther',
 } as const satisfies Record<ProposalKind, string>;
+
+/** A part of the course a project selects or a release freezes: its kind in the project and its title. */
+export interface CoursePart {
+  kind: string;
+  title: string;
+}
 
 /**
  * The teaching content of a proposal, as a teacher reviews it: what students are
@@ -33,6 +42,17 @@ export interface TeacherView {
   changes: ContentChange[];
   /** Candidate records that are not teaching content (structure, links, packages). */
   otherRecords: number;
+  /** For a project initialization: the parts it selects and the kinds the course still needs. */
+  project: { id: string; selected: CoursePart[]; missing: string[] } | null;
+  /** For a release: the parts it freezes. */
+  release: { parts: CoursePart[] } | null;
+  /** For a delivery import: its units, the resource each requirement uses, its agents and its source scopes. */
+  delivery: { units: number; bindings: { need: string; resource: string }[]; agents: { role: string; name: string }[];
+    scopes: string[] } | null;
+  /** The review agent's assessment of generated content it did not accept (model text), or null. */
+  notAccepted: string | null;
+  /** Whether `changes` compares the proposal with the course: only while it can still be decided or applied. */
+  compared: boolean;
 }
 
 export interface Criterion {
@@ -84,14 +104,24 @@ const isMaterial = (entity: Entity) =>
   entity.type === 'Resource' && text(entity.fields.contentOrLocator) !== '' && contentObject(entity) === null;
 
 const ROLES: Record<string, ProposalKind> = { ASSESSMENT: 'assessment', TEACHER_CONTENT: 'teacher', TRAINER_CONTENT: 'trainer' };
+const DELIVERY = new Set(['ResourceBinding', 'PolicySet', 'AgentSpecialization']);
 
-/** The kind of a proposal, from its candidates. */
+/** The JSON contents of the candidate resources of one format. */
+function contents(candidates: Entity[], format: string): Record<string, JsonValue>[] {
+  return candidates.filter((entity) => entity.type === 'Resource').map(contentObject)
+    .filter((content): content is Record<string, JsonValue> => content?.format === format);
+}
+
+/** The kind of a proposal, from its candidates. A delivery import carries completion rules and generated content too. */
 function kindOf(candidates: Entity[]): ProposalKind {
+  if (candidates.some((candidate) => DELIVERY.has(candidate.type))) return 'import';
+  if (contents(candidates, 'authoring-release').length > 0) return 'release';
+  const projects = contents(candidates, 'authoring-project');
+  const packages = contents(candidates, 'project-authoring-output');
+  if (projects.some((project) => project.previous === null) && packages.length === 0) return 'initialization';
   if (candidates.some((candidate) => candidate.type === 'RuleDefinition')) return 'completion';
-  for (const candidate of candidates.filter((entity) => entity.type === 'Resource')) {
-    const content = contentObject(candidate);
-    const inputs = content?.format === 'project-authoring-output' && isObject(content.inputs) ? content.inputs : null;
-    const role = inputs ? ROLES[text(inputs.role)] : undefined;
+  for (const content of packages) {
+    const role = isObject(content.inputs) ? ROLES[text(content.inputs.role)] : undefined;
     if (role) return role;
   }
   return candidates.some((candidate) => candidate.type === 'AssessmentSpecification') ? 'assessment' : 'other';
@@ -204,16 +234,82 @@ function outcomeIds(entity: Entity): string[] {
   return [...own, ...ofCriteria].map((outcome) => text(outcome.id)).filter(Boolean);
 }
 
-/** The teacher view of `candidates`, compared with `applied` (the context's current records). */
-export function teacherView(candidates: Entity[], applied: Entity[]): TeacherView {
+const refKey = (value: JsonValue | undefined) =>
+  (isObject(value) ? `${text(value.type)}\u0000${text(value.id)}\u0000${text(value.version)}` : '');
+
+/** A finder of exact records among `entities`, by reference. */
+function exact(entities: Entity[]) {
+  const byRef = new Map(entities.map((entity) => [`${entity.type}\u0000${entity.id}\u0000${entity.version}`, entity]));
+  return (value: JsonValue | undefined) => byRef.get(refKey(value));
+}
+
+const titleOf = (entity: Entity | undefined, value: JsonValue | undefined) =>
+  text(entity?.fields.title) || text(entity?.fields.name) || (isObject(value) ? text(value.id) : '');
+
+/** The parts of the course the project selects, and the required kinds it does not select yet. */
+function projectOf(candidates: Entity[], applied: Entity[]): TeacherView['project'] {
+  const manifest = contents(candidates, 'authoring-project')[0];
+  if (!manifest) return null;
+  const find = exact([...candidates, ...applied]);
+  const selected = records(manifest.artifacts).map((artifact) => ({
+    kind: text(artifact.kind), title: titleOf(find(artifact.resource), artifact.resource) }));
+  const kinds = new Set(selected.map((part) => part.kind));
+  return { id: text(manifest.project_id), selected, missing: texts(manifest.required_kinds).filter((kind) => !kinds.has(kind)) };
+}
+
+/** The parts a release freezes, with their kind in the project they come from. */
+function releaseOf(candidates: Entity[], applied: Entity[]): TeacherView['release'] {
+  const manifest = contents(candidates, 'authoring-release')[0];
+  if (!manifest) return null;
+  const find = exact([...candidates, ...applied]);
+  const kinds = new Map(contents([...candidates, ...applied], 'authoring-project')
+    .flatMap((project) => records(project.artifacts)).map((artifact) => [refKey(artifact.resource), text(artifact.kind)]));
+  const parts = (Array.isArray(manifest.artifacts) ? manifest.artifacts : []).map((artifact) => ({
+    kind: kinds.get(refKey(artifact)) ?? '', title: titleOf(find(artifact), artifact) }));
+  return { parts };
+}
+
+/** What a delivery import brings: its units, the resource each requirement uses, its agents and source scopes. */
+function deliveryOf(candidates: Entity[], applied: Entity[]): TeacherView['delivery'] {
+  const find = exact([...candidates, ...applied]);
+  const ofType = (type: string) => candidates.filter((candidate) => candidate.type === type);
+  return {
+    units: ofType('ProcessNode').filter((node) => node.fields.kind === 'UNIT').length,
+    bindings: ofType('ResourceBinding').map(({ fields }) => ({
+      need: text(find(fields.requirement)?.fields.purpose), resource: titleOf(find(fields.resource), fields.resource) })),
+    agents: ofType('AgentSpecialization').map(({ fields }) => ({ role: text(fields.role), name: text(fields.registryName) })),
+    scopes: ofType('PolicySet').flatMap(({ fields }) => texts(fields.sourceScopes)),
+  };
+}
+
+const FLAGS = ['source_alignment', 'citation_support', 'intent_correct', 'content_complete'];
+
+/** The review agent's reason when it did not accept the generated package of the candidates (S09d), or null. */
+function notAcceptedOf(candidates: Entity[]): string | null {
+  for (const content of contents(candidates, 'project-authoring-output')) {
+    const review = isObject(content.review) ? content.review : null;
+    if (review && (review.verdict !== 'ACCEPT' || FLAGS.some((flag) => review[flag] === false))) return text(review.reason);
+  }
+  return null;
+}
+
+/** Proposals that bring no teaching change of their own: what they carry is described instead. */
+const DESCRIBED = new Set<ProposalKind>(['initialization', 'release', 'import']);
+
+/**
+ * The teacher view of `candidates`, compared with `applied` (the context's current records). Without `compare`
+ * (a proposal applied or rejected), no change is listed: comparing it with the course now says nothing.
+ */
+export function teacherView(candidates: Entity[], applied: Entity[], compare = true): TeacherView {
   const current = new Map(applied.map((entity) => [`${entity.type}\u0000${entity.id}`, entity]));
   const teaching = candidates.filter((candidate) => TEACHING.has(candidate.type) || isMaterial(candidate));
   const ofType = (type: string) => teaching.filter((candidate) => candidate.type === type);
   const statements = new Map([...applied, ...candidates].filter((entity) => entity.type === 'LearningOutcome')
     .map((entity) => [entity.id, text(entity.fields.statement) || entity.id]));
   const outcomes = [...new Set(teaching.flatMap(outcomeIds))].map((id) => statements.get(id) ?? id);
+  const kind = kindOf(candidates);
   return {
-    kind: kindOf(candidates),
+    kind,
     activities: ofType('ActivityDefinition').map(({ fields }) => ({
       instruction: text(fields.instruction), evidence: texts(fields.expectedEvidence) })),
     materials: ofType('Resource').map(({ fields }) => ({ title: text(fields.title), text: text(fields.contentOrLocator) })),
@@ -224,8 +320,14 @@ export function teacherView(candidates: Entity[], applied: Entity[]): TeacherVie
     requirements: ofType('ResourceRequirement').map(({ fields }) => ({
       purpose: text(fields.purpose), constraints: texts(fields.constraints), mandatory: fields.mandatory === true })),
     outcomes,
-    changes: teaching.flatMap((candidate) => changesOf(candidate, current.get(`${candidate.type}\u0000${candidate.id}`))),
+    changes: !compare || DESCRIBED.has(kind) ? []
+      : teaching.flatMap((candidate) => changesOf(candidate, current.get(`${candidate.type}\u0000${candidate.id}`))),
     otherRecords: candidates.length - teaching.length,
+    project: kind === 'initialization' ? projectOf(candidates, applied) : null,
+    release: kind === 'release' ? releaseOf(candidates, applied) : null,
+    delivery: kind === 'import' ? deliveryOf(candidates, applied) : null,
+    notAccepted: notAcceptedOf(candidates),
+    compared: compare && !DESCRIBED.has(kind),
   };
 }
 

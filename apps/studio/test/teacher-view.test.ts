@@ -174,3 +174,65 @@ describe('plain issues', () => {
     expect(plainIssues(null, [], [])).toEqual({ generated: [], source: [], notes: [] });
   });
 });
+
+const manifest = (previous: unknown, artifacts: unknown[]) => entity('Resource', 'project-1', 'v2', {
+  title: 'Authoring project: synthetic-course', topics: [], usageConditions: 'Synthetic.',
+  contentOrLocator: JSON.stringify({ format: 'authoring-project', format_version: 1, project_id: 'synthetic-course',
+    authoring_context: 'ctx', previous, design: ref('LearningDesign', 'design-1', '1'),
+    required_kinds: ['SOURCE', 'SYLLABUS', 'ASSESSMENT', 'TEACHER_CONTENT', 'TRAINER_CONTENT'], artifacts }),
+});
+const SOURCE = entity('Resource', 'source-1', '1', { title: 'Source snapshot: LPO AI', contentOrLocator: '{"format":"x"}' });
+const SYLLABUS = entity('Resource', 'syllabus-1', '1', { title: 'Approved syllabus: LPO AI', contentOrLocator: '{"format":"x"}' });
+const SELECTED = [{ key: 'source', kind: 'SOURCE', resource: ref('Resource', 'source-1', '1') },
+  { key: 'syllabus', kind: 'SYLLABUS', resource: ref('Resource', 'syllabus-1', '1') }];
+
+describe('teacher view of the project, its release and a delivery import (S09c2 part 2)', () => {
+  it('says what a project initialization selects and what the course still needs', () => {
+    const view = teacherView([CONTEXT, manifest(null, SELECTED)], [SOURCE, SYLLABUS]);
+    expect(view.kind).toBe('initialization');
+    expect(view.project).toEqual({ id: 'synthetic-course',
+      selected: [{ kind: 'SOURCE', title: 'Source snapshot: LPO AI' }, { kind: 'SYLLABUS', title: 'Approved syllabus: LPO AI' }],
+      missing: ['ASSESSMENT', 'TEACHER_CONTENT', 'TRAINER_CONTENT'] });
+    expect(view.changes).toEqual([]);
+    // A later revision of the project is not an initialization.
+    expect(teacherView([manifest(ref('Resource', 'project-1', 'v1'), SELECTED)], []).kind).toBe('other');
+  });
+
+  it('lists the parts a release freezes, by their kind in the project', () => {
+    const release = entity('Resource', 'release-1', 'r1', { title: 'Authoring release: synthetic-course', topics: [],
+      contentOrLocator: JSON.stringify({ format: 'authoring-release', format_version: 1, authoring_context: 'ctx',
+        project: ref('Resource', 'project-1', 'v2'), domain: ref('DomainModel', 'project-1', 'v2'),
+        design: ref('LearningDesign', 'design-1', '1'), artifacts: SELECTED.map((a) => a.resource) }) });
+    const view = teacherView([CONTEXT, release], [SOURCE, SYLLABUS, manifest(null, SELECTED)]);
+    expect(view.kind).toBe('release');
+    expect(view.release).toEqual({ parts: [{ kind: 'SOURCE', title: 'Source snapshot: LPO AI' },
+      { kind: 'SYLLABUS', title: 'Approved syllabus: LPO AI' }] });
+    expect(view.changes).toEqual([]);
+  });
+
+  it('says what a delivery import brings into the course, and is not titled as completion rules', () => {
+    const guide = entity('Resource', 'wp3:test', 'v1', { title: 'Synthetic prompting guide', contentOrLocator: 'https://example.org/guide' });
+    const binding = entity('ResourceBinding', 'binding-1', 'i1', { context: ref('ExecutionContext', 'delivery', '1'),
+      resource: ref('Resource', 'wp3:test', 'v1'), requirement: ref('ResourceRequirement', 'req-1', 'i1') });
+    const agent = entity('AgentSpecialization', 'agent-1', 'i1', { registryName: 'guided-practice-coach', category: 'TEACHER_TRAINER',
+      role: 'TRAINER', topics: [], competenceScope: 'Exact reviewed content.' });
+    const policy = entity('PolicySet', 'policy-1', 'i1', { sourceScopes: ['delivery', 'wp3'], approvalConditions: [], permissions: [] });
+    const view = teacherView([CONTEXT, policy, binding, agent, guide, requirement('i1', []), activity('i1', 'Write a prompt.'),
+      node('unit-1', 'i1', 'UNIT', 'Prepare a prompt', {}), node('phase-1', 'i1', 'PHASE', 'Workshop', {}),
+      rule('rule-unit', 'i1', 'Complete this process node only when every direct child is COMPLETED.')], []);
+    expect(view.kind).toBe('import');
+    expect(view.delivery).toEqual({ units: 1, bindings: [{ need: 'Use the cited source.', resource: 'Synthetic prompting guide' }],
+      agents: [{ role: 'TRAINER', name: 'guided-practice-coach' }], scopes: ['delivery', 'wp3'] });
+    expect(view.changes).toEqual([]);
+  });
+
+  it('says when the review agent did not accept generated content, with its assessment as model text', () => {
+    const verdict = { verdict: 'REJECT', source_alignment: true, citation_support: true, intent_correct: true,
+      content_complete: false, reason: 'Unit 14 lacks a rubric.' };
+    const reviewed = (review: unknown) => entity('Resource', 'package-1', 'p1', { title: 'Proposed ASSESSMENT package', topics: [],
+      contentOrLocator: JSON.stringify({ format: 'project-authoring-output', format_version: 1, inputs: { role: 'ASSESSMENT' }, review }) });
+    expect(teacherView([reviewed(verdict)], []).notAccepted).toBe('Unit 14 lacks a rubric.');
+    expect(teacherView([reviewed({ ...verdict, verdict: 'ACCEPT', content_complete: true })], []).notAccepted).toBeNull();
+    expect(teacherView([CONTEXT], []).notAccepted).toBeNull();
+  });
+});

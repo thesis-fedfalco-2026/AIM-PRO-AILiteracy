@@ -27,3 +27,17 @@ def pending_proposals(store, context) -> tuple[PendingProposal, ...]:
         found.append(PendingProposal(proposal=proposal, candidates=candidates,
                                      review_payload_key=review_payload_key(proposal, candidates)))
     return tuple(found)
+
+
+def proposal_review(store, context, proposal_id) -> PendingProposal | None:
+    """The latest revision of one proposal of the context with its candidates, whatever its status (S09c2).
+
+    ``review_payload_key`` is the key a decision would carry; only a proposal awaiting a decision accepts one.
+    ``None`` when the context has no proposal under ``proposal_id``.
+    """
+    proposal = next((p for p in store.owned(context.snapshot.context.id, 'ChangeProposal') if p.id == proposal_id), None)
+    if proposal is None:
+        return None
+    candidates = proposal_candidates(store, proposal)
+    return PendingProposal(proposal=proposal, candidates=candidates,
+                           review_payload_key=review_payload_key(proposal, candidates))

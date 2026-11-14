@@ -548,6 +548,7 @@ browser recorded.
 | `build.spec.ts`: a syllabus on accepted sources (S09a2) | upload; search with two queries (synthetic retrieval); the excerpt found by both, with its usage conditions; tick it, write its purpose and limitations, prepare; the prepared sources; axe with every disclosure open; no prepared sources offered to the Curator before the choice; accept; the Curator on the accepted sources ends with a proposal; approve and apply; the course structure; back on the build page, the three jobs listed with their status; axe |
 | `refinement.spec.ts`: a syllabus refined step by step (S09b) | upload; the Curator by a query; the syllabus in words (competency, practice, planned activities) compared with a course without a syllabus, and not the generic "same teaching content" sentence; axe; a revision request with its reason (with the synthetic reviewer's marker, so its first draft is rejected); "Ask the Curator for a revised syllabus" ends with a link to the revision; the review agent's assessments of the two drafts (rejected, then accepted, its reason labelled as model text); axe; compared with the previous proposal (title changed, one unit changed in its purpose, one unit added) and showing the reason; axe; approve and apply: the course shows the revised syllabus; the teacher edits it (syllabus title, a unit title; axe on the form): a new proposal by the teacher, compared with the syllabus in use; approve and apply: the course shows the teacher's syllabus, "Edited by"; axe |
 | `generation.spec.ts`: the review of an Evaluator job's drafts (S09c, S09d) | on the seed's authoring context, an Evaluator job queued through the API with the browser's session (no form before S09c2), its requirement holding the synthetic reviewer's marker; the job list shows it proposed with "Blocks of units written: 1 of 1"; "How the review agent judged the drafts of this job": block 1 draft 1 not accepted ("Content complete: no", its reason labelled as model text), block 1 draft 2 accepted, the assembled draft accepted; the job view does not hold the reason; axe |
+| `teacher-views.spec.ts`: every proposal kind in words (S09c2, part 2) | on the seed, every proposal of the authoring context and the delivery imports of both delivery contexts, pending or decided, opened by URL: each has its title (syllabus, project initialization, assessments, teacher and trainer content, completion rules, release, delivery import; never "Proposed change"), the initialization says what it creates, the release lists its parts by kind, the import names its resources and agents, a decided proposal shows no comparison; axe on each; the course page links decided proposals with "Read this proposal" |
 | `cycle.spec.ts`: the rest of the authoring cycle (S09c2) | a new course: upload, Curator, approve and apply the syllabus, initialize and apply the project; the Evaluator form shows the project and course version it sends (read back through the API), the Teacher form says it needs the assessments; axe; another author applies an Evaluator proposal through the API, so the form's job is refused at queue time (409): the form says the course changed and shows the new course version; the Evaluator queued again, its proposal read in its teacher view (rubric; axe), approved and applied; the Teacher form shows the applied assessment it sends; the Teacher and Trainer proposals read with their material texts (axe), approved and applied; the completion rules proposed from the build page, read part by part (axe), approved and applied; the project inspection lists the five artifacts with their receipts and no stale dependency, and every node of the design has a rule |
 | `build.spec.ts`: a syllabus not accepted (issue #112) | upload; the Curator by a query holding the synthetic reviewer's `REJECT_EVERY` marker ends with a proposal; the job list shows the fixed notice; axe; the syllabus view says the review agent accepted no draft, with its reason as model text; axe; approve and apply; the course shows the structure |
 | `build.spec.ts`: an invalid file | a text file is refused with "The file is not UTF-8 JSON"; no report; the export directory and the database file are unchanged; axe |
@@ -1047,6 +1048,41 @@ the review agent judged the drafts of this job" names each draft's block, a
 block reused from an earlier job, a call that reached the time limit, a
 response cut at its length limit and the review of the assembled draft (labels
 and data only).
+
+## Teacher views of every proposal kind (S09c2, part 2)
+
+Issue #121; acceptance agreed with the owner in Chat 21 and split in Chat 22.
+
+1. **One proposal, whatever its status.** `GET
+   /contexts/{context_id}/proposals/{proposal_id}` returns the latest revision
+   of the proposal with its candidates and its review payload key
+   (`PendingProposal`), authorized as `pending-proposals`: a subject that may
+   not see the pending proposals reads none (the same status), and an unknown
+   proposal is 404. API version 0.12.0.
+2. **Every kind has a view in words.** The studio reads the candidates of a
+   proposal that no longer awaits a decision through that route, and builds the
+   teacher view for every kind:
+   - *project initialization* ("Start the authoring project of the course"):
+     what it is, why it is approved (it records the exact parts the next steps
+     build on; students see nothing new), the parts it selects and the kinds
+     still to prepare (Chat 22 trial finding 3);
+   - *release* ("Freeze the course as a release"): the parts it freezes, by
+     their kind in the project, and that nothing reaches students before an
+     import;
+   - *delivery import* ("Bring a release into a delivery course"): its units,
+     the resource each requirement uses, the agents that help students, the
+     sources the course may use, and the activities; it is no longer titled as
+     completion rules (its candidates carry them).
+3. **A decided proposal shows what it carries.** "What changes" compares a
+   proposal with the course only while it can still be decided or applied
+   (awaiting a decision, approved, or in revision); an applied or rejected one
+   shows its content without the comparison.
+4. **Generated content the review agent did not accept says so** (S09d): its
+   view opens with "The review agent did not accept this content. Its
+   assessment (model text): “…”. You decide whether to approve it.", from the
+   verdict kept in its package.
+5. The course page links every proposal: "Review this proposal" while it can be
+   decided or applied, "Read this proposal" after (labels and data only).
 
 ## Local identity smoke test
 

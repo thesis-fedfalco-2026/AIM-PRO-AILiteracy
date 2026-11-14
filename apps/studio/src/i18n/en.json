@@ -86,7 +86,9 @@
       "proposedBy": "Proposed by",
       "baseVersion": "Prepared on context version",
       "payloadKey": "Review payload key",
-      "notPending": "This proposal does not await a decision. Its status is: {{status}}."
+      "notPending": "This proposal does not await a decision. Its status is: {{status}}.",
+      "loadingContent": "Reading what this proposal carries…",
+      "contentFailed": "What this proposal carries could not be read. Reload the page."
     },
     "diagnostics": {
       "heading": "Diagnostics",
@@ -224,6 +226,39 @@
       "titleTeacher": "Proposed teacher content",
       "titleTrainer": "Proposed trainer content",
       "titleCompletion": "Proposed completion rules",
+      "titleInitialization": "Start the authoring project of the course",
+      "titleRelease": "Freeze the course as a release",
+      "titleImport": "Bring a release into a delivery course",
+      "notAccepted": "The review agent did not accept this content. Its assessment (model text): “{{reason}}”. You decide whether to approve it.",
+      "part": {
+        "SOURCE": "Sources",
+        "SYLLABUS": "Syllabus",
+        "ASSESSMENT": "Assessments",
+        "TEACHER_CONTENT": "Teacher content",
+        "TRAINER_CONTENT": "Trainer content",
+        "other": "Part",
+        "item": "{{kind}}: {{title}}"
+      },
+      "project": {
+        "heading": "What this project is",
+        "intro": "Approving creates the authoring project “{{id}}” of this course. It records the exact parts the next steps build on, so that the assessments and the teaching content are prepared from this syllabus and nothing else. Students see nothing new.",
+        "selected": "Selected now",
+        "missing": "Still to prepare: {{kinds}}"
+      },
+      "release": {
+        "heading": "What this release freezes",
+        "intro": "Approving freezes the course as it is now, so that it can be delivered exactly as reviewed. Nothing reaches students: the delivery, its resources and its permissions come with a later import, reviewed on its own."
+      },
+      "delivery": {
+        "heading": "What this delivery brings",
+        "intro_one": "Approving brings the frozen release into this delivery course: {{count}} unit, with the activities below. Students get nothing until the course is activated, a separate step.",
+        "intro_other": "Approving brings the frozen release into this delivery course: {{count}} units, with the activities below. Students get nothing until the course is activated, a separate step.",
+        "bindings": "The resource each requirement uses",
+        "binding": "{{need}} → {{resource}}",
+        "agents": "Agents that help students",
+        "agent": "{{role}}: {{name}}",
+        "scopes": "Sources the course may use: {{scopes}}"
+      },
       "materials": {
         "heading": "Material for students"
       },
@@ -365,6 +400,7 @@
       "applied": "{{at}}: applied to the course.",
       "noEvent": "No decision yet.",
       "review": "Review this proposal",
+      "read": "Read this proposal",
       "empty": "No proposal yet."
     },
     "verdict": {

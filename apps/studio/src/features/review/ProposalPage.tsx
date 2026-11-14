@@ -90,6 +90,32 @@ function TechnicalDetails({ proposal, pending, inbox, findings, report }: {
   );
 }
 
+type ContentState = { status: 'loading' } | { status: 'ready'; candidates: Entity[] } | { status: 'error' };
+
+/** The candidates of a proposal that no longer awaits a decision, read from the API; those of a pending one are known. */
+function useCandidates(contextId: string, proposal: Entity, pending: PendingProposal | undefined, wanted: boolean): ContentState {
+  const { api } = useReviewServices();
+  const [state, setState] = useState<ContentState>({ status: 'loading' });
+  const { id, version } = proposal;
+  const known = pending?.candidates;
+  useEffect(() => {
+    if (known || !wanted) return undefined;
+    let current = true;
+    setState({ status: 'loading' });
+    api.proposal(contextId, id).then(
+      (read) => current && setState({ status: 'ready', candidates: read.candidates }),
+      () => current && setState({ status: 'error' }),
+    );
+    return () => {
+      current = false;
+    };
+  }, [api, contextId, id, version, known, wanted]);
+  return known ? { status: 'ready', candidates: known } : state;
+}
+
+/** While a proposal can still be decided or applied, its view compares it with the course; after, it shows what it carries. */
+const COMPARED = new Set(['AWAITING_DECISION', 'APPROVED', 'DRAFT']);
+
 type SyllabusState = { status: 'loading' } | { status: 'ready'; view: SyllabusProposalView } | { status: 'error' };
 
 /** The syllabus of a syllabus proposal, read again when the proposal gets a new revision. */
@@ -140,17 +166,27 @@ function ProposalContent({ inbox, proposalId, busy, onDecide, onApply }: {
   onApply(proposal: Entity): void;
 }) {
   const { t } = useTranslation();
-  const statusLabel = useStatusLabel();
   const pending = inbox.pending.find((item) => item.proposal.id === proposalId);
   const proposal = latestProposals(inbox.entities).find((item) => item.id === proposalId) ?? pending?.proposal;
   if (!proposal) return <StatusMessage tone="error">{t('review.proposal.notFound', { proposal: proposalId })}</StatusMessage>;
+  return <ProposalBody inbox={inbox} proposal={proposal} pending={pending} busy={busy} onDecide={onDecide} onApply={onApply} />;
+}
 
+function ProposalBody({ inbox, proposal, pending, busy, onDecide, onApply }: {
+  inbox: Inbox; proposal: Entity; pending: PendingProposal | undefined; busy: boolean;
+  onDecide(pending: PendingProposal, decision: DecisionKind, reason: string): void;
+  onApply(proposal: Entity): void;
+}) {
+  const { t } = useTranslation();
+  const statusLabel = useStatusLabel();
   const explanation = proposalExplanation(proposal);
   const status = proposalStatus(proposal);
   const findings = (Array.isArray(proposal.fields.findings) ? proposal.fields.findings : []) as unknown as Finding[];
   const issues = plainIssues(explanation.details, findings, inbox.findings);
   const syllabus = isSyllabusProposal(proposal);
-  const view = pending && !syllabus ? teacherView(pending.candidates, [inbox.context, ...inbox.entities]) : null;
+  const content = useCandidates(inbox.context.id, proposal, pending, !syllabus);
+  const view = content.status === 'ready' && !syllabus
+    ? teacherView(content.candidates, [inbox.context, ...inbox.entities], COMPARED.has(status)) : null;
   const title = syllabus ? t('review.teacher.titleSyllabus') : t(KIND_TITLES[view?.kind ?? 'other']);
   return (
     <>
@@ -165,6 +201,8 @@ function ProposalContent({ inbox, proposalId, busy, onDecide, onApply }: {
       {view && view.kind !== 'other' ? null : <p>{explanation.summary}</p>}
       {pending || status === 'APPROVED' ? null : <p>{t('review.proposal.notPending', { status: statusLabel(status) })}</p>}
       {status === 'APPROVED' ? <ApplyStep busy={busy} onApply={() => onApply(proposal)} /> : null}
+      {!syllabus && content.status === 'loading' ? <StatusMessage>{t('review.proposal.loadingContent')}</StatusMessage> : null}
+      {!syllabus && content.status === 'error' ? <StatusMessage tone="error">{t('review.proposal.contentFailed')}</StatusMessage> : null}
       {view ? <TeacherView view={view} issues={issues} /> : null}
       {syllabus ? <SyllabusContent inbox={inbox} proposal={proposal} issues={issues} /> : null}
       {pending ? <DecisionForm busy={busy} onDecide={(decision, reason) => onDecide(pending, decision, reason)} /> : null}
