@@ -322,6 +322,15 @@ class LearningService:
                 return ()
             return pending_proposals(self.store, context)
 
+    def proposal_review(self, context_id, subject_key, proposal_id):
+        """One proposal with its candidates, whatever its status; ``None`` for a learner-only subject, as above."""
+        from learning.review import proposal_review
+        with self.store.read_transaction():
+            context = self._context(context_id, subject_key)
+            if self._learner_only(subject_key):
+                return None
+            return proposal_review(self.store, context, proposal_id)
+
     def show(self, context_id, subject_key):
         context = self._context(context_id, subject_key)
         learner_only = self._learner_only(subject_key)

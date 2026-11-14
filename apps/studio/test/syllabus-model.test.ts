@@ -67,6 +67,13 @@ describe('syllabus proposal', () => {
     expect(isSyllabusProposal(proposal(['aimpro-syllabus-0a1b:syllabus', 'aimpro-syllabus-0a1b:source-snapshot']))).toBe(true);
     expect(isSyllabusProposal(proposal(['aimpro-syllabus-0a1b:source-snapshot', 'syllabus']))).toBe(false);
   });
+
+  it('is not a delivery import that carries the frozen syllabus (S09c2)', () => {
+    const carried = proposal(['aimpro-syllabus-0a1b:syllabus']);
+    const definitions = [...(carried.fields.candidateDefinitions as Entity['fields'][]),
+      { type: 'ResourceBinding', id: 'binding-1', version: '1' }];
+    expect(isSyllabusProposal({ ...carried, fields: { candidateDefinitions: definitions } } as Entity)).toBe(false);
+  });
 });
 
 describe('syllabus editor', () => {

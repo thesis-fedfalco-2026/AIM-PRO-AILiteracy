@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 
 import { readable } from './model';
 import { RubricTable } from './RubricTable';
-import type { ContentChange, Issue, PlainIssues, TeacherView as View } from './teacher';
+import type { ContentChange, CoursePart, Issue, PlainIssues, TeacherView as View } from './teacher';
 
 const evidenceList = (codes: string[]) => codes.map(readable).join(', ');
 
@@ -100,9 +100,88 @@ function CompletionRules({ view, issues }: { view: View; issues: PlainIssues }) 
           ))}
         </ul>
       </section>
-      <Changes changes={view.changes} />
+      {view.compared ? <Changes changes={view.changes} /> : null}
       <Issues issues={issues} />
     </>
+  );
+}
+
+const PARTS = {
+  SOURCE: 'review.teacher.part.SOURCE', SYLLABUS: 'review.teacher.part.SYLLABUS',
+  ASSESSMENT: 'review.teacher.part.ASSESSMENT', TEACHER_CONTENT: 'review.teacher.part.TEACHER_CONTENT',
+  TRAINER_CONTENT: 'review.teacher.part.TRAINER_CONTENT',
+} as const;
+
+function usePartName() {
+  const { t } = useTranslation();
+  return (kind: string) => t(Object.hasOwn(PARTS, kind) ? PARTS[kind as keyof typeof PARTS] : 'review.teacher.part.other');
+}
+
+function Parts({ parts }: { parts: CoursePart[] }) {
+  const { t } = useTranslation();
+  const partName = usePartName();
+  return (
+    <ul data-testid="course-parts">
+      {parts.map((part, index) => (
+        <li key={index}>{t('review.teacher.part.item', { kind: partName(part.kind), title: part.title })}</li>
+      ))}
+    </ul>
+  );
+}
+
+/** A project initialization: what it selects, what the course still needs, and why it is approved. */
+function Project({ project }: { project: NonNullable<View['project']> }) {
+  const { t } = useTranslation();
+  const partName = usePartName();
+  return (
+    <section aria-labelledby="teacher-project">
+      <h2 id="teacher-project">{t('review.teacher.project.heading')}</h2>
+      <p>{t('review.teacher.project.intro', { id: project.id })}</p>
+      <h3>{t('review.teacher.project.selected')}</h3>
+      <Parts parts={project.selected} />
+      {project.missing.length > 0
+        ? <p>{t('review.teacher.project.missing', { kinds: project.missing.map(partName).join(', ') })}</p> : null}
+    </section>
+  );
+}
+
+/** A release: the parts of the course it freezes, and what it does not publish. */
+function Release({ release }: { release: NonNullable<View['release']> }) {
+  const { t } = useTranslation();
+  return (
+    <section aria-labelledby="teacher-release">
+      <h2 id="teacher-release">{t('review.teacher.release.heading')}</h2>
+      <p>{t('review.teacher.release.intro')}</p>
+      <Parts parts={release.parts} />
+    </section>
+  );
+}
+
+/** A delivery import: its units, the resources its requirements use, its agents and its sources. */
+function Delivery({ delivery }: { delivery: NonNullable<View['delivery']> }) {
+  const { t } = useTranslation();
+  return (
+    <section aria-labelledby="teacher-delivery">
+      <h2 id="teacher-delivery">{t('review.teacher.delivery.heading')}</h2>
+      <p>{t('review.teacher.delivery.intro', { count: delivery.units })}</p>
+      {delivery.bindings.length > 0 ? (
+        <>
+          <h3>{t('review.teacher.delivery.bindings')}</h3>
+          <ul>{delivery.bindings.map((binding, index) => <li key={index}>{t('review.teacher.delivery.binding', binding)}</li>)}</ul>
+        </>
+      ) : null}
+      {delivery.agents.length > 0 ? (
+        <>
+          <h3>{t('review.teacher.delivery.agents')}</h3>
+          <ul>
+            {delivery.agents.map((agent, index) => (
+              <li key={index}>{t('review.teacher.delivery.agent', { role: readable(agent.role), name: agent.name })}</li>
+            ))}
+          </ul>
+        </>
+      ) : null}
+      {delivery.scopes.length > 0 ? <p>{t('review.teacher.delivery.scopes', { scopes: delivery.scopes.join(', ') })}</p> : null}
+    </section>
   );
 }
 
@@ -110,9 +189,14 @@ function CompletionRules({ view, issues }: { view: View; issues: PlainIssues }) 
 export function TeacherView({ view, issues }: { view: View; issues: PlainIssues }) {
   const { t } = useTranslation();
   if (view.kind === 'completion') return <CompletionRules view={view} issues={issues} />;
+  if (view.project) return <><Project project={view.project} /><Issues issues={issues} /></>;
+  if (view.release) return <><Release release={view.release} /><Issues issues={issues} /></>;
   return (
     <>
-      <Changes changes={view.changes} />
+      {view.notAccepted !== null
+        ? <p data-testid="not-accepted">{t('review.teacher.notAccepted', { reason: view.notAccepted })}</p> : null}
+      {view.delivery ? <Delivery delivery={view.delivery} /> : null}
+      {view.compared ? <Changes changes={view.changes} /> : null}
 
       {view.activities.length > 0 ? (
         <section aria-labelledby="teacher-students">

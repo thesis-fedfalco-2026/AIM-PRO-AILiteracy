@@ -52,6 +52,8 @@ export interface ReviewApi {
   }): Promise<Entity>;
   /** Apply an approved proposal; the same `operationId` replays the same `StateChange`. */
   apply(contextId: string, csrfToken: string, proposal: EntityRef, operationId: string): Promise<Entity>;
+  /** One proposal with its candidates, whatever its status (S09c2). */
+  proposal(contextId: string, proposalId: string): Promise<PendingProposal>;
   /** A syllabus proposal with its texts, compared with the proposal it refines and the applied syllabus (S09b). */
   syllabusProposal(contextId: string, proposalId: string): Promise<SyllabusProposalView>;
   /** Propose the teacher's own syllabus in place of a syllabus proposal; the same request id replays it. */
@@ -115,6 +117,14 @@ export function createReviewApi(client: AuthoringClient): ReviewApi {
         headers: { 'X-CSRF-Token': csrfToken },
         body: { proposal, operation_id: operationId },
       })));
+    },
+
+    async proposal(contextId, proposalId) {
+      const item = await settle(() => client.GET('/contexts/{context_id}/proposals/{proposal_id}', {
+        params: { path: { context_id: contextId, proposal_id: proposalId } },
+      }));
+      return { proposal: asEntity(item.proposal), candidates: item.candidates.map(asEntity),
+        reviewPayloadKey: item.review_payload_key };
     },
 
     async syllabusProposal(contextId, proposalId) {

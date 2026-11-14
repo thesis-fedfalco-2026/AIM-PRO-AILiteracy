@@ -46,6 +46,9 @@ const SUMMARY = 'GET /contexts/ctx';
 const PENDING_LIST = 'GET /contexts/ctx/pending-proposals';
 const DECIDE = 'POST /contexts/ctx/decisions';
 const APPLY = 'POST /contexts/ctx/applications';
+const PROPOSAL = 'GET /contexts/ctx/proposals/p-1';
+/** A proposal read with its candidates, whatever its status (S09c2). */
+const read = (proposal: unknown): Reply => ({ status: 200, body: { proposal, candidates: CANDIDATES, review_payload_key: KEY } });
 
 const bodyOf = async (request: Request) => JSON.parse(await request.text()) as Record<string, unknown>;
 const writes = (requests: Request[]) => requests.filter((request) => request.method === 'POST');
@@ -206,7 +209,7 @@ describe('proposal review', () => {
     const rejected = withStatus(PENDING, 'REJECTED', '2');
     const { requests } = await open({
       [SUMMARY]: [summary(PENDING), summary(rejected)], [PENDING_LIST]: [pending(1), pending()],
-      [DECIDE]: [error(409, 'Reviewed payload or revision is no longer current')],
+      [DECIDE]: [error(409, 'Reviewed payload or revision is no longer current')], [PROPOSAL]: [read(rejected)],
     });
     fireEvent.click(await screen.findByRole('radio', { name: en.review.decision.approve }));
     fireEvent.change(screen.getByLabelText(en.review.decision.reason), { target: { value: 'Fine' } });
@@ -224,7 +227,7 @@ describe('proposal review', () => {
     const change = entity('StateChange', 'change-1', '1', { newVersion: 'c2' });
     const { requests } = await open({
       [SUMMARY]: [summary(approved), summary(withStatus(PENDING, 'APPLIED', '3'))], [PENDING_LIST]: [pending(), pending()],
-      [APPLY]: ['network', { status: 200, body: change }],
+      [APPLY]: ['network', { status: 200, body: change }], [PROPOSAL]: [read(approved), read(withStatus(PENDING, 'APPLIED', '3'))],
     });
     const apply = await screen.findByRole('button', { name: en.review.apply.submit });
     await act(async () => apply.click());
@@ -245,7 +248,7 @@ describe('proposal review', () => {
     const approved = withStatus(PENDING, 'APPROVED', '2');
     await open({
       [SUMMARY]: [summary(approved), summary(withStatus(PENDING, 'REJECTED', '3'))], [PENDING_LIST]: [pending(), pending()],
-      [APPLY]: [error(422, 'Proposal is not approved')],
+      [APPLY]: [error(422, 'Proposal is not approved')], [PROPOSAL]: [read(approved), read(withStatus(PENDING, 'REJECTED', '3'))],
     });
     const apply = await screen.findByRole('button', { name: en.review.apply.submit });
     await act(async () => apply.click());
@@ -253,6 +256,22 @@ describe('proposal review', () => {
       .toBe('The proposal can no longer be applied as approved: Proposal is not approved The page now shows its current state.');
     await waitFor(() => expect(screen.getByTestId('proposal-status').textContent).toBe(en.review.status.rejected));
     expect(screen.queryByRole('button', { name: en.review.apply.submit })).toBeNull();
+  });
+
+  it('shows what an applied proposal carries, read from the API, without comparing it with the course (S09c2)', async () => {
+    const applied = withStatus(PENDING, 'APPLIED', '3');
+    const { requests } = await open({ [SUMMARY]: [summary(applied)], [PENDING_LIST]: [pending()], [PROPOSAL]: [read(applied)] });
+    expect(await screen.findByText(en.review.teacher.titleAssessment)).toBeTruthy();
+    expect(screen.getByTestId('proposal-status').textContent).toBe(en.review.status.applied);
+    expect(screen.getByRole('heading', { name: en.review.teacher.students.heading })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: en.review.teacher.changes.heading })).toBeNull();
+    expect(screen.queryByRole('button', { name: en.review.decision.submit })).toBeNull();
+    expect(requests.filter((request) => request.url.endsWith('/proposals/p-1'))).toHaveLength(1);
+  });
+
+  it('says when the content of a proposal cannot be read', async () => {
+    await open({ [SUMMARY]: [summary(withStatus(PENDING, 'APPLIED', '3'))], [PENDING_LIST]: [pending()], [PROPOSAL]: [error(500)] });
+    expect((await screen.findByRole('alert')).textContent).toBe(en.review.proposal.contentFailed);
   });
 
   it('says when the proposal does not exist in the context', async () => {

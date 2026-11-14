@@ -19,6 +19,7 @@ from fastapi.testclient import TestClient
 
 from learning.__main__ import main as cli_main
 from learning.contracts import Entity, EntityRef
+from learning.decisions import proposal_candidates
 from learning.metamodel import load_contract
 from learning.service import LearningService
 from learning.store import LearningStore, canonical
@@ -139,6 +140,31 @@ class AuthoringReviewApiTest(ReviewApiCase):
         with LearningStore(self.location) as store:
             return next(p.ref for p in store.owned(context_id, 'ChangeProposal')
                         if p.fields['status'] == 'APPLIED' and p.id != other_than.id)
+
+    # S09c2 part 2 (issue #121): one proposal with its candidates, whatever its status.
+    def test_every_proposal_is_read_with_its_candidates_whatever_its_status(self):
+        with LearningStore(self.location) as store:
+            proposals = {p.id: p for p in store.owned(AUTH, 'ChangeProposal')}
+            expected = {p.id: (p, [c.model_dump(mode='json') for c in proposal_candidates(store, p)])
+                        for p in proposals.values()}
+        self.assertGreater(len({p.fields['status'] for p, _ in expected.values()}), 1)
+        pending = dict((ref.id, key) for ref, key in self.pending(AUTH))
+        for proposal_id, (proposal, candidates) in expected.items():
+            with self.subTest(status=proposal.fields['status']):
+                response = self.staff.get(f'/contexts/{AUTH}/proposals/{proposal_id}')
+                self.assertEqual(response.status_code, 200, response.text)
+                self.assertEqual(response.headers['cache-control'], 'no-store')
+                body = response.json()
+                self.assertEqual(Entity.model_validate(body['proposal']), proposal)
+                self.assertEqual(body['candidates'], candidates)
+                if proposal_id in pending:
+                    self.assertEqual(body['review_payload_key'], pending[proposal_id])
+        self.refused(self.staff.get(f'/contexts/{AUTH}/proposals/no-such-proposal'), 404, 'not_found')
+        # A subject that may not see the pending proposals reads no proposal either.
+        pending_status = self.learner.get(f'/contexts/{AUTH}/pending-proposals').status_code
+        self.assertEqual(self.learner.get(f'/contexts/{AUTH}/proposals/{next(iter(expected))}').status_code,
+                         pending_status)
+        self.assertNotEqual(pending_status, 200)
 
     def test_a_decision_on_the_key_the_reviewer_saw_is_recorded(self):
         [(proposal, key)] = self.pending(AUTH)

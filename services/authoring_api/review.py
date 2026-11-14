@@ -13,6 +13,7 @@ from __future__ import annotations
 from typing import Literal
 
 from fastapi import APIRouter, Depends, Request
+from starlette.exceptions import HTTPException
 
 from learning.contracts import Entity, EntityRef, Record, Text
 from learning.review import PendingProposal
@@ -48,6 +49,16 @@ router = APIRouter(tags=['review'])
 def pending_proposals(context_id: str, request: Request, principal: Principal = Depends(context_reader)):
     with open_context(request, context_id) as service:
         return PendingProposals(proposals=service.pending_proposals(context_id, principal.subject_key))
+
+
+@router.get('/contexts/{context_id}/proposals/{proposal_id}', response_model=PendingProposal, responses=READ_ERRORS,
+            summary='One proposal with its candidates, whatever its status; 404 for a learner-only subject, as pending')
+def proposal(context_id: str, proposal_id: str, request: Request, principal: Principal = Depends(context_reader)):
+    with open_context(request, context_id) as service:
+        found = service.proposal_review(context_id, principal.subject_key, proposal_id)
+    if found is None:
+        raise HTTPException(404, 'No such proposal in this context')
+    return found
 
 
 @router.post('/contexts/{context_id}/decisions', response_model=Entity, responses=WRITE_ERRORS,

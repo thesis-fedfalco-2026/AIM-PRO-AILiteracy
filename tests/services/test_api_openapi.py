@@ -42,6 +42,7 @@ class OpenApiSnapshotTest(unittest.TestCase):
                          {'/health': ['get'], '/auth/login': ['get'], '/auth/callback': ['get'],
                           '/auth/session': ['get'], '/auth/logout': ['post'],
                           '/contexts/{context_id}': ['get'], '/contexts/{context_id}/pending-proposals': ['get'],
+                          '/contexts/{context_id}/proposals/{proposal_id}': ['get'],
                           '/contexts/{context_id}/decisions': ['post'], '/contexts/{context_id}/applications': ['post'],
                           '/contexts/{context_id}/projects/{project_id}': ['get'],
                           '/contexts/{context_id}/projects': ['post'],

@@ -107,9 +107,13 @@ const refs = (value: JsonValue | undefined) =>
   (Array.isArray(value) ? value : []).filter((v): v is Record<string, JsonValue> =>
     typeof v === 'object' && v !== null && !Array.isArray(v));
 
-/** Whether a proposal proposes a Curator syllabus: one of its records is the syllabus payload. */
+/** Records only a delivery import proposes; an import also carries the frozen syllabus of its release (S09c2). */
+const DELIVERY = new Set(['ResourceBinding', 'PolicySet', 'AgentSpecialization']);
+
+/** Whether a proposal proposes a Curator syllabus: one of its records is the syllabus payload, and it is no import. */
 export function isSyllabusProposal(proposal: Entity): boolean {
-  return refs(proposal.fields.candidateDefinitions).some((ref) =>
+  const definitions = refs(proposal.fields.candidateDefinitions);
+  return !definitions.some((ref) => typeof ref.type === 'string' && DELIVERY.has(ref.type)) && definitions.some((ref) =>
     ref.type === 'Resource' && typeof ref.id === 'string' && /^aimpro-syllabus-[0-9a-f]+:syllabus$/.test(ref.id));
 }
 
